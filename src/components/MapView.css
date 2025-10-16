@@ -1,0 +1,10 @@
+/* src/components/MapView.css */
+.map-view-container { 
+    flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 20px; 
+}
+.field-representation { 
+    width: 300px; height: 200px; background-color: #a16207; border-radius: 20px; border: 4px solid #422006; padding: 20px; display: flex; justify-content: space-around; 
+}
+.row { 
+    width: 15%; height: 100%; background-color: #573b13; border-radius: 10px; 
+}

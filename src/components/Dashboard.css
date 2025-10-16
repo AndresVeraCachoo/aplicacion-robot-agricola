@@ -1,0 +1,10 @@
+/* src/components/Dashboard.css */
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+}
+.main-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Ocupa el espacio restante */
+}
