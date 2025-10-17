@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
-import React from 'react';
-import './Sidebar.css';
+import React from "react";
+import "./Sidebar.css";
 
 function Sidebar() {
   return (
@@ -10,9 +10,15 @@ function Sidebar() {
       </div>
       <nav className="sidebar-nav">
         <ul>
-          <li><a href="#">Datos</a></li>
-          <li><a href="#">Cámara</a></li>
-          <li><a href="#">Historial</a></li>
+          <li>
+            <a href="#">Datos</a>
+          </li>
+          <li>
+            <a href="#">Cámara</a>
+          </li>
+          <li>
+            <a href="#">Historial</a>
+          </li>
         </ul>
       </nav>
     </aside>

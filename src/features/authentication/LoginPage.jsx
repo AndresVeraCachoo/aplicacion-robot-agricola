@@ -1,14 +1,13 @@
 // src/features/authentication/LoginPage.jsx
-import React from 'react';
-import './LoginPage.css';
+import React from "react";
+import "./LoginPage.css";
 
 // Recibimos la función onLogin como un "prop" desde App.jsx
 function LoginPage({ onLogin }) {
-
   // Esta función se ejecuta cuando el usuario envía el formulario
   const handleSubmit = (event) => {
     event.preventDefault(); // Evita que la página se recargue
-    console.log('Intento de login...');
+    console.log("Intento de login...");
     onLogin(); // Llamamos a la función que nos pasó App.jsx
   };
 
