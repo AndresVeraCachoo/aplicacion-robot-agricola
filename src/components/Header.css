@@ -1,0 +1,8 @@
+/* src/components/Header.css */
+.header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #a7f3d0; border-bottom: 4px solid #166534; }
+.menu-button { background: none; border: none; font-size: 2em; cursor: pointer; color: #14532d; }
+.battery-status { display: flex; align-items: center; font-weight: bold; color: #14532d; }
+.battery-status span { margin-right: 10px; }
+.battery-icon { width: 50px; height: 22px; border: 2px solid #14532d; border-radius: 5px; position: relative; padding: 2px; }
+.battery-icon::after { content: ''; position: absolute; right: -8px; top: 4px; width: 4px; height: 10px; background-color: #14532d; border-radius: 0 2px 2px 0; }
+.battery-level { height: 100%; background-color: #22c55e; border-radius: 2px; }
