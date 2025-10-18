@@ -1,8 +1,8 @@
 // src/App.jsx
-import React, { useState } from 'react';
-import LoginPage from './features/authentication/LoginPage';
-import Dashboard from './features/dashboard/Dashboard';
-import './App.css';
+import React, { useState } from "react";
+import LoginPage from "./features/authentication/LoginPage";
+import Dashboard from "./features/dashboard/Dashboard";
+import "./App.css";
 
 function App() {
   // El estado `isLoggedIn` controla qué página se muestra.

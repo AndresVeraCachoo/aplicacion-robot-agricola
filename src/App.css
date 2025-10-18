@@ -1,6 +1,6 @@
 /* src/App.css */
 body {
   margin: 0;
-  font-family: sans-serif;
-  background-color: #a7f3d0; /* Color de fondo general */
+  font-family: var(--font-family);
+  background-color: var(--background-color); /* Usamos la variable global */
 }
