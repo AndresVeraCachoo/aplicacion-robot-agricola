@@ -1,0 +1,9 @@
+/* src/pages/HistoryPage.css */
+.history-container {
+  padding: 40px;
+  text-align: center;
+}
+.history-container h2 {
+  font-size: 2em;
+  color: #14532d;
+}

@@ -1,0 +1,66 @@
+/* src/pages/CameraPage.css */
+.camera-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  /* Ocupa el espacio disponible en el layout */
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.camera-feed-placeholder {
+  width: 480px;
+  height: 320px;
+  background-color: #333;
+  border-radius: 15px;
+  border: 4px solid #222;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.camera-lens {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #111;
+  border: 10px solid #282828;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.camera-reflection {
+  width: 30px;
+  height: 30px;
+  background-color: #44aaff;
+  border-radius: 50%;
+  opacity: 0.7;
+  transform: translate(20px, -20px);
+  box-shadow: 0 0 15px #44aaff;
+}
+
+.camera-label {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  color: white;
+  font-weight: bold;
+  font-family: "Arial", sans-serif;
+  font-size: 1.2em;
+}
+
+.camera-rec-dot {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 15px;
+  height: 15px;
+  background-color: #ff3b30;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ff3b30;
+}
