@@ -1,10 +1,9 @@
-// src/components/Dashboard.jsx
+// src/pages/Dashboard.jsx
 import React, { useState } from "react";
-
-import Header from "./components/Header";
-import MapView from "./components/MapView";
-import Sidebar from "./components/Sidebar";
-import "./Dashboard.css";
+import Header from "../features/dashboard/Header";
+import MapView from "../features/dashboard/MapView";
+import Sidebar from "../features/dashboard/Sidebar";
+import "./Dashboard.css"; // La ruta sigue siendo correcta porque el CSS se movió con el JSX
 
 function Dashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);

@@ -1,6 +1,6 @@
 // src/features/authentication/LoginPage.jsx
 import React from "react";
-import "./LoginPage.css";
+import "./LoginPage.css"; // La ruta sigue siendo correcta porque el CSS se movió con el JSX
 
 // Recibimos la función onLogin como un "prop" desde App.jsx
 function LoginPage({ onLogin }) {

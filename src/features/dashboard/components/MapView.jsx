@@ -1,6 +1,6 @@
 // src/components/MapView.jsx
-import React from 'react';
-import './MapView.css';
+import React from "react";
+import "./MapView.css";
 
 function MapView() {
   return (
