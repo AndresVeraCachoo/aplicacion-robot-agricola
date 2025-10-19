@@ -1,31 +1,12 @@
-// src/components/Dashboard.jsx
-import React, { useState } from "react";
-
-import Header from "./components/Header";
+// src/features/dashboard/Dashboard.jsx
+import React from "react";
 import MapView from "./components/MapView";
-import Sidebar from "./components/Sidebar";
-import "./Dashboard.css";
 
+// Esta es la página principal del dashboard,
+// solo debe mostrar el contenido específico (el mapa).
+// El Header y la Sidebar ya están en MainLayout.
 function Dashboard() {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-
-  // Esta función cambia el estado para mostrar u ocultar la Sidebar
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
-
-  return (
-    <div className="dashboard-layout">
-      {/* La barra lateral solo se muestra si isSidebarOpen es true */}
-      {isSidebarOpen && <Sidebar />}
-
-      <div className="main-content-wrapper">
-        {/* Le pasamos la función toggleSidebar al Header */}
-        <Header onMenuClick={toggleSidebar} />
-        <MapView />
-      </div>
-    </div>
-  );
+  return <MapView />;
 }
 
 export default Dashboard;
