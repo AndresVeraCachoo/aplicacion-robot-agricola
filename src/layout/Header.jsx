@@ -1,17 +1,27 @@
-// src/features/dashboard/components/Header.jsx
+// src/layout/Header.jsx
 import React from "react";
 import "./Header.css";
+import { useRobotStore } from "../store/robotStore"; // 1. Importar el store
 
 function Header({ onMenuClick }) {
+  // 2. Conectar al estado global
+  // Seleccionamos solo el dato que este componente necesita.
+  const batteryPercentage = useRobotStore((state) => state.battery.percentage);
+
   return (
     <header className="header">
       <button onClick={onMenuClick} className="menu-button">
-        ☰ {/* 1. Caracter '☰' corregido */}
+        ☰
       </button>
       <div className="battery-status">
-        <span>21%</span>
+        {/* 3. Usar el dato del store */}
+        <span>{batteryPercentage}%</span>
         <div className="battery-icon">
-          <div className="battery-level" style={{ width: "21%" }}></div>
+          {/* 4. La barra de batería también es dinámica ahora */}
+          <div
+            className="battery-level"
+            style={{ width: `${batteryPercentage}%` }}
+          ></div>
         </div>
       </div>
     </header>
