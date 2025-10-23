@@ -1,0 +1,38 @@
+/* src/features/dashboard/components/BatteryModal.css */
+.battery-modal-content {
+  text-align: center;
+}
+
+.battery-status-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.battery-icon-large {
+  font-size: 3em;
+  margin-right: 20px;
+}
+
+.battery-percentage-large {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: var(--primary-dark, #166534);
+}
+
+.battery-details {
+  text-align: left;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.battery-details p {
+  margin: 8px 0;
+  color: #555;
+}
+
+.battery-details strong {
+  color: #333;
+  margin-right: 8px;
+}

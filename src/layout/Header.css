@@ -46,3 +46,11 @@
   background-color: #22c55e;
   border-radius: 2px;
 }
+
+.battery-status.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.battery-status.clickable:hover {
+  opacity: 0.8;
+}
