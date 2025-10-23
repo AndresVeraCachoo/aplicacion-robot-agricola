@@ -1,19 +1,10 @@
 /* src/features/dashboard/components/MapView.css */
 
-/* El MapContainer de Leaflet usará esta clase */
 .map-view-container {
-  /* Ocupa todo el espacio disponible en el layout */
-  flex-grow: 1;
-
-  /* Asegura que tenga una altura (crucial para Leaflet) */
-  min-height: 400px;
+  /* El mapa ahora llena el 100% de su nuevo contenedor (.map-widget-wrapper) */
+  width: 100%;
   height: 100%;
-  width: 80%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+
+  /* Mantenemos una altura mínima por si el contenedor se encoge demasiado */
+  min-height: 400px;
 }
