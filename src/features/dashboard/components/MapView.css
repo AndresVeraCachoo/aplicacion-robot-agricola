@@ -1,10 +1,18 @@
 /* src/features/dashboard/components/MapView.css */
 
 .map-view-container {
-  /* El mapa ahora llena el 100% de su nuevo contenedor (.map-widget-wrapper) */
   width: 100%;
   height: 100%;
-
-  /* Mantenemos una altura mínima por si el contenedor se encoge demasiado */
   min-height: 400px;
+}
+
+/* Estilo para el DivIcon */
+.robot-marker-icon {
+  background: none; /* Sin fondo por defecto */
+  border: none; /* Sin borde por defecto */
+}
+
+/* Opcional: Centrar la imagen dentro del div si es necesario */
+.robot-marker-icon img {
+  display: block;
 }

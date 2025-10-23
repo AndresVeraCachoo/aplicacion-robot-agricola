@@ -16,6 +16,7 @@ export const mockRobotData = {
   system: {
     status: "OPERATING", // "IDLE", "ERROR", "CHARGING"
     speed: 1.2, // m/s
+    heading: 90, // Dirección en grados (0-360)
   },
 
   // Para el Mapa en tiempo real
