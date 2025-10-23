@@ -5,22 +5,22 @@
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: #a7f3d0;
+  background-color: var(--background-app);
 }
 .login-box {
-  background-color: #f0fdf4;
+  background-color: var(--background-widget);
   padding: 40px;
   border-radius: 20px;
-  border: 4px solid #166534;
+  border: 4px solid var(--primary-dark);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   width: 300px;
   text-align: center;
 }
 .login-box h2 {
   margin-bottom: 20px;
-  color: #14532d;
+  color: var(--primary-darkest);
   font-size: 2em;
-  border-bottom: 4px solid #166534;
+  border-bottom: 4px solid var(--primary-dark);
   padding-bottom: 10px;
   border-radius: 10px;
   display: inline-block;
@@ -32,22 +32,34 @@
   width: 100%;
   padding: 12px;
   border-radius: 10px;
-  border: 2px solid #86efac;
+  border: 2px solid var(--border-light);
   box-sizing: border-box;
+  font-size: 1em;
+  font-family: var(--font-family);
 }
+
+/* --- ESTILOS DE BOTÓN RESTAURADOS --- */
 .login-box button {
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 10px;
-  background-color: #22c55e;
+  border-radius: 8px; /* O el borde que prefieras */
+  background-color: var(--accent-green); /* Usar variable */
   color: white;
   font-size: 1.1em;
+  font-family: var(--font-family);
   cursor: pointer;
   transition: background-color 0.3s;
-  border-bottom: 4px solid #15803d;
+  border-bottom: 4px solid var(--accent-green-dark); /* Borde inferior simulado */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .login-box button:hover {
-  background-color: #16a34a;
+  background-color: var(--accent-green-hover); /* Usar variable */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.login-box button:active {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
 }

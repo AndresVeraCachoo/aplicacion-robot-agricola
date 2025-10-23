@@ -16,21 +16,23 @@ export const mockRobotData = {
   system: {
     status: "OPERATING", // "IDLE", "ERROR", "CHARGING"
     speed: 1.2, // m/s
+    heading: 75, // Dirección en grados (0-360)
   },
 
   // Para el Mapa en tiempo real
   position: {
-    lat: 42.34399,
-    lon: -3.70325,
+    lat: 42.363959,
+    lon: -3.699930,
   },
 
   // Para el Historial de Ruta
   pathHistory: [
-    { lat: 42.343, lon: -3.703 },
-    { lat: 42.34315, lon: -3.7031 },
-    { lat: 42.3433, lon: -3.70315 },
-    { lat: 42.3435, lon: -3.7032 },
-    { lat: 42.34399, lon: -3.70325 },
+    { lat: 42.342845, lon: -3.707339 },
+    { lat: 42.341005, lon: -3.701786 },
+    { lat: 42.340779, lon: -3.704174 },
+    { lat: 42.339170, lon: -3.697168 },
+    { lat: 42.351270, lon: -3.688858 },
+    { lat: 42.363959, lon: -3.699930 },
   ],
 
   // Para la página de la Cámara

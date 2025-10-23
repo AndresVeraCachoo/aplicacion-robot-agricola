@@ -1,18 +1,42 @@
 /* src/index.css */
 
-/*
-  Este archivo contiene estilos y variables globales para toda la aplicación.
-  Ayuda a mantener un diseño coherente.
-*/
-
 :root {
-  /* Paleta de Colores */
-  --primary-color: #10b981; /* Verde esmeralda */
-  --primary-color-dark: #059669;
-  --background-color: #2fad55; /* Un verde muy claro para el fondo */
-  --surface-color: #ffffff; /* Blanco para tarjetas, modales, etc. */
-  --text-color: #1f2937;
+  /* Paleta de Colores en Uso */
+  --primary-dark: #166534; /* Usado en bordes y Sidebar */
+  --primary-darkest: #14532d; /* Usado en bordes y texto oscuro */
+  --background-color: #2fad55; /* Fondo general del body */
+  --accent-green: #22c55e; /* Botones, nivel de batería */
+  --accent-green-hover: #16a34a; /* Hover del botón */
+  --accent-green-dark: #15803d; /* Borde inferior botón, hover Sidebar */
+  --text-light-accent: #dcfce7; /* Texto en Sidebar */
+  --border-light: #86efac; /* Borde de inputs */
+  --background-widget: #f0fdf4; /* Fondo de la caja de login */
+  --background-app: #a7f3d0; /* Fondo header y login container */
 
   /* Tipografía */
   --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background-color); /* Usamos la variable global */
+}
+
+/* --- Estilos Personalizados para Leaflet --- */
+
+/* Selecciona los botones de zoom in y zoom out */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  font-size: 1.2em !important;
+}
+
+/* Opcional: Ajusta el contenedor de los botones si es necesario */
+.leaflet-control-zoom {
+  border: none !important;
+  background-color: transparent !important;
 }
