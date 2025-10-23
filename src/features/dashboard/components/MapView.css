@@ -6,13 +6,69 @@
   min-height: 400px;
 }
 
-/* Estilo para el DivIcon */
 .robot-marker-icon {
-  background: none; /* Sin fondo por defecto */
-  border: none; /* Sin borde por defecto */
+  background: none;
+  border: none;
 }
 
-/* Opcional: Centrar la imagen dentro del div si es necesario */
 .robot-marker-icon img {
   display: block;
+}
+
+/* Estilo para el botón de centrado */
+.center-map-button {
+  /* Forzar posicionamiento absoluto sobre el mapa */
+  position: absolute !important;
+  bottom: 20px !important; /* Distancia desde abajo (ajusta si es necesario) */
+  right: 10px !important; /* Distancia desde la derecha */
+  z-index: 1000 !important; /* Asegura que esté por encima */
+
+  /* Estilos visuales (iguales que antes) */
+  background-color: white;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+
+  /* Centrar el icono SVG */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+
+  /* Quitar márgenes/posicionamiento por defecto de Leaflet */
+  margin: 0 !important;
+  top: auto !important; /* Anula el 'top' por defecto */
+  left: auto !important; /* Anula el 'left' por defecto */
+}
+
+.center-map-button:hover {
+  background-color: #f4f4f4;
+  cursor: pointer;
+}
+
+/* Quitar el margen superior por defecto del control de zoom para evitar solapamientos */
+.leaflet-control-zoom {
+  margin-top: 0 !important;
+}
+
+/* Estilo para mostrar las coordenadas clicadas */
+.clicked-coords-display {
+  position: absolute !important;
+  bottom: 10px !important; /* Ajusta la posición para que no se solape con el botón de centrar */
+  left: 10px !important; /* En la esquina inferior izquierda */
+  z-index: 1000 !important;
+
+  background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #333;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+
+  margin: 0 !important; /* Anula márgenes por defecto de leaflet-control */
+  top: auto !important;
+  right: auto !important;
 }

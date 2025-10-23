@@ -10,8 +10,7 @@ export const useRobotStore = create((set) => ({
   ...mockRobotData,
   
   // 2. Acciones: Funciones que pueden modificar el estado
-  // (Por ahora son falsas, en el futuro enviarán comandos WebSocket)
-  
+  // (Por ahora son falsas, en el futuro enviarán comandos WebSocket) 
   setSpeed: (newSpeed) => set((state) => ({
     system: { ...state.system, speed: newSpeed }
   })),
