@@ -17,7 +17,7 @@
   text-align: center;
 }
 .login-box h2 {
-  margin-bottom: 20px;
+  margin-bottom: 30px; /* Aumentamos el margen inferior */
   color: var(--primary-darkest);
   font-size: 2em;
   border-bottom: 4px solid var(--primary-dark);
@@ -25,41 +25,59 @@
   border-radius: 10px;
   display: inline-block;
 }
-.input-group {
-  margin-bottom: 20px;
-}
-.input-group input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: 2px solid var(--border-light);
-  box-sizing: border-box;
-  font-size: 1em;
-  font-family: var(--font-family);
+
+/* Contenedor de los botones de rol */
+.role-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Espacio entre los botones */
 }
 
-/* --- ESTILOS DE BOTÓN RESTAURADOS --- */
-.login-box button {
+/* Estilo base para todos los botones de rol */
+.role-button {
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 8px; /* O el borde que prefieras */
-  background-color: var(--accent-green); /* Usar variable */
+  border-radius: 8px;
   color: white;
   font-size: 1.1em;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
   border-bottom: 4px solid var(--accent-green-dark); /* Borde inferior simulado */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.login-box button:hover {
-  background-color: var(--accent-green-hover); /* Usar variable */
+.role-button:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
-.login-box button:active {
+.role-button:active {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transform: translateY(1px);
+}
+
+/* Colores específicos para cada rol */
+.role-button.admin {
+  background-color: var(--primary-dark);
+  border-bottom-color: var(--primary-darkest);
+}
+.role-button.admin:hover {
+  background-color: #15803d; /* Un poco más claro que el borde */
+}
+
+.role-button.operator {
+  background-color: var(--accent-green);
+  border-bottom-color: var(--accent-green-dark);
+}
+.role-button.operator:hover {
+  background-color: var(--accent-green-hover);
+}
+
+.role-button.user {
+  background-color: #0d9488; /* Un color 'teal' para diferenciar */
+  border-bottom-color: #0f766e;
+}
+.role-button.user:hover {
+  background-color: #0f766e;
 }

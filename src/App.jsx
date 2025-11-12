@@ -8,6 +8,8 @@ import MainLayout from "./layout/MainLayout";
 import CameraPage from "./pages/CameraPage";
 import DataPage from "./pages/DataPage";
 import HistoryPage from "./pages/HistoryPage";
+// --- 1. IMPORTAMOS LA NUEVA PÁGINA ---
+import UserManagementPage from "./pages/UserManagementPage";
 import "./App.css";
 
 // Componente para proteger rutas privadas
@@ -36,6 +38,8 @@ function App() {
         <Route path="camera" element={<CameraPage />} />
         <Route path="data" element={<DataPage />} />
         <Route path="history" element={<HistoryPage />} />
+        {/* --- 2. AÑADIMOS LA RUTA PARA ADMIN --- */}
+        <Route path="users" element={<UserManagementPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/app" replace />} />
     </Routes>
