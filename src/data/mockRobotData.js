@@ -36,6 +36,7 @@ export const mockRobotData = {
   ],
 
   // Para la página de la Cámara
+  
   camera: {
     frontStreamUrl: "https://url-falsa-del-stream-frontal.mjpg",
     rearStreamUrl: "https://url-falsa-del-stream-trasero.mjpg",

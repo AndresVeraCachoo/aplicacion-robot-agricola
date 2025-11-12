@@ -6,24 +6,31 @@ import { useAuth } from "../../hooks/useAuth"; // <-- Importa el hook
 function LoginPage() {
   const { login } = useAuth(); // <-- Aquí se usa useAuth()
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    login(); // Llama a la función del contexto
-  };
+  // No necesitamos handleSubmit ni el formulario
+  // Los botones llamarán a login() directamente
 
   return (
     <div className="login-container">
       <div className="login-box">
-        <h2>Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <input type="text" placeholder="Usuario" required />
-          </div>
-          <div className="input-group">
-            <input type="password" placeholder="Contraseña" required />
-          </div>
-          <button type="submit">Entrar</button>
-        </form>
+        <h2>Bienvenido</h2>
+
+        {/* Contenedor para los botones de rol */}
+        <div className="role-button-container">
+          <button className="role-button admin" onClick={() => login("admin")}>
+            Entrar como Administrador
+          </button>
+
+          <button
+            className="role-button operator"
+            onClick={() => login("operador")}
+          >
+            Entrar como Operador
+          </button>
+
+          <button className="role-button user" onClick={() => login("usuario")}>
+            Entrar como Usuario
+          </button>
+        </div>
       </div>
     </div>
   );
