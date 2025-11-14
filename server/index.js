@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import pg from "pg"; // Importa el paquete 'pg'
+import 'dotenv/config'; // Importa y configura dotenv
 
 const { Pool } = pg; // Extrae 'Pool' de la importación
 
@@ -15,7 +16,8 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "robot_dashboard_db",
-  password: "hsavcYt1hY2p", 
+  // eslint-disable-next-line no-undef
+  password: process.env.DB_PASSWORD, 
   port: 5432,
 });
 
