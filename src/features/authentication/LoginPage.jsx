@@ -1,36 +1,66 @@
 // src/features/authentication/LoginPage.jsx
-import React from "react";
+import React, { useState } from "react";
 import "./LoginPage.css";
-import { useAuth } from "../../hooks/useAuth"; // <-- Importa el hook
+import { useAuth } from "../../hooks/useAuth";
 
 function LoginPage() {
-  const { login } = useAuth(); // <-- Aquí se usa useAuth()
+  const { login } = useAuth();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  // No necesitamos handleSubmit ni el formulario
-  // Los botones llamarán a login() directamente
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(""); // Limpia errores previos
+
+    if (!name || !password) {
+      setError("Por favor, introduce nombre y contraseña");
+      return;
+    }
+
+    const result = await login(name, password); // Llama al nuevo 'login'
+
+    if (!result.success) {
+      setError(result.message || "Credenciales inválidas");
+    }
+    // Si tiene éxito, AuthContext redirige automáticamente
+  };
 
   return (
     <div className="login-container">
       <div className="login-box">
         <h2>Bienvenido</h2>
 
-        {/* Contenedor para los botones de rol */}
-        <div className="role-button-container">
-          <button className="role-button admin" onClick={() => login("admin")}>
-            Entrar como Administrador
-          </button>
+        {/* Formulario de Login */}
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="name">Nombre de Usuario</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="username"
+            />
+          </div>
 
-          <button
-            className="role-button operator"
-            onClick={() => login("operador")}
-          >
-            Entrar como Operador
-          </button>
+          <div className="form-group">
+            <label htmlFor="password">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </div>
 
-          <button className="role-button user" onClick={() => login("usuario")}>
-            Entrar como Usuario
+          {error && <p className="login-error">{error}</p>}
+
+          <button type="submit" className="login-submit-button">
+            Entrar
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

@@ -81,3 +81,60 @@
 .role-button.user:hover {
   background-color: #0f766e;
 }
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.form-group {
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--primary-darkest);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box; /* Importante */
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 1em;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-dark);
+  outline: none;
+}
+
+.login-submit-button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.1em;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-bottom: 4px solid var(--accent-green-dark);
+  background-color: var(--accent-green);
+  margin-top: 10px;
+}
+
+.login-submit-button:hover {
+  background-color: var(--accent-green-hover);
+}
+
+.login-error {
+  color: #d90429; /* Un rojo para errores */
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+}
