@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import pg from "pg"; // Importa el paquete 'pg'
+import 'dotenv/config'; // Importa y configura dotenv
 
 const { Pool } = pg; // Extrae 'Pool' de la importación
 
@@ -15,8 +16,80 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "robot_dashboard_db",
-  password: "hsavcYt1hY2p", 
+  // eslint-disable-next-line no-undef
+  password: process.env.DB_PASSWORD, 
   port: 5432,
+});
+
+// --- RUTAS CRUD DE USUARIOS ---
+
+// 1. OBTENER TODOS los usuarios (R: Read)
+// (No enviamos la contraseña, solo id, name y role)
+app.get("/api/users", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, role FROM usuarios ORDER BY name ASC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+// 2. CREAR un nuevo usuario (C: Create)
+app.post("/api/users", async (req, res) => {
+  const { name, password, role } = req.body;
+  // TODO: Hashear la contraseña aquí (ej. con bcrypt)
+  try {
+    const result = await pool.query(
+      "INSERT INTO usuarios (name, password, role) VALUES ($1, $2, $3) RETURNING id, name, role",
+      [name, password, role]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error al crear usuario" });
+  }
+});
+
+// 3. ACTUALIZAR un usuario (U: Update)
+app.put("/api/users/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, role, password } = req.body;
+
+  try {
+    // Lógica para actualizar contraseña SOLO si se proporciona una nueva
+    if (password) {
+      // TODO: Hashear la nueva contraseña
+      await pool.query(
+        "UPDATE usuarios SET name = $1, role = $2, password = $3 WHERE id = $4",
+        [name, role, password, id]
+      );
+    } else {
+      // Actualizar solo nombre y rol
+      await pool.query(
+        "UPDATE usuarios SET name = $1, role = $2 WHERE id = $3",
+        [name, role, id]
+      );
+    }
+    res.json({ message: "Usuario actualizado" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error al actualizar usuario" });
+  }
+});
+
+// 4. BORRAR un usuario (D: Delete)
+app.delete("/api/users/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
+    res.json({ message: "Usuario eliminado" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error al eliminar usuario" });
+  }
 });
 
 // --- RUTAS DE LA API ---

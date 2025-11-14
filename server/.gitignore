@@ -1,0 +1,7 @@
+# server/.gitignore
+
+# Ignorar todas las dependencias de node
+node_modules
+
+# Ignorar el archivo de variables de entorno (¡MUY IMPORTANTE!)
+.env
