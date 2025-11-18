@@ -1,10 +1,12 @@
-// server/index.js (Versión con Módulos ES)
+/* eslint-env node */
+// server/index.js (Versión completa y segura)
 import express from "express";
 import cors from "cors";
-import pg from "pg"; // Importa el paquete 'pg'
-import 'dotenv/config'; // Importa y configura dotenv
+import pg from "pg"; 
+import "dotenv/config"; 
+import bcrypt from "bcrypt"; 
 
-const { Pool } = pg; // Extrae 'Pool' de la importación
+const { Pool } = pg; 
 
 const app = express();
 const PORT = 3001;
@@ -12,6 +14,7 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Configuración de la base de datos
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
@@ -21,10 +24,9 @@ const pool = new Pool({
   port: 5432,
 });
 
-// --- RUTAS CRUD DE USUARIOS ---
+// --- RUTAS CRUD DE USUARIOS (Seguras con hash) ---
 
-// 1. OBTENER TODOS los usuarios (R: Read)
-// (No enviamos la contraseña, solo id, name y role)
+// 1. OBTENER TODOS los usuarios
 app.get("/api/users", async (req, res) => {
   try {
     const result = await pool.query(
@@ -37,14 +39,14 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-// 2. CREAR un nuevo usuario (C: Create)
+// 2. CREAR un nuevo usuario
 app.post("/api/users", async (req, res) => {
   const { name, password, role } = req.body;
-  // TODO: Hashear la contraseña aquí (ej. con bcrypt)
   try {
+    const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       "INSERT INTO usuarios (name, password, role) VALUES ($1, $2, $3) RETURNING id, name, role",
-      [name, password, role]
+      [name, hashedPassword, role]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -53,21 +55,19 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
-// 3. ACTUALIZAR un usuario (U: Update)
+// 3. ACTUALIZAR un usuario
 app.put("/api/users/:id", async (req, res) => {
   const { id } = req.params;
   const { name, role, password } = req.body;
 
   try {
-    // Lógica para actualizar contraseña SOLO si se proporciona una nueva
     if (password) {
-      // TODO: Hashear la nueva contraseña
+      const hashedPassword = await bcrypt.hash(password, 10);
       await pool.query(
         "UPDATE usuarios SET name = $1, role = $2, password = $3 WHERE id = $4",
-        [name, role, password, id]
+        [name, role, hashedPassword, id]
       );
     } else {
-      // Actualizar solo nombre y rol
       await pool.query(
         "UPDATE usuarios SET name = $1, role = $2 WHERE id = $3",
         [name, role, id]
@@ -80,7 +80,7 @@ app.put("/api/users/:id", async (req, res) => {
   }
 });
 
-// 4. BORRAR un usuario (D: Delete)
+// 4. BORRAR un usuario
 app.delete("/api/users/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -92,8 +92,9 @@ app.delete("/api/users/:id", async (req, res) => {
   }
 });
 
-// --- RUTAS DE LA API ---
+// --- RUTAS DE AUTENTICACIÓN Y ROBOT ---
 
+// 5. LOGIN SEGURO (Actualizado)
 app.post("/api/login", async (req, res) => {
   const { name, password } = req.body;
   if (!name || !password) {
@@ -102,22 +103,32 @@ app.post("/api/login", async (req, res) => {
       .json({ error: "Nombre de usuario y contraseña requeridos" });
   }
   try {
-    const result = await pool.query(
-      "SELECT * FROM usuarios WHERE name = $1 AND password = $2",
-      [name, password]
-    );
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      res.json({ id: user.id, name: user.name, role: user.role });
-    } else {
-      res.status(401).json({ error: "Credenciales inválidas" });
+    // PASO 1: Buscar por nombre
+    const result = await pool.query("SELECT * FROM usuarios WHERE name = $1", [name]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
     }
+
+    const user = result.rows[0];
+
+    // PASO 2: Verificar contraseña hash
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    // Login correcto
+    res.json({ id: user.id, name: user.name, role: user.role });
+
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Error en el servidor" });
   }
 });
 
+// 6. ESTADO DEL ROBOT
 app.get("/api/robot/estado", async (req, res) => {
   try {
     const result = await pool.query(
@@ -134,6 +145,7 @@ app.get("/api/robot/estado", async (req, res) => {
   }
 });
 
+// 7. DATOS/HISTORIAL DEL ROBOT
 app.get("/api/robot/datos", async (req, res) => {
   try {
     const result = await pool.query(
