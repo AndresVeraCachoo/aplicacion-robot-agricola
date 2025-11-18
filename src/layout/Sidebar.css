@@ -1,17 +1,24 @@
-/* src/components/Sidebar.css */
+/* src/layout/Sidebar.css */
 .sidebar {
   width: 250px;
   background-color: #166534;
   color: #dcfce7;
   height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Organiza elementos en columna */
   border-right: 4px solid #14532d;
 }
+
 .sidebar-header {
   padding: 20px;
   text-align: center;
   border-bottom: 2px solid #14532d;
+}
+
+/* Hacemos que la navegación crezca para ocupar el espacio vacío */
+.sidebar-nav {
+  flex-grow: 1;
+  overflow-y: auto; /* Permite scroll si hay muchos items */
 }
 
 .sidebar-nav ul {
@@ -19,6 +26,7 @@
   padding: 0;
   margin: 20px 0;
 }
+
 .sidebar-nav li a {
   display: block;
   padding: 15px 20px;
@@ -27,6 +35,35 @@
   font-size: 1.2em;
   transition: background-color 0.2s;
 }
+
 .sidebar-nav li a:hover {
   background-color: #15803d;
+}
+
+/* Estilos para el Footer y el Botón de Logout */
+.sidebar-footer {
+  padding: 20px;
+  border-top: 2px solid #14532d;
+  background-color: #14532d; /* Un tono más oscuro para el footer */
+}
+
+.logout-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #d90429; /* Rojo para indicar acción de salida */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.logout-button:hover {
+  background-color: #ef233c;
+}
+
+.logout-button:active {
+  transform: scale(0.98);
 }
