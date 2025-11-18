@@ -1,40 +1,61 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // 1. Importa axios
+import axios from "axios";
 
 export const AuthContext = createContext(null);
-const API_URL = "http://localhost:3001/api"; // URL de tu backend
+const API_URL = "http://localhost:3001/api";
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
+  // 1. INICIALIZACIÓN SINCRÓNICA (La clave del arreglo)
+  // Leemos el localStorage INMEDIATAMENTE, antes de que se renderice nada.
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [userRole, setUserRole] = useState(() =>
+    localStorage.getItem("userRole")
+  );
+
+  // Si hay token al arrancar, empezamos logueados desde el milisegundo 0
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("token")
+  );
+
   const navigate = useNavigate();
 
-  // 2. 'login' ahora es asíncrono y acepta 'name' y 'password'
+  // 2. Efecto para configurar Axios (se ejecuta al cambiar el token)
+  useEffect(() => {
+    if (token) {
+      // Si tenemos token, se lo pegamos a axios para todas las peticiones
+      axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+
+      // Nos aseguramos de que el estado esté sincronizado
+      localStorage.setItem("token", token);
+      if (userRole) localStorage.setItem("userRole", userRole);
+      setIsLoggedIn(true);
+    } else {
+      // Si no hay token, limpiamos cabeceras y storage
+      delete axios.defaults.headers.common["Authorization"];
+      localStorage.removeItem("token");
+      localStorage.removeItem("userRole");
+      setIsLoggedIn(false);
+    }
+  }, [token, userRole]);
+
   const login = async (name, password) => {
     try {
-      // 3. Llama a tu API
-      const response = await axios.post(`${API_URL}/login`, {
-        name,
-        password,
-      });
+      const response = await axios.post(`${API_URL}/login`, { name, password });
 
-      // 4. Si la API responde bien, guarda el rol de la DB
-      if (response.data && response.data.role) {
-        setIsLoggedIn(true);
-        setUserRole(response.data.role); // Guarda el rol
+      if (response.data.token) {
+        const { token: newToken, user } = response.data;
+
+        // Actualizamos estados (el useEffect se encargará del resto)
+        setToken(newToken);
+        setUserRole(user.role);
+
         navigate("/app");
         return { success: true };
       }
     } catch (error) {
-      console.error(
-        "Error de login:",
-        error.response?.data?.error || error.message
-      );
-      setIsLoggedIn(false);
-      setUserRole(null);
-      // Devuelve el error para mostrarlo en el formulario
+      console.error("Error de login:", error);
       return {
         success: false,
         message: error.response?.data?.error || "Error al conectar",
@@ -43,8 +64,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    setIsLoggedIn(false);
+    setToken(null);
     setUserRole(null);
+    setIsLoggedIn(false);
     navigate("/login");
   };
 
