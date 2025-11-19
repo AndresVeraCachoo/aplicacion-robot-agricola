@@ -1,22 +1,20 @@
-/* src/components/Dashboard.css */
+/* src/features/dashboard/Dashboard.css */
 .dashboard-layout {
   display: flex;
-  height: 100vh;
+  /* SOLUCIÓN: min-height para permitir crecimiento */
+  min-height: 100vh;
 }
 .main-content-wrapper {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Ocupa el espacio restante */
+  flex-grow: 1;
 }
-
-/* ... (tu código existente para .dashboard-layout y .main-content-wrapper) ... */
-
-/* --- NUEVOS ESTILOS --- */
 
 /* 1. Estilo para asegurar que <main> ocupe el espacio restante */
 .main-content-wrapper > main {
-  flex-grow: 1; /* Hace que 'main' ocupe el espacio bajo el Header */
-  display: flex; /* Permite que el hijo (.dashboard-page-container) use height: 100% */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 2. Estilos para el contenedor de la página del dashboard */
@@ -24,9 +22,9 @@
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* Centra la tarjeta horizontalmente */
-  align-items: center; /* Centra la tarjeta verticalmente */
-  padding: 24px; /* "Aire" alrededor de la tarjeta */
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
   box-sizing: border-box;
 }
 
@@ -34,15 +32,11 @@
 .map-widget-wrapper {
   width: 100%;
   height: 100%;
-
-  /* Define el tamaño máximo de tu "tarjeta" */
-  max-width: 1200px; /* Ajusta este valor a tu gusto */
-  max-height: 700px; /* Ajusta este valor a tu gusto */
-
-  /* Estilos de tarjeta */
-  border-radius: 16px; /* Bordes redondeados */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  overflow: hidden; /* MUY IMPORTANTE: recorta el mapa a los bordes redondeados */
-
-  display: flex; /* Para que el MapView hijo se expanda */
+  max-width: 1200px;
+  max-height: 700px;
+  min-height: 500px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
 }
