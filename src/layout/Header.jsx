@@ -2,33 +2,57 @@
 import React, { useState } from "react";
 import "./Header.css";
 import { useRobotStore } from "../store/robotStore";
-// --- RUTA DE IMPORTACIÓN ACTUALIZADA ---
 import Modal from "../components/Modal";
 import BatteryModal from "../features/dashboard/components/BatteryModal";
 
 function Header({ onMenuClick }) {
-  const batteryPercentage = useRobotStore((state) => state.battery.percentage);
+  // Extraemos el objeto completo para acceder a percentage y status
+  const battery = useRobotStore((state) => state.battery);
+  const { percentage, status } = battery;
+
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
   const closeBatteryModal = () => setIsBatteryModalOpen(false);
 
+  // Determinar la clase CSS basada en el estado y porcentaje
+  const getBatteryClass = () => {
+    if (status === "CHARGING") return "charging";
+    if (percentage <= 20) return "critical";
+    if (percentage <= 50) return "low";
+    return "good";
+  };
+
+  const batteryClass = getBatteryClass();
+
   return (
     <>
       <header className="header">
-        <button onClick={onMenuClick} className="menu-button">
+        <button
+          onClick={onMenuClick}
+          className="menu-button"
+          aria-label="Abrir menú"
+        >
           ☰
         </button>
+
         <div
-          className="battery-status clickable"
+          className={`battery-widget clickable ${batteryClass}`}
           onClick={openBatteryModal}
-          title="Ver detalles de la batería"
+          title={`Batería: ${percentage}% - ${
+            status === "CHARGING" ? "Cargando" : "En uso"
+          }`}
         >
-          <span>{batteryPercentage}%</span>
+          <span className="battery-text">
+            {/* Icono de rayo si está cargando */}
+            {status === "CHARGING" && <span className="charging-bolt">⚡</span>}
+            {percentage}%
+          </span>
+
           <div className="battery-icon">
             <div
-              className="battery-level"
-              style={{ width: `${batteryPercentage}%` }}
+              className="battery-fill"
+              style={{ width: `${percentage}%` }}
             ></div>
           </div>
         </div>
@@ -37,7 +61,7 @@ function Header({ onMenuClick }) {
       <Modal
         isOpen={isBatteryModalOpen}
         onClose={closeBatteryModal}
-        title="Estado de la Batería"
+        title="Detalle de Energía"
       >
         <BatteryModal />
       </Modal>
