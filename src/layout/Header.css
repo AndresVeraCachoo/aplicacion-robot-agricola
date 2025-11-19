@@ -7,6 +7,10 @@
   background-color: #a7f3d0;
   border-bottom: 4px solid #166534;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Para que siempre esté visible arriba si hay scroll */
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .menu-button {
@@ -15,7 +19,7 @@
   font-size: 2em;
   cursor: pointer;
   color: #14532d;
-  padding: 0;
+  padding: 5px; /* Aumentar área de toque */
   line-height: 1;
   transition: transform 0.2s;
 }
@@ -32,6 +36,7 @@
   background-color: transparent;
   transition: all 0.3s ease;
   border: 1px solid transparent;
+  user-select: none; /* Evita selección de texto al tocar rápido */
 }
 
 .battery-widget.clickable {
@@ -59,7 +64,7 @@
   animation: pulse-bolt 1.5s infinite ease-in-out;
 }
 
-/* Icono de la Pila (Contenedor) */
+/* Icono de la Pila */
 .battery-icon {
   width: 42px;
   height: 20px;
@@ -68,9 +73,9 @@
   position: relative;
   padding: 2px;
   background-color: transparent;
+  flex-shrink: 0; /* Evita que se aplaste en pantallas pequeñas */
 }
 
-/* El "polo" positivo de la pila */
 .battery-icon::after {
   content: "";
   position: absolute;
@@ -83,7 +88,6 @@
   border-radius: 0 2px 2px 0;
 }
 
-/* Barra de relleno */
 .battery-fill {
   height: 100%;
   border-radius: 1px;
@@ -91,32 +95,26 @@
   background-color: currentColor;
 }
 
-/* --- PALETAS DE COLORES POR ESTADO --- */
-
-/* 1. Good (> 50%) - Verde */
+/* --- PALETAS DE COLORES --- */
 .battery-widget.good {
   background-color: transparent;
   color: #15803d;
   border-color: #15803d;
 }
 
-/* 2. Low (< 50%) - Amarillo Oscuro */
 .battery-widget.low {
   background-color: transparent;
   color: #a16207;
   border-color: #a16207;
 }
 
-/* 3. Critical (< 10%) - Rojo con PARPADEO REAL */
 .battery-widget.critical {
   background-color: transparent;
-  color: #d90429; /* Rojo más intenso para alerta */
+  color: #d90429;
   border-color: #d90429;
-  /* Animación de parpadeo fuerte */
   animation: critical-blink 1s infinite;
 }
 
-/* 4. Charging (Cargando) - Azul */
 .battery-widget.charging {
   background-color: transparent;
   color: #1d4ed8;
@@ -124,7 +122,6 @@
 }
 
 /* --- ANIMACIONES --- */
-
 @keyframes pulse-bolt {
   0% {
     transform: scale(1);
@@ -140,7 +137,6 @@
   }
 }
 
-/* Nueva animación de parpadeo por opacidad (infalible) */
 @keyframes critical-blink {
   0%,
   100% {
@@ -148,5 +144,19 @@
   }
   50% {
     opacity: 0.3;
+  }
+}
+
+/* Ajuste para móviles muy pequeños */
+@media (max-width: 400px) {
+  .header {
+    padding: 10px;
+  }
+  .battery-text {
+    font-size: 1em;
+    margin-right: 6px;
+  }
+  .menu-button {
+    font-size: 1.8em;
   }
 }
