@@ -1,4 +1,4 @@
-/* src/components/Header.css */
+/* src/layout/Header.css */
 .header {
   display: flex;
   justify-content: space-between;
@@ -6,51 +6,147 @@
   padding: 10px 20px;
   background-color: #a7f3d0;
   border-bottom: 4px solid #166534;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
 .menu-button {
   background: none;
   border: none;
   font-size: 2em;
   cursor: pointer;
   color: #14532d;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.2s;
 }
-.battery-status {
+.menu-button:hover {
+  transform: scale(1.1);
+}
+
+/* WIDGET DE BATERÍA */
+.battery-widget {
   display: flex;
   align-items: center;
-  font-weight: bold;
-  color: #14532d;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: transparent;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
 }
-.battery-status span {
+
+.battery-widget.clickable {
+  cursor: pointer;
+}
+
+.battery-widget:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  box-shadow: none;
+}
+
+/* Texto y Rayo */
+.battery-text {
   margin-right: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 1.1em;
+  color: inherit;
 }
+
+.charging-bolt {
+  animation: pulse-bolt 1.5s infinite ease-in-out;
+}
+
+/* Icono de la Pila (Contenedor) */
 .battery-icon {
-  width: 50px;
-  height: 22px;
-  border: 2px solid #14532d;
-  border-radius: 5px;
+  width: 42px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
   position: relative;
   padding: 2px;
+  background-color: transparent;
 }
+
+/* El "polo" positivo de la pila */
 .battery-icon::after {
   content: "";
   position: absolute;
-  right: -8px;
-  top: 4px;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 4px;
   height: 10px;
-  background-color: #14532d;
+  background-color: currentColor;
   border-radius: 0 2px 2px 0;
 }
-.battery-level {
+
+/* Barra de relleno */
+.battery-fill {
   height: 100%;
-  background-color: #22c55e;
-  border-radius: 2px;
+  border-radius: 1px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: currentColor;
 }
 
-.battery-status.clickable {
-  cursor: pointer;
-  transition: opacity 0.2s;
+/* --- PALETAS DE COLORES POR ESTADO --- */
+
+/* 1. Good (> 50%) - Verde */
+.battery-widget.good {
+  background-color: transparent;
+  color: #15803d;
+  border-color: #15803d;
 }
-.battery-status.clickable:hover {
-  opacity: 0.8;
+
+/* 2. Low (< 50%) - Amarillo Oscuro */
+.battery-widget.low {
+  background-color: transparent;
+  color: #a16207;
+  border-color: #a16207;
+}
+
+/* 3. Critical (< 10%) - Rojo con PARPADEO REAL */
+.battery-widget.critical {
+  background-color: transparent;
+  color: #d90429; /* Rojo más intenso para alerta */
+  border-color: #d90429;
+  /* Animación de parpadeo fuerte */
+  animation: critical-blink 1s infinite;
+}
+
+/* 4. Charging (Cargando) - Azul */
+.battery-widget.charging {
+  background-color: transparent;
+  color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* --- ANIMACIONES --- */
+
+@keyframes pulse-bolt {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Nueva animación de parpadeo por opacidad (infalible) */
+@keyframes critical-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
