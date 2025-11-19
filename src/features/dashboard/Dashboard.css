@@ -1,23 +1,50 @@
 /* src/features/dashboard/Dashboard.css */
 .dashboard-layout {
   display: flex;
-  /* SOLUCIÓN: min-height para permitir crecimiento */
   min-height: 100vh;
+  position: relative; /* Necesario para el posicionamiento absoluto del overlay */
+  overflow-x: hidden; /* Evita scroll horizontal no deseado */
 }
+
 .main-content-wrapper {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  width: 100%; /* Asegura que ocupe el ancho disponible */
+  transition: margin-left 0.3s ease;
 }
 
-/* 1. Estilo para asegurar que <main> ocupe el espacio restante */
 .main-content-wrapper > main {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-/* 2. Estilos para el contenedor de la página del dashboard */
+/* Overlay oscuro para móvil cuando el menú está abierto */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1900; /* Justo debajo del Sidebar (z-index 2000) */
+}
+
+/* --- Responsive Mobile --- */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block; /* Se muestra solo en móvil */
+  }
+
+  .dashboard-page-container {
+    padding: 15px; /* Menos padding en móvil */
+  }
+}
+
+/* Estilos del Mapa (Widget) */
 .dashboard-page-container {
   width: 100%;
   height: 100%;
@@ -28,7 +55,6 @@
   box-sizing: border-box;
 }
 
-/* 3. Estilos para la "tarjeta" del mapa */
 .map-widget-wrapper {
   width: 100%;
   height: 100%;
@@ -39,4 +65,11 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   display: flex;
+}
+
+@media (max-width: 768px) {
+  .map-widget-wrapper {
+    min-height: 70vh; /* En móvil damos más altura relativa al mapa */
+    border-radius: 12px;
+  }
 }

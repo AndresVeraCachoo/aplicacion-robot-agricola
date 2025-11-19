@@ -3,13 +3,39 @@
   width: 250px;
   background-color: #166534;
   color: #dcfce7;
-  /* SOLUCIÓN: min-height asegura que cubra al menos la pantalla, 
-     pero crezca si hay scroll */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   border-right: 4px solid #14532d;
-  transition: width 0.3s;
+  transition: transform 0.3s ease-in-out;
+  /* En desktop es relativo, empuja el contenido */
+  flex-shrink: 0;
+}
+
+/* Cabecera solo visible en móvil (botón cerrar) */
+.sidebar-header-mobile {
+  display: none;
+  padding: 15px 20px;
+  background-color: #14532d;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #15803d;
+}
+
+.sidebar-header-mobile h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2em;
+}
+
+.close-menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2em;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 10px;
 }
 
 /* --- CABECERA DE PERFIL --- */
@@ -102,7 +128,7 @@
   padding-left: 29px;
 }
 
-/* Estilos para el Footer y el Botón de Logout */
+/* FOOTER */
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid #14532d;
@@ -133,4 +159,33 @@
 
 .logout-button:active {
   transform: scale(0.98);
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%; /* Ocupa toda la pantalla */
+    height: 100vh;
+    z-index: 2000; /* Por encima de todo */
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    border-right: none;
+  }
+
+  .sidebar-header-mobile {
+    display: flex; /* Mostrar botón de cerrar */
+  }
+
+  /* Ajustar tamaños para que sea más fácil tocar en móvil */
+  .sidebar-nav li a {
+    padding: 20px 25px;
+    font-size: 1.2em;
+  }
+
+  .logout-button {
+    padding: 15px;
+    font-size: 1.1em;
+  }
 }

@@ -7,14 +7,12 @@ import { useAuth } from "../hooks/useAuth";
 const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 
-function Sidebar() {
+function Sidebar({ onClose }) {
   const { userRole, logout } = useAuth();
-  // Estado local para el avatar
   const [avatar, setAvatar] = useState(
     localStorage.getItem("userAvatar") || DEFAULT_AVATAR
   );
 
-  // Escuchar cambios en el avatar
   useEffect(() => {
     const handleAvatarUpdate = () => {
       setAvatar(localStorage.getItem("userAvatar") || DEFAULT_AVATAR);
@@ -26,12 +24,19 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {/* Tarjeta de Perfil en lugar de "Navegación" */}
+      <div className="sidebar-header-mobile">
+        <h3>Menú</h3>
+        <button className="close-menu-btn" onClick={onClose}>
+          &times;
+        </button>
+      </div>
+
       <div className="sidebar-profile-header">
         <Link
           to="/app/profile"
           className="profile-link-wrapper"
           title="Ir a mi perfil"
+          onClick={onClose} // Cierra el menú al navegar en móvil
         >
           <div className="profile-image-container">
             <img src={avatar} alt="Usuario" className="sidebar-avatar" />
@@ -46,30 +51,46 @@ function Sidebar() {
       <nav className="sidebar-nav">
         <ul>
           <li>
-            <Link to="/app/dashboard">Inicio</Link>
+            <Link to="/app/dashboard" onClick={onClose}>
+              Inicio
+            </Link>
           </li>
           <li>
-            <Link to="/app/data">Datos</Link>
+            <Link to="/app/data" onClick={onClose}>
+              Datos
+            </Link>
           </li>
           {(userRole === "admin" || userRole === "operador") && (
             <li>
-              <Link to="/app/camera">Cámara</Link>
+              <Link to="/app/camera" onClick={onClose}>
+                Cámara
+              </Link>
             </li>
           )}
           <li>
-            <Link to="/app/history">Historial</Link>
+            <Link to="/app/history" onClick={onClose}>
+              Historial
+            </Link>
           </li>
 
           {userRole === "admin" && (
             <li>
-              <Link to="/app/users">Gestión de Usuarios</Link>
+              <Link to="/app/users" onClick={onClose}>
+                Gestión de Usuarios
+              </Link>
             </li>
           )}
         </ul>
       </nav>
 
       <div className="sidebar-footer">
-        <button onClick={logout} className="logout-button">
+        <button
+          onClick={() => {
+            logout();
+            onClose();
+          }}
+          className="logout-button"
+        >
           Cerrar Sesión
         </button>
       </div>
