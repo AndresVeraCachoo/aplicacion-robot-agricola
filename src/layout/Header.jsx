@@ -2,23 +2,25 @@
 import React, { useState } from "react";
 import "./Header.css";
 import { useRobotStore } from "../store/robotStore";
+import { useTheme } from "../context/ThemeContext"; // 1. Importar hook
 import Modal from "../components/Modal";
 import BatteryModal from "../features/dashboard/components/BatteryModal";
 
 function Header({ onMenuClick }) {
-  // Extraemos el objeto completo para acceder a percentage y status
   const battery = useRobotStore((state) => state.battery);
   const { percentage, status } = battery;
+
+  // 2. Usar el contexto del tema
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
   const closeBatteryModal = () => setIsBatteryModalOpen(false);
 
-  // Determinar la clase CSS basada en el estado y porcentaje
   const getBatteryClass = () => {
     if (status === "CHARGING") return "charging";
-    if (percentage <= 20) return "critical";
+    if (percentage < 10) return "critical";
     if (percentage <= 50) return "low";
     return "good";
   };
@@ -36,24 +38,37 @@ function Header({ onMenuClick }) {
           ☰
         </button>
 
-        <div
-          className={`battery-widget clickable ${batteryClass}`}
-          onClick={openBatteryModal}
-          title={`Batería: ${percentage}% - ${
-            status === "CHARGING" ? "Cargando" : "En uso"
-          }`}
-        >
-          <span className="battery-text">
-            {/* Icono de rayo si está cargando */}
-            {status === "CHARGING" && <span className="charging-bolt">⚡</span>}
-            {percentage}%
-          </span>
+        {/* Contenedor derecho para Tema + Batería */}
+        <div className="header-right-controls">
+          {/* 3. Botón Toggle Tema */}
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={
+              isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+            }
+          >
+            {isDarkMode ? "🌙" : "☀️"}
+          </button>
 
-          <div className="battery-icon">
-            <div
-              className="battery-fill"
-              style={{ width: `${percentage}%` }}
-            ></div>
+          <div
+            className={`battery-widget clickable ${batteryClass}`}
+            onClick={openBatteryModal}
+            title={`Batería: ${percentage}%`}
+          >
+            <span className="battery-text">
+              {status === "CHARGING" && (
+                <span className="charging-bolt">⚡</span>
+              )}
+              {percentage}%
+            </span>
+
+            <div className="battery-icon">
+              <div
+                className="battery-fill"
+                style={{ width: `${percentage}%` }}
+              ></div>
+            </div>
           </div>
         </div>
       </header>

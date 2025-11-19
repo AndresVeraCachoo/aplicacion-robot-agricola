@@ -1,31 +1,73 @@
 /* src/index.css */
 
 :root {
-  /* Paleta de Colores en Uso */
-  --primary-dark: #166534; /* Usado en bordes y Sidebar */
-  --primary-darkest: #14532d; /* Usado en bordes y texto oscuro */
-  --background-color: #2fad55; /* Fondo general del body */
-  --accent-green: #22c55e; /* Botones, nivel de batería */
-  --accent-green-hover: #16a34a; /* Hover del botón */
-  --accent-green-dark: #15803d; /* Borde inferior botón, hover Sidebar */
-  --text-light-accent: #dcfce7; /* Texto en Sidebar */
-  --border-light: #86efac; /* Borde de inputs */
-  --background-widget: #f0fdf4; /* Fondo de la caja de login */
-  --background-app: #a7f3d0; /* Fondo header y login container */
+  /* --- MODO CLARO (Variables originales) --- */
+  --primary-dark: #166534;
+  --primary-darkest: #14532d;
+  --background-color: #2fad55;
+  --accent-green: #22c55e;
+  --accent-green-hover: #16a34a;
+  --accent-green-dark: #15803d;
+  --text-light-accent: #dcfce7;
+  --border-light: #86efac;
+  --background-widget: #f0fdf4;
+  --background-app: #a7f3d0;
 
-  /* Tipografía */
+  /* Nuevas variables para texto y superficies */
+  --text-main: #14532d; /* Color de texto principal */
+  --text-inverse: #ffffff; /* Texto sobre fondos oscuros */
+  --card-bg: #ffffff; /* Fondo de tarjetas (perfil, usuarios) */
+  --icon-color: #14532d; /* Color de iconos (menú, etc) */
+
   --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- MODO OSCURO (Sobreescritura de variables) --- */
+body.dark-mode {
+  /* Fondos oscuros */
+  --background-color: #0f172a; /* Azul noche profundo */
+  --background-app: #1e293b; /* Header y contenedores */
+  --background-widget: #334155; /* Widgets y tarjetas */
+  --card-bg: #1e293b; /* Tarjetas en modo oscuro */
+
+  /* Textos claros */
+  --primary-dark: #4ade80; /* Verde neón suave para resaltar */
+  --primary-darkest: #f1f5f9; /* Texto casi blanco */
+  --text-main: #e2e8f0; /* Texto general gris claro */
+  --text-light-accent: #94a3b8;
+
+  /* Elementos de UI */
+  --accent-green: #15803d; /* Botones un poco más apagados */
+  --accent-green-hover: #166534;
+  --border-light: #475569; /* Bordes sutiles */
+  --icon-color: #f1f5f9; /* Iconos blancos */
 }
 
 body {
   margin: 0;
   font-family: var(--font-family);
-  background-color: var(--background-color); /* Usamos la variable global */
+  background-color: var(--background-color);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
 }
 
-/* --- Estilos Personalizados para Leaflet --- */
+/* Forzar color de texto en elementos específicos para que respeten el modo oscuro */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode strong,
+body.dark-mode label,
+body.dark-mode .user-name {
+  color: var(--text-main);
+}
 
-/* Selecciona los botones de zoom in y zoom out */
+body.dark-mode .user-item,
+body.dark-mode .profile-info-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-light);
+}
+
+/* Leaflet Controls */
 .leaflet-control-zoom-in,
 .leaflet-control-zoom-out {
   border-radius: 50% !important;
@@ -33,9 +75,10 @@ body {
   height: 30px !important;
   line-height: 30px !important;
   font-size: 1.2em !important;
+  background-color: var(--card-bg) !important; /* Adaptar controles al tema */
+  color: var(--text-main) !important;
 }
 
-/* Opcional: Ajusta el contenedor de los botones si es necesario */
 .leaflet-control-zoom {
   border: none !important;
   background-color: transparent !important;

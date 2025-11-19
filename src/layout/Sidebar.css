@@ -1,31 +1,53 @@
 /* src/layout/Sidebar.css */
+
+/* NOTA: Hemos reemplazado los colores fijos por variables CSS 
+  para que respondan al cambio de tema (Claro/Oscuro).
+*/
+
 .sidebar {
   width: 250px;
-  background-color: #166534;
-  color: #dcfce7;
+  /* Usamos var(--primary-dark) o un color específico si queremos mantener el verde */
+  /* En este caso, para modo oscuro, queremos que se adapte */
+  background-color: var(--primary-dark);
+  color: #dcfce7; /* Texto claro sobre fondo verde */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  border-right: 4px solid #14532d;
-  transition: transform 0.3s ease-in-out;
-  /* En desktop es relativo, empuja el contenido */
+  border-right: 4px solid var(--primary-darkest);
+  transition: transform 0.3s ease-in-out, background-color 0.3s,
+    border-color 0.3s;
   flex-shrink: 0;
 }
 
-/* Cabecera solo visible en móvil (botón cerrar) */
+/* Ajuste específico para MODO OSCURO en la sidebar */
+/* Queremos que en modo oscuro la sidebar sea gris/azul oscuro, no verde brillante */
+body.dark-mode .sidebar {
+  background-color: var(--background-app); /* Gris oscuro */
+  color: var(--text-main);
+  border-right: 1px solid var(--border-light);
+}
+
+/* --- CABECERA MÓVIL --- */
 .sidebar-header-mobile {
   display: none;
   padding: 15px 20px;
-  background-color: #14532d;
+  background-color: var(--primary-darkest);
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #15803d;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+body.dark-mode .sidebar-header-mobile {
+  background-color: var(--background-widget);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .sidebar-header-mobile h3 {
   margin: 0;
   color: white;
   font-size: 1.2em;
+}
+body.dark-mode .sidebar-header-mobile h3 {
+  color: var(--text-main);
 }
 
 .close-menu-btn {
@@ -37,12 +59,19 @@
   line-height: 1;
   padding: 0 10px;
 }
+body.dark-mode .close-menu-btn {
+  color: var(--text-main);
+}
 
 /* --- CABECERA DE PERFIL --- */
 .sidebar-profile-header {
   padding: 20px;
-  border-bottom: 1px solid #15803d;
-  background-color: #14532d;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1); /* Sutilmente más oscuro que el fondo */
+}
+body.dark-mode .sidebar-profile-header {
+  background-color: var(--background-widget);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .profile-link-wrapper {
@@ -64,8 +93,8 @@
   height: 50px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #dcfce7;
-  background-color: #fff;
+  border: 2px solid currentColor; /* Se adapta al color del texto */
+  background-color: var(--card-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -93,10 +122,13 @@
   font-weight: bold;
   font-size: 1.1em;
   text-transform: capitalize;
-  color: #fff;
+  color: white;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+body.dark-mode .profile-role-label {
+  color: var(--primary-dark); /* Verde neón en modo oscuro */
 }
 
 /* --- NAVEGACIÓN --- */
@@ -115,7 +147,7 @@
 .sidebar-nav li a {
   display: block;
   padding: 15px 25px;
-  color: #dcfce7;
+  color: inherit; /* Hereda del padre (.sidebar) */
   text-decoration: none;
   font-size: 1.1em;
   border-left: 4px solid transparent;
@@ -123,23 +155,31 @@
 }
 
 .sidebar-nav li a:hover {
-  background-color: #15803d;
-  border-left-color: #4ade80;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-left-color: var(--accent-green);
   padding-left: 29px;
 }
+body.dark-mode .sidebar-nav li a:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--primary-dark);
+}
 
-/* FOOTER */
+/* --- FOOTER --- */
 .sidebar-footer {
   padding: 20px;
-  border-top: 1px solid #14532d;
-  background-color: #14532d;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1);
   margin-top: auto;
+}
+body.dark-mode .sidebar-footer {
+  background-color: var(--background-widget);
+  border-top: 1px solid var(--border-light);
 }
 
 .logout-button {
   width: 100%;
   padding: 12px;
-  background-color: #b91c1c;
+  background-color: #b91c1c; /* Rojo */
   color: white;
   border: none;
   border-radius: 8px;
@@ -167,18 +207,21 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%; /* Ocupa toda la pantalla */
+    width: 100%;
     height: 100vh;
-    z-index: 2000; /* Por encima de todo */
+    z-index: 2000;
     box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
     border-right: none;
+    overflow-y: auto;
   }
 
   .sidebar-header-mobile {
-    display: flex; /* Mostrar botón de cerrar */
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
-  /* Ajustar tamaños para que sea más fácil tocar en móvil */
   .sidebar-nav li a {
     padding: 20px 25px;
     font-size: 1.2em;
