@@ -4,13 +4,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #a7f3d0;
-  border-bottom: 4px solid #166534;
+  /* Usar variable para que cambie de color en modo oscuro */
+  background-color: var(--background-app);
+  border-bottom: 4px solid var(--primary-dark);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  /* Para que siempre esté visible arriba si hay scroll */
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .menu-button {
@@ -18,13 +19,44 @@
   border: none;
   font-size: 2em;
   cursor: pointer;
-  color: #14532d;
-  padding: 5px; /* Aumentar área de toque */
+  color: var(--icon-color); /* Variable dinámica */
+  padding: 5px;
   line-height: 1;
   transition: transform 0.2s;
 }
 .menu-button:hover {
   transform: scale(1.1);
+}
+
+/* Contenedor derecho */
+.header-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Botón de Tema */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.3s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: rotate(15deg);
+}
+
+/* Hover específico para modo oscuro */
+body.dark-mode .theme-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* WIDGET DE BATERÍA */
@@ -36,7 +68,7 @@
   background-color: transparent;
   transition: all 0.3s ease;
   border: 1px solid transparent;
-  user-select: none; /* Evita selección de texto al tocar rápido */
+  user-select: none;
 }
 
 .battery-widget.clickable {
@@ -46,6 +78,10 @@
 .battery-widget:hover {
   background-color: rgba(0, 0, 0, 0.05);
   box-shadow: none;
+}
+/* Hover en modo oscuro */
+body.dark-mode .battery-widget:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Texto y Rayo */
@@ -73,7 +109,7 @@
   position: relative;
   padding: 2px;
   background-color: transparent;
-  flex-shrink: 0; /* Evita que se aplaste en pantallas pequeñas */
+  flex-shrink: 0;
 }
 
 .battery-icon::after {
@@ -95,30 +131,32 @@
   background-color: currentColor;
 }
 
-/* --- PALETAS DE COLORES --- */
+/* --- PALETAS DE COLORES (Adaptadas a variables) --- */
+
 .battery-widget.good {
-  background-color: transparent;
-  color: #15803d;
-  border-color: #15803d;
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+/* Ajuste para que se vea bien en modo oscuro (verde neón) */
+body.dark-mode .battery-widget.good {
+  color: var(--primary-dark);
+  border-color: var(--primary-dark);
 }
 
 .battery-widget.low {
-  background-color: transparent;
-  color: #a16207;
-  border-color: #a16207;
+  color: #eab308;
+  border-color: #eab308;
 }
 
 .battery-widget.critical {
-  background-color: transparent;
-  color: #d90429;
-  border-color: #d90429;
+  color: #ef4444;
+  border-color: #ef4444;
   animation: critical-blink 1s infinite;
 }
 
 .battery-widget.charging {
-  background-color: transparent;
-  color: #1d4ed8;
-  border-color: #1d4ed8;
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 /* --- ANIMACIONES --- */
@@ -147,7 +185,7 @@
   }
 }
 
-/* Ajuste para móviles muy pequeños */
+/* Ajuste para móviles */
 @media (max-width: 400px) {
   .header {
     padding: 10px;
@@ -158,5 +196,8 @@
   }
   .menu-button {
     font-size: 1.8em;
+  }
+  .theme-toggle-btn {
+    font-size: 1.2em;
   }
 }
