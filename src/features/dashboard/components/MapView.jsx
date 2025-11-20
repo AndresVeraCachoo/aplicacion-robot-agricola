@@ -76,7 +76,7 @@ function MapView() {
   const robotIcon = L.divIcon({
     html: `<img src="/robot-arrow.svg" style="transform: rotate(${
       heading || 0
-    }deg); width: 100%; height: 100%;" />`,
+    }deg); width: 75%; height: 70%; height: 75%;" />`,
     className: "robot-marker-icon",
     iconSize: [30, 30],
     iconAnchor: [15, 15],
