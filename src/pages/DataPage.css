@@ -1,0 +1,89 @@
+.data-page-container {
+  padding: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.data-header {
+  margin-bottom: 20px;
+}
+
+.data-header h1 {
+  color: var(--primary-darkest, #14532d);
+  margin-bottom: 5px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  background: white; /* Esto es vital para que no sea transparente sobre el fondo verde */
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.data-table th,
+.data-tableQw td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+  background-color: var(--primary-dark, #166534);
+  color: white;
+  font-weight: 600;
+}
+
+.data-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Badges para pH */
+.ph-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: white;
+  font-size: 0.9em;
+  display: inline-block;
+  min-width: 30px;
+  text-align: center;
+}
+
+.ph-acid {
+  background-color: #ef4444; /* Rojo */
+}
+.ph-neutral {
+  background-color: #22c55e; /* Verde */
+}
+.ph-alkaline {
+  background-color: #3b82f6; /* Azul */
+}
+
+/* Modo oscuro */
+body.dark-mode .table-responsive {
+  background-color: var(--background-widget);
+}
+body.dark-mode .data-table th {
+  background-color: var(--background-app);
+  color: var(--text-main);
+}
+body.dark-mode .data-table td {
+  color: var(--text-main);
+  border-bottom-color: var(--border-light);
+}
+body.dark-mode .data-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
