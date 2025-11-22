@@ -1,11 +1,20 @@
+/* src/pages/DataPage.css */
+
 .data-page-container {
   padding: 30px;
   width: 100%;
   box-sizing: border-box;
+  /* Usamos flex para ocupar la altura disponible sin scroll en el body */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Limitamos la altura total a la ventana para forzar el scroll interno */
+  max-height: calc(100vh - 80px); /* Restamos aprox la altura del header */
 }
 
 .data-header {
   margin-bottom: 20px;
+  flex-shrink: 0; /* Evita que el header se encoja */
 }
 
 .data-header h1 {
@@ -13,11 +22,17 @@
   margin-bottom: 5px;
 }
 
+/* Contenedor de la tabla con SCROLL INDEPENDIENTE */
 .table-responsive {
-  overflow-x: auto;
-  background: white; /* Esto es vital para que no sea transparente sobre el fondo verde */
+  background: white;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+
+  /* Propiedades clave para el scroll interno */
+  flex-grow: 1; /* Ocupa todo el espacio restante hacia abajo */
+  overflow-y: auto; /* Scroll vertical si hace falta */
+  position: relative;
 }
 
 .data-table {
@@ -26,17 +41,24 @@
   min-width: 900px;
 }
 
-.data-table th,
-.data-tableQw td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.data-table th {
+/* Encabezado FIJO (Sticky Header) */
+/* Esto hace que los títulos sigan visibles al bajar */
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background-color: var(--primary-dark, #166534);
   color: white;
   font-weight: 600;
+  padding: 15px;
+  text-align: left;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+}
+
+.data-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
 }
 
 .data-table tr:hover {
@@ -63,18 +85,19 @@
 }
 
 .ph-acid {
-  background-color: #ef4444; /* Rojo */
+  background-color: #ef4444;
 }
 .ph-neutral {
-  background-color: #22c55e; /* Verde */
+  background-color: #22c55e;
 }
 .ph-alkaline {
-  background-color: #3b82f6; /* Azul */
+  background-color: #3b82f6;
 }
 
 /* Modo oscuro */
 body.dark-mode .table-responsive {
   background-color: var(--background-widget);
+  border-color: var(--border-light);
 }
 body.dark-mode .data-table th {
   background-color: var(--background-app);
