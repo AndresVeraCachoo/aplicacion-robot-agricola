@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import axios from "axios";
+import { io } from "socket.io-client"; 
 
 const API_URL = "http://localhost:3001/api/robot";
+const SOCKET_URL = "http://localhost:3001";
 
 const initialState = {
   battery: {
@@ -21,24 +23,82 @@ const initialState = {
     lon: null,
   },
   pathHistory: [],
-  // Inicializamos siempre como array vacío
-  agronomicData: [],
+  agronomicData: [], 
   sensors: {
     soilHumidity: 0,
     ambientTemp: 0,
     tankLevel: 0,
   },
+  isConnected: false, 
 };
 
-export const useRobotStore = create((set) => ({
+export const useRobotStore = create((set, get) => ({
   ...initialState,
+  
+  socket: null, 
 
+  // Acción para conectar
+  connectSocket: () => {
+    const { socket } = get();
+    if (socket) return; // Ya conectado
+
+    console.log("🔌 Iniciando conexión WebSocket...");
+    const newSocket = io(SOCKET_URL, {
+      transports: ["websocket"], 
+    });
+
+    newSocket.on("connect", () => {
+      console.log("🟢 WS Conectado con ID:", newSocket.id);
+      set({ isConnected: true });
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("🔴 WS Desconectado");
+      set({ isConnected: false });
+    });
+
+    // 1. TELEMETRÍA (Posición, Batería)
+    newSocket.on("robot:status", (data) => {
+      set((state) => ({
+        battery: { ...state.battery, ...data.battery },
+        position: data.position,
+        system: { ...state.system, ...data.system },
+      }));
+    });
+
+    // 2. NUEVOS DATOS (Muestras)
+    newSocket.on("robot:new_data", (newRecord) => {
+      // console.log("🌱 Nuevo dato recibido:", newRecord.id);
+      set((state) => {
+        // Añadimos al principio y limitamos a 50
+        const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
+        
+        // Actualizamos rastro visual
+        const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
+        
+        return {
+          agronomicData: updatedData,
+          pathHistory: [...state.pathHistory, newPathPoint]
+        };
+      });
+    });
+
+    set({ socket: newSocket });
+  },
+
+  disconnectSocket: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.disconnect();
+      set({ socket: null, isConnected: false });
+    }
+  },
+
+  // Carga inicial HTTP (Snapshot)
   fetchInitialData: async () => {
     try {
       const estadoRes = await axios.get(`${API_URL}/estado`);
       const datosRes = await axios.get(`${API_URL}/datos`);
-
-      // Validación de seguridad: asegurar que data sea un array
       const validData = Array.isArray(datosRes.data) ? datosRes.data : [];
 
       set((state) => ({
@@ -46,47 +106,24 @@ export const useRobotStore = create((set) => ({
         battery: {
           percentage: estadoRes.data.battery_percentage,
           status: estadoRes.data.battery_status,
-          voltage: estadoRes.data.battery_voltage,
-          temperature: estadoRes.data.battery_temperature,
-          timeRemaining: estadoRes.data.battery_time_remaining,
-        },
-        system: {
-          status: estadoRes.data.system_status,
-          speed: estadoRes.data.system_speed,
-          heading: estadoRes.data.system_heading,
+          voltage: 12.5,
+          temperature: 30,
+          timeRemaining: "Calculando...",
         },
         position: {
           lat: estadoRes.data.current_lat,
           lon: estadoRes.data.current_lon,
         },
-        sensors: {
-          soilHumidity: estadoRes.data.sensors_soil_humidity,
-          ambientTemp: estadoRes.data.sensors_ambient_temp,
-          tankLevel: estadoRes.data.sensors_tank_level,
+        system: {
+            speed: estadoRes.data.system_speed,
+            heading: estadoRes.data.system_heading,
+            status: estadoRes.data.system_status
         },
-        // Usamos los datos validados
         agronomicData: validData,
-        // Mapeo seguro para el historial
-        pathHistory: validData.map(d => ({ 
-          lat: Number(d.lat), // Convertimos explícitamente a número
-          lon: Number(d.lon) 
-        })).filter(p => !isNaN(p.lat) && !isNaN(p.lon)), // Filtramos inválidos
+        pathHistory: validData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
       }));
     } catch (error) {
-      console.error("Error al cargar datos del robot:", error);
+      console.error("Error carga inicial:", error);
     }
   },
-
-  setSpeed: (newSpeed) => set((state) => ({
-    system: { ...state.system, speed: newSpeed }
-  })),
-  
-  pauseTask: () => set((state) => ({
-    system: { ...state.system, status: "IDLE" }
-  })),
-  
-  _updatePosition: (newPosition) => set({
-    position: newPosition,
-    pathHistory: [...useRobotStore.getState().pathHistory, newPosition]
-  })
 }));

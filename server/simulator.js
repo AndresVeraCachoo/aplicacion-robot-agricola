@@ -1,11 +1,9 @@
 import { pool } from "./config/db.js";
 
-// --- CONFIGURACIÓN ---
-const MOVEMENT_INTERVAL = 2000; // 2 segundos (Movimiento + Actualización Estado)
-const SENSOR_INTERVAL = 5000;   // 5 segundos (Generación de Datos Históricos)
-const MAX_HISTORY_RECORDS = 50; // Mantener la tabla limpia
+const MOVEMENT_INTERVAL = 2000; 
+const SENSOR_INTERVAL = 5000;   
+const MAX_HISTORY_RECORDS = 50; 
 
-// Estado inicial (Cerca de Burgos)
 let currentLat = 42.3525;
 let currentLon = -3.6845;
 let battery = 100;
@@ -13,65 +11,45 @@ let isCharging = false;
 let heading = 0;
 let speed = 0;
 
-// Variables de "Estado Ambiental" para variaciones suaves (Random Walk)
+// Variables ambientales simuladas
 let currentTemp = 20;
 let currentHumidity = 50;
 let currentPh = 7.0;
 
-// Vectores de movimiento (Velocidad y Dirección)
-let latVelocity = 0.00015; // Velocidad inicial en latitud
-let lonVelocity = 0.00010; // Velocidad inicial en longitud
+let latVelocity = 0.00015; 
+let lonVelocity = 0.00010; 
 
-export const startRobotSimulation = () => {
-  console.log("🤖 Simulador de Robot Avanzado: ACTIVADO");
+// Recibimos 'io' como argumento
+export const startRobotSimulation = (io) => {
+  console.log("🤖 Simulador: ACTIVADO con soporte WebSocket");
 
-  // 1. BUCLE DE MOVIMIENTO Y ESTADO (Rápido)
+  // 1. BUCLE DE MOVIMIENTO (Emite estado rápido)
   setInterval(async () => {
     
-    // --- A. Lógica de Batería ---
+    // Lógica de Batería
     if (isCharging) {
-      battery += 5; // Carga rápida
-      speed = 0;    // El robot se detiene al cargar
-      if (battery >= 100) {
-        battery = 100;
-        isCharging = false;
-        console.log("🔋 Carga completa. Reanudando trabajo.");
-      }
+      battery += 5;
+      speed = 0;
+      if (battery >= 100) { battery = 100; isCharging = false; }
     } else {
-      battery -= 0.5; // Descarga por uso
-      if (battery <= 10) {
-        isCharging = true;
-        console.log("🪫 Batería baja. Iniciando carga...");
-      }
+      battery -= 0.5;
+      if (battery <= 10) { isCharging = true; }
     }
 
-    // --- B. Lógica de Movimiento y Rotación ---
+    // Lógica de Movimiento
     if (!isCharging) {
-      // Cambio de dirección aleatorio suave (Zig-Zag realista)
       if (Math.random() > 0.9) latVelocity *= -1;
       if (Math.random() > 0.9) lonVelocity *= -1;
-
-      // Calcular nueva posición con un poco de "ruido" natural
-      const deltaLat = latVelocity + (Math.random() - 0.5) * 0.00005;
-      const deltaLon = lonVelocity + (Math.random() - 0.5) * 0.00005;
-
-      currentLat += deltaLat;
-      currentLon += deltaLon;
-
-      // --- CÁLCULO DE ROTACIÓN (HEADING) ---
-      // Math.atan2(y, x) devuelve el ángulo en radianes del vector (deltaLon, deltaLat)
-      // Lo convertimos a grados para que el CSS (transform: rotate) lo entienda.
-      const angleRad = Math.atan2(deltaLon, deltaLat);
-      heading = (angleRad * 180) / Math.PI; 
       
-      // Ajuste opcional: Si tu icono de flecha apunta hacia arriba originalmente, 
-      // puede que necesites sumar 90 grados: heading = heading + 90;
+      currentLat += latVelocity + (Math.random() - 0.5) * 0.00005;
+      currentLon += lonVelocity + (Math.random() - 0.5) * 0.00005;
 
-      // Calcular velocidad simulada (magnitud del vector)
-      speed = (Math.sqrt(deltaLat**2 + deltaLon**2) * 100000).toFixed(2);
+      const angleRad = Math.atan2(lonVelocity, latVelocity);
+      heading = (angleRad * 180) / Math.PI;
+      speed = (Math.sqrt(latVelocity**2 + lonVelocity**2) * 100000).toFixed(2);
     }
 
-    // --- C. Actualizar Estado en Base de Datos ---
+    // Actualizar DB
     try {
       await pool.query(
         `UPDATE robot_estado
@@ -79,59 +57,69 @@ export const startRobotSimulation = () => {
              battery_status = $4, system_status = $5, system_speed = $6, system_heading = $7
          WHERE id = 1`,
         [
-          currentLat,
-          currentLon,
-          Math.floor(battery),
+          currentLat, currentLon, Math.floor(battery),
           isCharging ? "CHARGING" : "IDLE",
           isCharging ? "CHARGING" : "WORKING",
-          speed,
-          Math.floor(heading) // Guardamos el ángulo calculado
+          speed, Math.floor(heading)
         ]
       );
+
+      // --- EMITIR EVENTO WS (TELEMETRÍA) ---
+      if (io) {
+        io.emit("robot:status", {
+          battery: {
+            percentage: Math.floor(battery),
+            status: isCharging ? "CHARGING" : "IDLE",
+            voltage: 12.5,
+            temperature: 35,
+            timeRemaining: isCharging ? "Cargando..." : `${Math.floor(battery * 1.5)} min`,
+          },
+          position: { lat: currentLat, lon: currentLon },
+          system: {
+            speed: speed,
+            heading: Math.floor(heading),
+            status: isCharging ? "CHARGING" : "WORKING"
+          }
+        });
+      }
+
     } catch (error) {
       console.error("Error simulador estado:", error.message);
     }
   }, MOVEMENT_INTERVAL);
 
-  // 2. BUCLE DE SENSORES Y LIMPIEZA (Lento)
+  // 2. BUCLE DE SENSORES (Emite nuevos datos de muestreo)
   setInterval(async () => {
-    if (isCharging) return; // No tomar muestras si carga
+    if (isCharging) return; 
 
-    // Variación suave de sensores
+    // Variación aleatoria suave
     currentTemp += (Math.random() - 0.5) * 2;
-    currentHumidity += (Math.random() - 0.5) * 5;
-    currentPh += (Math.random() - 0.5) * 0.2;
-
-    // Límites lógicos
-    currentHumidity = Math.max(0, Math.min(100, currentHumidity));
-    currentTemp = Math.max(-10, Math.min(45, currentTemp));
-    currentPh = Math.max(4, Math.min(10, currentPh));
-
+    currentHumidity = Math.max(0, Math.min(100, currentHumidity + (Math.random() - 0.5) * 5));
+    currentPh = Math.max(4, Math.min(10, currentPh + (Math.random() - 0.5) * 0.2));
+    
     const n = Math.floor(Math.random() * 50 + 20);
     const p = Math.floor(Math.random() * 30 + 10);
     const k = Math.floor(Math.random() * 40 + 15);
     const rad = Math.floor(Math.random() * 800 + 200);
 
     try {
-      // 1. Insertar nuevo dato histórico (Punto en el mapa)
-      await pool.query(
+      const newRecord = await pool.query(
         `INSERT INTO robot_datos 
         (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
         [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), n, p, k, rad]
       );
 
-      // 2. LIMPIEZA AUTOMÁTICA
+      // --- EMITIR EVENTO WS (NUEVA MUESTRA) ---
+      if (io && newRecord.rows[0]) {
+        io.emit("robot:new_data", newRecord.rows[0]);
+      }
+
+      // Limpieza
       await pool.query(`
-        DELETE FROM robot_datos
-        WHERE id NOT IN (
-          SELECT id FROM robot_datos
-          ORDER BY timestamp DESC
-          LIMIT $1
-        )
-      `, [MAX_HISTORY_RECORDS]);
-      
-      console.log(`🧹 Mantenimiento: Tabla limpia. Registros actuales: ${MAX_HISTORY_RECORDS}`);
+        DELETE FROM robot_datos WHERE id NOT IN (
+          SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1
+        )`, [MAX_HISTORY_RECORDS]);
 
     } catch (error) {
       console.error("Error simulador datos:", error.message);
