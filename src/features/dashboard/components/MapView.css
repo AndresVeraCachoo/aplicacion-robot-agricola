@@ -4,6 +4,7 @@
   width: 100%;
   height: 100%;
   min-height: 400px;
+  z-index: 1; /* Base z-index */
 }
 
 .robot-marker-icon {
@@ -13,17 +14,17 @@
 
 .robot-marker-icon img {
   display: block;
+  filter: drop-shadow(
+    0 0 2px rgba(0, 0, 0, 0.5)
+  ); /* Sombra para mejor visibilidad */
 }
 
-/* Estilo para el botón de centrado */
+/* Botón de centrado */
 .center-map-button {
-  /* Forzar posicionamiento absoluto sobre el mapa */
   position: absolute !important;
-  bottom: 20px !important; /* Distancia desde abajo (ajusta si es necesario) */
-  right: 10px !important; /* Distancia desde la derecha */
-  z-index: 1000 !important; /* Asegura que esté por encima */
-
-  /* Estilos visuales (iguales que antes) */
+  bottom: 20px !important;
+  right: 10px !important;
+  z-index: 1000 !important;
   background-color: white;
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-radius: 50%;
@@ -31,44 +32,104 @@
   height: 30px;
   cursor: pointer;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-
-  /* Centrar el icono SVG */
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0;
-
-  /* Quitar márgenes/posicionamiento por defecto de Leaflet */
   margin: 0 !important;
-  top: auto !important; /* Anula el 'top' por defecto */
-  left: auto !important; /* Anula el 'left' por defecto */
+  top: auto !important;
+  left: auto !important;
 }
 
 .center-map-button:hover {
   background-color: #f4f4f4;
-  cursor: pointer;
 }
 
-/* Quitar el margen superior por defecto del control de zoom para evitar solapamientos */
 .leaflet-control-zoom {
   margin-top: 0 !important;
 }
 
-/* Estilo para mostrar las coordenadas clicadas */
 .clicked-coords-display {
   position: absolute !important;
-  bottom: 10px !important; /* Ajusta la posición para que no se solape con el botón de centrar */
-  left: 10px !important; /* En la esquina inferior izquierda */
+  bottom: 10px !important;
+  left: 10px !important;
   z-index: 1000 !important;
-
-  background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+  background-color: rgba(255, 255, 255, 0.9);
   padding: 5px 10px;
   border-radius: 4px;
-  font-size: 0.9em;
+  font-size: 0.85em;
   color: #333;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-
-  margin: 0 !important; /* Anula márgenes por defecto de leaflet-control */
+  font-family: monospace;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  margin: 0 !important;
   top: auto !important;
   right: auto !important;
+}
+
+/* --- Estilos del Popup/Modal de Muestra --- */
+.sample-popup-content {
+  color: #333;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.popup-kpi {
+  text-align: center;
+  background-color: #f8fafc;
+  padding: 5px 15px;
+  border-radius: 8px;
+}
+
+.popup-kpi .label {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  color: #64748b;
+  display: block;
+}
+
+.popup-kpi .value {
+  font-size: 1.8em;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.popup-date {
+  font-size: 0.85em;
+  color: #666;
+  text-align: right;
+  max-width: 120px;
+}
+
+.popup-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popup-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1em;
+}
+
+.popup-nutrients {
+  display: flex;
+  justify-content: space-around;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 1.1em;
+  margin-top: 5px;
+}
+
+/* Modo Oscuro */
+body.dark-mode .clicked-coords-display {
+  background-color: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
 }
