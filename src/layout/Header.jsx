@@ -1,18 +1,17 @@
 // src/layout/Header.jsx
 import React, { useState } from "react";
 import "./Header.css";
-import { useRobotStore } from "../store/robotStore";
-import { useTheme } from "../context/ThemeContext"; // 1. Importar hook
-import Modal from "../components/Modal";
-import BatteryModal from "../features/dashboard/components/BatteryModal";
+import { useRobotStore } from "../store/robotStore.js"; // Ruta explícita .js
+import { useTheme } from "../context/ThemeContext.jsx"; // Ruta explícita .jsx
+import Modal from "../components/Modal.jsx";
+import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
 
 function Header({ onMenuClick }) {
   const battery = useRobotStore((state) => state.battery);
+  const isConnected = useRobotStore((state) => state.isConnected); // Estado de conexión
+
   const { percentage, status } = battery;
-
-  // 2. Usar el contexto del tema
   const { isDarkMode, toggleTheme } = useTheme();
-
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
@@ -25,34 +24,43 @@ function Header({ onMenuClick }) {
     return "good";
   };
 
-  const batteryClass = getBatteryClass();
-
   return (
     <>
       <header className="header">
-        <button
-          onClick={onMenuClick}
-          className="menu-button"
-          aria-label="Abrir menú"
-        >
-          ☰
-        </button>
+        <div className="header-left">
+          <button
+            onClick={onMenuClick}
+            className="menu-button"
+            aria-label="Abrir menú"
+          >
+            ☰
+          </button>
 
-        {/* Contenedor derecho para Tema + Batería */}
+          {/* Indicador de Estado de Sistema */}
+          <div
+            className={`system-status-pill ${
+              isConnected ? "online" : "offline"
+            }`}
+            title={isConnected ? "Sistema Conectado" : "Desconectado"}
+          >
+            <span className="status-dot"></span>
+            <span className="status-text">
+              {isConnected ? "ONLINE" : "OFFLINE"}
+            </span>
+          </div>
+        </div>
+
         <div className="header-right-controls">
-          {/* 3. Botón Toggle Tema */}
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
-            title={
-              isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
-            }
+            title={isDarkMode ? "Modo Claro" : "Modo Oscuro"}
           >
             {isDarkMode ? "🌙" : "☀️"}
           </button>
 
           <div
-            className={`battery-widget clickable ${batteryClass}`}
+            className={`battery-widget clickable ${getBatteryClass()}`}
             onClick={openBatteryModal}
             title={`Batería: ${percentage}%`}
           >
@@ -62,7 +70,6 @@ function Header({ onMenuClick }) {
               )}
               {percentage}%
             </span>
-
             <div className="battery-icon">
               <div
                 className="battery-fill"

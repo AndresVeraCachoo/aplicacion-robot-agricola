@@ -1,37 +1,37 @@
 // src/layout/MainLayout.jsx
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
-// Importaciones relativas desde src/layout/
-import Header from "./Header";
-import Sidebar from "./Sidebar";
-// Importaciones que salen de layout hacia otras carpetas
+import Header from "./Header.jsx";
+import Sidebar from "./Sidebar.jsx";
 import "../features/dashboard/Dashboard.css";
-import { useRobotStore } from "../store/robotStore";
+import { useRobotStore } from "../store/robotStore.js";
+import { useToast } from "../context/ToastContext.jsx";
 
 function MainLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(
     () => window.innerWidth > 768
   );
 
-  // Extraemos acciones
-  const fetchInitialData = useRobotStore((state) => state.fetchInitialData);
-  const connectSocket = useRobotStore((state) => state.connectSocket);
-  const disconnectSocket = useRobotStore((state) => state.disconnectSocket);
+  const { fetchInitialData, connectSocket, disconnectSocket, isConnected } =
+    useRobotStore();
+  const { addToast } = useToast();
 
   useEffect(() => {
-    console.log("🚀 Iniciando Dashboard en Tiempo Real...");
-
-    // 1. Carga inicial (Snapshot)
+    console.log("🚀 Iniciando Dashboard...");
     fetchInitialData();
-
-    // 2. Conectar al stream (WebSockets)
     connectSocket();
 
-    // 3. Limpieza
     return () => {
       disconnectSocket();
     };
-  }, []); // Array vacío = Solo al montar
+  }, [fetchInitialData, connectSocket, disconnectSocket]);
+
+  // Efecto para notificaciones de conexión
+  useEffect(() => {
+    if (isConnected) {
+      addToast("Conexión establecida con el robot", "success");
+    }
+  }, [isConnected, addToast]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
