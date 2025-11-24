@@ -4,7 +4,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  /* Usar variable para que cambie de color en modo oscuro */
   background-color: var(--background-app);
   border-bottom: 4px solid var(--primary-dark);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -14,12 +13,18 @@
   transition: background-color 0.3s, border-color 0.3s;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .menu-button {
   background: none;
   border: none;
   font-size: 2em;
   cursor: pointer;
-  color: var(--icon-color); /* Variable dinámica */
+  color: var(--icon-color);
   padding: 5px;
   line-height: 1;
   transition: transform 0.2s;
@@ -28,14 +33,77 @@
   transform: scale(1.1);
 }
 
-/* Contenedor derecho */
+/* --- ESTADO DEL SISTEMA --- */
+.system-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid transparent;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #999;
+}
+
+/* Online */
+.system-status-pill.online {
+  background-color: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.system-status-pill.online .status-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 5px #22c55e;
+  animation: pulse-dot 2s infinite;
+}
+
+/* Offline */
+.system-status-pill.offline {
+  background-color: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+.system-status-pill.offline .status-dot {
+  background-color: #ef4444;
+}
+
+@keyframes pulse-dot {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Modo Oscuro */
+body.dark-mode .system-status-pill.online {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+body.dark-mode .system-status-pill.offline {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Controles Derechos */
 .header-right-controls {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-/* Botón de Tema */
 .theme-toggle-btn {
   background: none;
   border: none;
@@ -43,48 +111,34 @@
   cursor: pointer;
   padding: 5px;
   border-radius: 50%;
-  transition: background-color 0.3s, transform 0.2s;
+  transition: background-color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .theme-toggle-btn:hover {
   background-color: rgba(0, 0, 0, 0.1);
-  transform: rotate(15deg);
 }
-
-/* Hover específico para modo oscuro */
 body.dark-mode .theme-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* WIDGET DE BATERÍA */
+/* Batería */
 .battery-widget {
   display: flex;
   align-items: center;
   padding: 6px 12px;
   border-radius: 8px;
-  background-color: transparent;
-  transition: all 0.3s ease;
   border: 1px solid transparent;
-  user-select: none;
-}
-
-.battery-widget.clickable {
   cursor: pointer;
 }
-
 .battery-widget:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  box-shadow: none;
 }
-/* Hover en modo oscuro */
 body.dark-mode .battery-widget:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Texto y Rayo */
 .battery-text {
   margin-right: 10px;
   font-weight: bold;
@@ -100,7 +154,6 @@ body.dark-mode .battery-widget:hover {
   animation: pulse-bolt 1.5s infinite ease-in-out;
 }
 
-/* Icono de la Pila */
 .battery-icon {
   width: 42px;
   height: 20px;
@@ -108,10 +161,7 @@ body.dark-mode .battery-widget:hover {
   border-radius: 4px;
   position: relative;
   padding: 2px;
-  background-color: transparent;
-  flex-shrink: 0;
 }
-
 .battery-icon::after {
   content: "";
   position: absolute;
@@ -123,43 +173,35 @@ body.dark-mode .battery-widget:hover {
   background-color: currentColor;
   border-radius: 0 2px 2px 0;
 }
-
 .battery-fill {
   height: 100%;
   border-radius: 1px;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: currentColor;
+  transition: width 0.5s ease;
 }
-
-/* --- PALETAS DE COLORES (Adaptadas a variables) --- */
 
 .battery-widget.good {
   color: var(--accent-green);
   border-color: var(--accent-green);
 }
-/* Ajuste para que se vea bien en modo oscuro (verde neón) */
 body.dark-mode .battery-widget.good {
   color: var(--primary-dark);
   border-color: var(--primary-dark);
 }
-
 .battery-widget.low {
   color: #eab308;
   border-color: #eab308;
 }
-
 .battery-widget.critical {
   color: #ef4444;
   border-color: #ef4444;
   animation: critical-blink 1s infinite;
 }
-
 .battery-widget.charging {
   color: #3b82f6;
   border-color: #3b82f6;
 }
 
-/* --- ANIMACIONES --- */
 @keyframes pulse-bolt {
   0% {
     transform: scale(1);
@@ -174,7 +216,6 @@ body.dark-mode .battery-widget.good {
     opacity: 1;
   }
 }
-
 @keyframes critical-blink {
   0%,
   100% {
@@ -185,7 +226,6 @@ body.dark-mode .battery-widget.good {
   }
 }
 
-/* Ajuste para móviles */
 @media (max-width: 400px) {
   .header {
     padding: 10px;
@@ -194,10 +234,7 @@ body.dark-mode .battery-widget.good {
     font-size: 1em;
     margin-right: 6px;
   }
-  .menu-button {
-    font-size: 1.8em;
-  }
-  .theme-toggle-btn {
-    font-size: 1.2em;
-  }
+  .status-text {
+    display: none;
+  } /* Ocultar texto en muy pequeño */
 }

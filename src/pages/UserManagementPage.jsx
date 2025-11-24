@@ -1,15 +1,17 @@
 // src/pages/UserManagementPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // Importamos useCallback
 import axios from "axios";
-import Modal from "../components/Modal"; // Solo un '../'
+import Modal from "../components/Modal";
 import "./UserManagementPage.css";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "http://localhost:3001/api/users";
 
 function UserManagementPage() {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState("");
+
+  const { addToast } = useToast();
 
   const [currentUser, setCurrentUser] = useState({
     id: null,
@@ -18,23 +20,21 @@ function UserManagementPage() {
     role: "usuario",
   });
 
-  // 1. Función para cargar todos los usuarios
-  const fetchUsers = async () => {
+  // CORRECCIÓN: Envolvemos fetchUsers en useCallback
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get(API_URL);
       setUsers(response.data);
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
-      setError("No se pudieron cargar los usuarios.");
+      addToast("No se pudieron cargar los usuarios.", "error");
     }
-  };
+  }, [addToast]);
 
-  // 2. Cargar usuarios cuando el componente se monta
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  // 3. Manejadores del Modal
   const openCreateModal = () => {
     setCurrentUser({ id: null, name: "", password: "", role: "usuario" });
     setIsModalOpen(true);
@@ -47,13 +47,10 @@ function UserManagementPage() {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setError("");
   };
 
-  // 4. Manejador para el formulario (Crear o Editar)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
     const userData = {
       name: currentUser.name,
@@ -64,35 +61,45 @@ function UserManagementPage() {
     try {
       if (currentUser.id) {
         await axios.put(`${API_URL}/${currentUser.id}`, userData);
+        addToast(
+          `Usuario "${userData.name}" actualizado correctamente`,
+          "success"
+        );
       } else {
         if (!userData.password) {
-          setError("La contraseña es obligatoria para crear usuarios.");
+          addToast(
+            "La contraseña es obligatoria para crear usuarios.",
+            "warning"
+          );
           return;
         }
         await axios.post(API_URL, userData);
+        addToast(`Usuario "${userData.name}" creado con éxito`, "success");
       }
       closeModal();
       fetchUsers();
     } catch (err) {
       console.error("Error al guardar usuario:", err);
-      setError("Error al guardar el usuario.");
+      addToast(
+        err.response?.data?.error || "Error al guardar el usuario.",
+        "error"
+      );
     }
   };
 
-  // 5. Manejador para Borrar
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
       try {
         await axios.delete(`${API_URL}/${id}`);
+        addToast("Usuario eliminado correctamente", "success");
         fetchUsers();
       } catch (err) {
         console.error("Error al eliminar usuario:", err);
-        setError("Error al eliminar el usuario.");
+        addToast("Error al eliminar el usuario.", "error");
       }
     }
   };
 
-  // 6. Manejador para cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCurrentUser((prev) => ({ ...prev, [name]: value }));
@@ -104,8 +111,6 @@ function UserManagementPage() {
       <button className="btn-create" onClick={openCreateModal}>
         + Crear Nuevo Usuario
       </button>
-
-      {error && <p className="error-message">{error}</p>}
 
       <div className="user-list">
         {users.map((user) => (
@@ -172,7 +177,7 @@ function UserManagementPage() {
               <option value="admin">Admin</option>
             </select>
           </div>
-          {error && <p className="error-message">{error}</p>}
+
           <div className="form-actions">
             <button type="button" className="btn-cancel" onClick={closeModal}>
               Cancelar
