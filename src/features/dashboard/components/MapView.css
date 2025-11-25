@@ -1,74 +1,256 @@
-/* src/features/dashboard/components/MapView.css */
-
 .map-view-container {
   width: 100%;
   height: 100%;
   min-height: 400px;
-  z-index: 1; /* Base z-index */
+  z-index: 1;
+  position: relative;
+  font-family: var(--font-family, sans-serif);
 }
 
 .robot-marker-icon {
   background: none;
   border: none;
 }
-
 .robot-marker-icon img {
   display: block;
-  filter: drop-shadow(
-    0 0 2px rgba(0, 0, 0, 0.5)
-  ); /* Sombra para mejor visibilidad */
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
-/* Botón de centrado */
-.center-map-button {
-  position: absolute !important;
-  bottom: 20px !important;
-  right: 10px !important;
+/* --- 1. POSICIONAMIENTO DE CONTROLES --- */
+
+.leaflet-top.leaflet-left {
+  top: 10px !important;
+  left: 10px !important;
+}
+
+/* --- 2. PANEL DE BOTONES --- */
+.map-controls-overlay {
+  position: absolute;
+  top: 42px;
+  left: 80px;
   z-index: 1000 !important;
+  display: flex;
+  gap: 10px;
+}
+
+.zone-active-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.map-btn {
   background-color: white;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+  font-size: 0.9em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  color: #444;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 0;
-  margin: 0 !important;
-  top: auto !important;
-  left: auto !important;
+  gap: 8px;
+  height: 34px;
 }
 
+.map-btn:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.map-btn.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.map-btn.danger {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+.map-btn.danger:hover {
+  background-color: #fef2f2;
+}
+
+.map-btn.info {
+  color: #0ea5e9;
+  border-color: #e0f2fe;
+}
+
+/* --- 3. BOTÓN DE CENTRADO --- */
+.center-map-button {
+  position: absolute !important;
+  bottom: 25px !important;
+  right: 25px !important;
+  z-index: 1000 !important;
+
+  background-color: white !important;
+  color: #333 !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  border: 2px solid rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+
+  display: flex !important;
+  justify-content: center;
+  align-items: center !important;
+  cursor: pointer;
+  padding: 0 !important;
+}
 .center-map-button:hover {
-  background-color: #f4f4f4;
+  background-color: #f0f0f0 !important;
+  transform: scale(1.05);
 }
 
-.leaflet-control-zoom {
-  margin-top: 0 !important;
-}
-
+/* --- 4. PANEL DE COORDENADAS --- */
 .clicked-coords-display {
   position: absolute !important;
-  bottom: 10px !important;
-  left: 10px !important;
+  bottom: 25px !important;
+  left: 20px !important;
   z-index: 1000 !important;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 5px 10px;
-  border-radius: 4px;
+
+  background-color: white !important;
+  padding: 6px 12px !important;
+  border-radius: 6px;
+  border: 1px solid #ccc;
   font-size: 0.85em;
+  font-weight: 600;
   color: #333;
   font-family: monospace;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  margin: 0 !important;
-  top: auto !important;
-  right: auto !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* --- Estilos del Popup/Modal de Muestra --- */
+/* --- 5. PANEL DE RESUMEN DE ZONA --- */
+.zone-summary-panel {
+  position: absolute;
+  top: 60px;
+  left: 60px;
+  width: 220px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border: 1px solid #eee;
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+.summary-header h4 {
+  margin: 0;
+  font-size: 0.95em;
+  color: #333;
+  font-weight: 700;
+}
+.summary-header button {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #999;
+}
+.summary-metric.main {
+  text-align: center;
+  margin-bottom: 10px;
+  background: #f0fdf4;
+  padding: 8px;
+  border-radius: 6px;
+}
+.summary-metric.main .label {
+  display: block;
+  font-size: 0.7em;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.summary-metric.main .value {
+  font-size: 1.8em;
+  font-weight: 800;
+  line-height: 1;
+  color: #166534;
+}
+.summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.metric-box {
+  flex: 1 1 40%;
+  background: #f8fafc;
+  padding: 6px;
+  border-radius: 4px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+.metric-box span {
+  display: block;
+  font-size: 0.7em;
+  color: #64748b;
+}
+.metric-box strong {
+  font-size: 1em;
+  color: #333;
+}
+.metric-box.full {
+  flex: 1 1 100%;
+}
+.mini-npk {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2px;
+  font-weight: bold;
+  font-size: 0.85em;
+}
+.mini-npk .n {
+  color: #0284c7;
+}
+.mini-npk .p {
+  color: #d97706;
+}
+.mini-npk .k {
+  color: #7c3aed;
+}
+
+.summary-footer {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.7em;
+  color: #999;
+  font-style: italic;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --- 6. ESTILOS DEL POPUP DE DETALLE --- */
+
 .sample-popup-content {
   color: #333;
+  font-family: var(--font-family, sans-serif);
+  min-width: 200px;
 }
 
 .popup-header {
@@ -80,11 +262,14 @@
   padding-bottom: 10px;
 }
 
+/* Caja de pH */
 .popup-kpi {
   text-align: center;
-  background-color: #f8fafc;
-  padding: 5px 15px;
+  background-color: #f1f5f9; /* Fondo claro por defecto */
+  padding: 8px 16px;
   border-radius: 8px;
+  min-width: 60px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .popup-kpi .label {
@@ -92,44 +277,182 @@
   text-transform: uppercase;
   color: #64748b;
   display: block;
+  font-weight: 700;
+  margin-bottom: 2px;
 }
 
 .popup-kpi .value {
   font-size: 1.8em;
-  font-weight: bold;
+  font-weight: 800;
   line-height: 1;
 }
 
 .popup-date {
-  font-size: 0.85em;
-  color: #666;
+  font-size: 0.8em;
+  color: #64748b;
   text-align: right;
-  max-width: 120px;
+  max-width: 140px;
+  line-height: 1.4;
 }
 
 .popup-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .popup-row {
   display: flex;
   justify-content: space-between;
-  font-size: 1em;
+  font-size: 1.05em;
+  align-items: center;
 }
 
+.popup-row span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+}
+
+.popup-row strong {
+  color: #333;
+}
+
+.popup-divider {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 5px 0;
+}
+
+/* Caja de Nutrientes */
 .popup-nutrients {
   display: flex;
   justify-content: space-around;
-  font-weight: bold;
-  font-family: monospace;
-  font-size: 1.1em;
   margin-top: 5px;
+  background-color: #f8fafc; /* Fondo claro por defecto */
+  padding: 12px 10px;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-/* Modo Oscuro */
-body.dark-mode .clicked-coords-display {
-  background-color: rgba(30, 41, 59, 0.9);
+.nutrient-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nutrient-label {
+  font-weight: 900;
+  font-size: 0.8em;
+  text-transform: uppercase;
+}
+.nutrient-label.n {
+  color: #0ea5e9;
+} /* Cyan/Azul */
+.nutrient-label.p {
+  color: #f59e0b;
+} /* Ambar/Naranja */
+.nutrient-label.k {
+  color: #8b5cf6;
+} /* Violeta */
+
+.nutrient-val {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #333;
+}
+
+/* --- 7. AJUSTES MODO OSCURO --- */
+
+/* Botones e interfaz general */
+body.dark-mode .map-btn,
+body.dark-mode .clicked-coords-display,
+body.dark-mode .zone-summary-panel,
+body.dark-mode .center-map-button {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode .summary-header h4,
+body.dark-mode .metric-box strong {
   color: #e2e8f0;
+}
+
+body.dark-mode .metric-box {
+  background-color: #334155;
+  border-color: #475569;
+}
+
+/* --- OVERRIDES LEAFLET POPUP DARK MODE --- */
+/* Esto cambia el color de fondo de la burbuja del mapa */
+
+body.dark-mode .leaflet-popup-content-wrapper,
+body.dark-mode .leaflet-popup-tip {
+  background-color: #1e293b !important; /* Fondo oscuro para el popup */
+  color: #f1f5f9 !important; /* Texto claro */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .leaflet-popup-close-button {
+  color: #94a3b8 !important; /* X de cerrar más clara */
+}
+body.dark-mode .leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+/* Ajustes internos del Modal en Oscuro */
+body.dark-mode .sample-popup-content {
+  color: #e2e8f0;
+}
+
+body.dark-mode .popup-header {
+  border-bottom-color: #334155;
+}
+
+body.dark-mode .popup-kpi {
+  background-color: #0f172a; /* Fondo muy oscuro para la caja de pH */
+  border: 1px solid #334155;
+}
+
+body.dark-mode .popup-kpi .label {
+  color: #b8a594;
+}
+
+body.dark-mode .popup-date {
+  color: #94a3b8;
+}
+
+body.dark-mode .popup-row span {
+  color: #025807; /* Iconos y etiquetas legibles */
+}
+
+body.dark-mode .popup-grid strong {
+  color: #07720786;
+}
+
+body.dark-mode .popup-divider {
+  border-top-color: #334155;
+}
+
+body.dark-mode .popup-nutrients {
+  background-color: #0f172a; /* Fondo muy oscuro para la caja NPK */
+  border: 1px solid #334155;
+}
+
+body.dark-mode .nutrient-val {
+  color: #ffffff;
+}
+
+/* Ajuste de colores de nutrientes para fondo oscuro */
+body.dark-mode .nutrient-label.n {
+  color: #38bdf8;
+}
+body.dark-mode .nutrient-label.p {
+  color: #fbbf24;
+}
+body.dark-mode .nutrient-label.k {
+  color: #a78bfa;
 }

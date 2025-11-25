@@ -1,49 +1,53 @@
 import express from "express";
 import cors from "cors";
-import { createServer } from "http"; // 1. Importar createServer
-import { Server } from "socket.io";  // 2. Importar Server de socket.io
+import { createServer } from "http"; 
+import { Server } from "socket.io"; 
 import "dotenv/config";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
-import { startRobotSimulation } from "./simulator.js";
+// Importamos las nuevas funciones del simulador
+import { startRobotSimulation, setSimulationZone, clearSimulationZone } from "./simulator.js";
 
 const app = express();
 const PORT = 3001;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Rutas
 app.use("/api", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/robot", robotRoutes);
 
-// 3. Crear servidor HTTP y adjuntar Socket.io
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Ajusta si tu frontend corre en otro puerto
+    origin: "http://localhost:5173", 
     methods: ["GET", "POST"],
   },
 });
 
-// 4. Manejo de conexiones
 io.on("connection", (socket) => {
-  console.log("🔌 Cliente conectado al socket:", socket.id);
+  console.log("🔌 Cliente conectado:", socket.id);
   
+  // --- NUEVOS EVENTOS DE ZONA ---
+  socket.on("client:update_zone", (zone) => {
+    setSimulationZone(zone);
+    // Opcional: Reenviar a otros clientes si quieres sincronización multi-usuario
+    // socket.broadcast.emit("robot:zone_updated", zone);
+  });
+
+  socket.on("client:clear_zone", () => {
+    clearSimulationZone();
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ Cliente desconectado:", socket.id);
   });
 });
 
-// 5. Iniciar servidor (usando httpServer en lugar de app.listen)
 httpServer.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-  console.log("📡 WebSockets habilitados y listos");
-  
-  // Pasamos la instancia de 'io' al simulador para que pueda emitir eventos
   startRobotSimulation(io);
 });

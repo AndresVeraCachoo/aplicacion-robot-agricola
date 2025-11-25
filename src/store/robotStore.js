@@ -1,3 +1,4 @@
+// src/store/robotStore.js
 import { create } from 'zustand';
 import axios from "axios";
 import { io } from "socket.io-client"; 
@@ -29,7 +30,9 @@ const initialState = {
     ambientTemp: 0,
     tankLevel: 0,
   },
-  isConnected: false, 
+  isConnected: false,
+  // NUEVO: Zona segura definida por el usuario [[lat1, lon1], [lat2, lon2]]
+  safeZone: null, 
 };
 
 export const useRobotStore = create((set, get) => ({
@@ -37,10 +40,9 @@ export const useRobotStore = create((set, get) => ({
   
   socket: null, 
 
-  // Acción para conectar
   connectSocket: () => {
     const { socket } = get();
-    if (socket) return; // Ya conectado
+    if (socket) return; 
 
     console.log("🔌 Iniciando conexión WebSocket...");
     const newSocket = io(SOCKET_URL, {
@@ -48,8 +50,13 @@ export const useRobotStore = create((set, get) => ({
     });
 
     newSocket.on("connect", () => {
-      console.log("🟢 WS Conectado con ID:", newSocket.id);
+      console.log("🟢 WS Conectado");
       set({ isConnected: true });
+      // Si ya teníamos una zona definida localmente, la enviamos al reconectar
+      const { safeZone } = get();
+      if (safeZone) {
+        newSocket.emit("client:update_zone", safeZone);
+      }
     });
 
     newSocket.on("disconnect", () => {
@@ -57,7 +64,6 @@ export const useRobotStore = create((set, get) => ({
       set({ isConnected: false });
     });
 
-    // 1. TELEMETRÍA (Posición, Batería)
     newSocket.on("robot:status", (data) => {
       set((state) => ({
         battery: { ...state.battery, ...data.battery },
@@ -66,14 +72,9 @@ export const useRobotStore = create((set, get) => ({
       }));
     });
 
-    // 2. NUEVOS DATOS (Muestras)
     newSocket.on("robot:new_data", (newRecord) => {
-      // console.log("🌱 Nuevo dato recibido:", newRecord.id);
       set((state) => {
-        // Añadimos al principio y limitamos a 50
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
-        
-        // Actualizamos rastro visual
         const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
         
         return {
@@ -94,7 +95,6 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
-  // Carga inicial HTTP (Snapshot)
   fetchInitialData: async () => {
     try {
       const estadoRes = await axios.get(`${API_URL}/estado`);
@@ -126,4 +126,23 @@ export const useRobotStore = create((set, get) => ({
       console.error("Error carga inicial:", error);
     }
   },
+
+  // --- NUEVAS ACCIONES DE ZONA ---
+  setSafeZone: (bounds) => {
+    const { socket } = get();
+    set({ safeZone: bounds });
+    if (socket && socket.connected) {
+      socket.emit("client:update_zone", bounds);
+      console.log("📤 Zona enviada al robot:", bounds);
+    }
+  },
+
+  clearSafeZone: () => {
+    const { socket } = get();
+    set({ safeZone: null });
+    if (socket && socket.connected) {
+      socket.emit("client:clear_zone");
+      console.log("📤 Zona eliminada");
+    }
+  }
 }));

@@ -90,6 +90,7 @@
   overflow: hidden; /* Para que el mapa se ajuste al borde redondeado */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
   z-index: 10; /* Asegura que esté por encima del feed principal */
+  background-color: #333; /* Fondo base por si tarda en cargar */
 }
 
 /* MUY IMPORTANTE: Anular estilos previos del MapView para el minimapa */
@@ -105,4 +106,44 @@
 .minimap-container .leaflet-control-zoom,
 .minimap-container .leaflet-control-attribution {
   display: none !important;
+}
+
+/* --- OVERRIDES ESPECÍFICOS DEL MINIMAPA --- */
+
+/* 1. Ocultar el botón de "Delimitar Área" solo en este mapa */
+.minimap-container .map-controls-overlay {
+  display: none !important;
+}
+
+/* 2. Hacer pequeño el botón de centrar y pegarlo a la esquina */
+.minimap-container .center-map-button {
+  width: 24px !important;
+  height: 24px !important;
+  bottom: 5px !important;
+  right: 5px !important;
+  border-radius: 4px !important; /* Un poco más cuadrado para encajar */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.minimap-container .center-map-button span {
+  font-size: 0.9em !important; /* Emoji más pequeño */
+  line-height: 1 !important;
+}
+
+/* 3. Estilo de coordenadas compacto para el minimapa */
+.minimap-container .clicked-coords-display {
+  bottom: 5px !important;
+  left: 5px !important;
+  padding: 2px 5px !important;
+  font-size: 0.7em !important; /* Letra pequeña */
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 3px !important;
+  max-width: 180px;
+}
+
+/* Ajuste coordenadas minimapa en modo oscuro */
+body.dark-mode .minimap-container .clicked-coords-display {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #475569;
 }
