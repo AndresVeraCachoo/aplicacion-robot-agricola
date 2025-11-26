@@ -3,11 +3,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 10px 30px;
   background-color: var(--background-app);
   border-bottom: 4px solid var(--primary-dark);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  position: sticky;
+  position: sticky; /*Mantiene el encabezado arriba al hacer scroll*/
   top: 0;
   z-index: 100;
   transition: background-color 0.3s, border-color 0.3s;
@@ -16,19 +16,21 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .menu-button {
   background: none;
   border: none;
-  font-size: 2em;
+  font-size: 1.8em;
   cursor: pointer;
   color: var(--icon-color);
   padding: 5px;
   line-height: 1;
   transition: transform 0.2s;
+  display: block;
 }
+
 .menu-button:hover {
   transform: scale(1.1);
 }
@@ -37,18 +39,19 @@
 .system-status-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 0.8em;
+  font-size: 0.85em;
   font-weight: bold;
   background-color: rgba(0, 0, 0, 0.05);
   border: 1px solid transparent;
+  transition: all 0.3s;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: #999;
 }
@@ -58,10 +61,11 @@
   background-color: #dcfce7;
   border-color: #bbf7d0;
   color: #166534;
+  box-shadow: 0 2px 5px rgba(34, 197, 94, 0.1);
 }
 .system-status-pill.online .status-dot {
   background-color: #22c55e;
-  box-shadow: 0 0 5px #22c55e;
+  box-shadow: 0 0 8px #22c55e;
   animation: pulse-dot 2s infinite;
 }
 
@@ -78,46 +82,52 @@
 @keyframes pulse-dot {
   0% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.6;
+    transform: scale(1.1);
   }
   100% {
     opacity: 1;
+    transform: scale(1);
   }
 }
 
 /* Modo Oscuro */
 body.dark-mode .system-status-pill.online {
-  background-color: rgba(34, 197, 94, 0.2);
+  background-color: rgba(34, 197, 94, 0.15);
   color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
 }
 body.dark-mode .system-status-pill.offline {
-  background-color: rgba(239, 68, 68, 0.2);
+  background-color: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Controles Derechos */
 .header-right-controls {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .theme-toggle-btn {
   background: none;
   border: none;
-  font-size: 1.5em;
+  font-size: 1.4em;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
   border-radius: 50%;
   transition: background-color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-main);
 }
 .theme-toggle-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 body.dark-mode .theme-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
@@ -127,16 +137,23 @@ body.dark-mode .theme-toggle-btn:hover {
 .battery-widget {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 10px;
   border: 1px solid transparent;
   cursor: pointer;
+  transition: all 0.2s;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 .battery-widget:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+body.dark-mode .battery-widget {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 body.dark-mode .battery-widget:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .battery-text {
@@ -144,7 +161,7 @@ body.dark-mode .battery-widget:hover {
   font-weight: bold;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-family: monospace;
   font-size: 1.1em;
   color: inherit;
@@ -152,11 +169,12 @@ body.dark-mode .battery-widget:hover {
 
 .charging-bolt {
   animation: pulse-bolt 1.5s infinite ease-in-out;
+  font-size: 1.2em;
 }
 
 .battery-icon {
-  width: 42px;
-  height: 20px;
+  width: 38px;
+  height: 18px;
   border: 2px solid currentColor;
   border-radius: 4px;
   position: relative;
@@ -165,11 +183,11 @@ body.dark-mode .battery-widget:hover {
 .battery-icon::after {
   content: "";
   position: absolute;
-  right: -6px;
+  right: -5px;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 10px;
+  width: 3px;
+  height: 8px;
   background-color: currentColor;
   border-radius: 0 2px 2px 0;
 }
@@ -226,15 +244,17 @@ body.dark-mode .battery-widget.good {
   }
 }
 
-@media (max-width: 400px) {
-  .header {
-    padding: 10px;
-  }
-  .battery-text {
-    font-size: 1em;
-    margin-right: 6px;
-  }
+@media (max-width: 480px) {
   .status-text {
     display: none;
-  } /* Ocultar texto en muy pequeño */
+  }
+  .header-right-controls {
+    gap: 10px;
+  }
+  .battery-widget {
+    padding: 4px 8px;
+  }
+  .battery-text {
+    font-size: 0.9em;
+  }
 }

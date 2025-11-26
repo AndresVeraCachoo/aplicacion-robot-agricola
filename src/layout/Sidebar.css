@@ -1,28 +1,22 @@
 /* src/layout/Sidebar.css */
 
-/* NOTA: Hemos reemplazado los colores fijos por variables CSS 
-  para que respondan al cambio de tema (Claro/Oscuro).
-*/
-
 .sidebar {
-  width: 250px;
-  /* Usamos var(--primary-dark) o un color específico si queremos mantener el verde */
-  /* En este caso, para modo oscuro, queremos que se adapte */
+  width: 260px;
+  height: 100%; /* Ocupa todo el alto del contenedor padre (dashboard-layout) */
   background-color: var(--primary-dark);
-  color: #dcfce7; /* Texto claro sobre fondo verde */
-  min-height: 100vh;
+  color: #dcfce7;
   display: flex;
   flex-direction: column;
   border-right: 4px solid var(--primary-darkest);
-  transition: transform 0.3s ease-in-out, background-color 0.3s,
-    border-color 0.3s;
-  flex-shrink: 0;
+  transition: transform 0.3s ease-in-out;
+  flex-shrink: 0; /* No se encoge */
+  overflow-y: auto; /* Scroll interno solo para el menú si es muy largo */
+  z-index: 2000; /* Por encima del contenido */
 }
 
-/* Ajuste específico para MODO OSCURO en la sidebar */
-/* Queremos que en modo oscuro la sidebar sea gris/azul oscuro, no verde brillante */
+/* Ajuste específico para MODO OSCURO */
 body.dark-mode .sidebar {
-  background-color: var(--background-app); /* Gris oscuro */
+  background-color: var(--background-app);
   color: var(--text-main);
   border-right: 1px solid var(--border-light);
 }
@@ -65,9 +59,9 @@ body.dark-mode .close-menu-btn {
 
 /* --- CABECERA DE PERFIL --- */
 .sidebar-profile-header {
-  padding: 20px;
+  padding: 25px 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(0, 0, 0, 0.1); /* Sutilmente más oscuro que el fondo */
+  background-color: rgba(0, 0, 0, 0.1);
 }
 body.dark-mode .sidebar-profile-header {
   background-color: var(--background-widget);
@@ -93,7 +87,7 @@ body.dark-mode .sidebar-profile-header {
   height: 50px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid currentColor; /* Se adapta al color del texto */
+  border: 2px solid currentColor;
   background-color: var(--card-bg);
   display: flex;
   justify-content: center;
@@ -128,13 +122,12 @@ body.dark-mode .sidebar-profile-header {
   text-overflow: ellipsis;
 }
 body.dark-mode .profile-role-label {
-  color: var(--primary-dark); /* Verde neón en modo oscuro */
+  color: var(--primary-dark);
 }
 
 /* --- NAVEGACIÓN --- */
 .sidebar-nav {
   flex-grow: 1;
-  overflow-y: auto;
   padding-top: 10px;
 }
 
@@ -147,7 +140,7 @@ body.dark-mode .profile-role-label {
 .sidebar-nav li a {
   display: block;
   padding: 15px 25px;
-  color: inherit; /* Hereda del padre (.sidebar) */
+  color: inherit;
   text-decoration: none;
   font-size: 1.1em;
   border-left: 4px solid transparent;
@@ -179,7 +172,7 @@ body.dark-mode .sidebar-footer {
 .logout-button {
   width: 100%;
   padding: 12px;
-  background-color: #b91c1c; /* Rojo */
+  background-color: #b91c1c;
   color: white;
   border: none;
   border-radius: 8px;
@@ -207,12 +200,11 @@ body.dark-mode .sidebar-footer {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 80%; /* Sidebar más ancho en móvil para mejor tacto */
+    max-width: 300px;
     height: 100vh;
-    z-index: 2000;
     box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
     border-right: none;
-    overflow-y: auto;
   }
 
   .sidebar-header-mobile {
@@ -220,15 +212,5 @@ body.dark-mode .sidebar-footer {
     position: sticky;
     top: 0;
     z-index: 10;
-  }
-
-  .sidebar-nav li a {
-    padding: 20px 25px;
-    font-size: 1.2em;
-  }
-
-  .logout-button {
-    padding: 15px;
-    font-size: 1.1em;
   }
 }
