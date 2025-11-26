@@ -17,18 +17,20 @@
 }
 
 /* --- 1. POSICIONAMIENTO DE CONTROLES --- */
-
 .leaflet-top.leaflet-left {
   top: 10px !important;
   left: 10px !important;
 }
 
-/* --- 2. PANEL DE BOTONES --- */
+/* --- 2. PANEL DE BOTONES (IZQUIERDA) --- */
 .map-controls-overlay {
   position: absolute;
-  top: 42px;
-  left: 80px;
-  z-index: 1000 !important;
+  top: 42px; /* Posición original solicitada */
+  left: 80px; /* Posición original solicitada */
+
+  /* CLAVE: z-index menor que el modal (que suele ser 1000+) */
+  z-index: 900 !important;
+
   display: flex;
   gap: 10px;
 }
@@ -85,7 +87,7 @@
   position: absolute !important;
   bottom: 25px !important;
   right: 25px !important;
-  z-index: 1000 !important;
+  z-index: 900 !important; /* También bajamos este z-index */
 
   background-color: white !important;
   color: #333 !important;
@@ -111,7 +113,7 @@
   position: absolute !important;
   bottom: 25px !important;
   left: 20px !important;
-  z-index: 1000 !important;
+  z-index: 900 !important;
 
   background-color: white !important;
   padding: 6px 12px !important;
@@ -131,14 +133,14 @@
 /* --- 5. PANEL DE RESUMEN DE ZONA --- */
 .zone-summary-panel {
   position: absolute;
-  top: 60px;
-  left: 60px;
+  top: 90px;
+  left: 80px;
   width: 220px;
   background-color: white;
   border-radius: 8px;
   padding: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 900;
   border: 1px solid #eee;
   animation: slideInLeft 0.3s ease-out;
 }
@@ -164,6 +166,7 @@
   cursor: pointer;
   color: #999;
 }
+
 .summary-metric.main {
   text-align: center;
   margin-bottom: 10px;
@@ -176,7 +179,6 @@
   font-size: 0.7em;
   color: #166534;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 .summary-metric.main .value {
   font-size: 1.8em;
@@ -184,6 +186,7 @@
   line-height: 1;
   color: #166534;
 }
+
 .summary-grid {
   display: flex;
   flex-wrap: wrap;
@@ -209,6 +212,7 @@
 .metric-box.full {
   flex: 1 1 100%;
 }
+
 .mini-npk {
   display: flex;
   justify-content: space-around;
@@ -246,13 +250,11 @@
 }
 
 /* --- 6. ESTILOS DEL POPUP DE DETALLE --- */
-
 .sample-popup-content {
   color: #333;
   font-family: var(--font-family, sans-serif);
   min-width: 200px;
 }
-
 .popup-header {
   display: flex;
   justify-content: space-between;
@@ -262,16 +264,14 @@
   padding-bottom: 10px;
 }
 
-/* Caja de pH */
 .popup-kpi {
   text-align: center;
-  background-color: #f1f5f9; /* Fondo claro por defecto */
+  background-color: #f1f5f9;
   padding: 8px 16px;
   border-radius: 8px;
   min-width: 60px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-
 .popup-kpi .label {
   font-size: 0.75em;
   text-transform: uppercase;
@@ -280,7 +280,6 @@
   font-weight: 700;
   margin-bottom: 2px;
 }
-
 .popup-kpi .value {
   font-size: 1.8em;
   font-weight: 800;
@@ -294,55 +293,47 @@
   max-width: 140px;
   line-height: 1.4;
 }
-
 .popup-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .popup-row {
   display: flex;
   justify-content: space-between;
   font-size: 1.05em;
   align-items: center;
 }
-
 .popup-row span {
   display: flex;
   align-items: center;
   gap: 6px;
   color: #64748b;
 }
-
 .popup-row strong {
   color: #333;
 }
-
 .popup-divider {
   border: 0;
   border-top: 1px solid #e2e8f0;
   margin: 5px 0;
 }
 
-/* Caja de Nutrientes */
 .popup-nutrients {
   display: flex;
   justify-content: space-around;
   margin-top: 5px;
-  background-color: #f8fafc; /* Fondo claro por defecto */
+  background-color: #f8fafc;
   padding: 12px 10px;
   border-radius: 8px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-
 .nutrient-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
-
 .nutrient-label {
   font-weight: 900;
   font-size: 0.8em;
@@ -350,14 +341,13 @@
 }
 .nutrient-label.n {
   color: #0ea5e9;
-} /* Cyan/Azul */
+}
 .nutrient-label.p {
   color: #f59e0b;
-} /* Ambar/Naranja */
+}
 .nutrient-label.k {
   color: #8b5cf6;
-} /* Violeta */
-
+}
 .nutrient-val {
   font-weight: bold;
   font-size: 1.1em;
@@ -365,9 +355,19 @@
 }
 
 /* --- 7. AJUSTES MODO OSCURO --- */
+body.dark-mode .map-btn {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+body.dark-mode .map-btn:hover {
+  background-color: #334155;
+}
+body.dark-mode .map-controls-overlay {
+  background-color: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
 
-/* Botones e interfaz general */
-body.dark-mode .map-btn,
 body.dark-mode .clicked-coords-display,
 body.dark-mode .zone-summary-panel,
 body.dark-mode .center-map-button {
@@ -380,73 +380,56 @@ body.dark-mode .summary-header h4,
 body.dark-mode .metric-box strong {
   color: #e2e8f0;
 }
-
 body.dark-mode .metric-box {
   background-color: #334155;
   border-color: #475569;
 }
 
-/* --- OVERRIDES LEAFLET POPUP DARK MODE --- */
-/* Esto cambia el color de fondo de la burbuja del mapa */
-
 body.dark-mode .leaflet-popup-content-wrapper,
 body.dark-mode .leaflet-popup-tip {
-  background-color: #1e293b !important; /* Fondo oscuro para el popup */
-  color: #f1f5f9 !important; /* Texto claro */
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
-
 body.dark-mode .leaflet-popup-close-button {
-  color: #94a3b8 !important; /* X de cerrar más clara */
+  color: #94a3b8 !important;
 }
 body.dark-mode .leaflet-popup-close-button:hover {
   color: #fff !important;
 }
 
-/* Ajustes internos del Modal en Oscuro */
 body.dark-mode .sample-popup-content {
   color: #e2e8f0;
 }
-
 body.dark-mode .popup-header {
   border-bottom-color: #334155;
 }
-
 body.dark-mode .popup-kpi {
-  background-color: #0f172a; /* Fondo muy oscuro para la caja de pH */
+  background-color: #0f172a;
   border: 1px solid #334155;
 }
-
 body.dark-mode .popup-kpi .label {
   color: #b8a594;
 }
-
 body.dark-mode .popup-date {
   color: #94a3b8;
 }
-
 body.dark-mode .popup-row span {
-  color: #025807; /* Iconos y etiquetas legibles */
+  color: #025807;
 }
-
 body.dark-mode .popup-grid strong {
   color: #07720786;
 }
-
 body.dark-mode .popup-divider {
   border-top-color: #334155;
 }
-
 body.dark-mode .popup-nutrients {
-  background-color: #0f172a; /* Fondo muy oscuro para la caja NPK */
+  background-color: #0f172a;
   border: 1px solid #334155;
 }
-
 body.dark-mode .nutrient-val {
   color: #ffffff;
 }
-
-/* Ajuste de colores de nutrientes para fondo oscuro */
 body.dark-mode .nutrient-label.n {
   color: #38bdf8;
 }
@@ -455,4 +438,28 @@ body.dark-mode .nutrient-label.p {
 }
 body.dark-mode .nutrient-label.k {
   color: #a78bfa;
+}
+
+/* Ajuste específico minimapa */
+.minimap-container .map-controls-overlay {
+  display: none !important;
+}
+.minimap-container .center-map-button {
+  width: 24px !important;
+  height: 24px !important;
+  bottom: 5px !important;
+  right: 5px !important;
+}
+.minimap-container .clicked-coords-display {
+  bottom: 5px !important;
+  left: 5px !important;
+  padding: 2px 5px !important;
+  font-size: 0.7em !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  max-width: 180px;
+}
+body.dark-mode .minimap-container .clicked-coords-display {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #475569;
 }
