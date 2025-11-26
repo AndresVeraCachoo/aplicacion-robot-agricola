@@ -1,17 +1,25 @@
 /* src/features/dashboard/Dashboard.css */
+
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
-  position: relative; /* Necesario para el posicionamiento absoluto del overlay */
-  overflow-x: hidden; /* Evita scroll horizontal no deseado */
+  height: 100vh; /* Ocupa exactamente el alto de la ventana */
+  width: 100vw; /* Ocupa el ancho completo */
+  overflow: hidden; /* EVITA que el body tenga scroll */
+  background-color: var(--background-app);
 }
+
+/* El sidebar se renderiza aquí directamente como hijo flex */
 
 .main-content-wrapper {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  width: 100%; /* Asegura que ocupe el ancho disponible */
-  transition: margin-left 0.3s ease;
+  height: 100%; /* Ocupa todo el alto disponible */
+  overflow-y: auto; /* AQUÍ es donde ocurre el scroll de la página */
+  overflow-x: hidden;
+  position: relative;
+  /* Scroll suave */
+  scroll-behavior: smooth;
 }
 
 .main-content-wrapper > main {
@@ -19,9 +27,11 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  /* Un poco de padding al final para que no se corte el contenido */
+  padding-bottom: 40px;
 }
 
-/* Overlay oscuro para móvil cuando el menú está abierto */
+/* Overlay oscuro para móvil */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -30,24 +40,26 @@
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1900; /* Justo debajo del Sidebar (z-index 2000) */
+  z-index: 1900;
 }
 
 /* --- Responsive Mobile --- */
 @media (max-width: 768px) {
   .sidebar-overlay {
-    display: block; /* Se muestra solo en móvil */
+    display: block;
   }
 
   .dashboard-page-container {
-    padding: 15px; /* Menos padding en móvil */
+    padding: 15px;
   }
 }
 
 /* Estilos del Mapa (Widget) */
 .dashboard-page-container {
   width: 100%;
-  height: 100%;
+  /* En este nuevo layout, height:100% puede ser confuso si el padre scrollea.
+     Mejor min-height o dejar que fluya. */
+  min-height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -57,9 +69,8 @@
 
 .map-widget-wrapper {
   width: 100%;
-  height: 100%;
+  height: 70vh; /* Altura fija relativa a la ventana para el mapa */
   max-width: 1200px;
-  max-height: 700px;
   min-height: 500px;
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
@@ -69,7 +80,7 @@
 
 @media (max-width: 768px) {
   .map-widget-wrapper {
-    min-height: 70vh; /* En móvil damos más altura relativa al mapa */
+    min-height: 60vh;
     border-radius: 12px;
   }
 }
