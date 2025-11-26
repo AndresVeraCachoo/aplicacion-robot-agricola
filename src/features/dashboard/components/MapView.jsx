@@ -20,7 +20,6 @@ import "./MapView.css";
 
 // --- Funciones Auxiliares ---
 
-// Algoritmo Ray-Casting para detectar punto en polígono
 const isPointInPolygon = (point, vs) => {
   const x = point[0],
     y = point[1];
@@ -37,17 +36,16 @@ const isPointInPolygon = (point, vs) => {
   return inside;
 };
 
-// Helper para color del pH
 const getColorByPH = (phVal) => {
   const ph = Number(phVal);
-  if (ph < 6.0) return "#ef4444"; // Ácido - Rojo
-  if (ph > 7.5) return "#3b82f6"; // Alcalino - Azul
-  return "#22c55e"; // Neutro - Verde
+  if (ph < 6.0) return "#ef4444";
+  if (ph > 7.5) return "#3b82f6";
+  return "#22c55e";
 };
 
 // --- Subcomponentes ---
 
-function ZoneDrawer({ isDrawing, onZoneComplete }) {
+function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
   const [points, setPoints] = useState([]);
   const [mousePos, setMousePos] = useState(null);
   const map = useMap();
@@ -63,6 +61,17 @@ function ZoneDrawer({ isDrawing, onZoneComplete }) {
       setMousePos(null);
     }
   }, [isDrawing, map]);
+
+  // Escuchar evento de escape para cancelar
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape" && isDrawing) {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isDrawing, onCancel]);
 
   useMapEvents({
     click(e) {
@@ -157,13 +166,10 @@ function MapView() {
     return Array.isArray(data) ? data : [];
   });
 
-  // Gestión de Zona Segura (Store)
   const safeZone = useRobotStore((state) => state.safeZone);
   const { setSafeZone, clearSafeZone } = useRobotStore();
-
   const { addToast } = useToast();
 
-  // Estados Locales
   const [isDrawingZone, setIsDrawingZone] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -185,7 +191,6 @@ function MapView() {
     iconAnchor: [15, 15],
   });
 
-  // Cálculo de Estadísticas de Zona
   const zoneStats = useMemo(() => {
     if (!safeZone || agronomicData.length === 0) return null;
     const pointsInZone = agronomicData.filter(
@@ -218,7 +223,6 @@ function MapView() {
     };
   }, [safeZone, agronomicData]);
 
-  // Manejadores de Eventos
   const handleStartDrawing = () => {
     setIsDrawingZone(true);
     setLastClickedCoords(null);
@@ -227,6 +231,21 @@ function MapView() {
       "Haz clic para añadir vértices. Clic en el punto rojo para cerrar.",
       "info"
     );
+  };
+
+  // NUEVO: Función para cancelar dibujo
+  const handleCancelDrawing = () => {
+    setIsDrawingZone(false);
+    addToast("Delimitación cancelada.", "info");
+  };
+
+  // Modificado para alternar entre iniciar y cancelar
+  const toggleDrawing = () => {
+    if (isDrawingZone) {
+      handleCancelDrawing();
+    } else {
+      handleStartDrawing();
+    }
   };
 
   const handleZoneComplete = (polygonPoints) => {
@@ -348,6 +367,7 @@ function MapView() {
         <ZoneDrawer
           isDrawing={isDrawingZone}
           onZoneComplete={handleZoneComplete}
+          onCancel={handleCancelDrawing} // Pasar manejador de cancelar
         />
         <MapClickHandler
           onMapClick={handleMapClick}
@@ -355,8 +375,6 @@ function MapView() {
         />
         <CenterButtonInternal />
       </MapContainer>
-
-      {/* --- INTERFAZ FLOTANTE SOBRE EL MAPA --- */}
 
       {lastClickedCoords && !isDrawingZone && (
         <div className="clicked-coords-display">
@@ -370,7 +388,7 @@ function MapView() {
         {!safeZone ? (
           <button
             className={`map-btn ${isDrawingZone ? "active" : ""}`}
-            onClick={handleStartDrawing}
+            onClick={toggleDrawing} // Usar toggle para activar/cancelar
             title="Delimitar Área"
           >
             {isDrawingZone ? "❌ Cancelar" : "🌾 Delimitar Área"}
@@ -395,7 +413,6 @@ function MapView() {
         )}
       </div>
 
-      {/* Panel de Resumen de Zona */}
       {showZoneSummary && zoneStats && (
         <div className="zone-summary-panel">
           <div className="summary-header">
@@ -435,7 +452,6 @@ function MapView() {
         </div>
       )}
 
-      {/* --- MODAL DE DETALLE RESTAURADO --- */}
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
