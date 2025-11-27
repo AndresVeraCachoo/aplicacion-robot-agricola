@@ -10,6 +10,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import { useNavigate } from "react-router-dom"; // 1. Importar hook de navegación
 import { useRobotStore } from "../../../store/robotStore";
 import "./BatteryModal.css";
 
@@ -17,41 +18,25 @@ import "./BatteryModal.css";
 const generateMockBatteryHistory = (currentLevel, isCharging) => {
   const data = [];
   const now = new Date();
-
   let simulatedLevel = currentLevel;
 
-  // Generamos 24 horas hacia atrás
   for (let i = 0; i < 24; i++) {
     const time = new Date(now);
     time.setHours(now.getHours() - i);
-
-    // Lógica de Estado Pasado:
-    // Si está cargando AHORA, asumimos que lleva cargando entre 1 y 4 horas.
-    // Antes de eso, asumimos que se estaba descargando.
     let wasChargingInPast = isCharging;
 
-    // Si actualmente carga, fingimos que empezó hace poco (ej. 3 horas)
     if (isCharging && i > 3) {
       wasChargingInPast = false;
     }
-
-    // Si actualmente NO carga, fingimos que lleva así un buen rato,
-    // a menos que esté al 100%, lo que implicaría que acabó de cargar hace poco.
     if (!isCharging && currentLevel === 100 && i < 5) {
       wasChargingInPast = true;
     }
 
-    // Cálculo del nivel (hacia el pasado, invertimos la lógica)
     if (i > 0) {
-      const rate = Math.random() * 4 + 3; // Variación 3-7%
-
+      const rate = Math.random() * 4 + 3;
       if (wasChargingInPast) {
-        // Si en ese momento cargaba, tenía MENOS batería que el futuro relativo.
-        // Restamos al ir hacia atrás.
-        simulatedLevel = Math.max(0, simulatedLevel - rate * 2); // Carga rápida
+        simulatedLevel = Math.max(0, simulatedLevel - rate * 2);
       } else {
-        // Si en ese momento gastaba, tenía MÁS batería.
-        // Sumamos al ir hacia atrás.
         simulatedLevel = Math.min(100, simulatedLevel + rate);
       }
     }
@@ -62,20 +47,18 @@ const generateMockBatteryHistory = (currentLevel, isCharging) => {
       isChargingState: wasChargingInPast,
     });
   }
-
-  // Forzar consistencia final
   data[data.length - 1].level = currentLevel;
   data[data.length - 1].isChargingState = isCharging;
-
   return data;
 };
 
-function BatteryModal() {
+// 2. Recibir prop onClose
+function BatteryModal({ onClose }) {
+  const navigate = useNavigate(); // 3. Inicializar navigate
   const batteryInfo = useRobotStore((state) => state.battery);
   const { percentage, status, voltage, temperature, timeRemaining } =
     batteryInfo;
   const isCharging = status === "CHARGING";
-
   const LOW_BATTERY_THRESHOLD = 20;
 
   const historyData = useMemo(() => {
@@ -107,16 +90,16 @@ function BatteryModal() {
     return null;
   };
 
-  // Función de color corregida y simplificada
   const getBarColor = (entry) => {
-    // 1. Si está cargando -> VERDE (siempre)
     if (entry.isChargingState) return "#22c55e";
-
-    // 2. Si no carga y es bajo -> NARANJA
     if (entry.level < LOW_BATTERY_THRESHOLD) return "#f97316";
-
-    // 3. Si no carga y es normal -> AZUL
     return "#3b82f6";
+  };
+
+  // 4. Manejador de navegación
+  const handleViewDetails = () => {
+    if (onClose) onClose(); // Cerrar modal primero
+    navigate("/app/energy"); // Navegar a la nueva página
   };
 
   return (
@@ -162,11 +145,9 @@ function BatteryModal() {
       <div className="battery-chart-section">
         <div className="chart-header-row">
           <h4>Uso de batería (24h)</h4>
-          <button
-            className="btn-details-link"
-            onClick={() => alert("Próximamente")}
-          >
-            Más detalles &rarr;
+          {/* 5. Conectar el botón */}
+          <button className="btn-details-link" onClick={handleViewDetails}>
+            Ver Detalles Avanzados &rarr;
           </button>
         </div>
 
@@ -185,14 +166,11 @@ function BatteryModal() {
                 content={<CustomTooltip />}
                 cursor={{ fill: "rgba(0,0,0,0.05)" }}
               />
-
-              {/* Línea de referencia (Umbral) */}
               <ReferenceLine
                 y={LOW_BATTERY_THRESHOLD}
                 stroke="#ef4444"
                 strokeDasharray="3 3"
               />
-
               <Bar dataKey="level" radius={[3, 3, 3, 3]}>
                 {historyData.map((entry, index) => (
                   <Cell
@@ -206,7 +184,6 @@ function BatteryModal() {
           </ResponsiveContainer>
         </div>
 
-        {/* LEYENDA ACTUALIZADA CON CUADRADO NARANJA */}
         <div className="chart-legend">
           <span className="legend-item">
             <span className="dot usage"></span> Uso

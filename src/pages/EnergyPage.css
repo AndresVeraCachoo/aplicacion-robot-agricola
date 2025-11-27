@@ -1,0 +1,133 @@
+/* src/pages/EnergyPage.css */
+
+.energy-page-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-main);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.energy-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.btn-back {
+  background: none;
+  border: 2px solid var(--border-light);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background-color: var(--accent-green);
+  border-color: var(--accent-green);
+  color: white;
+}
+
+.energy-header h1 {
+  margin: 0;
+  font-size: 1.8em;
+  color: var(--primary-darkest);
+}
+
+/* Grid de Métricas */
+.energy-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background-color: var(--card-bg);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.kpi-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.kpi-label {
+  font-size: 0.9em;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  font-size: 1.8em;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 5px 0;
+}
+
+.kpi-sub {
+  font-size: 0.8em;
+  color: #94a3b8;
+}
+
+/* Sección de Gráficos */
+.energy-charts-section {
+  background-color: var(--card-bg);
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-light);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  margin: 0 0 20px 0;
+  color: var(--primary-dark);
+}
+
+/* Estados Específicos */
+.status-charging {
+  color: #22c55e;
+}
+.status-draining {
+  color: #f59e0b;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modo Oscuro */
+body.dark-mode .kpi-label {
+  color: #94a3b8;
+}
+body.dark-mode .kpi-sub {
+  color: #64748b;
+}
