@@ -1,14 +1,14 @@
 // src/layout/Header.jsx
 import React, { useState } from "react";
 import "./Header.css";
-import { useRobotStore } from "../store/robotStore.js"; // Ruta explícita .js
-import { useTheme } from "../context/ThemeContext.jsx"; // Ruta explícita .jsx
+import { useRobotStore } from "../store/robotStore.js";
+import { useTheme } from "../context/ThemeContext.jsx";
 import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
 
 function Header({ onMenuClick }) {
   const battery = useRobotStore((state) => state.battery);
-  const isConnected = useRobotStore((state) => state.isConnected); // Estado de conexión
+  const isConnected = useRobotStore((state) => state.isConnected);
 
   const { percentage, status } = battery;
   const { isDarkMode, toggleTheme } = useTheme();
@@ -36,7 +36,6 @@ function Header({ onMenuClick }) {
             ☰
           </button>
 
-          {/* Indicador de Estado de Sistema */}
           <div
             className={`system-status-pill ${
               isConnected ? "online" : "offline"
@@ -85,7 +84,8 @@ function Header({ onMenuClick }) {
         onClose={closeBatteryModal}
         title="Detalle de Energía"
       >
-        <BatteryModal />
+        {/*Pasar la función onClose al hijo */}
+        <BatteryModal onClose={closeBatteryModal} />
       </Modal>
     </>
   );

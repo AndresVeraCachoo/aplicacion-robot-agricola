@@ -10,6 +10,8 @@ import DataPage from "./pages/DataPage";
 import HistoryPage from "./pages/HistoryPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ProfilePage from "./pages/ProfilePage";
+// 1. Importar la nueva página
+import EnergyPage from "./pages/EnergyPage";
 import "./App.css";
 
 // Componente para proteger rutas privadas
@@ -38,10 +40,11 @@ function App() {
         <Route path="camera" element={<CameraPage />} />
         <Route path="data" element={<DataPage />} />
         <Route path="history" element={<HistoryPage />} />
-        {/* 2. AÑADIR LA RUTA AL PERFIL (Accesible para todos) */}
         <Route path="profile" element={<ProfilePage />} />
-
         <Route path="users" element={<UserManagementPage />} />
+
+        {/* 2. Definir la ruta oculta (no está en Sidebar) */}
+        <Route path="energy" element={<EnergyPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/app" replace />} />
     </Routes>
