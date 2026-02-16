@@ -18,6 +18,7 @@ const initialState = {
     status: "IDLE",
     speed: 0,
     heading: 0,
+    mode: "AUTO", // Nuevo campo en estado del sistema
   },
   position: {
     lat: null,
@@ -31,8 +32,9 @@ const initialState = {
     tankLevel: 0,
   },
   isConnected: false,
-  // NUEVO: Zona segura definida por el usuario [[lat1, lon1], [lat2, lon2]]
-  safeZone: null, 
+  safeZone: null,
+  // Estado local de control
+  controlMode: "AUTO", 
 };
 
 export const useRobotStore = create((set, get) => ({
@@ -44,15 +46,14 @@ export const useRobotStore = create((set, get) => ({
     const { socket } = get();
     if (socket) return; 
 
-    console.log("🔌 Iniciando conexión WebSocket...");
+    console.log("📡 Iniciando conexión WebSocket...");
     const newSocket = io(SOCKET_URL, {
       transports: ["websocket"], 
     });
 
     newSocket.on("connect", () => {
-      console.log("🟢 WS Conectado");
+      console.log("✅ WS Conectado");
       set({ isConnected: true });
-      // Si ya teníamos una zona definida localmente, la enviamos al reconectar
       const { safeZone } = get();
       if (safeZone) {
         newSocket.emit("client:update_zone", safeZone);
@@ -60,7 +61,7 @@ export const useRobotStore = create((set, get) => ({
     });
 
     newSocket.on("disconnect", () => {
-      console.log("🔴 WS Desconectado");
+      console.log("❌ WS Desconectado");
       set({ isConnected: false });
     });
 
@@ -69,7 +70,13 @@ export const useRobotStore = create((set, get) => ({
         battery: { ...state.battery, ...data.battery },
         position: data.position,
         system: { ...state.system, ...data.system },
+        // Sincronizamos el modo si viene del backend
+        controlMode: data.system.mode || state.controlMode 
       }));
+    });
+
+    newSocket.on("robot:mode_changed", (mode) => {
+        set({ controlMode: mode });
     });
 
     newSocket.on("robot:new_data", (newRecord) => {
@@ -127,13 +134,11 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
-  // --- NUEVAS ACCIONES DE ZONA ---
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
     if (socket && socket.connected) {
       socket.emit("client:update_zone", bounds);
-      console.log("📤 Zona enviada al robot:", bounds);
     }
   },
 
@@ -142,7 +147,25 @@ export const useRobotStore = create((set, get) => ({
     set({ safeZone: null });
     if (socket && socket.connected) {
       socket.emit("client:clear_zone");
-      console.log("📤 Zona eliminada");
     }
+  },
+
+  // --- ACCIONES DE CONTROL ---
+  setControlMode: (mode) => {
+      const { socket } = get();
+      // Actualización optimista
+      set({ controlMode: mode });
+      if (socket && socket.connected) {
+          socket.emit("client:set_mode", mode);
+      }
+  },
+
+  sendManualMove: (velocity) => {
+      const { socket, controlMode } = get();
+      if (controlMode !== "MANUAL") return;
+      
+      if (socket && socket.connected) {
+          socket.emit("client:manual_move", velocity);
+      }
   }
 }));
