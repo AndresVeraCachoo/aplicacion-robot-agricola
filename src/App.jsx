@@ -10,11 +10,11 @@ import DataPage from "./pages/DataPage";
 import HistoryPage from "./pages/HistoryPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ProfilePage from "./pages/ProfilePage";
-// 1. Importar la nueva página
 import EnergyPage from "./pages/EnergyPage";
+// Importar la nueva página de Control
+import ControlPage from "./pages/ControlPage";
 import "./App.css";
 
-// Componente para proteger rutas privadas
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) {
@@ -37,13 +37,13 @@ function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        {/* Nueva ruta de control */}
+        <Route path="control" element={<ControlPage />} />
         <Route path="camera" element={<CameraPage />} />
         <Route path="data" element={<DataPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="users" element={<UserManagementPage />} />
-
-        {/* 2. Definir la ruta oculta (no está en Sidebar) */}
         <Route path="energy" element={<EnergyPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/app" replace />} />

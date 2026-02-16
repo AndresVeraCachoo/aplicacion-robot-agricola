@@ -1,3 +1,4 @@
+// server/index.js
 import express from "express";
 import cors from "cors";
 import { createServer } from "http"; 
@@ -7,8 +8,14 @@ import "dotenv/config";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
-// Importamos las nuevas funciones del simulador
-import { startRobotSimulation, setSimulationZone, clearSimulationZone } from "./simulator.js";
+// Importamos funciones del simulador, incluyendo las nuevas de control
+import { 
+  startRobotSimulation, 
+  setSimulationZone, 
+  clearSimulationZone,
+  setRobotMode,
+  setManualVelocity
+} from "./simulator.js";
 
 const app = express();
 const PORT = 3001;
@@ -31,15 +38,25 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log("🔌 Cliente conectado:", socket.id);
   
-  // --- NUEVOS EVENTOS DE ZONA ---
+  // Eventos de Zona
   socket.on("client:update_zone", (zone) => {
     setSimulationZone(zone);
-    // Opcional: Reenviar a otros clientes si quieres sincronización multi-usuario
-    // socket.broadcast.emit("robot:zone_updated", zone);
   });
 
   socket.on("client:clear_zone", () => {
     clearSimulationZone();
+  });
+
+  // --- NUEVOS EVENTOS DE CONTROL ---
+  socket.on("client:set_mode", (mode) => {
+    // mode: "AUTO" | "MANUAL"
+    setRobotMode(mode);
+    io.emit("robot:mode_changed", mode); // Notificar a todos los clientes
+  });
+
+  socket.on("client:manual_move", (velocity) => {
+    // velocity: { x: -1|0|1, y: -1|0|1 }
+    setManualVelocity(velocity.x, velocity.y);
   });
 
   socket.on("disconnect", () => {

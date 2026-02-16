@@ -35,8 +35,7 @@ function Sidebar({ onClose }) {
         <Link
           to="/app/profile"
           className="profile-link-wrapper"
-          title="Ir a mi perfil"
-          onClick={onClose} // Cierra el menú al navegar en móvil
+          onClick={onClose}
         >
           <div className="profile-image-container">
             <img src={avatar} alt="Usuario" className="sidebar-avatar" />
@@ -55,6 +54,14 @@ function Sidebar({ onClose }) {
               Inicio
             </Link>
           </li>
+
+          {/* Nuevo enlace al panel de Control */}
+          <li>
+            <Link to="/app/control" onClick={onClose}>
+              Control Remoto
+            </Link>
+          </li>
+
           <li>
             <Link to="/app/data" onClick={onClose}>
               Datos

@@ -1,3 +1,4 @@
+// server/simulator.js
 import { pool } from "./config/db.js";
 
 const MOVEMENT_INTERVAL = 2000; 
@@ -11,15 +12,20 @@ let isCharging = false;
 let heading = 0;
 let speed = 0;
 
-// Variables de estado ambiental (Ahora sí se usarán)
+// Variables de estado ambiental
 let currentTemp = 20;
 let currentHumidity = 50;
 let currentPh = 7.0;
 
+// Variables de movimiento
 let latVelocity = 0.00015; 
 let lonVelocity = 0.00010; 
 
-// NUEVO: Variable para la zona segura
+// NUEVO: Variables de Control
+let controlMode = "AUTO"; // "AUTO" | "MANUAL"
+let manualVelocity = { x: 0, y: 0 }; // x: lon, y: lat
+
+// Variable para la zona segura
 let safeZonePolygon = null;
 
 // --- ALGORITMO RAY CASTING (Backend) ---
@@ -46,46 +52,92 @@ export const clearSimulationZone = () => {
   console.log("🛡️ Simulador: Límite de finca eliminado");
 };
 
+// --- NUEVAS FUNCIONES DE CONTROL ---
+export const setRobotMode = (mode) => {
+  if (mode === "AUTO" || mode === "MANUAL") {
+    controlMode = mode;
+    console.log(`🎮 Simulador: Modo cambiado a ${mode}`);
+    // Al cambiar a manual, detenemos el robot inicialmente
+    if (mode === "MANUAL") manualVelocity = { x: 0, y: 0 };
+  }
+};
+
+export const setManualVelocity = (vx, vy) => {
+  if (controlMode === "MANUAL") {
+    // Ajustamos la sensibilidad para coordenadas geográficas
+    manualVelocity = { 
+      x: vx * 0.00015, // Longitud
+      y: vy * 0.00015  // Latitud
+    };
+  }
+};
+
 export const startRobotSimulation = (io) => {
   console.log("🤖 Simulador: ACTIVADO con soporte WebSocket");
 
   // 1. BUCLE DE MOVIMIENTO
   setInterval(async () => {
+    // Lógica de carga de batería (común para ambos modos)
     if (isCharging) {
       battery += 5;
       speed = 0;
       if (battery >= 100) { battery = 100; isCharging = false; }
     } else {
-      battery -= 0.5;
+      battery -= (controlMode === "MANUAL" && (manualVelocity.x !== 0 || manualVelocity.y !== 0)) ? 0.8 : 0.5;
       if (battery <= 10) { isCharging = true; }
     }
 
     if (!isCharging) {
-      if (Math.random() > 0.9) latVelocity *= -1;
-      if (Math.random() > 0.9) lonVelocity *= -1;
-      
-      let nextLat = currentLat + latVelocity + (Math.random() - 0.5) * 0.00005;
-      let nextLon = currentLon + lonVelocity + (Math.random() - 0.5) * 0.00005;
+      let nextLat = currentLat;
+      let nextLon = currentLon;
+      let dLat = 0;
+      let dLon = 0;
 
-      // Lógica de Geofencing Poligonal
+      if (controlMode === "AUTO") {
+        // --- LÓGICA AUTÓNOMA EXISTENTE ---
+        if (Math.random() > 0.9) latVelocity *= -1;
+        if (Math.random() > 0.9) lonVelocity *= -1;
+        
+        dLat = latVelocity + (Math.random() - 0.5) * 0.00005;
+        dLon = lonVelocity + (Math.random() - 0.5) * 0.00005;
+
+      } else {
+        // --- LÓGICA MANUAL ---
+        dLat = manualVelocity.y;
+        dLon = manualVelocity.x;
+      }
+
+      nextLat = currentLat + dLat;
+      nextLon = currentLon + dLon;
+
+      // Lógica de Geofencing (Aplica en ambos modos por seguridad)
       if (safeZonePolygon && safeZonePolygon.length >= 3) {
         const inside = isPointInPolygon(nextLat, nextLon, safeZonePolygon);
         
         if (!inside) {
-            latVelocity *= -1;
-            lonVelocity *= -1;
-            nextLat = currentLat;
-            nextLon = currentLon;
-            console.log("🚧 Límite de finca irregular alcanzado. Rebotando...");
+            if (controlMode === "AUTO") {
+                latVelocity *= -1;
+                lonVelocity *= -1;
+            } else {
+                // En manual, simplemente no nos movemos fuera
+                nextLat = currentLat;
+                nextLon = currentLon;
+            }
+            console.log("🚧 Límite de finca alcanzado.");
         }
       }
 
       currentLat = nextLat;
       currentLon = nextLon;
 
-      const angleRad = Math.atan2(lonVelocity, latVelocity);
-      heading = (angleRad * 180) / Math.PI;
-      speed = (Math.sqrt(latVelocity**2 + lonVelocity**2) * 100000).toFixed(2);
+      // Calcular Heading y Speed
+      if (Math.abs(dLat) > 0 || Math.abs(dLon) > 0) {
+        const angleRad = Math.atan2(dLon, dLat); // Nota: atan2(y, x) -> atan2(lon, lat) para norte geográfico aprox
+        heading = (angleRad * 180) / Math.PI;
+        speed = (Math.sqrt(dLat**2 + dLon**2) * 100000).toFixed(2);
+      } else {
+        speed = 0;
+      }
     }
 
     try {
@@ -97,7 +149,7 @@ export const startRobotSimulation = (io) => {
         [
           currentLat, currentLon, Math.floor(battery),
           isCharging ? "CHARGING" : "IDLE",
-          isCharging ? "CHARGING" : "WORKING",
+          isCharging ? "CHARGING" : (speed > 0 ? "WORKING" : "IDLE"),
           speed, Math.floor(heading)
         ]
       );
@@ -115,7 +167,8 @@ export const startRobotSimulation = (io) => {
           system: {
             speed: speed,
             heading: Math.floor(heading),
-            status: isCharging ? "CHARGING" : "WORKING"
+            status: isCharging ? "CHARGING" : (speed > 0 ? "WORKING" : "IDLE"),
+            mode: controlMode // Enviamos el modo actual al frontend
           }
         });
       }
@@ -124,15 +177,12 @@ export const startRobotSimulation = (io) => {
     }
   }, MOVEMENT_INTERVAL);
 
-  // 2. BUCLE DE SENSORES (AQUÍ SE USAN LAS VARIABLES)
+  // 2. BUCLE DE SENSORES (Sin cambios mayores, salvo comprobación de carga)
   setInterval(async () => {
     if (isCharging) return; 
 
-    // Variación aleatoria suave
     currentTemp += (Math.random() - 0.5) * 2;
-    // USO DE CURRENTHUMIDITY (Aquí se elimina el error)
     currentHumidity = Math.max(0, Math.min(100, currentHumidity + (Math.random() - 0.5) * 5));
-    // USO DE CURRENTPH
     currentPh = Math.max(4, Math.min(10, currentPh + (Math.random() - 0.5) * 0.2));
     
     const n = Math.floor(Math.random() * 50 + 20);
@@ -141,7 +191,6 @@ export const startRobotSimulation = (io) => {
     const rad = Math.floor(Math.random() * 800 + 200);
 
     try {
-      // Insertar en DB usando las variables actualizadas
       const newRecord = await pool.query(
         `INSERT INTO robot_datos 
         (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar)
@@ -149,12 +198,10 @@ export const startRobotSimulation = (io) => {
         [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), n, p, k, rad]
       );
 
-      // Emitir nuevo dato
       if (io && newRecord.rows[0]) {
         io.emit("robot:new_data", newRecord.rows[0]);
       }
 
-      // Limpieza
       await pool.query(`
         DELETE FROM robot_datos WHERE id NOT IN (
           SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1
