@@ -18,7 +18,7 @@ const initialState = {
     status: "IDLE",
     speed: 0,
     heading: 0,
-    mode: "AUTO", // Nuevo campo en estado del sistema
+    mode: "AUTO",
   },
   position: {
     lat: null,
@@ -33,35 +33,27 @@ const initialState = {
   },
   isConnected: false,
   safeZone: null,
-  // Estado local de control
   controlMode: "AUTO", 
+  navTarget: null, // Nuevo estado para dibujar la línea en el mapa
 };
 
 export const useRobotStore = create((set, get) => ({
   ...initialState,
-  
   socket: null, 
 
   connectSocket: () => {
     const { socket } = get();
     if (socket) return; 
 
-    console.log("📡 Iniciando conexión WebSocket...");
-    const newSocket = io(SOCKET_URL, {
-      transports: ["websocket"], 
-    });
+    const newSocket = io(SOCKET_URL, { transports: ["websocket"] });
 
     newSocket.on("connect", () => {
-      console.log("✅ WS Conectado");
       set({ isConnected: true });
       const { safeZone } = get();
-      if (safeZone) {
-        newSocket.emit("client:update_zone", safeZone);
-      }
+      if (safeZone) newSocket.emit("client:update_zone", safeZone);
     });
 
     newSocket.on("disconnect", () => {
-      console.log("❌ WS Desconectado");
       set({ isConnected: false });
     });
 
@@ -70,20 +62,21 @@ export const useRobotStore = create((set, get) => ({
         battery: { ...state.battery, ...data.battery },
         position: data.position,
         system: { ...state.system, ...data.system },
-        // Sincronizamos el modo si viene del backend
-        controlMode: data.system.mode || state.controlMode 
+        controlMode: data.system.mode || state.controlMode,
+        // Sincronizar el target si viene del backend
+        navTarget: data.system.target || null 
       }));
     });
 
     newSocket.on("robot:mode_changed", (mode) => {
         set({ controlMode: mode });
+        if (mode !== "NAVIGATING") set({ navTarget: null });
     });
 
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
         const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
-        
         return {
           agronomicData: updatedData,
           pathHistory: [...state.pathHistory, newPathPoint]
@@ -117,10 +110,7 @@ export const useRobotStore = create((set, get) => ({
           temperature: 30,
           timeRemaining: "Calculando...",
         },
-        position: {
-          lat: estadoRes.data.current_lat,
-          lon: estadoRes.data.current_lon,
-        },
+        position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
         system: {
             speed: estadoRes.data.system_speed,
             heading: estadoRes.data.system_heading,
@@ -129,43 +119,39 @@ export const useRobotStore = create((set, get) => ({
         agronomicData: validData,
         pathHistory: validData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
       }));
-    } catch (error) {
-      console.error("Error carga inicial:", error);
-    }
+    } catch (error) { console.error("Error carga inicial:", error); }
   },
 
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
-    if (socket && socket.connected) {
-      socket.emit("client:update_zone", bounds);
-    }
+    if (socket && socket.connected) socket.emit("client:update_zone", bounds);
   },
 
   clearSafeZone: () => {
     const { socket } = get();
     set({ safeZone: null });
-    if (socket && socket.connected) {
-      socket.emit("client:clear_zone");
-    }
+    if (socket && socket.connected) socket.emit("client:clear_zone");
   },
 
-  // --- ACCIONES DE CONTROL ---
   setControlMode: (mode) => {
       const { socket } = get();
-      // Actualización optimista
       set({ controlMode: mode });
-      if (socket && socket.connected) {
-          socket.emit("client:set_mode", mode);
-      }
+      if (socket && socket.connected) socket.emit("client:set_mode", mode);
   },
 
   sendManualMove: (velocity) => {
       const { socket, controlMode } = get();
       if (controlMode !== "MANUAL") return;
-      
+      if (socket && socket.connected) socket.emit("client:manual_move", velocity);
+  },
+
+  // NUEVA ACCIÓN: Navegar a punto
+  navigateToPoint: (lat, lon) => {
+      const { socket } = get();
+      set({ navTarget: { lat, lon } }); // Optimista
       if (socket && socket.connected) {
-          socket.emit("client:manual_move", velocity);
+          socket.emit("client:navigate_to", { lat, lon });
       }
   }
 }));

@@ -1,0 +1,42 @@
+/* src/features/control/ControlMap.css */
+.control-map-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #ccc;
+  position: relative;
+}
+
+.control-leaflet-map {
+  height: 100%;
+  width: 100%;
+}
+
+.map-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: #eee;
+  color: #666;
+}
+
+.map-instructions {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.robot-marker-icon {
+  filter: drop-shadow(0 0 5px white);
+}

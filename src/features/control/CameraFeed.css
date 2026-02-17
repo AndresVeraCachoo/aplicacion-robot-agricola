@@ -1,0 +1,73 @@
+/* src/features/control/CameraFeed.css */
+.camera-feed-container {
+  position: relative;
+  width: 100%;
+  height: 100%; /* Importante para igualar al mapa */
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.video-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Evita interacciones con el video de YT */
+}
+
+.camera-iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.2); /* Un pequeño zoom para evitar bordes negros de YT */
+}
+
+/* Crosshair */
+.camera-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0.2); /* Más sutil */
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* HUD Bottom */
+.camera-hud-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* Degradado sutil para que se lean las letras blancas */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  padding: 15px;
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start; /* Alineado a la izquierda */
+  pointer-events: none;
+}
+
+.hud-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-metric .label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+.hud-metric .value {
+  font-size: 1rem;
+  color: white;
+  font-family: monospace;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
