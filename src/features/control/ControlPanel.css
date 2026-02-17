@@ -1,47 +1,54 @@
 /* src/features/control/ControlPanel.css */
-.control-panel-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 400px;
-  margin: 0 auto;
+
+/* El contenedor ocupa TODO el espacio sobre el video */
+.control-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Permite ver a través, activaremos puntero en los hijos */
+  z-index: 20;
 }
 
+/* --- INTERRUPTOR (Arriba Izquierda) --- */
 .mode-switch-wrapper {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  pointer-events: auto; /* Reactivar clicks */
+
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente oscuro */
+  padding: 8px 15px;
+  border-radius: 30px;
+  backdrop-filter: blur(4px);
 }
 
 .mode-label {
-  font-weight: bold;
-  color: #ccc;
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
 }
-
 .mode-label.active {
-  color: #2c3e50;
+  color: #fff;
 }
 
-/* Toggle Switch CSS */
+/* Switch CSS */
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 34px;
+  width: 44px;
+  height: 24px;
 }
-
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -49,95 +56,91 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #2ecc71; /* Verde para Auto */
+  background-color: #2ecc71;
   transition: 0.4s;
 }
-
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
   background-color: white;
   transition: 0.4s;
 }
-
 input:checked + .slider {
-  background-color: #3498db; /* Azul para Manual */
+  background-color: #3498db;
 }
-
 input:checked + .slider:before {
-  transform: translateX(26px);
+  transform: translateX(20px);
 }
-
 .slider.round {
   border-radius: 34px;
 }
-
 .slider.round:before {
   border-radius: 50%;
 }
 
-/* Controls */
+/* --- FLECHAS (Abajo Centro) --- */
 .manual-controls {
+  position: absolute;
+  bottom: 40px; /* Separación del fondo */
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto; /* Reactivar clicks */
   transition: opacity 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .manual-controls.disabled {
-  opacity: 0.3;
+  opacity: 0;
   pointer-events: none;
 }
 
-.d-pad {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 1rem;
-}
-
-.d-row {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
+/* Grid perfecto de 3x3 */
+.d-pad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 60px);
+  gap: 8px; /* Espacio entre botones */
 }
 
 .d-btn {
-  width: 60px;
-  height: 60px;
-  border: none;
-  border-radius: 8px;
-  background-color: #ecf0f1;
-  color: #2c3e50;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Borde muy sutil */
+  border-radius: 12px;
+
+  /* MÁS TRANSPARENTE AQUÍ */
+  background-color: rgba(255, 255, 255, 0.1);
+
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  user-select: none;
-  transition: background 0.1s, transform 0.1s;
+  backdrop-filter: blur(2px);
+  transition: all 0.1s ease-in-out;
+}
+
+.d-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .d-btn:active,
 .d-btn.pressed {
-  background-color: #bdc3c7;
+  background-color: rgba(255, 255, 255, 0.4);
   transform: scale(0.95);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 .d-btn.center {
-  background-color: #e74c3c;
-  color: white;
+  background-color: rgba(231, 76, 60, 0.5); /* Rojo semitransparente */
+  border: none;
   font-size: 1rem;
-  border-radius: 50%;
-}
-
-.instruction-text {
-  font-size: 0.8rem;
-  color: #7f8c8d;
-  text-align: center;
+  border-radius: 50%; /* Redondo */
+  width: 50px;
+  height: 50px;
+  margin: auto; /* Centrar en la celda */
 }

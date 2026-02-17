@@ -8,13 +8,14 @@ import "dotenv/config";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
-// Importamos funciones del simulador, incluyendo las nuevas de control
+
 import { 
   startRobotSimulation, 
   setSimulationZone, 
   clearSimulationZone,
   setRobotMode,
-  setManualVelocity
+  setManualVelocity,
+  setNavigationTarget // Importamos la nueva función
 } from "./simulator.js";
 
 const app = express();
@@ -38,7 +39,6 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log("🔌 Cliente conectado:", socket.id);
   
-  // Eventos de Zona
   socket.on("client:update_zone", (zone) => {
     setSimulationZone(zone);
   });
@@ -47,16 +47,20 @@ io.on("connection", (socket) => {
     clearSimulationZone();
   });
 
-  // --- NUEVOS EVENTOS DE CONTROL ---
   socket.on("client:set_mode", (mode) => {
-    // mode: "AUTO" | "MANUAL"
     setRobotMode(mode);
-    io.emit("robot:mode_changed", mode); // Notificar a todos los clientes
+    io.emit("robot:mode_changed", mode);
   });
 
   socket.on("client:manual_move", (velocity) => {
-    // velocity: { x: -1|0|1, y: -1|0|1 }
     setManualVelocity(velocity.x, velocity.y);
+  });
+
+  // NUEVO: Listener de navegación
+  socket.on("client:navigate_to", (coords) => {
+    // coords: { lat, lon }
+    setNavigationTarget(coords.lat, coords.lon);
+    io.emit("robot:mode_changed", "NAVIGATING");
   });
 
   socket.on("disconnect", () => {

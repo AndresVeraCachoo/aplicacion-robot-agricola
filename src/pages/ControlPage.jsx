@@ -1,6 +1,8 @@
 // src/pages/ControlPage.jsx
 import React from "react";
 import ControlPanel from "../features/control/ControlPanel";
+import CameraFeed from "../features/control/CameraFeed";
+import ControlMap from "../features/control/ControlMap";
 import "./ControlPage.css";
 
 const ControlPage = () => {
@@ -8,23 +10,22 @@ const ControlPage = () => {
     <div className="control-page">
       <header className="page-header">
         <h1>Centro de Control</h1>
-        <p>Gestión de operación manual y modos de funcionamiento</p>
       </header>
 
-      <div className="control-content">
-        <ControlPanel />
+      <div className="cockpit-grid">
+        {/* Columna Izquierda: Stack de Video + Controles */}
+        <div className="left-column-stack">
+          <CameraFeed />
 
-        {/* Aquí podríamos añadir información adicional, logs, o un minimapa */}
-        <div className="control-info-card">
-          <h3>Estado del Sistema</h3>
-          <p>
-            Seleccione el modo <strong>MANUAL</strong> para tomar el control del
-            robot mediante el teclado o la interfaz táctil.
-          </p>
-          <p>
-            En modo <strong>AUTO</strong>, el robot seguirá su algoritmo de
-            cobertura predeterminado.
-          </p>
+          {/* El Panel se superpone ocupando todo el espacio */}
+          <div className="overlay-controls-wrapper">
+            <ControlPanel />
+          </div>
+        </div>
+
+        {/* Columna Derecha: Mapa */}
+        <div className="right-column-map">
+          <ControlMap />
         </div>
       </div>
     </div>
