@@ -21,10 +21,10 @@ let currentPh = 7.0;
 let latVelocity = 0.00015; 
 let lonVelocity = 0.00010; 
 
-// Variables de Control
-let controlMode = "AUTO"; // "AUTO" | "MANUAL" | "NAVIGATING"
+// Variables de Control (Inicializado en MANUAL)
+let controlMode = "MANUAL"; 
 let manualVelocity = { x: 0, y: 0 }; 
-let navTarget = null; // { lat, lon }
+let navTarget = null; 
 
 let safeZonePolygon = null;
 
@@ -62,7 +62,6 @@ export const setManualVelocity = (vx, vy) => {
   }
 };
 
-// NUEVO: Establecer objetivo de navegación
 export const setNavigationTarget = (lat, lon) => {
     navTarget = { lat, lon };
     controlMode = "NAVIGATING";
@@ -72,13 +71,14 @@ export const setNavigationTarget = (lat, lon) => {
 export const startRobotSimulation = (io) => {
   console.log("🤖 Simulador: ACTIVADO");
 
+  // --- BUCLE DE MOVIMIENTO Y ESTADO ---
   setInterval(async () => {
     if (isCharging) {
       battery += 5;
       speed = 0;
       if (battery >= 100) { battery = 100; isCharging = false; }
     } else {
-      battery -= (controlMode !== "AUTO" ? 0.8 : 0.5);
+      battery -= (controlMode === "MANUAL" ? 0.5 : 0.8);
       if (battery <= 10) isCharging = true;
     }
 
@@ -89,30 +89,32 @@ export const startRobotSimulation = (io) => {
       let dLon = 0;
 
       if (controlMode === "AUTO") {
-        if (Math.random() > 0.9) latVelocity *= -1;
-        if (Math.random() > 0.9) lonVelocity *= -1;
-        dLat = latVelocity + (Math.random() - 0.5) * 0.00005;
-        dLon = lonVelocity + (Math.random() - 0.5) * 0.00005;
+        if (!safeZonePolygon) {
+            dLat = 0;
+            dLon = 0;
+        } else {
+            if (Math.random() > 0.9) latVelocity *= -1;
+            if (Math.random() > 0.9) lonVelocity *= -1;
+            dLat = latVelocity + (Math.random() - 0.5) * 0.00005;
+            dLon = lonVelocity + (Math.random() - 0.5) * 0.00005;
+        }
       
       } else if (controlMode === "MANUAL") {
         dLat = manualVelocity.y;
         dLon = manualVelocity.x;
 
       } else if (controlMode === "NAVIGATING" && navTarget) {
-        // --- LÓGICA DE NAVEGACIÓN VECTORIAL ---
         const distLat = navTarget.lat - currentLat;
         const distLon = navTarget.lon - currentLon;
         const distance = Math.sqrt(distLat**2 + distLon**2);
 
-        // Si estamos muy cerca (< ~2 metros), nos detenemos
         if (distance < 0.00002) {
             console.log("🏁 Destino alcanzado");
-            controlMode = "IDLE"; // O "MANUAL" en reposo
+            controlMode = "AUTO"; 
             navTarget = null;
             speed = 0;
         } else {
-            // Normalizar vector y aplicar velocidad constante
-            const navSpeed = 0.00020; // Velocidad de crucero
+            const navSpeed = 0.00020; 
             dLat = (distLat / distance) * navSpeed;
             dLon = (distLon / distance) * navSpeed;
         }
@@ -121,7 +123,6 @@ export const startRobotSimulation = (io) => {
       nextLat = currentLat + dLat;
       nextLon = currentLon + dLon;
 
-      // Geofencing
       if (safeZonePolygon && safeZonePolygon.length >= 3) {
         const inside = isPointInPolygon(nextLat, nextLon, safeZonePolygon);
         if (!inside) {
@@ -130,7 +131,7 @@ export const startRobotSimulation = (io) => {
                 lonVelocity *= -1;
             } else if (controlMode === "NAVIGATING") {
                  console.log("⚠️ Destino fuera de zona segura. Deteniendo.");
-                 controlMode = "MANUAL"; // Abortar navegación
+                 controlMode = "MANUAL"; 
                  dLat = 0; dLon = 0;
             }
             nextLat = currentLat;
@@ -142,19 +143,15 @@ export const startRobotSimulation = (io) => {
       currentLon = nextLon;
 
       if (Math.abs(dLat) > 0 || Math.abs(dLon) > 0) {
-        // Calcular ángulo para el heading (brújula)
         const angleRad = Math.atan2(dLon, dLat); 
         heading = (angleRad * 180) / Math.PI;
-        // Normalizar a 0-360
         if (heading < 0) heading += 360;
-        
         speed = (Math.sqrt(dLat**2 + dLon**2) * 100000).toFixed(2);
       } else {
         speed = 0;
       }
     }
 
-    // Actualización BBDD y Socket (Sin cambios)
     try {
       await pool.query(
         `UPDATE robot_estado
@@ -184,7 +181,7 @@ export const startRobotSimulation = (io) => {
             heading: Math.floor(heading),
             status: isCharging ? "CHARGING" : (speed > 0 ? "WORKING" : "IDLE"),
             mode: controlMode,
-            target: navTarget // Enviamos el target actual al frontend
+            target: navTarget 
           }
         });
       }
@@ -193,12 +190,15 @@ export const startRobotSimulation = (io) => {
     }
   }, MOVEMENT_INTERVAL);
 
-  // Bucle de Sensores (Sin cambios)
+  // --- BUCLE DE SENSORES (RESTAURADO) ---
   setInterval(async () => {
     if (isCharging) return; 
+    
+    // Aquí se usan las variables que daban error
     currentTemp += (Math.random() - 0.5) * 2;
     currentHumidity = Math.max(0, Math.min(100, currentHumidity + (Math.random() - 0.5) * 5));
     currentPh = Math.max(4, Math.min(10, currentPh + (Math.random() - 0.5) * 0.2));
+    
     const n = Math.floor(Math.random() * 50 + 20);
     const p = Math.floor(Math.random() * 30 + 10);
     const k = Math.floor(Math.random() * 40 + 15);
