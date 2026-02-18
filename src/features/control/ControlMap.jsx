@@ -14,10 +14,11 @@ import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import "./ControlMap.css";
 
+// Importación de Geoman
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
-// Fix para iconos por defecto
+// Fix para iconos por defecto de Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
@@ -29,32 +30,116 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// --- FUNCIÓN AUXILIAR: CÁLCULO DE ÁREA GEODÉSICA (m2) ---
+// Calcula el área esférica aproximada sin dependencias externas
+const calculateGeodesicArea = (latLngs) => {
+  const EARTH_RADIUS = 6378137; // Metros
+  let area = 0;
+
+  if (latLngs.length > 2) {
+    for (let i = 0; i < latLngs.length; i++) {
+      const p1 = latLngs[i];
+      const p2 = latLngs[(i + 1) % latLngs.length];
+      area +=
+        (p2.lng - p1.lng) *
+        (Math.PI / 180) *
+        (2 +
+          Math.sin(p1.lat * (Math.PI / 180)) +
+          Math.sin(p2.lat * (Math.PI / 180)));
+    }
+    area = (area * EARTH_RADIUS * EARTH_RADIUS) / 2.0;
+  }
+  return Math.abs(area);
+};
+
+// Función para formatear y mostrar el área en la capa
+const updateAreaTooltip = (layer) => {
+  if (!(layer instanceof L.Polygon)) return;
+
+  const latlngs = layer.getLatLngs();
+  // Manejo de polígonos simples vs polígonos con huecos (Anillos)
+  let mainArea = 0;
+  let holesArea = 0;
+
+  // Leaflet devuelve:
+  // - Polígono simple: [ [lat,lon], ... ] -> Array de LatLng
+  // - Polígono complejo: [ [ [lat,lon], ... ], [ [lat,lon], ... ] ] -> Array de Arrays de LatLng (El primero es exterior, resto son huecos)
+
+  // Normalizamos para cálculo
+  const shapes = Array.isArray(latlngs[0]) ? latlngs : [latlngs];
+
+  shapes.forEach((ring, index) => {
+    // Convertimos objetos LatLng a estructura simple si es necesario
+    // Ring suele ser un array de objetos LatLng
+    const ringArea = calculateGeodesicArea(ring);
+    if (index === 0) {
+      mainArea = ringArea;
+    } else {
+      holesArea += ringArea;
+    }
+  });
+
+  const finalArea = mainArea - holesArea;
+
+  // Formatear texto
+  let text = "";
+  if (finalArea < 10000) {
+    text = `Area: ${Math.round(finalArea).toLocaleString()} m²`;
+  } else {
+    text = `Area: ${(finalArea / 10000).toFixed(2)} ha`;
+  }
+
+  // Vincular o actualizar tooltip permanente en el centro
+  if (!layer.getTooltip()) {
+    layer.bindTooltip(text, {
+      permanent: true,
+      direction: "center",
+      className: "area-tooltip",
+    });
+  } else {
+    layer.setTooltipContent(text);
+  }
+};
+
 // --- COMPONENTE GEOMAN CONTROLS ---
 const GeomanControls = ({ ignoreClickRef }) => {
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
   const isZoneLoadedRef = useRef(false);
 
-  // 1. Definimos la función de actualización con useCallback para que sea estable
-  // y podamos usarla en las dependencias sin causar re-renders.
+  // Función estable para actualizar el store
   const handleZoneUpdate = useCallback(
     (layer) => {
       if (layer instanceof L.Polygon) {
+        updateAreaTooltip(layer); // Actualizar visualización de área
+
         const latlngs = layer.getLatLngs();
-        const coords = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
-        const formattedZone = coords.map((p) => [p.lat, p.lng]);
+        // Para el backend, simplificamos enviando solo el anillo exterior por ahora
+        // (Si quisieras soportar huecos en backend, habría que enviar la estructura compleja)
+        const outerRing = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+        const formattedZone = outerRing.map((p) => [p.lat, p.lng]);
+
         setSafeZone(formattedZone);
       }
     },
     [setSafeZone]
   );
 
-  // 2. EFECTO DE CONFIGURACIÓN (No depende de safeZone)
-  // Este efecto configura las herramientas de dibujo y los eventos globales.
-  // Al no incluir 'safeZone', no se reinicia cuando editas el polígono.
+  // EFECTO DE CONFIGURACIÓN
   useEffect(() => {
     if (!map) return;
 
+    // 1. Opciones Globales (Snapping + Restricciones)
+    map.pm.setGlobalOptions({
+      snappable: true,
+      snapDistance: 20,
+      allowSelfIntersection: false, // ¡Importante para la lógica de ruta!
+      hintlineStyle: { color: "#3388ff", dashArray: [5, 5] },
+    });
+
+    map.pm.setLang("es");
+
+    // 2. Barra de Herramientas
     map.pm.addControls({
       position: "topleft",
       drawMarker: false,
@@ -64,29 +149,40 @@ const GeomanControls = ({ ignoreClickRef }) => {
       drawPolygon: true,
       drawCircle: false,
       editMode: true,
-      dragMode: true,
-      cutPolygon: false,
+      dragMode: true, // Habilitar Arrastre
+      cutPolygon: true, // Habilitar Corte (Huecos)
+      rotateMode: true, // Habilitar Rotación
       removalMode: true,
     });
 
-    map.pm.setLang("es");
-
-    // Bloqueo de clics durante el dibujo
+    // Manejo de bloqueos de click
     map.on("pm:drawstart", () => {
       ignoreClickRef.current = true;
     });
-
     map.on("pm:drawend", () => {
       setTimeout(() => {
         ignoreClickRef.current = false;
       }, 300);
     });
+    map.on("pm:globaldragmodetoggled", (e) => {
+      ignoreClickRef.current = e.enabled;
+    });
+    map.on("pm:globalrotatemodetoggled", (e) => {
+      ignoreClickRef.current = e.enabled;
+    });
 
-    // Evento al CREAR una zona nueva
+    // EVENTO: CREAR
     map.on("pm:create", (e) => {
       const { layer } = e;
 
-      // Borrar zonas anteriores para mantener solo una
+      // Validación de intersección
+      if (layer.pm && layer.pm.hasSelfIntersection()) {
+        alert("El polígono no puede cruzarse a sí mismo.");
+        map.removeLayer(layer);
+        return;
+      }
+
+      // Borrar anteriores
       map.eachLayer((l) => {
         if (l.pm && l !== layer && l instanceof L.Polygon && !l._pmTempLayer) {
           map.removeLayer(l);
@@ -95,19 +191,24 @@ const GeomanControls = ({ ignoreClickRef }) => {
 
       handleZoneUpdate(layer);
 
-      // Asignar listeners a la nueva capa
-      layer.on("pm:edit", (editEvent) => handleZoneUpdate(editEvent.target));
-      layer.on("pm:dragend", (dragEvent) => handleZoneUpdate(dragEvent.target));
+      // Eventos de modificación
+      layer.on("pm:edit", (evt) => handleZoneUpdate(evt.target));
+      layer.on("pm:dragend", (evt) => handleZoneUpdate(evt.target));
+      layer.on("pm:rotateend", (evt) => handleZoneUpdate(evt.target)); // Nuevo evento rotación
+      layer.on("pm:cut", (evt) => {
+        // Nuevo evento corte
+        // Al cortar, la capa original cambia (layer)
+        handleZoneUpdate(evt.layer);
+      });
     });
 
-    // Evento al BORRAR
+    // EVENTO: BORRAR
     map.on("pm:remove", () => {
       const layers = map.pm.getGeomanLayers();
       const hasPolygons = layers.some((l) => l instanceof L.Polygon);
-
       if (!hasPolygons) {
         clearSafeZone();
-        isZoneLoadedRef.current = false; // Permitimos volver a cargar si fuera necesario
+        isZoneLoadedRef.current = false;
       }
     });
 
@@ -117,38 +218,38 @@ const GeomanControls = ({ ignoreClickRef }) => {
       map.off("pm:remove");
       map.off("pm:drawstart");
       map.off("pm:drawend");
+      map.off("pm:globaldragmodetoggled");
+      map.off("pm:globalrotatemodetoggled");
     };
   }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate]);
 
-  // 3. EFECTO DE RESTAURACIÓN (Sí depende de safeZone)
-  // Este efecto se encarga EXCLUSIVAMENTE de pintar el polígono guardado al iniciar.
-  // Usa isZoneLoadedRef para asegurarse de que solo lo hace una vez.
+  // EFECTO DE RESTAURACIÓN (Pintar zona inicial)
   useEffect(() => {
-    // Si ya cargamos la zona, o no hay datos, no hacemos nada.
     if (!map || !safeZone || safeZone.length === 0 || isZoneLoadedRef.current)
       return;
 
-    // Limpieza de seguridad
     map.eachLayer((l) => {
       if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
     });
 
-    // Pintar el polígono desde el store
     const polygon = L.polygon(safeZone, { color: "#3388ff" }).addTo(map);
 
-    // IMPORTANTE: Reconectar los eventos de edición al polígono restaurado
+    // Calcular área inicial
+    updateAreaTooltip(polygon);
+
+    // Reconectar eventos
     polygon.on("pm:edit", (e) => handleZoneUpdate(e.target));
     polygon.on("pm:dragend", (e) => handleZoneUpdate(e.target));
+    polygon.on("pm:rotateend", (e) => handleZoneUpdate(e.target));
+    polygon.on("pm:cut", (e) => handleZoneUpdate(e.layer));
 
-    // Marcamos como cargado para que futuras actualizaciones de 'safeZone'
-    // (causadas por editar este mismo polígono) sean ignoradas por este efecto.
     isZoneLoadedRef.current = true;
   }, [map, safeZone, handleZoneUpdate]);
 
   return null;
 };
 
-// --- ICONO ROBOT (Sin cambios) ---
+// --- ICONO ROBOT ---
 const createRobotArrowIcon = (heading) => {
   return new L.DivIcon({
     className: "robot-arrow-icon",
@@ -171,7 +272,7 @@ const createRobotArrowIcon = (heading) => {
   });
 };
 
-// --- CLICK HANDLER (Sin cambios) ---
+// --- CLICK HANDLER ---
 const ClickHandler = ({ ignoreClickRef }) => {
   const { navigateToPoint, controlMode } = useRobotStore();
 
@@ -181,8 +282,16 @@ const ClickHandler = ({ ignoreClickRef }) => {
 
       const isDrawing = e.target.pm?.globalDrawModeEnabled?.();
       const isEditing = e.target.pm?.globalEditModeEnabled?.();
+      const isDragging = e.target.pm?.globalDragModeEnabled?.();
+      const isRotating = e.target.pm?.globalRotateModeEnabled?.();
 
-      if (controlMode !== "MANUAL" && !isDrawing && !isEditing) {
+      if (
+        controlMode !== "MANUAL" &&
+        !isDrawing &&
+        !isEditing &&
+        !isDragging &&
+        !isRotating
+      ) {
         navigateToPoint(e.latlng.lat, e.latlng.lng);
       }
     },
