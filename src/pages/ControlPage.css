@@ -1,64 +1,94 @@
 /* src/pages/ControlPage.css */
 
 .control-page {
-  width: 100%;
-  height: 100%;
-  padding: 1rem;
-  box-sizing: border-box; /* Clave para que el padding no sume al width */
-  overflow: hidden; /* Evita scrollbars accidentales */
   display: flex;
   flex-direction: column;
+  /* Altura exacta de la ventana menos la altura aproximada de tu Header. 
+     Ajusta este 70px al alto real de tu navbar si aún ves scroll o un hueco. */
+  height: calc(100vh - 70px);
+  padding: 10px;
+  gap: 10px;
+  box-sizing: border-box;
+  overflow: hidden; /* Esto asegura que NUNCA haya scroll */
+  background-color: var(--bg-primary, #121212);
 }
 
-.page-header {
-  flex: 0 0 auto; /* No crece ni encoge */
-  margin-bottom: 0.5rem;
+.control-top-row {
+  display: flex;
+  flex: 1; /* Ocupa todo el espacio vertical disponible empujando la barra inferior hacia abajo */
+  gap: 10px;
+  min-height: 0; /* Crítico en Flexbox para evitar que el contenido desborde */
 }
 
-.page-header h1 {
-  font-size: 1.25rem;
-  color: #2c3e50;
-  margin: 0;
-}
-
-/* El grid ocupa todo el espacio restante */
-.cockpit-grid {
-  flex: 1; /* Ocupa el resto de la altura vertical */
-  display: grid;
-  grid-template-columns: 1fr; /* Móvil: 1 columna */
-  gap: 1rem;
-  min-height: 0; /* TPermitir scroll interno si fuera necesario */
-}
-
-@media (min-width: 1024px) {
-  .cockpit-grid {
-    /* Escritorio: 2 columnas iguales */
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* Columna Izquierda (Video + Controles) */
-.left-column-stack {
+.camera-container,
+.map-container {
+  flex: 1;
+  background: var(--bg-secondary, #1e1e1e);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
-  width: 100%;
-  height: 100%; /* Llena su celda del grid */
-  border-radius: 12px;
-  overflow: hidden; /* Recorta el video si sobresale */
 }
 
-/* Wrapper para los controles superpuestos */
-.overlay-controls-wrapper {
+.camera-container > div:first-child,
+.map-container > div {
   width: 100%;
   height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
-/* Columna Derecha (Mapa) */
-.right-column-map {
-  width: 100%;
-  height: 100%; /* Llena su celda del grid */
-  border-radius: 12px;
-  overflow: hidden;
+.control-bottom-row {
+  /* Al no tener 'flex: 1', solo ocupará la altura de su contenido, 
+     pero al estar dentro del contenedor principal de height fija, 
+     se quedará anclado al fondo */
+  flex-shrink: 0;
+  background: var(--bg-secondary, #1e1e1e);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* === OVERLAYS DE LA CÁMARA (JOYSTICK) === */
+.joystick-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 10;
+}
+
+.joy-row {
+  display: flex;
+  gap: 5px;
+}
+
+.joy-btn {
+  width: 45px;
+  height: 45px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  transition: all 0.1s;
+}
+
+.joy-btn:active:not(:disabled) {
+  background: rgba(76, 175, 80, 0.8);
+  border-color: #4caf50;
+  transform: scale(0.95);
+}
+
+.joy-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }

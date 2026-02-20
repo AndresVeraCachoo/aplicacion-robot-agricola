@@ -6,7 +6,11 @@ import { io } from "socket.io-client";
 const API_URL = "http://localhost:3001/api/robot";
 const SOCKET_URL = "http://localhost:3001";
 
-const initialState = {
+export const useRobotStore = create((set, get) => ({
+  // --- ESTADO INICIAL ---
+  socket: null, 
+  isConnected: false,
+  
   battery: {
     percentage: 0,
     status: "IDLE",
@@ -14,33 +18,27 @@ const initialState = {
     temperature: 0,
     timeRemaining: "...",
   },
+  
+  // Ahora controlMode está integrado en system para mejor sincronización
   system: {
     status: "IDLE",
     speed: 0,
     heading: 0,
     mode: "AUTO",
+    emergencyStop: false, // E-STOP
+    speedLimit: 50        // Límite de velocidad
   },
-  position: {
-    lat: null,
-    lon: null,
-  },
+  
+  position: { lat: null, lon: null },
   pathHistory: [],
   agronomicData: [], 
-  sensors: {
-    soilHumidity: 0,
-    ambientTemp: 0,
-    tankLevel: 0,
-  },
-  isConnected: false,
+  sensors: { soilHumidity: 0, ambientTemp: 0, tankLevel: 0 },
+  
   safeZone: null,
-  controlMode: "AUTO", 
-  navTarget: null, // Nuevo estado para dibujar la línea en el mapa
-};
+  navTarget: null, 
+  navQueue: [], // Cola de navegación multipunto
 
-export const useRobotStore = create((set, get) => ({
-  ...initialState,
-  socket: null, 
-
+  // --- 1. INICIALIZACIÓN Y SOCKETS (Tu código original restaurado) ---
   connectSocket: () => {
     const { socket } = get();
     if (socket) return; 
@@ -57,22 +55,23 @@ export const useRobotStore = create((set, get) => ({
       set({ isConnected: false });
     });
 
+    // Escuchar estado del robot
     newSocket.on("robot:status", (data) => {
       set((state) => ({
         battery: { ...state.battery, ...data.battery },
         position: data.position,
-        system: { ...state.system, ...data.system },
-        controlMode: data.system.mode || state.controlMode,
-        // Sincronizar el target si viene del backend
-        navTarget: data.system.target || null 
+        system: { 
+            ...state.system, 
+            ...data.system,
+            emergencyStop: data.system.emergencyStop ?? state.system.emergencyStop,
+            speedLimit: data.system.speedLimit ?? state.system.speedLimit
+        },
+        navTarget: data.system.target || null,
+        navQueue: data.system.queue || []
       }));
     });
 
-    newSocket.on("robot:mode_changed", (mode) => {
-        set({ controlMode: mode });
-        if (mode !== "NAVIGATING") set({ navTarget: null });
-    });
-
+    // Escuchar nuevos datos de sensores
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
@@ -112,6 +111,7 @@ export const useRobotStore = create((set, get) => ({
         },
         position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
         system: {
+            ...state.system,
             speed: estadoRes.data.system_speed,
             heading: estadoRes.data.system_heading,
             status: estadoRes.data.system_status
@@ -122,6 +122,54 @@ export const useRobotStore = create((set, get) => ({
     } catch (error) { console.error("Error carga inicial:", error); }
   },
 
+  // --- 2. ACCIONES DE SEGURIDAD (Nuevas) ---
+  toggleEmergencyStop: () => {
+    const { socket, system } = get();
+    const newState = !system.emergencyStop;
+    
+    set({ system: { ...system, emergencyStop: newState } });
+    if (socket && socket.connected) {
+        socket.emit("client:emergency_stop", newState);
+    }
+  },
+
+  setSpeedLimit: (limit) => {
+    const { socket, system } = get();
+    const newLimit = Math.max(0, Math.min(100, limit));
+    
+    set({ system: { ...system, speedLimit: newLimit } });
+    if (socket && socket.connected) {
+        socket.emit("client:set_speed_limit", newLimit);
+    }
+  },
+
+  // --- 3. ACCIONES DE NAVEGACIÓN (Nuevas) ---
+  queueNavigationPoint: (lat, lon) => {
+    const { socket, navTarget, navQueue, system, navigateToPoint } = get();
+    
+    if (!navTarget && system.mode !== "NAVIGATING") {
+        navigateToPoint(lat, lon);
+    } else {
+        set({ navQueue: [...navQueue, { lat, lon }] });
+        if (socket && socket.connected) {
+            socket.emit("client:queue_point", { lat, lon });
+        }
+    }
+  },
+
+  navigateToPoint: (lat, lon) => {
+      const { socket, system } = get();
+      set({ 
+          navTarget: { lat, lon }, 
+          navQueue: [], 
+          system: { ...system, mode: "NAVIGATING" } 
+      }); 
+      if (socket && socket.connected) {
+          socket.emit("client:navigate_to", { lat, lon, clearQueue: true });
+      }
+  },
+
+  // --- 4. ACCIONES DE ZONA Y CONTROL (Modificadas para el nuevo sistema) ---
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
@@ -134,24 +182,16 @@ export const useRobotStore = create((set, get) => ({
     if (socket && socket.connected) socket.emit("client:clear_zone");
   },
 
+  // Mantenemos esta función por compatibilidad, pero actualiza system.mode
   setControlMode: (mode) => {
-      const { socket } = get();
-      set({ controlMode: mode });
-      if (socket && socket.connected) socket.emit("client:set_mode", mode);
+      const { socket, system } = get();
+      set({ system: { ...system, mode: mode } });
+      if (socket && socket.connected) socket.emit("client:change_mode", mode);
   },
 
   sendManualMove: (velocity) => {
-      const { socket, controlMode } = get();
-      if (controlMode !== "MANUAL") return;
-      if (socket && socket.connected) socket.emit("client:manual_move", velocity);
-  },
-
-  // NUEVA ACCIÓN: Navegar a punto
-  navigateToPoint: (lat, lon) => {
-      const { socket } = get();
-      set({ navTarget: { lat, lon } }); // Optimista
-      if (socket && socket.connected) {
-          socket.emit("client:navigate_to", { lat, lon });
-      }
+      const { socket, system } = get();
+      if (system.mode !== "MANUAL") return;
+      if (socket && socket.connected) socket.emit("client:manual_control", velocity);
   }
 }));

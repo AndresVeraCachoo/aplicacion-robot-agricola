@@ -1,146 +1,121 @@
 /* src/features/control/ControlPanel.css */
-
-/* El contenedor ocupa TODO el espacio sobre el video */
-.control-panel-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* Permite ver a través, activaremos puntero en los hijos */
-  z-index: 20;
-}
-
-/* --- INTERRUPTOR (Arriba Izquierda) --- */
-.mode-switch-wrapper {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  pointer-events: auto; /* Reactivar clicks */
-
+.control-panel-horizontal {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente oscuro */
+  /* Panel mucho más compacto */
   padding: 8px 15px;
-  border-radius: 30px;
-  backdrop-filter: blur(4px);
+  gap: 15px;
+  color: white;
 }
 
-.mode-label {
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.75rem;
+.panel-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 5px; /* Menos hueco entre título y botón */
+}
+
+.panel-col h4 {
+  margin: 0;
+  color: #aaa;
+  font-size: 0.75em;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
-.mode-label.active {
-  color: #fff;
-}
 
-/* Switch CSS */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-}
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #2ecc71;
-  transition: 0.4s;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.4s;
-}
-input:checked + .slider {
-  background-color: #3498db;
-}
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-.slider.round {
-  border-radius: 34px;
-}
-.slider.round:before {
-  border-radius: 50%;
-}
-
-/* --- FLECHAS (Abajo Centro) --- */
-.manual-controls {
-  position: absolute;
-  bottom: 40px; /* Separación del fondo */
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: auto; /* Reactivar clicks */
-  transition: opacity 0.3s;
-}
-
-.manual-controls.disabled {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Grid perfecto de 3x3 */
-.d-pad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 60px);
-  grid-template-rows: repeat(3, 60px);
-  gap: 8px; /* Espacio entre botones */
-}
-
-.d-btn {
-  width: 100%;
-  height: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.2); /* Borde muy sutil */
-  border-radius: 12px;
-
-  /* MÁS TRANSPARENTE AQUÍ */
-  background-color: rgba(255, 255, 255, 0.1);
-
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.5rem;
-  cursor: pointer;
+/* Modos */
+.mode-buttons {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(2px);
-  transition: all 0.1s ease-in-out;
+  gap: 8px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 8px; /* Aún más fino */
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9em;
+  transition: 0.2s;
+}
+.mode-btn.active {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+.mode-btn:hover:not(:disabled) {
+  background: #3a3a3a;
+}
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.d-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+/* Slider */
+.speed-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  appearance: none;
+  background: #444;
+  outline: none;
+  margin-top: 5px;
+}
+.speed-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+  border: 2px solid #1e1e1e;
+}
+.speed-slider.high-speed::-webkit-slider-thumb {
+  background: #ff9800;
+}
+.speed-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.d-btn:active,
-.d-btn.pressed {
-  background-color: rgba(255, 255, 255, 0.4);
-  transform: scale(0.95);
-  border-color: rgba(255, 255, 255, 0.8);
+/* Botón de Parada (MUCHO MÁS PEQUEÑO) */
+.safety-col {
+  align-items: flex-end;
+}
+.estop-btn {
+  width: 100%;
+  max-width: 180px; /* Estrecho */
+  padding: 8px; /* Bajito */
+  font-size: 0.85em; /* Letra pequeña pero negrita */
+  font-weight: 900;
+  background-color: #cc0000;
+  color: white;
+  border: 2px solid #ff0000;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+.estop-btn:hover:not(:disabled) {
+  background-color: #ff1a1a;
+  transform: translateY(-2px);
+}
+.estop-btn.active {
+  background-color: #550000;
+  border-color: #ff6666;
+  animation: pulse-red 1s infinite;
 }
 
-.d-btn.center {
-  background-color: rgba(231, 76, 60, 0.5); /* Rojo semitransparente */
-  border: none;
-  font-size: 1rem;
-  border-radius: 50%; /* Redondo */
-  width: 50px;
-  height: 50px;
-  margin: auto; /* Centrar en la celda */
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
 }

@@ -14,11 +14,11 @@ import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import "./ControlMap.css";
 
-// Importación de Geoman
+// Geoman
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
-// Fix para iconos por defecto de Leaflet
+// Fix iconos por defecto de Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
@@ -30,12 +30,10 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- FUNCIÓN AUXILIAR: CÁLCULO DE ÁREA GEODÉSICA (m2) ---
-// Calcula el área esférica aproximada sin dependencias externas
+// --- FUNCIÓN AUXILIAR: CÁLCULO DE ÁREA ---
 const calculateGeodesicArea = (latLngs) => {
-  const EARTH_RADIUS = 6378137; // Metros
+  const EARTH_RADIUS = 6378137;
   let area = 0;
-
   if (latLngs.length > 2) {
     for (let i = 0; i < latLngs.length; i++) {
       const p1 = latLngs[i];
@@ -52,44 +50,26 @@ const calculateGeodesicArea = (latLngs) => {
   return Math.abs(area);
 };
 
-// Función para formatear y mostrar el área en la capa
 const updateAreaTooltip = (layer) => {
   if (!(layer instanceof L.Polygon)) return;
 
   const latlngs = layer.getLatLngs();
-  // Manejo de polígonos simples vs polígonos con huecos (Anillos)
   let mainArea = 0;
   let holesArea = 0;
-
-  // Leaflet devuelve:
-  // - Polígono simple: [ [lat,lon], ... ] -> Array de LatLng
-  // - Polígono complejo: [ [ [lat,lon], ... ], [ [lat,lon], ... ] ] -> Array de Arrays de LatLng (El primero es exterior, resto son huecos)
-
-  // Normalizamos para cálculo
   const shapes = Array.isArray(latlngs[0]) ? latlngs : [latlngs];
 
   shapes.forEach((ring, index) => {
-    // Convertimos objetos LatLng a estructura simple si es necesario
-    // Ring suele ser un array de objetos LatLng
     const ringArea = calculateGeodesicArea(ring);
-    if (index === 0) {
-      mainArea = ringArea;
-    } else {
-      holesArea += ringArea;
-    }
+    if (index === 0) mainArea = ringArea;
+    else holesArea += ringArea;
   });
 
   const finalArea = mainArea - holesArea;
+  let text =
+    finalArea < 10000
+      ? `Area: ${Math.round(finalArea).toLocaleString()} m²`
+      : `Area: ${(finalArea / 10000).toFixed(2)} ha`;
 
-  // Formatear texto
-  let text = "";
-  if (finalArea < 10000) {
-    text = `Area: ${Math.round(finalArea).toLocaleString()} m²`;
-  } else {
-    text = `Area: ${(finalArea / 10000).toFixed(2)} ha`;
-  }
-
-  // Vincular o actualizar tooltip permanente en el centro
   if (!layer.getTooltip()) {
     layer.bindTooltip(text, {
       permanent: true,
@@ -107,39 +87,30 @@ const GeomanControls = ({ ignoreClickRef }) => {
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
   const isZoneLoadedRef = useRef(false);
 
-  // Función estable para actualizar el store
   const handleZoneUpdate = useCallback(
     (layer) => {
       if (layer instanceof L.Polygon) {
-        updateAreaTooltip(layer); // Actualizar visualización de área
-
+        updateAreaTooltip(layer);
         const latlngs = layer.getLatLngs();
-        // Para el backend, simplificamos enviando solo el anillo exterior por ahora
-        // (Si quisieras soportar huecos en backend, habría que enviar la estructura compleja)
         const outerRing = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
         const formattedZone = outerRing.map((p) => [p.lat, p.lng]);
-
         setSafeZone(formattedZone);
       }
     },
-    [setSafeZone]
+    [setSafeZone],
   );
 
-  // EFECTO DE CONFIGURACIÓN
   useEffect(() => {
     if (!map) return;
 
-    // 1. Opciones Globales (Snapping + Restricciones)
     map.pm.setGlobalOptions({
       snappable: true,
       snapDistance: 20,
-      allowSelfIntersection: false, // ¡Importante para la lógica de ruta!
+      allowSelfIntersection: false,
       hintlineStyle: { color: "#3388ff", dashArray: [5, 5] },
     });
 
     map.pm.setLang("es");
-
-    // 2. Barra de Herramientas
     map.pm.addControls({
       position: "topleft",
       drawMarker: false,
@@ -149,13 +120,12 @@ const GeomanControls = ({ ignoreClickRef }) => {
       drawPolygon: true,
       drawCircle: false,
       editMode: true,
-      dragMode: true, // Habilitar Arrastre
-      cutPolygon: true, // Habilitar Corte (Huecos)
-      rotateMode: true, // Habilitar Rotación
+      dragMode: true,
+      cutPolygon: true,
+      rotateMode: true,
       removalMode: true,
     });
 
-    // Manejo de bloqueos de click
     map.on("pm:drawstart", () => {
       ignoreClickRef.current = true;
     });
@@ -171,38 +141,25 @@ const GeomanControls = ({ ignoreClickRef }) => {
       ignoreClickRef.current = e.enabled;
     });
 
-    // EVENTO: CREAR
     map.on("pm:create", (e) => {
       const { layer } = e;
-
-      // Validación de intersección
       if (layer.pm && layer.pm.hasSelfIntersection()) {
         alert("El polígono no puede cruzarse a sí mismo.");
         map.removeLayer(layer);
         return;
       }
-
-      // Borrar anteriores
       map.eachLayer((l) => {
-        if (l.pm && l !== layer && l instanceof L.Polygon && !l._pmTempLayer) {
+        if (l.pm && l !== layer && l instanceof L.Polygon && !l._pmTempLayer)
           map.removeLayer(l);
-        }
       });
 
       handleZoneUpdate(layer);
-
-      // Eventos de modificación
       layer.on("pm:edit", (evt) => handleZoneUpdate(evt.target));
       layer.on("pm:dragend", (evt) => handleZoneUpdate(evt.target));
-      layer.on("pm:rotateend", (evt) => handleZoneUpdate(evt.target)); // Nuevo evento rotación
-      layer.on("pm:cut", (evt) => {
-        // Nuevo evento corte
-        // Al cortar, la capa original cambia (layer)
-        handleZoneUpdate(evt.layer);
-      });
+      layer.on("pm:rotateend", (evt) => handleZoneUpdate(evt.target));
+      layer.on("pm:cut", (evt) => handleZoneUpdate(evt.layer));
     });
 
-    // EVENTO: BORRAR
     map.on("pm:remove", () => {
       const layers = map.pm.getGeomanLayers();
       const hasPolygons = layers.some((l) => l instanceof L.Polygon);
@@ -223,7 +180,6 @@ const GeomanControls = ({ ignoreClickRef }) => {
     };
   }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate]);
 
-  // EFECTO DE RESTAURACIÓN (Pintar zona inicial)
   useEffect(() => {
     if (!map || !safeZone || safeZone.length === 0 || isZoneLoadedRef.current)
       return;
@@ -233,11 +189,8 @@ const GeomanControls = ({ ignoreClickRef }) => {
     });
 
     const polygon = L.polygon(safeZone, { color: "#3388ff" }).addTo(map);
-
-    // Calcular área inicial
     updateAreaTooltip(polygon);
 
-    // Reconectar eventos
     polygon.on("pm:edit", (e) => handleZoneUpdate(e.target));
     polygon.on("pm:dragend", (e) => handleZoneUpdate(e.target));
     polygon.on("pm:rotateend", (e) => handleZoneUpdate(e.target));
@@ -254,15 +207,7 @@ const createRobotArrowIcon = (heading) => {
   return new L.DivIcon({
     className: "robot-arrow-icon",
     html: `
-            <div style="
-                transform: rotate(${heading}deg);
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: transform 0.3s linear;
-            ">
+            <div style="transform: rotate(${heading}deg); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.3s linear;">
                 <img src="/robot-arrow.svg" alt="Robot" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" />
             </div>
         `,
@@ -272,9 +217,10 @@ const createRobotArrowIcon = (heading) => {
   });
 };
 
-// --- CLICK HANDLER ---
+// --- CLICK HANDLER (Shift + Click) ---
 const ClickHandler = ({ ignoreClickRef }) => {
-  const { navigateToPoint, controlMode } = useRobotStore();
+  const { navigateToPoint, queueNavigationPoint, system } = useRobotStore();
+  const controlMode = system.mode;
 
   useMapEvents({
     click(e) {
@@ -292,18 +238,57 @@ const ClickHandler = ({ ignoreClickRef }) => {
         !isDragging &&
         !isRotating
       ) {
-        navigateToPoint(e.latlng.lat, e.latlng.lng);
+        if (e.originalEvent.shiftKey) {
+          queueNavigationPoint(e.latlng.lat, e.latlng.lng);
+        } else {
+          navigateToPoint(e.latlng.lat, e.latlng.lng);
+        }
       }
     },
   });
   return null;
 };
 
+// --- BOTÓN PARA CENTRAR CÁMARA (Idéntico a MapView) ---
+const CenterButton = () => {
+  const map = useMap();
+  const position = useRobotStore((state) => state.position);
+
+  const centerView = () => {
+    if (position.lat && position.lon) {
+      const currentPosition = [position.lat, position.lon];
+      map.setView(currentPosition, 19);
+    }
+  };
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        centerView();
+      }}
+      className="center-map-button"
+      title="Centrar en el robot"
+    >
+      <span style={{ fontSize: "1.2em" }}>🎯</span>
+    </button>
+  );
+};
+
+// --- COMPONENTE PRINCIPAL ---
 const ControlMap = () => {
-  const { position, navTarget, pathHistory, system } = useRobotStore();
+  const { position, navTarget, navQueue, pathHistory, system } =
+    useRobotStore();
   const ignoreClickRef = useRef(false);
 
   if (!position.lat) return <div className="map-loading">Cargando GPS...</div>;
+
+  const fullQueuePath = [];
+  if (navTarget) {
+    fullQueuePath.push([position.lat, position.lon]);
+    fullQueuePath.push([navTarget.lat, navTarget.lon]);
+    navQueue.forEach((p) => fullQueuePath.push([p.lat, p.lon]));
+  }
 
   return (
     <div className="control-map-wrapper">
@@ -314,23 +299,23 @@ const ControlMap = () => {
         className="control-leaflet-map"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution="&copy; OpenStreetMap"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         />
 
         <ClickHandler ignoreClickRef={ignoreClickRef} />
         <GeomanControls ignoreClickRef={ignoreClickRef} />
 
+        <CenterButton />
+
         <Marker
           position={[position.lat, position.lon]}
           icon={createRobotArrowIcon(system.heading || 0)}
         >
           <Popup>
-            <div style={{ textAlign: "center" }}>
-              <strong>AgriRobot</strong>
-              <br />
-              Rumbo: {Math.floor(system.heading)}°
-            </div>
+            AgriRobot
+            <br />
+            Rumbo: {Math.floor(system.heading)}°
           </Popup>
         </Marker>
 
@@ -341,20 +326,27 @@ const ControlMap = () => {
           opacity={0.6}
         />
 
-        {navTarget && (
+        {fullQueuePath.length > 0 && (
           <>
-            <Marker position={[navTarget.lat, navTarget.lon]}>
-              <Popup>Destino</Popup>
-            </Marker>
             <Polyline
-              positions={[
-                [position.lat, position.lon],
-                [navTarget.lat, navTarget.lon],
-              ]}
-              color="cyan"
-              dashArray="5, 10"
+              positions={fullQueuePath}
+              color="#00ffcc"
+              weight={3}
+              dashArray="10, 10"
+              opacity={0.8}
             />
+            {navQueue.map((p, idx) => (
+              <Marker key={idx} position={[p.lat, p.lon]} opacity={0.7}>
+                <Popup>Punto en cola #{idx + 1}</Popup>
+              </Marker>
+            ))}
           </>
+        )}
+
+        {navTarget && (
+          <Marker position={[navTarget.lat, navTarget.lon]}>
+            <Popup>Destino Actual</Popup>
+          </Marker>
         )}
       </MapContainer>
     </div>

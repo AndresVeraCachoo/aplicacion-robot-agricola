@@ -1,74 +1,66 @@
 // server/index.js
 import express from "express";
+import http from "http";
+import { Server } from "socket.io";
 import cors from "cors";
-import { createServer } from "http"; 
-import { Server } from "socket.io"; 
-import "dotenv/config";
-
 import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
+// Importamos TODAS las funciones del simulador
 import { 
-  startRobotSimulation, 
-  setSimulationZone, 
-  clearSimulationZone,
-  setRobotMode,
-  setManualVelocity,
-  setNavigationTarget // Importamos la nueva función
+    startRobotSimulation, 
+    setManualVelocity, 
+    setRobotMode, 
+    setNavigationTarget, 
+    setSimulationZone, 
+    clearSimulationZone,
+    setEmergencyStop,
+    setSpeedLimit,
+    queueNavPoint
 } from "./simulator.js";
 
 const app = express();
-const PORT = 3001;
-
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/robot", robotRoutes);
+app.use("/api/users", userRoutes);
 
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173", 
-    methods: ["GET", "POST"],
-  },
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
 });
+
+// Iniciar el ciclo del simulador
+startRobotSimulation(io);
 
 io.on("connection", (socket) => {
-  console.log("🔌 Cliente conectado:", socket.id);
+  console.log("Cliente conectado:", socket.id);
+
+  // --- CONTROL BÁSICO ---
+  socket.on("client:manual_control", (data) => setManualVelocity(data.x, data.y));
+  socket.on("client:change_mode", (mode) => setRobotMode(mode));
   
-  socket.on("client:update_zone", (zone) => {
-    setSimulationZone(zone);
-  });
+  // --- NAVEGACIÓN Y COLA ---
+  socket.on("client:navigate_to", (target) => setNavigationTarget(target.lat, target.lon, target.clearQueue));
+  socket.on("client:queue_point", (point) => queueNavPoint(point));
 
-  socket.on("client:clear_zone", () => {
-    clearSimulationZone();
-  });
+  // --- SEGURIDAD Y AJUSTES ---
+  socket.on("client:emergency_stop", (active) => setEmergencyStop(active));
+  socket.on("client:set_speed_limit", (limit) => setSpeedLimit(limit));
 
-  socket.on("client:set_mode", (mode) => {
-    setRobotMode(mode);
-    io.emit("robot:mode_changed", mode);
-  });
-
-  socket.on("client:manual_move", (velocity) => {
-    setManualVelocity(velocity.x, velocity.y);
-  });
-
-  // NUEVO: Listener de navegación
-  socket.on("client:navigate_to", (coords) => {
-    // coords: { lat, lon }
-    setNavigationTarget(coords.lat, coords.lon);
-    io.emit("robot:mode_changed", "NAVIGATING");
-  });
+  // --- MAPA ---
+  socket.on("client:update_zone", (zone) => setSimulationZone(zone));
+  socket.on("client:clear_zone", () => clearSimulationZone());
 
   socket.on("disconnect", () => {
-    console.log("❌ Cliente desconectado:", socket.id);
+    console.log("Cliente desconectado:", socket.id);
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-  startRobotSimulation(io);
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
