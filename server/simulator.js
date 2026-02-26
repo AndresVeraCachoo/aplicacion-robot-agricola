@@ -6,8 +6,8 @@ const MOVEMENT_INTERVAL = 1000;
 const SENSOR_INTERVAL = 5000;   
 const MAX_HISTORY_RECORDS = 50; 
 
-let currentLat = 42.3525;
-let currentLon = -3.6845;
+let currentLat = 42.36317;
+let currentLon = -3.69882;
 let battery = 100;
 let isCharging = false;
 let heading = 0;
@@ -288,9 +288,19 @@ export const startRobotSimulation = (io) => {
   // 4. Sensores
   setInterval(async () => {
     if (isCharging || emergencyStop) return; 
-    currentTemp += (Math.random() - 0.5) * 2;
-    currentHumidity = Math.max(0, Math.min(100, currentHumidity + (Math.random() - 0.5) * 5));
-    currentPh = Math.max(4, Math.min(10, currentPh + (Math.random() - 0.5) * 0.2));
+
+    // --- MEJORA: Lógica de manchas térmicas basada en la posición GPS (sin tocar BD) ---
+    const factorLat = Math.sin(currentLat * 15000); 
+    const factorLon = Math.cos(currentLon * 15000);
+    const intensity = (factorLat + factorLon + 2) / 4; 
+
+    const humedadBase = 20 + (intensity * 70); 
+    const phBase = 5.0 + (intensity * 3.0);    
+    const tempBase = 15 + (intensity * 20);    
+
+    currentHumidity = Math.max(0, Math.min(100, humedadBase + (Math.random() * 4 - 2)));
+    currentPh = Math.max(4, Math.min(10, phBase + (Math.random() * 0.4 - 0.2)));
+    currentTemp = tempBase + (Math.random() * 1 - 0.5);
     
     try {
       const newRecord = await pool.query(

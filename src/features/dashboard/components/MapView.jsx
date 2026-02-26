@@ -1,3 +1,4 @@
+// src/features/dashboard/components/MapView.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   MapContainer,
@@ -16,6 +17,7 @@ import L from "leaflet";
 import { useRobotStore } from "../../../store/robotStore.js";
 import Modal from "../../../components/Modal.jsx";
 import { useToast } from "../../../context/ToastContext.jsx";
+import FieldDataOverlay from "./FieldDataOverlay.jsx"; // IMPORTAMOS LA CAPA DE CALOR
 import "./MapView.css";
 
 // --- Funciones Auxiliares ---
@@ -62,7 +64,6 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
     }
   }, [isDrawing, map]);
 
-  // Escuchar evento de escape para cancelar
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape" && isDrawing) {
@@ -176,6 +177,9 @@ function MapView() {
   const [lastClickedCoords, setLastClickedCoords] = useState(null);
   const [showZoneSummary, setShowZoneSummary] = useState(false);
 
+  // NUEVO ESTADO PARA EL MAPA DE CALOR
+  const [selectedMetric, setSelectedMetric] = useState("none");
+
   const initialPosition =
     position.lat && position.lon
       ? [position.lat, position.lon]
@@ -197,7 +201,7 @@ function MapView() {
       (p) =>
         p.lat &&
         p.lon &&
-        isPointInPolygon([Number(p.lat), Number(p.lon)], safeZone)
+        isPointInPolygon([Number(p.lat), Number(p.lon)], safeZone),
     );
     if (pointsInZone.length === 0) return null;
     const sum = pointsInZone.reduce(
@@ -209,7 +213,7 @@ function MapView() {
         p: acc.p + Number(p.fosforo),
         k: acc.k + Number(p.potasio),
       }),
-      { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 }
+      { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 },
     );
     const count = pointsInZone.length;
     return {
@@ -229,17 +233,15 @@ function MapView() {
     setShowZoneSummary(false);
     addToast(
       "Haz clic para añadir vértices. Clic en el punto rojo para cerrar.",
-      "info"
+      "info",
     );
   };
 
-  // NUEVO: Función para cancelar dibujo
   const handleCancelDrawing = () => {
     setIsDrawingZone(false);
     addToast("Delimitación cancelada.", "info");
   };
 
-  // Modificado para alternar entre iniciar y cancelar
   const toggleDrawing = () => {
     if (isDrawingZone) {
       handleCancelDrawing();
@@ -303,6 +305,11 @@ function MapView() {
           </LayersControl.BaseLayer>
         </LayersControl>
 
+        {/* CAPA DE MAPA DE CALOR (INTERPOLACIÓN) */}
+        {selectedMetric !== "none" && (
+          <FieldDataOverlay metric={selectedMetric} />
+        )}
+
         {safeZone && (
           <Polygon
             positions={safeZone}
@@ -331,7 +338,7 @@ function MapView() {
           if (!sample.lat || !sample.lon) return null;
           const isVisible = isInsideZone(
             Number(sample.lat),
-            Number(sample.lon)
+            Number(sample.lon),
           );
           const markerKey = sample.id
             ? `sample-${sample.id}`
@@ -367,7 +374,7 @@ function MapView() {
         <ZoneDrawer
           isDrawing={isDrawingZone}
           onZoneComplete={handleZoneComplete}
-          onCancel={handleCancelDrawing} // Pasar manejador de cancelar
+          onCancel={handleCancelDrawing}
         />
         <MapClickHandler
           onMapClick={handleMapClick}
@@ -384,11 +391,32 @@ function MapView() {
         </div>
       )}
 
+      {/* --- BOTONES Y CONTROLES DEL MAPA --- */}
       <div className="map-controls-overlay">
+        {/* NUEVO: SELECTOR DE MAPA DE CALOR INTEGRADO AL DISEÑO */}
+        <select
+          className="map-btn"
+          value={selectedMetric}
+          onChange={(e) => setSelectedMetric(e.target.value)}
+          title="Seleccionar Mapa de Calor"
+          style={{
+            outline: "none",
+            cursor: "pointer",
+            WebkitAppearance: "none",
+            appearance: "auto",
+          }}
+        >
+          <option value="none">🗺️ Capa: Desactivada</option>
+          <option value="humedad">💧 Capa: Humedad</option>
+          <option value="ph">🧪 Capa: pH</option>
+          <option value="temperatura_suelo">🌡️ Capa: Temperatura</option>
+        </select>
+
+        {/* BOTONES ORIGINALES (DELIMITAR, VER RESUMEN, BORRAR) */}
         {!safeZone ? (
           <button
             className={`map-btn ${isDrawingZone ? "active" : ""}`}
-            onClick={toggleDrawing} // Usar toggle para activar/cancelar
+            onClick={toggleDrawing}
             title="Delimitar Área"
           >
             {isDrawingZone ? "❌ Cancelar" : "🌾 Delimitar Área"}
