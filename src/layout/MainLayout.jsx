@@ -9,7 +9,7 @@ import { useToast } from "../context/ToastContext.jsx";
 
 function MainLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(
-    () => window.innerWidth > 768
+    () => window.innerWidth > 768,
   );
 
   const { fetchInitialData, connectSocket, disconnectSocket, isConnected } =
@@ -47,7 +47,13 @@ function MainLayout() {
     <div className="dashboard-layout">
       {isSidebarOpen && <Sidebar onClose={closeMobileSidebar} />}
       {isSidebarOpen && window.innerWidth <= 768 && (
-        <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+        // Esto soluciona la falta de eventos de teclado y elementos no interactivos.
+        <button
+          className="sidebar-overlay"
+          onClick={toggleSidebar}
+          aria-label="Cerrar menú lateral"
+          style={{ border: "none", padding: 0 }} // Evita los estilos por defecto del botón
+        ></button>
       )}
       <div className="main-content-wrapper">
         <Header onMenuClick={toggleSidebar} />
@@ -58,4 +64,5 @@ function MainLayout() {
     </div>
   );
 }
+
 export default MainLayout;

@@ -1,9 +1,32 @@
 // src/pages/DataPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRobotStore } from "../store/robotStore";
 import ChartWidget from "../features/dashboard/components/ChartWidget";
 import "./DataPage.css";
 
+// --- Funciones Utilitarias (Movidas fuera para optimizar memoria) ---
+
+const formatDate = (iso) =>
+  iso
+    ? new Date(iso).toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    : "-";
+
+const formatNum = (n, d = 2) =>
+  n === null || Number.isNaN(Number(n)) ? "-" : Number(n).toFixed(d);
+
+function getPhClass(val) {
+  const ph = Number(val);
+  if (!ph && ph !== 0) return "";
+  if (ph < 6) return "ph-acid";
+  if (ph > 8) return "ph-alkaline";
+  return "ph-neutral";
+}
+
+// --- Componente Principal ---
 function DataPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpPage, setJumpPage] = useState("");
@@ -18,19 +41,25 @@ function DataPage() {
   const totalItems = agronomicData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const currentData = agronomicData.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const goToNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
+
   const goToPrevPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
+
   const handleJumpToPage = (e) => {
     e.preventDefault();
     const num = Number(jumpPage);
@@ -39,17 +68,6 @@ function DataPage() {
       setJumpPage("");
     }
   };
-
-  const formatDate = (iso) =>
-    !iso
-      ? "-"
-      : new Date(iso).toLocaleTimeString("es-ES", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-  const formatNum = (n, d = 2) =>
-    n === null || isNaN(Number(n)) ? "-" : Number(n).toFixed(d);
 
   return (
     <div className="data-page-container">
@@ -107,8 +125,8 @@ function DataPage() {
             </thead>
             <tbody>
               {currentData.length > 0 ? (
-                currentData.map((row) => (
-                  <tr key={row.id || Math.random()}>
+                currentData.map((row, index) => (
+                  <tr key={row.id || `${row.timestamp}-${index}`}>
                     <td className="time-cell">{formatDate(row.timestamp)}</td>
                     <td style={{ fontFamily: "monospace", fontSize: "0.85em" }}>
                       {formatNum(row.lat, 5)}, {formatNum(row.lon, 5)}
@@ -194,14 +212,6 @@ function DataPage() {
       </div>
     </div>
   );
-}
-
-function getPhClass(val) {
-  const ph = Number(val);
-  if (!ph && ph !== 0) return "";
-  if (ph < 6) return "ph-acid";
-  if (ph > 8) return "ph-alkaline";
-  return "ph-neutral";
 }
 
 export default DataPage;

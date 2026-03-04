@@ -1,5 +1,6 @@
 // src/layout/Header.jsx
 import React, { useState } from "react";
+import PropTypes from "prop-types"; // 1. Importación para validación (S6774)
 import "./Header.css";
 import { useRobotStore } from "../store/robotStore.js";
 import { useTheme } from "../context/ThemeContext.jsx";
@@ -58,7 +59,7 @@ function Header({ onMenuClick }) {
             {isDarkMode ? "🌙" : "☀️"}
           </button>
 
-          <div
+          <button
             className={`battery-widget clickable ${getBatteryClass()}`}
             onClick={openBatteryModal}
             title={`Batería: ${percentage}%`}
@@ -75,7 +76,7 @@ function Header({ onMenuClick }) {
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>
-          </div>
+          </button>
         </div>
       </header>
 
@@ -90,5 +91,10 @@ function Header({ onMenuClick }) {
     </>
   );
 }
+
+// 2. Validación estricta de las propiedades esperadas
+Header.propTypes = {
+  onMenuClick: PropTypes.func.isRequired,
+};
 
 export default Header;

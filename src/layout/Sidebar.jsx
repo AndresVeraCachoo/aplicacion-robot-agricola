@@ -1,5 +1,6 @@
 // src/layout/Sidebar.jsx
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types"; // 1. Importación de la librería de validación
 import { Link } from "react-router-dom";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
@@ -10,16 +11,16 @@ const DEFAULT_AVATAR =
 function Sidebar({ onClose }) {
   const { userRole, logout } = useAuth();
   const [avatar, setAvatar] = useState(
-    localStorage.getItem("userAvatar") || DEFAULT_AVATAR
+    localStorage.getItem("userAvatar") || DEFAULT_AVATAR,
   );
 
   useEffect(() => {
     const handleAvatarUpdate = () => {
       setAvatar(localStorage.getItem("userAvatar") || DEFAULT_AVATAR);
     };
-    window.addEventListener("avatarUpdated", handleAvatarUpdate);
+    globalThis.addEventListener("avatarUpdated", handleAvatarUpdate);
     return () =>
-      window.removeEventListener("avatarUpdated", handleAvatarUpdate);
+      globalThis.removeEventListener("avatarUpdated", handleAvatarUpdate);
   }, []);
 
   return (
@@ -94,7 +95,7 @@ function Sidebar({ onClose }) {
         <button
           onClick={() => {
             logout();
-            onClose();
+            if (onClose) onClose(); // Validación adicional de seguridad antes de ejecutar
           }}
           className="logout-button"
         >
@@ -104,5 +105,10 @@ function Sidebar({ onClose }) {
     </aside>
   );
 }
+
+// 2. Definición del tipo de la propiedad esperada (Función requerida)
+Sidebar.propTypes = {
+  onClose: PropTypes.func.isRequired,
+};
 
 export default Sidebar;

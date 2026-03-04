@@ -128,7 +128,7 @@ export const useRobotStore = create((set, get) => ({
     const newState = !system.emergencyStop;
     
     set({ system: { ...system, emergencyStop: newState } });
-    if (socket && socket.connected) {
+    if (socket?.connected) {
         socket.emit("client:emergency_stop", newState);
     }
   },
@@ -138,7 +138,7 @@ export const useRobotStore = create((set, get) => ({
     const newLimit = Math.max(0, Math.min(100, limit));
     
     set({ system: { ...system, speedLimit: newLimit } });
-    if (socket && socket.connected) {
+    if (socket?.connected) {
         socket.emit("client:set_speed_limit", newLimit);
     }
   },
@@ -151,7 +151,7 @@ export const useRobotStore = create((set, get) => ({
         navigateToPoint(lat, lon);
     } else {
         set({ navQueue: [...navQueue, { lat, lon }] });
-        if (socket && socket.connected) {
+        if (socket?.connected) {
             socket.emit("client:queue_point", { lat, lon });
         }
     }
@@ -164,7 +164,7 @@ export const useRobotStore = create((set, get) => ({
           navQueue: [], 
           system: { ...system, mode: "NAVIGATING" } 
       }); 
-      if (socket && socket.connected) {
+      if (socket?.connected) {
           socket.emit("client:navigate_to", { lat, lon, clearQueue: true });
       }
   },
@@ -173,25 +173,25 @@ export const useRobotStore = create((set, get) => ({
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
-    if (socket && socket.connected) socket.emit("client:update_zone", bounds);
+    if (socket?.connected) socket.emit("client:update_zone", bounds);
   },
 
   clearSafeZone: () => {
     const { socket } = get();
     set({ safeZone: null });
-    if (socket && socket.connected) socket.emit("client:clear_zone");
+    if (socket?.connected) socket.emit("client:clear_zone");
   },
 
   // Mantenemos esta función por compatibilidad, pero actualiza system.mode
   setControlMode: (mode) => {
       const { socket, system } = get();
       set({ system: { ...system, mode: mode } });
-      if (socket && socket.connected) socket.emit("client:change_mode", mode);
+      if (socket?.connected) socket.emit("client:change_mode", mode);
   },
 
   sendManualMove: (velocity) => {
       const { socket, system } = get();
       if (system.mode !== "MANUAL") return;
-      if (socket && socket.connected) socket.emit("client:manual_control", velocity);
+      if (socket?.connected) socket.emit("client:manual_control", velocity);
   }
 }));

@@ -41,7 +41,7 @@ const ControlPanel = () => {
           step="5"
           value={system.speedLimit}
           disabled={system.emergencyStop}
-          onChange={(e) => setSpeedLimit(parseInt(e.target.value))}
+          onChange={(e) => setSpeedLimit(Number.parseInt(e.target.value))}
           className={`speed-slider ${system.speedLimit > 80 ? "high-speed" : ""}`}
         />
       </div>

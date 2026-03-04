@@ -1,4 +1,6 @@
+// src/features/dashboard/components/ChartWidget.jsx
 import React, { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import {
   LineChart,
   Line,
@@ -15,9 +17,24 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  ZAxis,
 } from "recharts";
 import "./ChartWidget.css";
+
+const MetricOptions = () => (
+  <>
+    <optgroup label="Clima & Suelo">
+      <option value="humedad">💧 Humedad</option>
+      <option value="temperatura_suelo">🌡️ Temperatura</option>
+      <option value="ph">🧪 pH</option>
+      <option value="radiacion_solar">☀️ Rad. Solar</option>
+    </optgroup>
+    <optgroup label="Nutrientes (NPK)">
+      <option value="nitrogeno">🔵 Nitrógeno (N)</option>
+      <option value="fosforo">🟡 Fósforo (P)</option>
+      <option value="potasio">🟣 Potasio (K)</option>
+    </optgroup>
+  </>
+);
 
 function ChartWidget({
   data,
@@ -25,15 +42,13 @@ function ChartWidget({
   initialType = "area",
   initialMetric1 = "humedad",
   initialMetric2 = "temperatura_suelo",
-  forcedCompare = false, // Si es true, fuerza el modo comparación y oculta selectores de tipo
+  forcedCompare = false,
 }) {
-  // Estados de configuración
   const [metric1, setMetric1] = useState(initialMetric1);
   const [metric2, setMetric2] = useState(initialMetric2);
   const [chartType, setChartType] = useState(initialType);
   const [timeRange, setTimeRange] = useState("all");
 
-  // Filtrado y preparación de datos
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -47,7 +62,7 @@ function ChartWidget({
       if (timeRange === "7d") cutoff.setDate(now.getDate() - 7);
 
       processedData = processedData.filter(
-        (d) => new Date(d.timestamp) >= cutoff
+        (d) => new Date(d.timestamp) >= cutoff,
       );
     }
 
@@ -58,7 +73,6 @@ function ChartWidget({
         minute: "2-digit",
         second: "2-digit",
       }),
-      // Conversión segura
       humedad: Number(d.humedad),
       temperatura_suelo: Number(d.temperatura_suelo),
       ph: Number(d.ph),
@@ -94,10 +108,8 @@ function ChartWidget({
   const conf1 = config[metric1] || config["humedad"];
   const conf2 = config[metric2] || config["temperatura_suelo"];
 
-  // Determinar si estamos en modo comparación
   const isComparing = forcedCompare || chartType === "compare";
 
-  // Ejes comunes
   const CommonAxis = (
     <>
       <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
@@ -145,7 +157,6 @@ function ChartWidget({
     if (chartData.length === 0)
       return <div className="no-data-chart">Sin datos en este rango</div>;
 
-    // Caso 1: Comparación (Forzado o Seleccionado)
     if (isComparing) {
       return (
         <ComposedChart
@@ -183,7 +194,6 @@ function ChartWidget({
       );
     }
 
-    // Caso 2: Scatter Plot (Dispersión)
     if (chartType === "scatter") {
       return (
         <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -208,7 +218,6 @@ function ChartWidget({
       );
     }
 
-    // Caso 3: Barras Verticales
     if (chartType === "bar") {
       return (
         <BarChart
@@ -226,7 +235,6 @@ function ChartWidget({
       );
     }
 
-    // Caso 4: Línea Simple
     if (chartType === "line") {
       return (
         <LineChart
@@ -248,7 +256,6 @@ function ChartWidget({
       );
     }
 
-    // Default: Área Simple
     return (
       <AreaChart
         data={chartData}
@@ -281,46 +288,31 @@ function ChartWidget({
     );
   };
 
-  // Renderizado de Opciones del Select
-  const MetricOptions = () => (
-    <>
-      <optgroup label="Clima & Suelo">
-        <option value="humedad">💧 Humedad</option>
-        <option value="temperatura_suelo">🌡️ Temperatura</option>
-        <option value="ph">🧪 pH</option>
-        <option value="radiacion_solar">☀️ Rad. Solar</option>
-      </optgroup>
-      <optgroup label="Nutrientes (NPK)">
-        <option value="nitrogeno">🔵 Nitrógeno (N)</option>
-        <option value="fosforo">🟡 Fósforo (P)</option>
-        <option value="potasio">🟣 Potasio (K)</option>
-      </optgroup>
-    </>
-  );
-
   return (
     <div className="chart-widget-container">
       <div className="chart-header">
         <h3 className="chart-title">{title}</h3>
 
         <div className="chart-controls-row">
-          {/* Filtro de Tiempo */}
           <div className="control-group">
             <span className="control-label">Rango:</span>
             <div className="time-pills">
               <button
+                type="button"
                 className={timeRange === "1h" ? "active" : ""}
                 onClick={() => setTimeRange("1h")}
               >
                 1h
               </button>
               <button
+                type="button"
                 className={timeRange === "24h" ? "active" : ""}
                 onClick={() => setTimeRange("24h")}
               >
                 24h
               </button>
               <button
+                type="button"
                 className={timeRange === "all" ? "active" : ""}
                 onClick={() => setTimeRange("all")}
               >
@@ -329,11 +321,11 @@ function ChartWidget({
             </div>
           </div>
 
-          {/* Selector de Tipo de Gráfico (Solo si NO es comparación forzada) */}
           {!forcedCompare && (
             <div className="control-group">
               <div className="btn-group">
                 <button
+                  type="button"
                   className={chartType === "area" ? "active" : ""}
                   onClick={() => setChartType("area")}
                   title="Área"
@@ -341,6 +333,7 @@ function ChartWidget({
                   📈
                 </button>
                 <button
+                  type="button"
                   className={chartType === "line" ? "active" : ""}
                   onClick={() => setChartType("line")}
                   title="Línea"
@@ -348,6 +341,7 @@ function ChartWidget({
                   〰️
                 </button>
                 <button
+                  type="button"
                   className={chartType === "bar" ? "active" : ""}
                   onClick={() => setChartType("bar")}
                   title="Barras"
@@ -355,6 +349,7 @@ function ChartWidget({
                   📊
                 </button>
                 <button
+                  type="button"
                   className={chartType === "scatter" ? "active" : ""}
                   onClick={() => setChartType("scatter")}
                   title="Dispersión"
@@ -366,7 +361,6 @@ function ChartWidget({
           )}
         </div>
 
-        {/* Selectores de Métricas */}
         <div className="metric-selectors-row">
           <select
             value={metric1}
@@ -399,5 +393,14 @@ function ChartWidget({
     </div>
   );
 }
+
+ChartWidget.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  title: PropTypes.string,
+  initialType: PropTypes.string,
+  initialMetric1: PropTypes.string,
+  initialMetric2: PropTypes.string,
+  forcedCompare: PropTypes.bool,
+};
 
 export default ChartWidget;

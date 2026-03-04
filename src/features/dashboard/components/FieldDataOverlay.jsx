@@ -1,5 +1,6 @@
 // src/features/dashboard/components/FieldDataOverlay.jsx
 import { useEffect } from "react";
+import PropTypes from "prop-types";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet.heat"; // Extensión mágica para el mapa de calor
@@ -37,14 +38,14 @@ const FieldDataOverlay = ({ metric }) => {
 
     // 2. Definir los colores
     // Empezamos en 0.0 para que el azul cubra más rápido los valores bajos
-    const unifiedGradient = { 0.0: "blue", 0.5: "yellow", 1.0: "red" };
+    const unifiedGradient = { 0: "blue", 0.5: "yellow", 1: "red" };
 
     // 3. Pintar la capa en el mapa
     const heatLayer = L.heatLayer(heatPoints, {
       radius: 45,
       blur: 45,
       maxZoom: 19,
-      max: 1.0,
+      max: 1,
       minOpacity: 0.4, // <-- NUEVO: Fuerza a que los valores bajos (azul) nunca sean invisibles
       gradient: unifiedGradient,
     });
@@ -59,6 +60,11 @@ const FieldDataOverlay = ({ metric }) => {
 
   // Este componente no devuelve HTML, solo dibuja directamente en el Canvas del mapa
   return null;
+};
+
+// 2. Definición del tipo de propiedad esperada
+FieldDataOverlay.propTypes = {
+  metric: PropTypes.string.isRequired,
 };
 
 export default FieldDataOverlay;

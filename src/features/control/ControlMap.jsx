@@ -1,5 +1,6 @@
 // src/features/control/ControlMap.jsx
 import React, { useEffect, useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 import {
   MapContainer,
   TileLayer,
@@ -14,11 +15,9 @@ import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import "./ControlMap.css";
 
-// Geoman
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
-// Fix iconos por defecto de Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
@@ -30,7 +29,6 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- FUNCIÓN AUXILIAR: CÁLCULO DE ÁREA ---
 const calculateGeodesicArea = (latLngs) => {
   const EARTH_RADIUS = 6378137;
   let area = 0;
@@ -45,7 +43,7 @@ const calculateGeodesicArea = (latLngs) => {
           Math.sin(p1.lat * (Math.PI / 180)) +
           Math.sin(p2.lat * (Math.PI / 180)));
     }
-    area = (area * EARTH_RADIUS * EARTH_RADIUS) / 2.0;
+    area = (area * EARTH_RADIUS * EARTH_RADIUS) / 2;
   }
   return Math.abs(area);
 };
@@ -70,18 +68,17 @@ const updateAreaTooltip = (layer) => {
       ? `Area: ${Math.round(finalArea).toLocaleString()} m²`
       : `Area: ${(finalArea / 10000).toFixed(2)} ha`;
 
-  if (!layer.getTooltip()) {
+  if (layer.getTooltip()) {
+    layer.setTooltipContent(text);
+  } else {
     layer.bindTooltip(text, {
       permanent: true,
       direction: "center",
       className: "area-tooltip",
     });
-  } else {
-    layer.setTooltipContent(text);
   }
 };
 
-// --- COMPONENTE GEOMAN CONTROLS ---
 const GeomanControls = ({ ignoreClickRef }) => {
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
@@ -143,7 +140,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
 
     map.on("pm:create", (e) => {
       const { layer } = e;
-      if (layer.pm && layer.pm.hasSelfIntersection()) {
+      if (layer.pm?.hasSelfIntersection()) {
         alert("El polígono no puede cruzarse a sí mismo.");
         map.removeLayer(layer);
         return;
@@ -202,7 +199,10 @@ const GeomanControls = ({ ignoreClickRef }) => {
   return null;
 };
 
-// --- ICONO ROBOT ---
+GeomanControls.propTypes = {
+  ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
+};
+
 const createRobotArrowIcon = (heading) => {
   return new L.DivIcon({
     className: "robot-arrow-icon",
@@ -217,7 +217,6 @@ const createRobotArrowIcon = (heading) => {
   });
 };
 
-// --- CLICK HANDLER (Shift + Click) ---
 const ClickHandler = ({ ignoreClickRef }) => {
   const { navigateToPoint, queueNavigationPoint, system } = useRobotStore();
   const controlMode = system.mode;
@@ -249,7 +248,10 @@ const ClickHandler = ({ ignoreClickRef }) => {
   return null;
 };
 
-// --- BOTÓN PARA CENTRAR CÁMARA (Idéntico a MapView) ---
+ClickHandler.propTypes = {
+  ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
+};
+
 const CenterButton = () => {
   const map = useMap();
   const position = useRobotStore((state) => state.position);
@@ -263,6 +265,7 @@ const CenterButton = () => {
 
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         centerView();
@@ -275,7 +278,6 @@ const CenterButton = () => {
   );
 };
 
-// --- COMPONENTE PRINCIPAL ---
 const ControlMap = () => {
   const { position, navTarget, navQueue, pathHistory, system } =
     useRobotStore();
@@ -285,8 +287,10 @@ const ControlMap = () => {
 
   const fullQueuePath = [];
   if (navTarget) {
-    fullQueuePath.push([position.lat, position.lon]);
-    fullQueuePath.push([navTarget.lat, navTarget.lon]);
+    fullQueuePath.push(
+      [position.lat, position.lon],
+      [navTarget.lat, navTarget.lon],
+    );
     navQueue.forEach((p) => fullQueuePath.push([p.lat, p.lon]));
   }
 
@@ -336,7 +340,11 @@ const ControlMap = () => {
               opacity={0.8}
             />
             {navQueue.map((p, idx) => (
-              <Marker key={idx} position={[p.lat, p.lon]} opacity={0.7}>
+              <Marker
+                key={`nav-queue-${p.lat}-${p.lon}-${idx}`}
+                position={[p.lat, p.lon]}
+                opacity={0.7}
+              >
                 <Popup>Punto en cola #{idx + 1}</Popup>
               </Marker>
             ))}

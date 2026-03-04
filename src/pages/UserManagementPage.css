@@ -63,10 +63,12 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 .btn-edit {
-  background-color: #0d9488; /* Teal */
+  background-color: #0f766e; /* Teal oscuro en lugar de #0d9488 */
   color: white;
 }
+
 .btn-delete {
   background-color: #d90429; /* Rojo */
   color: white;
@@ -100,14 +102,16 @@
   gap: 10px;
   margin-top: 20px;
 }
+
 .form-actions .btn-cancel {
-  background-color: #aaa;
+  background-color: #555555; /* Gris oscuro en lugar de #aaa */
   color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 6px;
   cursor: pointer;
 }
+
 .form-actions .btn-submit {
   background-color: var(--accent-green);
   color: white;

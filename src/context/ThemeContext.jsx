@@ -1,19 +1,24 @@
-// src/context/ThemeContext.jsx
-import React, { createContext, useState, useEffect, useContext } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
+import PropTypes from "prop-types";
 
 const ThemeContext = createContext();
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  // 1. Inicializar estado leyendo localStorage (persistencia)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
-    // Por defecto claro, si savedTheme es 'dark' inicia en oscuro
     return savedTheme === "dark";
   });
 
-  // 2. Efecto para aplicar la clase CSS al body
   useEffect(() => {
     if (isDarkMode) {
       document.body.classList.add("dark-mode");
@@ -24,13 +29,22 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setIsDarkMode((prev) => !prev);
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({ isDarkMode, toggleTheme }),
+    [isDarkMode, toggleTheme],
+  );
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
+};
+
+ThemeProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

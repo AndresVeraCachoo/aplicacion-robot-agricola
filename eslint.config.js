@@ -2,46 +2,53 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config' // Asumo que esta importación te funciona
 
-export default defineConfig([
-  // 1. Ignorar carpeta de build
-  globalIgnores(['dist']),
-
-  // 2. Configuración PRINCIPAL (React / Frontend / General)
+export default [
+  // 1. Ignorar carpetas de compilación
   {
-    files: ['**/*.{js,jsx}'],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
+    ignores: ['dist', 'eslint-report.json']
+  },
+
+  // 2. Configuración para el FRONTEND (Vite/React)
+  {
+    files: ['src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser, // Define 'window', 'document', etc.
+      globals: {
+        ...globals.browser,
+        // Vite usa import.meta.env, pero si usas process.env por error, 
+        // aquí es donde daría el fallo.
+      },
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
       },
     },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
     rules: {
+      ...js.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
 
-  // 3. Configuración EXCLUSIVA para el Servidor (Backend)
+  // 3. Configuración para el SERVIDOR (Node.js)
   {
-    // Solo aplica a archivos dentro de la carpeta server
     files: ['server/**/*.js'], 
     languageOptions: {
-      // Mezcla los globales existentes con los de Node.js
+      sourceType: 'module',
       globals: {
-        ...globals.node, 
+        ...globals.node, // Esto define 'process', '__dirname', etc.
       }
     },
     rules: {
-      'react-refresh/only-export-components': 'off' 
+      ...js.configs.recommended.rules,
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     }
   }
-])
+]

@@ -1,5 +1,6 @@
 // src/features/dashboard/components/BatteryModal.jsx
 import React, { useMemo } from "react";
+import PropTypes from "prop-types";
 import {
   BarChart,
   Bar,
@@ -10,11 +11,10 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import { useNavigate } from "react-router-dom"; // 1. Importar hook de navegación
+import { useNavigate } from "react-router-dom";
 import { useRobotStore } from "../../../store/robotStore";
 import "./BatteryModal.css";
 
-// --- Generador de Datos Simulados (Estabilizado) ---
 const generateMockBatteryHistory = (currentLevel, isCharging) => {
   const data = [];
   const now = new Date();
@@ -47,14 +47,34 @@ const generateMockBatteryHistory = (currentLevel, isCharging) => {
       isChargingState: wasChargingInPast,
     });
   }
-  data[data.length - 1].level = currentLevel;
-  data[data.length - 1].isChargingState = isCharging;
+  data.at(-1).level = currentLevel;
+  data.at(-1).isChargingState = isCharging;
   return data;
 };
 
-// 2. Recibir prop onClose
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload?.length) {
+    const dataPoint = payload[0].payload;
+    return (
+      <div className="battery-tooltip">
+        <p className="tooltip-time">{label}</p>
+        <p className="tooltip-level">
+          {dataPoint.level}% {dataPoint.isChargingState ? "⚡" : ""}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.arrayOf(PropTypes.object),
+  label: PropTypes.string,
+};
+
 function BatteryModal({ onClose }) {
-  const navigate = useNavigate(); // 3. Inicializar navigate
+  const navigate = useNavigate();
   const batteryInfo = useRobotStore((state) => state.battery);
   const { percentage, status, voltage, temperature, timeRemaining } =
     batteryInfo;
@@ -75,36 +95,19 @@ function BatteryModal({ onClose }) {
     statusText = "Batería Baja";
   }
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const dataPoint = payload[0].payload;
-      return (
-        <div className="battery-tooltip">
-          <p className="tooltip-time">{label}</p>
-          <p className="tooltip-level">
-            {dataPoint.level}% {dataPoint.isChargingState ? "⚡" : ""}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   const getBarColor = (entry) => {
     if (entry.isChargingState) return "#22c55e";
     if (entry.level < LOW_BATTERY_THRESHOLD) return "#f97316";
     return "#3b82f6";
   };
 
-  // 4. Manejador de navegación
   const handleViewDetails = () => {
-    if (onClose) onClose(); // Cerrar modal primero
-    navigate("/app/energy"); // Navegar a la nueva página
+    if (onClose) onClose();
+    navigate("/app/energy");
   };
 
   return (
     <div className="battery-modal-content">
-      {/* Header */}
       <div className="battery-header-section">
         <div className="battery-percentage-ring">
           <span className="icon">{statusIcon}</span>
@@ -141,12 +144,14 @@ function BatteryModal({ onClose }) {
 
       <hr className="divider" />
 
-      {/* Gráfica */}
       <div className="battery-chart-section">
         <div className="chart-header-row">
           <h4>Uso de batería (24h)</h4>
-          {/* 5. Conectar el botón */}
-          <button className="btn-details-link" onClick={handleViewDetails}>
+          <button
+            type="button"
+            className="btn-details-link"
+            onClick={handleViewDetails}
+          >
             Ver Detalles Avanzados &rarr;
           </button>
         </div>
@@ -172,9 +177,9 @@ function BatteryModal({ onClose }) {
                 strokeDasharray="3 3"
               />
               <Bar dataKey="level" radius={[3, 3, 3, 3]}>
-                {historyData.map((entry, index) => (
+                {historyData.map((entry) => (
                   <Cell
-                    key={`cell-${index}`}
+                    key={`cell-${entry.hour}`}
                     fill={getBarColor(entry)}
                     fillOpacity={entry.isChargingState ? 1 : 0.8}
                   />
@@ -199,5 +204,9 @@ function BatteryModal({ onClose }) {
     </div>
   );
 }
+
+BatteryModal.propTypes = {
+  onClose: PropTypes.func,
+};
 
 export default BatteryModal;

@@ -1,5 +1,6 @@
 // src/App.jsx
 import React from "react";
+import PropTypes from "prop-types"; // 1. Importación añadida para validación
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./features/authentication/LoginPage";
@@ -22,6 +23,11 @@ function ProtectedRoute({ children }) {
   }
   return children;
 }
+
+// 2. Validación de propiedades para satisfacer a SonarLint (S6774)
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 function App() {
   return (

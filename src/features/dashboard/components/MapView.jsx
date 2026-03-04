@@ -1,5 +1,6 @@
 // src/features/dashboard/components/MapView.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import PropTypes from "prop-types";
 import {
   MapContainer,
   TileLayer,
@@ -17,7 +18,7 @@ import L from "leaflet";
 import { useRobotStore } from "../../../store/robotStore.js";
 import Modal from "../../../components/Modal.jsx";
 import { useToast } from "../../../context/ToastContext.jsx";
-import FieldDataOverlay from "./FieldDataOverlay.jsx"; // IMPORTAMOS LA CAPA DE CALOR
+import FieldDataOverlay from "./FieldDataOverlay.jsx";
 import "./MapView.css";
 
 // --- Funciones Auxiliares ---
@@ -40,7 +41,7 @@ const isPointInPolygon = (point, vs) => {
 
 const getColorByPH = (phVal) => {
   const ph = Number(phVal);
-  if (ph < 6.0) return "#ef4444";
+  if (ph < 6) return "#ef4444";
   if (ph > 7.5) return "#3b82f6";
   return "#22c55e";
 };
@@ -70,8 +71,8 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
         onCancel();
       }
     };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    globalThis.addEventListener("keydown", handleEsc);
+    return () => globalThis.removeEventListener("keydown", handleEsc);
   }, [isDrawing, onCancel]);
 
   useMapEvents({
@@ -106,7 +107,7 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
       />
       {points.map((p, i) => (
         <CircleMarker
-          key={i}
+          key={`point-${p[0]}-${p[1]}`}
           center={p}
           radius={5}
           pathOptions={{
@@ -120,6 +121,12 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
   );
 }
 
+ZoneDrawer.propTypes = {
+  isDrawing: PropTypes.bool.isRequired,
+  onZoneComplete: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};
+
 function MapClickHandler({ onMapClick, isDrawing }) {
   useMapEvents({
     click(e) {
@@ -130,6 +137,11 @@ function MapClickHandler({ onMapClick, isDrawing }) {
   });
   return null;
 }
+
+MapClickHandler.propTypes = {
+  onMapClick: PropTypes.func.isRequired,
+  isDrawing: PropTypes.bool.isRequired,
+};
 
 function CenterButtonInternal() {
   const map = useMap();
@@ -144,6 +156,7 @@ function CenterButtonInternal() {
 
   return (
     <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         centerView();
@@ -412,18 +425,10 @@ function MapView() {
           <option value="temperatura_suelo">🌡️ Capa: Temperatura</option>
         </select>
 
-        {/* BOTONES ORIGINALES (DELIMITAR, VER RESUMEN, BORRAR) */}
-        {!safeZone ? (
-          <button
-            className={`map-btn ${isDrawingZone ? "active" : ""}`}
-            onClick={toggleDrawing}
-            title="Delimitar Área"
-          >
-            {isDrawingZone ? "❌ Cancelar" : "🌾 Delimitar Área"}
-          </button>
-        ) : (
+        {safeZone ? (
           <div className="zone-active-controls">
             <button
+              type="button"
               className="map-btn info"
               onClick={() => setShowZoneSummary(!showZoneSummary)}
               title="Ver Resumen de Datos"
@@ -431,6 +436,7 @@ function MapView() {
               {showZoneSummary ? "👁️ Ocultar Datos" : "📊 Ver Datos"}
             </button>
             <button
+              type="button"
               className="map-btn danger"
               onClick={handleClearZone}
               title="Borrar Límite"
@@ -438,6 +444,15 @@ function MapView() {
               🗑️ Borrar
             </button>
           </div>
+        ) : (
+          <button
+            type="button"
+            className={`map-btn ${isDrawingZone ? "active" : ""}`}
+            onClick={toggleDrawing}
+            title="Delimitar Área"
+          >
+            {isDrawingZone ? "❌ Cancelar" : "🌾 Delimitar Área"}
+          </button>
         )}
       </div>
 
@@ -445,7 +460,9 @@ function MapView() {
         <div className="zone-summary-panel">
           <div className="summary-header">
             <h4>Resumen de Área</h4>
-            <button onClick={() => setShowZoneSummary(false)}>&times;</button>
+            <button type="button" onClick={() => setShowZoneSummary(false)}>
+              &times;
+            </button>
           </div>
           <div className="summary-metric main">
             <span className="label">pH Promedio</span>

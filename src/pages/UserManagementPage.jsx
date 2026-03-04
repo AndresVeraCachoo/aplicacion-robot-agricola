@@ -20,7 +20,6 @@ function UserManagementPage() {
     role: "usuario",
   });
 
-  // CORRECCIÓN: Envolvemos fetchUsers en useCallback
   const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get(API_URL);
@@ -63,13 +62,13 @@ function UserManagementPage() {
         await axios.put(`${API_URL}/${currentUser.id}`, userData);
         addToast(
           `Usuario "${userData.name}" actualizado correctamente`,
-          "success"
+          "success",
         );
       } else {
         if (!userData.password) {
           addToast(
             "La contraseña es obligatoria para crear usuarios.",
-            "warning"
+            "warning",
           );
           return;
         }
@@ -82,13 +81,15 @@ function UserManagementPage() {
       console.error("Error al guardar usuario:", err);
       addToast(
         err.response?.data?.error || "Error al guardar el usuario.",
-        "error"
+        "error",
       );
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
+    if (
+      globalThis.confirm("¿Estás seguro de que quieres eliminar este usuario?")
+    ) {
       try {
         await axios.delete(`${API_URL}/${id}`);
         addToast("Usuario eliminado correctamente", "success");

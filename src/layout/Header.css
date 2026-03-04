@@ -10,7 +10,9 @@
   position: sticky; /*Mantiene el encabezado arriba al hacer scroll*/
   top: 0;
   z-index: 100;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
 }
 
 .header-left {
@@ -96,14 +98,15 @@
 
 /* Modo Oscuro */
 body.dark-mode .system-status-pill.online {
-  background-color: rgba(34, 197, 94, 0.15);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.3);
+  background-color: #064e3b; /* Verde esmeralda muy oscuro sólido */
+  color: #6ee7b7; /* Verde claro de alto contraste */
+  border-color: #047857;
 }
+
 body.dark-mode .system-status-pill.offline {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.3);
+  background-color: #7f1d1d; /* Rojo muy oscuro sólido */
+  color: #fca5a5; /* Rojo claro de alto contraste */
+  border-color: #b91c1c;
 }
 
 /* Controles Derechos */
