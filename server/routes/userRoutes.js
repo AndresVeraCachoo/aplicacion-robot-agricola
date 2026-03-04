@@ -106,7 +106,7 @@ router.post("/", requireAdmin, async (req, res) => {
 // PUT: Actualizar otro usuario (Admin)
 router.put("/:id", requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const {KXname, role, password } = req.body; // Nota: puse KXname por error en tipeo, corregido abajo a name
+  const {role, password } = req.body; // Nota: puse KXname por error en tipeo, corregido abajo a name
 
   try {
     if (password) {
