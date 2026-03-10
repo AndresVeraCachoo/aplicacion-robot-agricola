@@ -1,55 +1,119 @@
 /* src/components/Modal.css */
+
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  /* Empieza transparente */
+  background-color: rgba(0, 0, 0, 0);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999 !important;
   padding: 20px;
+  /* Animación suave de fondo */
+  transition: background-color 0.3s ease;
+  pointer-events: none;
+}
+
+/* Cuando recibe la clase visible, se oscurece */
+.modal-overlay.visible {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  pointer-events: auto;
+}
+
+.modal-backdrop-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: default;
 }
 
 .modal-content {
-  background-color: var(--surface-color, white);
-  padding: 25px;
-  border-radius: var(--button-border-radius, 8px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
-  width: 90%;
+  background-color: var(--card-bg, #ffffff);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: 600px;
+  width: 95%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+
+  /* Empieza pequeño y transparente */
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+  /* Animación suave de la ventana */
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+/* Cuando recibe la clase visible, crece y aparece */
+.modal-content.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* src/components/Modal.css */
+.modal-close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--background-app, #f1f5f9);
+  border: none;
+  font-size: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main, #334155);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close-button:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+  transform: scale(1.1);
 }
 
 .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  padding-right: 40px;
+  border-bottom: none;
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.4em;
-  color: var(--primary-dark, #166534);
+  font-size: 1.5em;
+  font-weight: 800;
+  color: var(--text-main, #1e293b);
 }
 
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 1.8em;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 5px;
-  color: #888;
+/* --- MODO OSCURO --- */
+body.dark-mode .modal-content {
+  background-color: var(--card-bg, #1e293b);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
-.modal-close-button:hover {
-  color: #333;
+body.dark-mode .modal-close-button {
+  background-color: #0f172a;
+  color: #94a3b8;
+}
+
+body.dark-mode .modal-close-button:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+body.dark-mode .modal-title {
+  color: #f1f5f9;
 }

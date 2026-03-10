@@ -9,7 +9,8 @@ import { useAuth } from "../hooks/useAuth";
 const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 
-function Sidebar({ onClose }) {
+// Añadimos isOpen a las props
+function Sidebar({ isOpen, onClose }) {
   const { t } = useTranslation();
   const { userRole, logout } = useAuth();
   const [avatar, setAvatar] = useState(
@@ -26,88 +27,98 @@ function Sidebar({ onClose }) {
   }, []);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header-mobile">
-        <h3>{t("sidebar.menu")}</h3>
-        <button className="close-menu-btn" onClick={onClose}>
-          &times;
-        </button>
-      </div>
+    <>
+      {/* Velo oscuro para móvil con transición - Corregido para SonarLint (S6848 y S1082) */}
+      <button
+        type="button"
+        className={`sidebar-overlay-bg ${isOpen ? "visible" : ""}`}
+        onClick={onClose}
+        aria-label={t("modal.close") || "Close sidebar"}
+        tabIndex={isOpen ? 0 : -1}
+      />
 
-      <div className="sidebar-profile-header">
-        <Link
-          to="/app/profile"
-          className="profile-link-wrapper"
-          onClick={onClose}
-        >
-          <div className="profile-image-container">
-            <img src={avatar} alt="Usuario" className="sidebar-avatar" />
-          </div>
-          <div className="profile-text">
-            <span className="profile-greeting">{t("sidebar.profile")}</span>
-            <span className="profile-role-label">{userRole}</span>
-          </div>
-        </Link>
-      </div>
+      {/* La sidebar ahora usa la clase open/closed */}
+      <aside className={`sidebar ${isOpen ? "open" : "closed"}`}>
+        <div className="sidebar-header-mobile">
+          <h3>{t("sidebar.menu")}</h3>
+          <button className="close-menu-btn" onClick={onClose}>
+            &times;
+          </button>
+        </div>
 
-      <nav className="sidebar-nav">
-        <ul>
-          <li>
-            <Link to="/app/dashboard" onClick={onClose}>
-              {t("sidebar.home")}
-            </Link>
-          </li>
+        <div className="sidebar-profile-header">
+          <Link
+            to="/app/profile"
+            className="profile-link-wrapper"
+            onClick={onClose}
+          >
+            <div className="profile-image-container">
+              <img src={avatar} alt="Usuario" className="sidebar-avatar" />
+            </div>
+            <div className="profile-text">
+              <span className="profile-greeting">{t("sidebar.profile")}</span>
+              <span className="profile-role-label">{userRole}</span>
+            </div>
+          </Link>
+        </div>
 
-          <li>
-            <Link to="/app/control" onClick={onClose}>
-              {t("sidebar.remoteControl")}
-            </Link>
-          </li>
-
-          <li>
-            <Link to="/app/data" onClick={onClose}>
-              {t("sidebar.data")}
-            </Link>
-          </li>
-          {(userRole === "admin" || userRole === "operador") && (
+        <nav className="sidebar-nav">
+          <ul>
             <li>
-              <Link to="/app/camera" onClick={onClose}>
-                {t("sidebar.camera")}
+              <Link to="/app/dashboard" onClick={onClose}>
+                {t("sidebar.home")}
               </Link>
             </li>
-          )}
-          <li>
-            <Link to="/app/history" onClick={onClose}>
-              {t("sidebar.history")}
-            </Link>
-          </li>
-
-          {userRole === "admin" && (
             <li>
-              <Link to="/app/users" onClick={onClose}>
-                {t("sidebar.userManagement")}
+              <Link to="/app/control" onClick={onClose}>
+                {t("sidebar.remoteControl")}
               </Link>
             </li>
-          )}
-        </ul>
-      </nav>
+            <li>
+              <Link to="/app/data" onClick={onClose}>
+                {t("sidebar.data")}
+              </Link>
+            </li>
+            {(userRole === "admin" || userRole === "operador") && (
+              <li>
+                <Link to="/app/camera" onClick={onClose}>
+                  {t("sidebar.camera")}
+                </Link>
+              </li>
+            )}
+            <li>
+              <Link to="/app/history" onClick={onClose}>
+                {t("sidebar.history")}
+              </Link>
+            </li>
+            {userRole === "admin" && (
+              <li>
+                <Link to="/app/users" onClick={onClose}>
+                  {t("sidebar.userManagement")}
+                </Link>
+              </li>
+            )}
+          </ul>
+        </nav>
 
-      <div className="sidebar-footer">
-        <button
-          onClick={() => {
-            logout();
-            if (onClose) onClose();
-          }}
-          className="logout-button"
-        >
-          {t("sidebar.logout")}
-        </button>
-      </div>
-    </aside>
+        <div className="sidebar-footer">
+          <button
+            onClick={() => {
+              logout();
+              if (onClose) onClose();
+            }}
+            className="logout-button"
+          >
+            {t("sidebar.logout")}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
 
 Sidebar.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
 };
 

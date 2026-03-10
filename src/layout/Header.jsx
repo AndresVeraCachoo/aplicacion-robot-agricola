@@ -7,11 +7,13 @@ import { useRobotStore } from "../store/robotStore.js";
 import { useTheme } from "../context/ThemeContext.jsx";
 import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 
 function Header({ onMenuClick }) {
   const { t, i18n } = useTranslation();
   const battery = useRobotStore((state) => state.battery);
   const isConnected = useRobotStore((state) => state.isConnected);
+  const { addToast } = useToast();
 
   const { percentage, status } = battery;
   const { isDarkMode, toggleTheme } = useTheme();
@@ -31,7 +33,13 @@ function Header({ onMenuClick }) {
   const toggleLanguage = () => {
     const currentLang = i18n.language || "es";
     const nextLang = currentLang.startsWith("es") ? "en" : "es";
-    i18n.changeLanguage(nextLang);
+
+    i18n.changeLanguage(nextLang).then(() => {
+      addToast(
+        i18n.getFixedT(nextLang)("notifications.languageChanged"),
+        "info",
+      );
+    });
   };
 
   return (

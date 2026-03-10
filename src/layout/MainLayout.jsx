@@ -35,11 +35,18 @@ function MainLayout() {
     return () => disconnectSocket();
   }, [fetchInitialData, connectSocket, disconnectSocket]);
 
-  // 1. Notificación de Conexión
+  // Asegúrate de definir esta referencia arriba junto a las otras (lastEmergencyState, etc.)
+  const connectionAlertFired = useRef(false);
+
+  // 1. Notificación de Conexión (ARREGALDA)
   useEffect(() => {
-    // Esta sí queremos que salga al recargar para confirmar que hay conexión
-    if (isConnected) {
+    // Solo avisa si está conectado Y si no ha avisado antes
+    if (isConnected && !connectionAlertFired.current) {
       addToast(t("notifications.connectionSuccess"), "success");
+      connectionAlertFired.current = true;
+    } else if (!isConnected) {
+      // Si se desconecta, reseteamos el seguro para que avise la próxima vez
+      connectionAlertFired.current = false;
     }
   }, [isConnected, addToast, t]);
 
@@ -96,7 +103,7 @@ function MainLayout() {
 
   return (
     <div className="dashboard-layout">
-      {isSidebarOpen && <Sidebar onClose={closeMobileSidebar} />}
+      <Sidebar isOpen={isSidebarOpen} onClose={closeMobileSidebar} />
       {isSidebarOpen && window.innerWidth <= 768 && (
         <button
           className="sidebar-overlay"

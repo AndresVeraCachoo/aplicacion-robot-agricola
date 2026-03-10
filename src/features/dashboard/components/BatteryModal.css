@@ -6,15 +6,14 @@
   gap: 25px;
   font-family: var(--font-family, sans-serif);
   color: var(--text-main, #333);
-  min-width: 500px;
+  width: 100%;
 }
 
 /* --- Header Section --- */
 .battery-header-section {
   display: flex;
   align-items: center;
-  gap: 30px;
-  padding: 0 10px;
+  gap: 20px;
 }
 
 .battery-percentage-ring {
@@ -22,24 +21,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 110px;
-  height: 110px;
+  min-width: 100px; /* Obliga a que siempre sea redondo */
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  border: 8px solid var(--background-app, #f1f5f9);
-  box-shadow: inset 0 0 0 4px var(--accent-green);
-  position: relative;
-  background-color: var(--card-bg);
+  border: 6px solid var(--background-app, #f1f5f9);
+  box-shadow: inset 0 0 0 4px var(--accent-green, #22c55e);
+  background-color: var(--card-bg, #ffffff);
 }
 
 .battery-percentage-ring .icon {
-  font-size: 1.8em;
-  margin-bottom: -5px;
+  font-size: 1.5em;
 }
 
 .battery-percentage-ring .value {
-  font-size: 2em;
+  font-size: 1.5em;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--text-main, #333);
   line-height: 1;
 }
 
@@ -51,7 +49,7 @@
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 15px;
+  gap: 15px;
 }
 
 .info-item {
@@ -61,17 +59,16 @@
 
 .info-item .label {
   font-size: 0.75em;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .info-item .value {
   font-size: 1.1em;
   font-weight: 600;
-  color: var(--text-main);
+  color: var(--text-main, #333);
 }
 
 .charging-text {
@@ -97,7 +94,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
 }
 
 .battery-chart-section h4 {
@@ -110,7 +106,7 @@
 .btn-details-link {
   background: none;
   border: none;
-  color: var(--accent-green);
+  color: var(--accent-green, #22c55e);
   font-size: 0.85em;
   font-weight: 600;
   cursor: pointer;
@@ -126,15 +122,14 @@
 
 .chart-container {
   width: 100%;
-  height: 220px;
+  height: 200px;
   background-color: var(--background-app, #f8fafc);
   border-radius: 12px;
-  padding: 15px 10px 5px 5px;
+  padding: 15px 10px 5px 0;
   box-sizing: border-box;
   border: 1px solid var(--border-light, transparent);
 }
 
-/* Tooltip Personalizado */
 .battery-tooltip {
   background-color: var(--card-bg, white);
   border: 1px solid var(--border-light, #ccc);
@@ -142,14 +137,12 @@
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   text-align: center;
-  z-index: 100;
 }
 
 .tooltip-time {
   margin: 0;
   font-size: 0.85em;
-  color: #64748b;
-  margin-bottom: 4px;
+  color: var(--text-muted, #64748b);
 }
 
 .tooltip-level {
@@ -159,14 +152,12 @@
   color: var(--text-main);
 }
 
-/* Legend */
 .chart-legend {
   display: flex;
   justify-content: flex-end;
   gap: 20px;
-  margin-top: 5px;
   font-size: 0.8em;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   font-weight: 500;
 }
 
@@ -184,14 +175,10 @@
 
 .dot.usage {
   background-color: #3b82f6;
-  opacity: 0.8;
 }
 .dot.charge {
   background-color: #22c55e;
 }
-.dot.low {
-  background-color: #f97316;
-} /* COLOR NARANJA PARA BAJO NIVEL */
 
 @keyframes pulse-text {
   0% {
@@ -203,38 +190,4 @@
   100% {
     opacity: 1;
   }
-}
-
-/* --- MODO OSCURO --- */
-body.dark-mode .battery-modal-content {
-  color: #e2e8f0;
-}
-body.dark-mode .battery-percentage-ring {
-  border-color: #0f172a;
-  background-color: #1e293b;
-  box-shadow: inset 0 0 0 4px var(--accent-green);
-}
-body.dark-mode .info-item .label {
-  color: #94a3b8;
-}
-body.dark-mode .info-item .value {
-  color: #f1f5f9;
-}
-body.dark-mode .divider {
-  border-top-color: #334155;
-}
-body.dark-mode .chart-container {
-  background-color: #0f172a;
-  border-color: #334155;
-}
-body.dark-mode .battery-tooltip {
-  background-color: #1e293b;
-  border-color: #475569;
-  color: #f1f5f9;
-}
-body.dark-mode .tooltip-time {
-  color: #94a3b8;
-}
-body.dark-mode .tooltip-level {
-  color: #f1f5f9;
 }
