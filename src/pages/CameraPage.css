@@ -93,6 +93,10 @@
   background-color: #333; /* Fondo base por si tarda en cargar */
 }
 
+.minimap-container .leaflet-map-container {
+  height: 100% !important;
+}
+
 /* MUY IMPORTANTE: Anular estilos previos del MapView para el minimapa */
 .minimap-container .map-view-container {
   width: 100% !important;

@@ -1,180 +1,102 @@
 // src/pages/EnergyPage.jsx
-import React, { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { useRobotStore } from "../store/robotStore";
+import React from "react";
+import { useTranslation } from "react-i18next";
 import "./EnergyPage.css";
-
-// Función auxiliar para simular historial detallado de energía
-const generateEnergyHistory = () => {
-  const data = [];
-  const now = new Date();
-  let level = 80;
-  for (let i = 24; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 3600 * 1000); // Últimas 24h
-
-    // Simulación: De día (6-18) carga solar, de noche descarga
-    const hour = time.getHours();
-    const isDay = hour > 6 && hour < 19;
-
-    // Consumo base del robot
-    const consumption = Math.random() * 5 + 2;
-    // Producción solar (0 de noche, alta a mediodía)
-    const solarInput = isDay
-      ? Math.max(0, 15 - Math.abs(12 - hour) * 2) + Math.random() * 2
-      : 0;
-
-    level = Math.max(0, Math.min(100, level - consumption + solarInput));
-
-    data.push({
-      time: time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      batteryLevel: Number(level.toFixed(1)),
-      solarWatts: Number((solarInput * 12).toFixed(1)), // Conversión ficticia a Watts
-      consumptionWatts: Number((consumption * 12).toFixed(1)),
-    });
-  }
-  return data;
-};
+import { useRobotStore } from "../store/robotStore";
 
 function EnergyPage() {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const battery = useRobotStore((state) => state.battery);
-  const isCharging = battery.status === "CHARGING";
+  const { percentage, status, voltage, temperature, health } = battery;
 
-  // Generamos datos al montar el componente (simulación)
-  const chartData = useMemo(() => generateEnergyHistory(), []);
-
-  // Cálculos derivados para KPIs
-  const currentSolarInput = isCharging
-    ? (Math.random() * 50 + 100).toFixed(0)
-    : 0;
-  const currentAmps = (battery.voltage > 0 ? 120 / battery.voltage : 0).toFixed(
-    1
-  ); // Simulación potencia
+  // Clases dinámicas según el porcentaje
+  const getBatteryClass = () => {
+    if (status === "CHARGING") return "charging";
+    if (percentage < 20) return "critical";
+    if (percentage < 50) return "low";
+    return "good";
+  };
 
   return (
     <div className="energy-page-container">
-      {/* Cabecera */}
-      <header className="energy-header">
-        <button
-          onClick={() => navigate("/app/dashboard")}
-          className="btn-back"
-          title="Volver al Dashboard"
-        >
-          ←
-        </button>
-        <h1>Gestión Energética Avanzada</h1>
-      </header>
-
-      {/* Grid de KPIs */}
-      <div className="energy-kpi-grid">
-        <div className="kpi-card">
-          <span className="kpi-icon">🔋</span>
-          <span className="kpi-label">Nivel Actual</span>
-          <span
-            className={`kpi-value ${
-              battery.percentage < 20 ? "status-draining" : ""
-            }`}
-          >
-            {battery.percentage}%
-          </span>
-          <span className="kpi-sub">{battery.status}</span>
-        </div>
-
-        <div className="kpi-card">
-          <span className="kpi-icon">⚡</span>
-          <span className="kpi-label">Voltaje / Corriente</span>
-          <span className="kpi-value">{battery.voltage}V</span>
-          <span className="kpi-sub">~{currentAmps} Amperios</span>
-        </div>
-
-        <div className="kpi-card">
-          <span className="kpi-icon">☀️</span>
-          <span className="kpi-label">Entrada Solar</span>
-          <span className={`kpi-value ${isCharging ? "status-charging" : ""}`}>
-            {currentSolarInput} W
-          </span>
-          <span className="kpi-sub">
-            {isCharging ? "Panel Activo" : "Standby / Noche"}
-          </span>
-        </div>
-
-        <div className="kpi-card">
-          <span className="kpi-icon">🌡️</span>
-          <span className="kpi-label">Temp. Batería</span>
-          <span className="kpi-value">{battery.temperature}°C</span>
-          <span className="kpi-sub">Estado Óptimo</span>
-        </div>
+      <div className="energy-header">
+        <h1>{t("energy.title")}</h1>
+        <p>{t("energy.subtitle")}</p>
       </div>
 
-      {/* Gráfica Avanzada */}
-      <div className="energy-charts-section">
-        <h3 className="section-title">Balance Energético (24h)</h3>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-          >
-            <defs>
-              <linearGradient id="colorBat" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorSolar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="time" tick={{ fill: "var(--text-main)" }} />
-            <YAxis
-              yAxisId="left"
-              orientation="left"
-              tick={{ fill: "var(--text-main)" }}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tick={{ fill: "var(--text-main)" }}
-            />
-            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "var(--card-bg)",
-                borderColor: "var(--border-light)",
-                color: "var(--text-main)",
-              }}
-            />
-            <Legend />
+      <div className="energy-dashboard-grid">
+        {/* PANEL PRINCIPAL: Estado de la batería */}
+        <div className="energy-card main-battery-card">
+          <h2>{t("energy.batteryStatus")}</h2>
+          <div className="battery-visualizer">
+            <div className={`battery-icon-large ${getBatteryClass()}`}>
+              <div
+                className="battery-level-fill"
+                style={{ height: `${percentage}%` }}
+              ></div>
+            </div>
+            <div className="battery-info-large">
+              <span className="battery-percentage-text">{percentage}%</span>
+              <span className={`battery-status-badge ${getBatteryClass()}`}>
+                {status === "CHARGING"
+                  ? t("energy.charging")
+                  : t("energy.inUse")}
+              </span>
+            </div>
+          </div>
+        </div>
 
-            <Area
-              yAxisId="left"
-              type="monotone"
-              dataKey="batteryLevel"
-              name="Nivel Batería (%)"
-              stroke="#22c55e"
-              fillOpacity={1}
-              fill="url(#colorBat)"
-            />
-            <Area
-              yAxisId="right"
-              type="monotone"
-              dataKey="solarWatts"
-              name="Input Solar (W)"
-              stroke="#f59e0b"
-              fillOpacity={1}
-              fill="url(#colorSolar)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {/* PANELES SECUNDARIOS: Estadísticas */}
+        <div className="energy-stats-container">
+          <div className="energy-stat-card">
+            <h3>{t("energy.currentCharge")}</h3>
+            <p className="stat-value">{voltage} V</p>
+          </div>
+          <div className="energy-stat-card">
+            <h3>{t("energy.generalStatus")}</h3>
+            <p className="stat-value">{status}</p>
+          </div>
+          <div className="energy-stat-card">
+            <h3>{t("energy.health")}</h3>
+            <p className="stat-value health-good">{health}%</p>
+          </div>
+          <div className="energy-stat-card">
+            <h3>{t("energy.temperature")}</h3>
+            <p className="stat-value">{temperature} °C</p>
+          </div>
+          <div className="energy-stat-card">
+            <h3>{t("energy.chargeCycles")}</h3>
+            <p className="stat-value">142</p>
+          </div>
+        </div>
+
+        {/* PANEL INFERIOR: Consumo estimado */}
+        <div className="energy-card consumption-card">
+          <h2>{t("energy.realTimeConsumption")}</h2>
+          <div className="consumption-bars">
+            <div className="consumption-item">
+              <span>{t("energy.tractionMotors")} (60%)</span>
+              <div className="bar-bg">
+                <div className="bar-fill motors" style={{ width: "60%" }}></div>
+              </div>
+            </div>
+            <div className="consumption-item">
+              <span>{t("energy.navSystem")} (25%)</span>
+              <div className="bar-bg">
+                <div className="bar-fill nav" style={{ width: "25%" }}></div>
+              </div>
+            </div>
+            <div className="consumption-item">
+              <span>{t("energy.sensorsCamera")} (15%)</span>
+              <div className="bar-bg">
+                <div
+                  className="bar-fill sensors"
+                  style={{ width: "15%" }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

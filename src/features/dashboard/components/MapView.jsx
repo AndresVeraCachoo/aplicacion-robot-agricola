@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from "react-leaflet";
 import L from "leaflet";
+import { useTranslation } from "react-i18next";
 
 import { useRobotStore } from "../../../store/robotStore.js";
 import Modal from "../../../components/Modal.jsx";
@@ -144,6 +145,7 @@ MapClickHandler.propTypes = {
 };
 
 function CenterButtonInternal() {
+  const { t } = useTranslation();
   const map = useMap();
   const position = useRobotStore((state) => state.position);
 
@@ -162,7 +164,7 @@ function CenterButtonInternal() {
         centerView();
       }}
       className="center-map-button"
-      title="Centrar en el robot"
+      title={t("control.centerRobot")}
     >
       <span style={{ fontSize: "1.2em" }}>🎯</span>
     </button>
@@ -172,6 +174,7 @@ function CenterButtonInternal() {
 // --- Componente Principal ---
 
 function MapView() {
+  const { t } = useTranslation();
   const position = useRobotStore((state) => state.position);
   const pathHistory = useRobotStore((state) => state.pathHistory);
   const heading = useRobotStore((state) => state.system.heading);
@@ -190,7 +193,6 @@ function MapView() {
   const [lastClickedCoords, setLastClickedCoords] = useState(null);
   const [showZoneSummary, setShowZoneSummary] = useState(false);
 
-  // NUEVO ESTADO PARA EL MAPA DE CALOR
   const [selectedMetric, setSelectedMetric] = useState("none");
 
   const initialPosition =
@@ -244,15 +246,12 @@ function MapView() {
     setIsDrawingZone(true);
     setLastClickedCoords(null);
     setShowZoneSummary(false);
-    addToast(
-      "Haz clic para añadir vértices. Clic en el punto rojo para cerrar.",
-      "info",
-    );
+    addToast(t("mapAdv.drawInstructions"), "info");
   };
 
   const handleCancelDrawing = () => {
     setIsDrawingZone(false);
-    addToast("Delimitación cancelada.", "info");
+    addToast(t("mapAdv.drawCancelled"), "info");
   };
 
   const toggleDrawing = () => {
@@ -267,13 +266,13 @@ function MapView() {
     setSafeZone(polygonPoints);
     setIsDrawingZone(false);
     setShowZoneSummary(true);
-    addToast("Área delimitada.", "success");
+    addToast(t("mapAdv.areaDelimited"), "success");
   };
 
   const handleClearZone = () => {
     clearSafeZone();
     setShowZoneSummary(false);
-    addToast("Límites eliminados.", "info");
+    addToast(t("mapAdv.limitsRemoved"), "info");
   };
 
   const handleMapClick = (latlng) => {
@@ -304,13 +303,13 @@ function MapView() {
         zoomControl={true}
       >
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Satélite">
+          <LayersControl.BaseLayer checked name={t("mapAdv.layerSatellite")}>
             <TileLayer
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Calles">
+          <LayersControl.BaseLayer name={t("mapAdv.layerStreets")}>
             <TileLayer
               attribution="&copy; OpenStreetMap"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -318,7 +317,6 @@ function MapView() {
           </LayersControl.BaseLayer>
         </LayersControl>
 
-        {/* CAPA DE MAPA DE CALOR (INTERPOLACIÓN) */}
         {selectedMetric !== "none" && (
           <FieldDataOverlay metric={selectedMetric} />
         )}
@@ -404,14 +402,12 @@ function MapView() {
         </div>
       )}
 
-      {/* --- BOTONES Y CONTROLES DEL MAPA --- */}
       <div className="map-controls-overlay">
-        {/* NUEVO: SELECTOR DE MAPA DE CALOR INTEGRADO AL DISEÑO */}
         <select
           className="map-btn"
           value={selectedMetric}
           onChange={(e) => setSelectedMetric(e.target.value)}
-          title="Seleccionar Mapa de Calor"
+          title={t("mapAdv.selectHeatmap")}
           style={{
             outline: "none",
             cursor: "pointer",
@@ -419,10 +415,10 @@ function MapView() {
             appearance: "auto",
           }}
         >
-          <option value="none">🗺️ Capa: Desactivada</option>
-          <option value="humedad">💧 Capa: Humedad</option>
-          <option value="ph">🧪 Capa: pH</option>
-          <option value="temperatura_suelo">🌡️ Capa: Temperatura</option>
+          <option value="none">{t("mapAdv.layerOff")}</option>
+          <option value="humedad">{t("mapAdv.layerHum")}</option>
+          <option value="ph">{t("mapAdv.layerPh")}</option>
+          <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
         </select>
 
         {safeZone ? (
@@ -431,17 +427,17 @@ function MapView() {
               type="button"
               className="map-btn info"
               onClick={() => setShowZoneSummary(!showZoneSummary)}
-              title="Ver Resumen de Datos"
+              title={t("mapAdv.viewData")}
             >
-              {showZoneSummary ? "👁️ Ocultar Datos" : "📊 Ver Datos"}
+              {showZoneSummary ? t("mapAdv.hideData") : t("mapAdv.viewData")}
             </button>
             <button
               type="button"
               className="map-btn danger"
               onClick={handleClearZone}
-              title="Borrar Límite"
+              title={t("mapAdv.clearLimit")}
             >
-              🗑️ Borrar
+              🗑️ {t("mapAdv.clear")}
             </button>
           </div>
         ) : (
@@ -449,9 +445,11 @@ function MapView() {
             type="button"
             className={`map-btn ${isDrawingZone ? "active" : ""}`}
             onClick={toggleDrawing}
-            title="Delimitar Área"
+            title={t("mapAdv.drawArea")}
           >
-            {isDrawingZone ? "❌ Cancelar" : "🌾 Delimitar Área"}
+            {isDrawingZone
+              ? `❌ ${t("users.cancel")}`
+              : `🌾 ${t("mapAdv.drawArea")}`}
           </button>
         )}
       </div>
@@ -459,13 +457,13 @@ function MapView() {
       {showZoneSummary && zoneStats && (
         <div className="zone-summary-panel">
           <div className="summary-header">
-            <h4>Resumen de Área</h4>
+            <h4>{t("mapAdv.areaSummary")}</h4>
             <button type="button" onClick={() => setShowZoneSummary(false)}>
               &times;
             </button>
           </div>
           <div className="summary-metric main">
-            <span className="label">pH Promedio</span>
+            <span className="label">{t("mapAdv.avgPh")}</span>
             <span
               className="value"
               style={{ color: getColorByPH(zoneStats.avgPh) }}
@@ -475,15 +473,15 @@ function MapView() {
           </div>
           <div className="summary-grid">
             <div className="metric-box">
-              <span>Humedad</span>
+              <span>{t("mapAdv.humidity")}</span>
               <strong>{zoneStats.avgHum}%</strong>
             </div>
             <div className="metric-box">
-              <span>Temp.</span>
+              <span>{t("mapAdv.temp")}</span>
               <strong>{zoneStats.avgTemp}°C</strong>
             </div>
             <div className="metric-box full">
-              <span>Nutrientes (Promedio)</span>
+              <span>{t("mapAdv.avgNutrients")}</span>
               <div className="mini-npk">
                 <span className="n">N: {zoneStats.avgN}</span>
                 <span className="p">P: {zoneStats.avgP}</span>
@@ -492,7 +490,7 @@ function MapView() {
             </div>
           </div>
           <div className="summary-footer">
-            {zoneStats.count} muestras analizadas
+            {zoneStats.count} {t("mapAdv.samplesAnalyzed")}
           </div>
         </div>
       )}
@@ -501,7 +499,9 @@ function MapView() {
         isOpen={isModalOpen}
         onClose={closeModal}
         title={
-          selectedSample ? `Muestra #${selectedSample.id || "N/A"}` : "Detalle"
+          selectedSample
+            ? `${t("mapAdv.sample")} #${selectedSample.id || "N/A"}`
+            : t("mapAdv.detail")
         }
       >
         {selectedSample && (
@@ -525,15 +525,15 @@ function MapView() {
 
             <div className="popup-grid">
               <div className="popup-row">
-                <span>🌡️ Suelo:</span>{" "}
+                <span>🌡️ {t("mapAdv.soil")}:</span>{" "}
                 <strong>{selectedSample.temperatura_suelo}°C</strong>
               </div>
               <div className="popup-row">
-                <span>💧 Humedad:</span>{" "}
+                <span>💧 {t("mapAdv.humidity")}:</span>{" "}
                 <strong>{selectedSample.humedad}%</strong>
               </div>
               <div className="popup-row">
-                <span>☀️ Rad:</span>{" "}
+                <span>☀️ {t("mapAdv.rad")}:</span>{" "}
                 <strong>{selectedSample.radiacion_solar} W</strong>
               </div>
 

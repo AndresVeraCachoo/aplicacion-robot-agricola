@@ -1,14 +1,15 @@
 // src/pages/DataPage.jsx
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useRobotStore } from "../store/robotStore";
 import ChartWidget from "../features/dashboard/components/ChartWidget";
 import "./DataPage.css";
 
-// --- Funciones Utilitarias (Movidas fuera para optimizar memoria) ---
-
-const formatDate = (iso) =>
+// --- Funciones Utilitarias ---
+// Añadimos 'lng' para que la hora se adapte al idioma (ej. AM/PM vs 24h)
+const formatDate = (iso, lng) =>
   iso
-    ? new Date(iso).toLocaleTimeString("es-ES", {
+    ? new Date(iso).toLocaleTimeString(lng || "es-ES", {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
@@ -28,6 +29,7 @@ function getPhClass(val) {
 
 // --- Componente Principal ---
 function DataPage() {
+  const { t, i18n } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpPage, setJumpPage] = useState("");
   const itemsPerPage = 10;
@@ -73,8 +75,8 @@ function DataPage() {
     <div className="data-page-container">
       {/* Cabecera Simple */}
       <div className="data-header">
-        <h1>Monitor Avanzado</h1>
-        <p>Análisis multi-variable en tiempo real.</p>
+        <h1>{t("data.title")}</h1>
+        <p>{t("data.subtitle")}</p>
       </div>
 
       {/* --- BLOQUE 1: GRÁFICA INDIVIDUAL (Flexible) --- */}
@@ -82,7 +84,7 @@ function DataPage() {
         <div className="chart-section">
           <ChartWidget
             data={agronomicData}
-            title="Análisis Individual"
+            title={t("data.individualAnalysis")}
             initialType="line"
             initialMetric1="nitrogeno"
             // allowCompare=true por defecto
@@ -95,7 +97,7 @@ function DataPage() {
         <div className="chart-section">
           <ChartWidget
             data={agronomicData}
-            title="Comparativa de Variables"
+            title={t("data.comparativeAnalysis")}
             initialType="compare"
             initialMetric1="temperatura_suelo"
             initialMetric2="humedad"
@@ -107,27 +109,29 @@ function DataPage() {
       {/* --- BLOQUE 3: TABLA DE DATOS --- */}
       <div className="table-card">
         <div className="table-header-internal">
-          <h3>Tabla de Registros</h3>
+          <h3>{t("data.recordsTable")}</h3>
         </div>
 
         <div className="table-responsive">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Hora</th>
-                <th>Ubicación</th>
-                <th>Humedad (%)</th>
-                <th>Temp. (°C)</th>
-                <th>pH</th>
-                <th>N-P-K</th>
-                <th>Rad. Solar</th>
+                <th>{t("data.time")}</th>
+                <th>{t("data.location")}</th>
+                <th>{t("data.humidity")}</th>
+                <th>{t("data.temp")}</th>
+                <th>{t("data.ph")}</th>
+                <th>{t("data.npk")}</th>
+                <th>{t("data.solarRad")}</th>
               </tr>
             </thead>
             <tbody>
               {currentData.length > 0 ? (
                 currentData.map((row, index) => (
                   <tr key={row.id || `${row.timestamp}-${index}`}>
-                    <td className="time-cell">{formatDate(row.timestamp)}</td>
+                    <td className="time-cell">
+                      {formatDate(row.timestamp, i18n.language)}
+                    </td>
                     <td style={{ fontFamily: "monospace", fontSize: "0.85em" }}>
                       {formatNum(row.lat, 5)}, {formatNum(row.lon, 5)}
                     </td>
@@ -158,7 +162,7 @@ function DataPage() {
               ) : (
                 <tr>
                   <td colSpan="7" className="no-data">
-                    Esperando datos...
+                    {t("data.waitingData")}
                   </td>
                 </tr>
               )}
@@ -171,7 +175,7 @@ function DataPage() {
           <div className="pagination-footer">
             <div className="pagination-left">
               <span className="pagination-info">
-                Página <strong>{currentPage}</strong> de{" "}
+                {t("data.page")} <strong>{currentPage}</strong> {t("data.of")}{" "}
                 <strong>{totalPages}</strong>
               </span>
             </div>
@@ -205,7 +209,9 @@ function DataPage() {
               </button>
             </div>
             <div className="pagination-right">
-              <span className="pagination-total">{totalItems} registros</span>
+              <span className="pagination-total">
+                {totalItems} {t("data.records")}
+              </span>
             </div>
           </div>
         )}

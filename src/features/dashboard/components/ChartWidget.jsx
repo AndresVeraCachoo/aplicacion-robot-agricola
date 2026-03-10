@@ -1,6 +1,7 @@
 // src/features/dashboard/components/ChartWidget.jsx
 import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -20,21 +21,26 @@ import {
 } from "recharts";
 import "./ChartWidget.css";
 
-const MetricOptions = () => (
+// SOLUCIÓN SONARLINT: Componente declarado FUERA del componente principal
+const MetricOptions = ({ t }) => (
   <>
-    <optgroup label="Clima & Suelo">
-      <option value="humedad">💧 Humedad</option>
-      <option value="temperatura_suelo">🌡️ Temperatura</option>
-      <option value="ph">🧪 pH</option>
-      <option value="radiacion_solar">☀️ Rad. Solar</option>
+    <optgroup label={t("chart.climateSoil")}>
+      <option value="humedad">{t("chart.humidity")}</option>
+      <option value="temperatura_suelo">{t("chart.temp")}</option>
+      <option value="ph">{t("chart.ph")}</option>
+      <option value="radiacion_solar">{t("chart.solarRad")}</option>
     </optgroup>
-    <optgroup label="Nutrientes (NPK)">
-      <option value="nitrogeno">🔵 Nitrógeno (N)</option>
-      <option value="fosforo">🟡 Fósforo (P)</option>
-      <option value="potasio">🟣 Potasio (K)</option>
+    <optgroup label={t("chart.nutrients")}>
+      <option value="nitrogeno">{t("chart.nitrogen")}</option>
+      <option value="fosforo">{t("chart.phosphorus")}</option>
+      <option value="potasio">{t("chart.potassium")}</option>
     </optgroup>
   </>
 );
+
+MetricOptions.propTypes = {
+  t: PropTypes.func.isRequired,
+};
 
 function ChartWidget({
   data,
@@ -44,6 +50,7 @@ function ChartWidget({
   initialMetric2 = "temperatura_suelo",
   forcedCompare = false,
 }) {
+  const { t } = useTranslation();
   const [metric1, setMetric1] = useState(initialMetric1);
   const [metric2, setMetric2] = useState(initialMetric2);
   const [chartType, setChartType] = useState(initialType);
@@ -84,23 +91,35 @@ function ChartWidget({
   }, [data, timeRange]);
 
   const config = {
-    humedad: { color: "#3b82f6", label: "Humedad (%)", domain: [0, 100] },
+    humedad: {
+      color: "#3b82f6",
+      label: t("chart.humidityLabel"),
+      domain: [0, 100],
+    },
     temperatura_suelo: {
       color: "#f97316",
-      label: "Temp. (°C)",
+      label: t("chart.tempLabel"),
       domain: ["auto", "auto"],
     },
-    ph: { color: "#10b981", label: "pH", domain: [0, 14] },
+    ph: { color: "#10b981", label: t("chart.phLabel"), domain: [0, 14] },
     nitrogeno: {
       color: "#0ea5e9",
-      label: "Nitrógeno (N)",
+      label: t("chart.nitrogenLabel"),
       domain: [0, "auto"],
     },
-    fosforo: { color: "#eab308", label: "Fósforo (P)", domain: [0, "auto"] },
-    potasio: { color: "#8b5cf6", label: "Potasio (K)", domain: [0, "auto"] },
+    fosforo: {
+      color: "#eab308",
+      label: t("chart.phosphorusLabel"),
+      domain: [0, "auto"],
+    },
+    potasio: {
+      color: "#8b5cf6",
+      label: t("chart.potassiumLabel"),
+      domain: [0, "auto"],
+    },
     radiacion_solar: {
       color: "#ef4444",
-      label: "Rad. Solar",
+      label: t("chart.solarRadLabel"),
       domain: [0, "auto"],
     },
   };
@@ -155,7 +174,7 @@ function ChartWidget({
 
   const renderChart = () => {
     if (chartData.length === 0)
-      return <div className="no-data-chart">Sin datos en este rango</div>;
+      return <div className="no-data-chart">{t("chart.noData")}</div>;
 
     if (isComparing) {
       return (
@@ -200,7 +219,7 @@ function ChartWidget({
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis
             dataKey="timeStr"
-            name="Tiempo"
+            name={t("chart.time")}
             tick={{ fontSize: 10 }}
             minTickGap={30}
           />
@@ -295,7 +314,7 @@ function ChartWidget({
 
         <div className="chart-controls-row">
           <div className="control-group">
-            <span className="control-label">Rango:</span>
+            <span className="control-label">{t("chart.range")}</span>
             <div className="time-pills">
               <button
                 type="button"
@@ -316,7 +335,7 @@ function ChartWidget({
                 className={timeRange === "all" ? "active" : ""}
                 onClick={() => setTimeRange("all")}
               >
-                Todo
+                {t("chart.all")}
               </button>
             </div>
           </div>
@@ -367,7 +386,7 @@ function ChartWidget({
             onChange={(e) => setMetric1(e.target.value)}
             className="metric-select primary"
           >
-            <MetricOptions />
+            <MetricOptions t={t} />
           </select>
 
           {isComparing && (
@@ -378,7 +397,7 @@ function ChartWidget({
                 onChange={(e) => setMetric2(e.target.value)}
                 className="metric-select secondary"
               >
-                <MetricOptions />
+                <MetricOptions t={t} />
               </select>
             </>
           )}

@@ -2,85 +2,35 @@
 
 .dashboard-layout {
   display: flex;
-  height: 100vh; /* Ocupa exactamente el alto de la ventana */
-  width: 100vw; /* Ocupa el ancho completo */
-  overflow: hidden; /* EVITA que el body tenga scroll */
-  background-color: var(--background-app);
+  height: 100vh; /* Ocupa exactamente el 100% de la pantalla */
+  width: 100vw;
+  overflow: hidden; /* Elimina el scroll global de la ventana */
 }
-
-/* El sidebar se renderiza aquí directamente como hijo flex */
 
 .main-content-wrapper {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  height: 100%; /* Ocupa todo el alto disponible */
-  overflow-y: auto; /* AQUÍ es donde ocurre el scroll de la página */
-  overflow-x: hidden;
-  position: relative;
-  /* Scroll suave */
-  scroll-behavior: smooth;
-}
-
-.main-content-wrapper > main {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  /* Un poco de padding al final para que no se corte el contenido */
-  padding-bottom: 40px;
-}
-
-/* Overlay oscuro para móvil */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1900;
+  overflow: hidden;
 }
 
-/* --- Responsive Mobile --- */
-@media (max-width: 768px) {
-  .sidebar-overlay {
-    display: block;
-  }
-
-  .dashboard-page-container {
-    padding: 15px;
-  }
+main {
+  flex: 1; /* Ocupa todo el alto que sobra debajo del Header */
+  overflow-y: auto; /* Si el perfil es muy largo, el scroll solo sale aquí dentro */
+  position: relative;
 }
 
-/* Estilos del Mapa (Widget) */
+/* Ajustes para la página del Dashboard en sí */
 .dashboard-page-container {
-  width: 100%;
-  /* En este nuevo layout, height:100% puede ser confuso si el padre scrollea.
-     Mejor min-height o dejar que fluya. */
-  min-height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
+  height: 100%;
+  padding: 20px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-widget-wrapper {
-  width: 100%;
-  height: 70vh; /* Altura fija relativa a la ventana para el mapa */
-  max-width: 1200px;
-  min-height: 500px;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  display: flex;
-}
-
-@media (max-width: 768px) {
-  .map-widget-wrapper {
-    min-height: 60vh;
-    border-radius: 12px;
-  }
+  flex: 1;
+  min-height: 400px;
 }

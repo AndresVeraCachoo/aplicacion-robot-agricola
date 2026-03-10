@@ -1,6 +1,7 @@
 // src/layout/Header.jsx
 import React, { useState } from "react";
-import PropTypes from "prop-types"; // 1. Importación para validación (S6774)
+import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import "./Header.css";
 import { useRobotStore } from "../store/robotStore.js";
 import { useTheme } from "../context/ThemeContext.jsx";
@@ -8,6 +9,7 @@ import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
 
 function Header({ onMenuClick }) {
+  const { t, i18n } = useTranslation();
   const battery = useRobotStore((state) => state.battery);
   const isConnected = useRobotStore((state) => state.isConnected);
 
@@ -25,6 +27,13 @@ function Header({ onMenuClick }) {
     return "good";
   };
 
+  // Función para alternar idioma con un solo clic
+  const toggleLanguage = () => {
+    const currentLang = i18n.language || "es";
+    const nextLang = currentLang.startsWith("es") ? "en" : "es";
+    i18n.changeLanguage(nextLang);
+  };
+
   return (
     <>
       <header className="header">
@@ -32,7 +41,7 @@ function Header({ onMenuClick }) {
           <button
             onClick={onMenuClick}
             className="menu-button"
-            aria-label="Abrir menú"
+            aria-label={t("sidebar.menu")}
           >
             ☰
           </button>
@@ -41,20 +50,36 @@ function Header({ onMenuClick }) {
             className={`system-status-pill ${
               isConnected ? "online" : "offline"
             }`}
-            title={isConnected ? "Sistema Conectado" : "Desconectado"}
+            title={
+              isConnected ? t("header.connected") : t("header.disconnected")
+            }
           >
             <span className="status-dot"></span>
             <span className="status-text">
-              {isConnected ? "ONLINE" : "OFFLINE"}
+              {isConnected ? t("header.online") : t("header.offline")}
             </span>
           </div>
         </div>
 
         <div className="header-right-controls">
+          {/* Nuevo botón de idioma estilizado */}
+          <button
+            className="lang-toggle-btn"
+            onClick={toggleLanguage}
+            title={
+              i18n.language.startsWith("es")
+                ? "Switch to English"
+                : "Cambiar a Español"
+            }
+          >
+            <span className="lang-icon">🌍</span>
+            <span>{i18n.language.startsWith("es") ? "ES" : "EN"}</span>
+          </button>
+
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
-            title={isDarkMode ? "Modo Claro" : "Modo Oscuro"}
+            title={isDarkMode ? t("header.lightMode") : t("header.darkMode")}
           >
             {isDarkMode ? "🌙" : "☀️"}
           </button>
@@ -62,7 +87,7 @@ function Header({ onMenuClick }) {
           <button
             className={`battery-widget clickable ${getBatteryClass()}`}
             onClick={openBatteryModal}
-            title={`Batería: ${percentage}%`}
+            title={`${t("header.battery")}: ${percentage}%`}
           >
             <span className="battery-text">
               {status === "CHARGING" && (
@@ -83,16 +108,14 @@ function Header({ onMenuClick }) {
       <Modal
         isOpen={isBatteryModalOpen}
         onClose={closeBatteryModal}
-        title="Detalle de Energía"
+        title={t("header.energyDetail")}
       >
-        {/*Pasar la función onClose al hijo */}
         <BatteryModal onClose={closeBatteryModal} />
       </Modal>
     </>
   );
 }
 
-// 2. Validación estricta de las propiedades esperadas
 Header.propTypes = {
   onMenuClick: PropTypes.func.isRequired,
 };

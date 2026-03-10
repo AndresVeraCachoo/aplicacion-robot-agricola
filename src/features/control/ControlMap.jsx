@@ -1,6 +1,7 @@
 // src/features/control/ControlMap.jsx
 import React, { useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import {
   MapContainer,
   TileLayer,
@@ -48,7 +49,8 @@ const calculateGeodesicArea = (latLngs) => {
   return Math.abs(area);
 };
 
-const updateAreaTooltip = (layer) => {
+// Añadimos 't' como parámetro para poder traducir el Área
+const updateAreaTooltip = (layer, t) => {
   if (!(layer instanceof L.Polygon)) return;
 
   const latlngs = layer.getLatLngs();
@@ -63,10 +65,14 @@ const updateAreaTooltip = (layer) => {
   });
 
   const finalArea = mainArea - holesArea;
+
+  // Usamos un fallback seguro por si 't' no se pasa correctamente al inicio
+  const areaLabel = t ? t("control.area") : "Area";
+
   let text =
     finalArea < 10000
-      ? `Area: ${Math.round(finalArea).toLocaleString()} m²`
-      : `Area: ${(finalArea / 10000).toFixed(2)} ha`;
+      ? `${areaLabel}: ${Math.round(finalArea).toLocaleString()} m²`
+      : `${areaLabel}: ${(finalArea / 10000).toFixed(2)} ha`;
 
   if (layer.getTooltip()) {
     layer.setTooltipContent(text);
@@ -80,6 +86,7 @@ const updateAreaTooltip = (layer) => {
 };
 
 const GeomanControls = ({ ignoreClickRef }) => {
+  const { t, i18n } = useTranslation();
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
   const isZoneLoadedRef = useRef(false);
@@ -87,14 +94,14 @@ const GeomanControls = ({ ignoreClickRef }) => {
   const handleZoneUpdate = useCallback(
     (layer) => {
       if (layer instanceof L.Polygon) {
-        updateAreaTooltip(layer);
+        updateAreaTooltip(layer, t);
         const latlngs = layer.getLatLngs();
         const outerRing = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
         const formattedZone = outerRing.map((p) => [p.lat, p.lng]);
         setSafeZone(formattedZone);
       }
     },
-    [setSafeZone],
+    [setSafeZone, t],
   );
 
   useEffect(() => {
@@ -107,7 +114,10 @@ const GeomanControls = ({ ignoreClickRef }) => {
       hintlineStyle: { color: "#3388ff", dashArray: [5, 5] },
     });
 
-    map.pm.setLang("es");
+    // Cambia el idioma de Geoman según nuestro i18n
+    const currentLang = i18n.language.startsWith("es") ? "es" : "en";
+    map.pm.setLang(currentLang);
+
     map.pm.addControls({
       position: "topleft",
       drawMarker: false,
@@ -141,7 +151,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
     map.on("pm:create", (e) => {
       const { layer } = e;
       if (layer.pm?.hasSelfIntersection()) {
-        alert("El polígono no puede cruzarse a sí mismo.");
+        alert(t("control.polygonError"));
         map.removeLayer(layer);
         return;
       }
@@ -175,7 +185,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
       map.off("pm:globaldragmodetoggled");
       map.off("pm:globalrotatemodetoggled");
     };
-  }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate]);
+  }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate, t, i18n.language]);
 
   useEffect(() => {
     if (!map || !safeZone || safeZone.length === 0 || isZoneLoadedRef.current)
@@ -186,7 +196,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
     });
 
     const polygon = L.polygon(safeZone, { color: "#3388ff" }).addTo(map);
-    updateAreaTooltip(polygon);
+    updateAreaTooltip(polygon, t);
 
     polygon.on("pm:edit", (e) => handleZoneUpdate(e.target));
     polygon.on("pm:dragend", (e) => handleZoneUpdate(e.target));
@@ -194,7 +204,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
     polygon.on("pm:cut", (e) => handleZoneUpdate(e.layer));
 
     isZoneLoadedRef.current = true;
-  }, [map, safeZone, handleZoneUpdate]);
+  }, [map, safeZone, handleZoneUpdate, t]);
 
   return null;
 };
@@ -253,6 +263,7 @@ ClickHandler.propTypes = {
 };
 
 const CenterButton = () => {
+  const { t } = useTranslation();
   const map = useMap();
   const position = useRobotStore((state) => state.position);
 
@@ -271,7 +282,7 @@ const CenterButton = () => {
         centerView();
       }}
       className="center-map-button"
-      title="Centrar en el robot"
+      title={t("control.centerRobot")}
     >
       <span style={{ fontSize: "1.2em" }}>🎯</span>
     </button>
@@ -279,11 +290,13 @@ const CenterButton = () => {
 };
 
 const ControlMap = () => {
+  const { t } = useTranslation();
   const { position, navTarget, navQueue, pathHistory, system } =
     useRobotStore();
   const ignoreClickRef = useRef(false);
 
-  if (!position.lat) return <div className="map-loading">Cargando GPS...</div>;
+  if (!position.lat)
+    return <div className="map-loading">{t("control.loadingGPS")}</div>;
 
   const fullQueuePath = [];
   if (navTarget) {
@@ -319,7 +332,7 @@ const ControlMap = () => {
           <Popup>
             AgriRobot
             <br />
-            Rumbo: {Math.floor(system.heading)}°
+            {t("control.heading")}: {Math.floor(system.heading)}°
           </Popup>
         </Marker>
 
@@ -345,7 +358,9 @@ const ControlMap = () => {
                 position={[p.lat, p.lon]}
                 opacity={0.7}
               >
-                <Popup>Punto en cola #{idx + 1}</Popup>
+                <Popup>
+                  {t("control.queuePoint")} #{idx + 1}
+                </Popup>
               </Marker>
             ))}
           </>
@@ -353,7 +368,7 @@ const ControlMap = () => {
 
         {navTarget && (
           <Marker position={[navTarget.lat, navTarget.lon]}>
-            <Popup>Destino Actual</Popup>
+            <Popup>{t("control.currentTarget")}</Popup>
           </Marker>
         )}
       </MapContainer>

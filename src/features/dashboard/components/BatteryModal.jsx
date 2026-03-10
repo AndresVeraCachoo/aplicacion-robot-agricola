@@ -1,212 +1,62 @@
 // src/features/dashboard/components/BatteryModal.jsx
-import React, { useMemo } from "react";
+import React from "react";
 import PropTypes from "prop-types";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
-} from "recharts";
-import { useNavigate } from "react-router-dom";
-import { useRobotStore } from "../../../store/robotStore";
+import { useTranslation } from "react-i18next";
 import "./BatteryModal.css";
-
-const generateMockBatteryHistory = (currentLevel, isCharging) => {
-  const data = [];
-  const now = new Date();
-  let simulatedLevel = currentLevel;
-
-  for (let i = 0; i < 24; i++) {
-    const time = new Date(now);
-    time.setHours(now.getHours() - i);
-    let wasChargingInPast = isCharging;
-
-    if (isCharging && i > 3) {
-      wasChargingInPast = false;
-    }
-    if (!isCharging && currentLevel === 100 && i < 5) {
-      wasChargingInPast = true;
-    }
-
-    if (i > 0) {
-      const rate = Math.random() * 4 + 3;
-      if (wasChargingInPast) {
-        simulatedLevel = Math.max(0, simulatedLevel - rate * 2);
-      } else {
-        simulatedLevel = Math.min(100, simulatedLevel + rate);
-      }
-    }
-
-    data.unshift({
-      hour: time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      level: Math.round(simulatedLevel),
-      isChargingState: wasChargingInPast,
-    });
-  }
-  data.at(-1).level = currentLevel;
-  data.at(-1).isChargingState = isCharging;
-  return data;
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload?.length) {
-    const dataPoint = payload[0].payload;
-    return (
-      <div className="battery-tooltip">
-        <p className="tooltip-time">{label}</p>
-        <p className="tooltip-level">
-          {dataPoint.level}% {dataPoint.isChargingState ? "⚡" : ""}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
-CustomTooltip.propTypes = {
-  active: PropTypes.bool,
-  payload: PropTypes.arrayOf(PropTypes.object),
-  label: PropTypes.string,
-};
+import { useRobotStore } from "../../../store/robotStore";
 
 function BatteryModal({ onClose }) {
-  const navigate = useNavigate();
-  const batteryInfo = useRobotStore((state) => state.battery);
-  const { percentage, status, voltage, temperature, timeRemaining } =
-    batteryInfo;
-  const isCharging = status === "CHARGING";
-  const LOW_BATTERY_THRESHOLD = 20;
+  const { t } = useTranslation();
+  const battery = useRobotStore((state) => state.battery);
 
-  const historyData = useMemo(() => {
-    return generateMockBatteryHistory(percentage, isCharging);
-  }, [percentage, isCharging]);
-
-  let statusIcon = "🔋";
-  let statusText = "En uso";
-  if (isCharging) {
-    statusIcon = "⚡";
-    statusText = "Cargando (Solar)";
-  } else if (percentage < LOW_BATTERY_THRESHOLD) {
-    statusIcon = "🪫";
-    statusText = "Batería Baja";
-  }
-
-  const getBarColor = (entry) => {
-    if (entry.isChargingState) return "#22c55e";
-    if (entry.level < LOW_BATTERY_THRESHOLD) return "#f97316";
-    return "#3b82f6";
-  };
-
-  const handleViewDetails = () => {
-    if (onClose) onClose();
-    navigate("/app/energy");
+  const getStatusClass = () => {
+    if (battery.status === "CHARGING") return "status-charging";
+    if (battery.percentage < 20) return "status-critical";
+    return "status-normal";
   };
 
   return (
     <div className="battery-modal-content">
-      <div className="battery-header-section">
-        <div className="battery-percentage-ring">
-          <span className="icon">{statusIcon}</span>
-          <span
-            className={`value ${
-              percentage < LOW_BATTERY_THRESHOLD ? "text-alert" : ""
-            }`}
-          >
-            {percentage}%
-          </span>
-        </div>
+      <h3 className="battery-title">{t("battery.title")}</h3>
 
-        <div className="battery-info-grid">
-          <div className="info-item">
-            <span className="label">Estado</span>
-            <span className={`value ${isCharging ? "charging-text" : ""}`}>
-              {statusText}
-            </span>
-          </div>
-          <div className="info-item">
-            <span className="label">Tiempo Restante</span>
-            <span className="value">{timeRemaining}</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Voltaje</span>
-            <span className="value">{voltage} V</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Temperatura</span>
-            <span className="value">{temperature}°C</span>
-          </div>
+      <div className="battery-main-indicator">
+        <div className={`battery-big-circle ${getStatusClass()}`}>
+          <span className="battery-percentage">{battery.percentage}%</span>
+          <span className="battery-status-text">
+            {battery.status === "CHARGING"
+              ? t("battery.charging")
+              : t("battery.discharging")}
+          </span>
         </div>
       </div>
 
-      <hr className="divider" />
-
-      <div className="battery-chart-section">
-        <div className="chart-header-row">
-          <h4>Uso de batería (24h)</h4>
-          <button
-            type="button"
-            className="btn-details-link"
-            onClick={handleViewDetails}
-          >
-            Ver Detalles Avanzados &rarr;
-          </button>
+      <div className="battery-details-grid">
+        <div className="detail-item">
+          <span className="detail-label">{t("battery.voltage")}</span>
+          <span className="detail-value">{battery.voltage}V</span>
         </div>
-
-        <div className="chart-container">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={historyData} barCategoryGap={2}>
-              <XAxis
-                dataKey="hour"
-                tick={{ fontSize: 10, fill: "var(--text-main)" }}
-                minTickGap={35}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis hide domain={[0, 100]} />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "rgba(0,0,0,0.05)" }}
-              />
-              <ReferenceLine
-                y={LOW_BATTERY_THRESHOLD}
-                stroke="#ef4444"
-                strokeDasharray="3 3"
-              />
-              <Bar dataKey="level" radius={[3, 3, 3, 3]}>
-                {historyData.map((entry) => (
-                  <Cell
-                    key={`cell-${entry.hour}`}
-                    fill={getBarColor(entry)}
-                    fillOpacity={entry.isChargingState ? 1 : 0.8}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="detail-item">
+          <span className="detail-label">{t("battery.temperature")}</span>
+          <span className="detail-value">{battery.temperature}°C</span>
         </div>
-
-        <div className="chart-legend">
-          <span className="legend-item">
-            <span className="dot usage"></span> Uso
-          </span>
-          <span className="legend-item">
-            <span className="dot charge"></span> Carga
-          </span>
-          <span className="legend-item">
-            <span className="dot low"></span> Bajo ({"<"}20%)
-          </span>
+        <div className="detail-item">
+          <span className="detail-label">{t("battery.health")}</span>
+          <span className="detail-value">{battery.health}%</span>
         </div>
+      </div>
+
+      <div className="modal-actions">
+        <button onClick={onClose} className="btn-close-modal">
+          {t("users.cancel")}{" "}
+          {/* Reutilizamos el botón de cancelar que ya existe */}
+        </button>
       </div>
     </div>
   );
 }
 
 BatteryModal.propTypes = {
-  onClose: PropTypes.func,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default BatteryModal;

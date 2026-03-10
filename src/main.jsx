@@ -4,9 +4,10 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-// Importamos el nuevo provider
 import { ToastProvider } from "./context/ToastContext";
 import App from "./App";
+
+import "./i18n";
 
 import "leaflet/dist/leaflet.css";
 import "./index.css";
@@ -22,5 +23,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

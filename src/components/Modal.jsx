@@ -1,8 +1,12 @@
+// src/components/Modal.jsx
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 import "./Modal.css";
 
 function Modal({ isOpen, onClose, title, children }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape" && isOpen && onClose) {
@@ -22,7 +26,7 @@ function Modal({ isOpen, onClose, title, children }) {
       <button
         type="button"
         onClick={onClose}
-        aria-label="Cerrar modal"
+        aria-label={t("modal.close")}
         tabIndex={-1}
         style={{
           position: "absolute",
@@ -47,7 +51,7 @@ function Modal({ isOpen, onClose, title, children }) {
                 type="button"
                 onClick={onClose}
                 className="modal-close-button"
-                aria-label="Cerrar modal"
+                aria-label={t("modal.close")}
               >
                 &times;
               </button>

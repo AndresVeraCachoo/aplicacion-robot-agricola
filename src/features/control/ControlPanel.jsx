@@ -1,8 +1,11 @@
+// src/features/control/ControlPanel.jsx
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useRobotStore } from "../../store/robotStore";
 import "./ControlPanel.css";
 
 const ControlPanel = () => {
+  const { t } = useTranslation();
   const { system, toggleEmergencyStop, setSpeedLimit, setControlMode } =
     useRobotStore();
 
@@ -10,14 +13,14 @@ const ControlPanel = () => {
     <div className="control-panel-horizontal">
       {/* 1. Modos de Conducción */}
       <div className="panel-col">
-        <h4>Modo de Conducción</h4>
+        <h4>{t("control.drivingMode")}</h4>
         <div className="mode-buttons">
           <button
             className={system.mode === "AUTO" ? "mode-btn active" : "mode-btn"}
             onClick={() => setControlMode("AUTO")}
             disabled={system.emergencyStop}
           >
-            AUTO
+            {t("control.auto")}
           </button>
           <button
             className={
@@ -26,14 +29,16 @@ const ControlPanel = () => {
             onClick={() => setControlMode("MANUAL")}
             disabled={system.emergencyStop}
           >
-            MANUAL
+            {t("control.manual")}
           </button>
         </div>
       </div>
 
       {/* 2. Control de Velocidad */}
       <div className="panel-col">
-        <h4>Límite de Velocidad: {system.speedLimit}%</h4>
+        <h4>
+          {t("control.speedLimit")}: {system.speedLimit}%
+        </h4>
         <input
           type="range"
           min="0"
@@ -53,8 +58,8 @@ const ControlPanel = () => {
           onClick={toggleEmergencyStop}
         >
           {system.emergencyStop
-            ? "⚠️ REARMAR SISTEMA ⚠️"
-            : "🛑 PARADA DE EMERGENCIA 🛑"}
+            ? t("control.rearmSystem")
+            : t("control.emergencyStop")}
         </button>
       </div>
     </div>

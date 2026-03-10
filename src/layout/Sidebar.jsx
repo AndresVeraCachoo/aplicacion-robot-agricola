@@ -1,7 +1,8 @@
 // src/layout/Sidebar.jsx
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types"; // 1. Importación de la librería de validación
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 
@@ -9,6 +10,7 @@ const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 
 function Sidebar({ onClose }) {
+  const { t } = useTranslation();
   const { userRole, logout } = useAuth();
   const [avatar, setAvatar] = useState(
     localStorage.getItem("userAvatar") || DEFAULT_AVATAR,
@@ -26,7 +28,7 @@ function Sidebar({ onClose }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header-mobile">
-        <h3>Menú</h3>
+        <h3>{t("sidebar.menu")}</h3>
         <button className="close-menu-btn" onClick={onClose}>
           &times;
         </button>
@@ -42,7 +44,7 @@ function Sidebar({ onClose }) {
             <img src={avatar} alt="Usuario" className="sidebar-avatar" />
           </div>
           <div className="profile-text">
-            <span className="profile-greeting">Mi Perfil</span>
+            <span className="profile-greeting">{t("sidebar.profile")}</span>
             <span className="profile-role-label">{userRole}</span>
           </div>
         </Link>
@@ -52,39 +54,38 @@ function Sidebar({ onClose }) {
         <ul>
           <li>
             <Link to="/app/dashboard" onClick={onClose}>
-              Inicio
+              {t("sidebar.home")}
             </Link>
           </li>
 
-          {/* Nuevo enlace al panel de Control */}
           <li>
             <Link to="/app/control" onClick={onClose}>
-              Control Remoto
+              {t("sidebar.remoteControl")}
             </Link>
           </li>
 
           <li>
             <Link to="/app/data" onClick={onClose}>
-              Datos
+              {t("sidebar.data")}
             </Link>
           </li>
           {(userRole === "admin" || userRole === "operador") && (
             <li>
               <Link to="/app/camera" onClick={onClose}>
-                Cámara
+                {t("sidebar.camera")}
               </Link>
             </li>
           )}
           <li>
             <Link to="/app/history" onClick={onClose}>
-              Historial
+              {t("sidebar.history")}
             </Link>
           </li>
 
           {userRole === "admin" && (
             <li>
               <Link to="/app/users" onClick={onClose}>
-                Gestión de Usuarios
+                {t("sidebar.userManagement")}
               </Link>
             </li>
           )}
@@ -95,18 +96,17 @@ function Sidebar({ onClose }) {
         <button
           onClick={() => {
             logout();
-            if (onClose) onClose(); // Validación adicional de seguridad antes de ejecutar
+            if (onClose) onClose();
           }}
           className="logout-button"
         >
-          Cerrar Sesión
+          {t("sidebar.logout")}
         </button>
       </div>
     </aside>
   );
 }
 
-// 2. Definición del tipo de la propiedad esperada (Función requerida)
 Sidebar.propTypes = {
   onClose: PropTypes.func.isRequired,
 };

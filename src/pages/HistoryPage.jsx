@@ -1,12 +1,15 @@
 // src/pages/HistoryPage.jsx
 import React from "react";
+import { useTranslation } from "react-i18next";
 import "./HistoryPage.css"; // Crearemos este archivo
 
 function HistoryPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="history-container">
-      <h2>Historial de Datos</h2>
-      <p>Aquí se mostrarán los registros y eventos pasados.</p>
+      <h2>{t("history.title")}</h2>
+      <p>{t("history.description")}</p>
     </div>
   );
 }

@@ -43,7 +43,10 @@
   font-size: 1.1em;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.2s;
   border-bottom: 4px solid var(--accent-green-dark); /* Borde inferior simulado */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
@@ -137,4 +140,28 @@
   font-weight: bold;
   margin: 0;
   text-align: center;
+}
+
+.login-lang-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: none;
+  font-size: 0.85em;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  font-family: monospace;
+}
+
+.login-lang-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }

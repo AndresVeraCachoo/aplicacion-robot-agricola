@@ -1,6 +1,7 @@
 // src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import "./ProfilePage.css";
 
 const API_URL = "http://localhost:3001/api/users";
@@ -10,59 +11,59 @@ const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 
 function ProfilePage() {
-  // Estado para la información del perfil
+  const { t } = useTranslation();
+
   const [profile, setProfile] = useState({
     name: "",
     role: "",
   });
 
-  // Solo leemos la imagen para mostrarla, ya no hay lógica de edición
   const [avatarUrl] = useState(() => {
     return localStorage.getItem("userAvatar") || DEFAULT_AVATAR;
   });
 
-  // Estado para el cambio de contraseña
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // Estados de UI
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
 
-  // 1. Cargar datos del usuario al montar
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`${API_URL}/profile`);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_URL}/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setProfile(response.data);
       } catch (error) {
         console.error("Error al cargar perfil:", error);
         setMessage({
-          text: "No se pudieron cargar los datos del usuario.",
+          text: t("profile.errorLoadProfile"),
           type: "error",
         });
       }
     };
     fetchProfile();
-  }, []);
+  }, [t]);
 
-  // Manejar cambios en los inputs de contraseña
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 2. Manejar el envío del formulario de contraseña
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ text: "", type: "" });
 
     if (passwords.newPassword !== passwords.confirmPassword) {
       setMessage({
-        text: "Las contraseñas nuevas no coinciden.",
+        text: t("profile.errorMismatch"),
         type: "error",
       });
       return;
@@ -70,7 +71,7 @@ function ProfilePage() {
 
     if (passwords.newPassword.length < 4) {
       setMessage({
-        text: "La nueva contraseña es demasiado corta.",
+        text: t("profile.errorShort"),
         type: "error",
       });
       return;
@@ -79,13 +80,23 @@ function ProfilePage() {
     setIsLoading(true);
 
     try {
-      await axios.put(`${API_URL}/profile/password`, {
-        currentPassword: passwords.currentPassword,
-        newPassword: passwords.newPassword,
-      });
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${API_URL}/profile/password`,
+        {
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       setMessage({
-        text: "¡Contraseña actualizada con éxito!",
+        text: t("profile.successUpdate"),
         type: "success",
       });
       setPasswords({
@@ -95,9 +106,8 @@ function ProfilePage() {
       });
     } catch (error) {
       console.error("Error al cambiar contraseña:", error);
-      const errorMsg =
-        error.response?.data?.error || "Error al conectar con el servidor.";
-      setMessage({ text: errorMsg, type: "error" });
+      // 👇 AQUÍ ESTÁ LA MAGIA: Ignoramos el backend y forzamos el idioma local
+      setMessage({ text: t("profile.errorServer"), type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -106,11 +116,10 @@ function ProfilePage() {
   return (
     <div className="profile-container">
       <header className="profile-header">
-        <h1>Mi Perfil</h1>
+        <h1>{t("profile.title")}</h1>
       </header>
 
       <div className="profile-content-grid">
-        {/* Columna Izquierda: Foto y Datos Básicos */}
         <section className="profile-info-card">
           <div className="avatar-section">
             <img
@@ -119,23 +128,22 @@ function ProfilePage() {
               className="profile-avatar-large"
             />
 
-            {/* Botón decorativo, sin funcionalidad */}
             <button
               className="btn-change-photo"
               style={{ cursor: "default", opacity: 0.7 }}
-              title="Próximamente"
+              title={t("profile.comingSoon")}
             >
-              Cambiar Foto (URL)
+              {t("profile.changePhotoBtn")}
             </button>
           </div>
 
           <div className="info-details">
             <div className="info-row">
-              <strong>Nombre:</strong>{" "}
-              <span>{profile.name || "Cargando..."}</span>
+              <strong>{t("profile.name")}</strong>{" "}
+              <span>{profile.name || t("profile.loading")}</span>
             </div>
             <div className="info-row">
-              <strong>Rol:</strong>{" "}
+              <strong>{t("profile.role")}</strong>{" "}
               <span style={{ textTransform: "capitalize" }}>
                 {profile.role || "..."}
               </span>
@@ -143,9 +151,8 @@ function ProfilePage() {
           </div>
         </section>
 
-        {/* Columna Derecha: Cambio de Contraseña */}
         <section className="password-section">
-          <h2>Seguridad</h2>
+          <h2>{t("profile.security")}</h2>
 
           {message.text && (
             <div className={`message ${message.type}`}>{message.text}</div>
@@ -153,7 +160,9 @@ function ProfilePage() {
 
           <form onSubmit={handleSubmit} className="password-form">
             <div className="form-group">
-              <label htmlFor="currentPassword">Contraseña Actual</label>
+              <label htmlFor="currentPassword">
+                {t("profile.currentPassword")}
+              </label>
               <input
                 type="password"
                 id="currentPassword"
@@ -165,7 +174,7 @@ function ProfilePage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="newPassword">Nueva Contraseña</label>
+              <label htmlFor="newPassword">{t("profile.newPassword")}</label>
               <input
                 type="password"
                 id="newPassword"
@@ -178,7 +187,7 @@ function ProfilePage() {
 
             <div className="form-group">
               <label htmlFor="confirmPassword">
-                Confirmar Nueva Contraseña
+                {t("profile.confirmPassword")}
               </label>
               <input
                 type="password"
@@ -195,7 +204,7 @@ function ProfilePage() {
               className="btn-save-password"
               disabled={isLoading}
             >
-              {isLoading ? "Guardando..." : "Actualizar Contraseña"}
+              {isLoading ? t("profile.saving") : t("profile.updatePassword")}
             </button>
           </form>
         </section>
