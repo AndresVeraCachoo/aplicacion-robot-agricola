@@ -10,15 +10,15 @@
     "energyDetail": "Detalle de Energía"
   },
   "sidebar": {
-    "menu": "Menu",
-    "profile": "My Profile",
-    "home": "Home",
-    "remoteControl": "Remote Control",
-    "data": "Data",
-    "camera": "Camera",
-    "history": "History",
-    "userManagement": "User Management",
-    "logout": "Logout"
+    "menu": "Menú",
+    "profile": "Mi Perfil",
+    "home": "Inicio",
+    "remoteControl": "Control Remoto",
+    "data": "Datos",
+    "camera": "Cámara en Vivo",
+    "history": "Historial",
+    "userManagement": "Gestión de Usuarios",
+    "logout": "Cerrar Sesión"
   },
   "dashboard": {
     "title": "Panel General"
@@ -209,12 +209,12 @@
     "rad": "Rad"
   },
   "notifications": {
-    "connectionSuccess": "Connection established with the robot",
-    "emergencyActive": "SYSTEM LOCKED: Emergency stop activated",
-    "systemReady": "System rearmed and operational",
-    "batteryLow": "Low Battery (20%). Please drive the robot to a charging point",
-    "updateSuccess": "Update successful",
-    "deleteSuccess": "Deleted successfully",
-    "languageChanged": "Language changed to English"
+    "connectionSuccess": "Conexión establecida con el robot",
+    "emergencyActive": "SISTEMA BLOQUEADO: Parada de emergencia activada",
+    "systemReady": "Sistema rearmado y operativo",
+    "batteryLow": "Batería baja (20%). Dirija al robot al punto de carga",
+    "updateSuccess": "Actualización realizada con éxito",
+    "deleteSuccess": "Eliminado correctamente",
+    "languageChanged": "Idioma cambiado a Español"
   }
 }

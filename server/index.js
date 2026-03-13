@@ -6,6 +6,8 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+// 1. Importamos la nueva API de misiones
+import missionRoutes from "./routes/missionRoutes.js"; 
 
 // Importamos TODAS las funciones del simulador
 import { 
@@ -27,6 +29,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
+// 2. Registramos la ruta para que React pueda usarla
+app.use("/api/missions", missionRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
