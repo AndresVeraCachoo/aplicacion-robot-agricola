@@ -9,7 +9,6 @@ import { useAuth } from "../hooks/useAuth";
 const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 
-// Añadimos isOpen a las props
 function Sidebar({ isOpen, onClose }) {
   const { t } = useTranslation();
   const { userRole, logout } = useAuth();
@@ -28,7 +27,6 @@ function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Velo oscuro para móvil con transición - Corregido para SonarLint (S6848 y S1082) */}
       <button
         type="button"
         className={`sidebar-overlay-bg ${isOpen ? "visible" : ""}`}
@@ -37,7 +35,6 @@ function Sidebar({ isOpen, onClose }) {
         tabIndex={isOpen ? 0 : -1}
       />
 
-      {/* La sidebar ahora usa la clase open/closed */}
       <aside className={`sidebar ${isOpen ? "open" : "closed"}`}>
         <div className="sidebar-header-mobile">
           <h3>{t("sidebar.menu")}</h3>
@@ -87,8 +84,8 @@ function Sidebar({ isOpen, onClose }) {
               </li>
             )}
             <li>
-              <Link to="/app/history" onClick={onClose}>
-                {t("sidebar.history")}
+              <Link to="/app/missions" onClick={onClose}>
+                {t("sidebar.missions")}
               </Link>
             </li>
             {userRole === "admin" && (

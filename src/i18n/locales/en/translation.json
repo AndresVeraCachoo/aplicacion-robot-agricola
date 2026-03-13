@@ -15,13 +15,13 @@
     "home": "Home",
     "remoteControl": "Remote Control",
     "data": "Data",
-    "camera": "Camera",
-    "history": "History",
+    "camera": "Live Camera",
     "userManagement": "User Management",
-    "logout": "Logout"
+    "logout": "Logout",
+    "missions": "Missions"
   },
   "dashboard": {
-    "title": "Main Dashboard"
+    "title": "General Dashboard"
   },
   "login": {
     "welcome": "Welcome",
@@ -35,10 +35,10 @@
     "title": "My Profile",
     "errorLoadProfile": "Could not load user data.",
     "errorMismatch": "New passwords do not match.",
-    "errorShort": "The new password is too short.",
+    "errorShort": "New password is too short.",
     "successUpdate": "Password updated successfully!",
-    "errorServer": "Error connecting to the server.",
-    "comingSoon": "Coming soon",
+    "errorServer": "Error connecting to server.",
+    "comingSoon": "Coming Soon",
     "changePhotoBtn": "Change Photo (URL)",
     "name": "Name:",
     "loading": "Loading...",
@@ -64,7 +64,7 @@
     "loadingGPS": "Loading GPS...",
     "centerRobot": "Center on robot",
     "heading": "Heading",
-    "queuePoint": "Queued point",
+    "queuePoint": "Queued Point",
     "currentTarget": "Current Target",
     "area": "Area"
   },
@@ -72,7 +72,7 @@
     "title": "Advanced Monitor",
     "subtitle": "Real-time multi-variable analysis.",
     "individualAnalysis": "Individual Analysis",
-    "comparativeAnalysis": "Variables Comparison",
+    "comparativeAnalysis": "Variable Comparison",
     "recordsTable": "Records Table",
     "time": "Time",
     "location": "Location",
@@ -133,7 +133,7 @@
     "save": "Save",
     "errorLoad": "Could not load users.",
     "updated": "User updated successfully:",
-    "pwdRequired": "Password is required to create users.",
+    "pwdRequired": "Password is required to create a user.",
     "created": "User created successfully:",
     "errorSave": "Error saving user.",
     "confirmDelete": "Are you sure you want to delete this user?",
@@ -166,7 +166,7 @@
     "subtitle": "Detailed electrical system status.",
     "batteryStatus": "Battery Status",
     "charging": "Charging",
-    "inUse": "In use",
+    "inUse": "In Use",
     "currentCharge": "Current Charge",
     "generalStatus": "General Status",
     "health": "Health",
@@ -175,13 +175,13 @@
     "realTimeConsumption": "Real-Time Consumption",
     "tractionMotors": "Traction Motors",
     "navSystem": "Navigation System",
-    "sensorsCamera": "Sensors & Camera"
+    "sensorsCamera": "Sensors and Camera"
   },
   "modal": {
     "close": "Close modal"
   },
   "mapAdv": {
-    "drawInstructions": "Click to add vertices. Click the red point to close.",
+    "drawInstructions": "Click to add vertices. Click on the red point to close.",
     "drawCancelled": "Delimitation cancelled.",
     "areaDelimited": "Area delimited.",
     "limitsRemoved": "Limits removed.",
@@ -196,12 +196,12 @@
     "hideData": "👁️ Hide Data",
     "clearLimit": "Clear Limit",
     "clear": "Clear",
-    "drawArea": "Delimit Area",
+    "drawArea": "Draw Area",
     "areaSummary": "Area Summary",
     "avgPh": "Avg pH",
     "humidity": "Humidity",
     "temp": "Temp.",
-    "avgNutrients": "Nutrients (Average)",
+    "avgNutrients": "Nutrients (Avg)",
     "samplesAnalyzed": "samples analyzed",
     "sample": "Sample",
     "detail": "Detail",
@@ -209,12 +209,47 @@
     "rad": "Rad"
   },
   "notifications": {
-    "connectionSuccess": "Connection established with the robot",
+    "connectionSuccess": "Connection established with robot",
     "emergencyActive": "SYSTEM LOCKED: Emergency stop activated",
     "systemReady": "System rearmed and operational",
-    "batteryLow": "Low Battery (20%). Please drive the robot to a charging point",
-    "updateSuccess": "Update successful",
+    "batteryLow": "Low battery (20%). Route robot to charging point",
+    "updateSuccess": "Update completed successfully",
     "deleteSuccess": "Deleted successfully",
     "languageChanged": "Language changed to English"
+  },
+  "missions": {
+    "createNew": "Create New Mission",
+    "savedMissions": "Saved Missions",
+    "noMissions": "No missions configured yet.",
+    "form": {
+      "name": "Mission Name",
+      "dataToCollect": "Data to collect",
+      "humidity": "Humidity",
+      "soilTemp": "Soil Temp.",
+      "ph": "pH",
+      "npk": "N-P-K",
+      "solarRad": "Solar Rad.",
+      "width": "Width (m)",
+      "angle": "Angle (º)",
+      "minBattery": "Min Bat. (%)",
+      "saveBtn": "Save Mission"
+    },
+    "card": {
+      "data": "Data",
+      "batteryReq": "Battery Req",
+      "deleteBtn": "Delete"
+    },
+    "alerts": {
+      "drawAreaFirst": "Please draw the work area on the map first.",
+      "selectData": "You must select at least one data type to collect.",
+      "saveSuccess": "Mission saved successfully",
+      "polygonError": "The polygon cannot intersect itself."
+    },
+    "map": {
+      "centerRobot": "Center on robot",
+      "heading": "Heading",
+      "lat": "Lat",
+      "lon": "Lon"
+    }
   }
 }

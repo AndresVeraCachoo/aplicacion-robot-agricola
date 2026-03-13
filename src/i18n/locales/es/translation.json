@@ -16,9 +16,9 @@
     "remoteControl": "Control Remoto",
     "data": "Datos",
     "camera": "Cámara en Vivo",
-    "history": "Historial",
     "userManagement": "Gestión de Usuarios",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "missions": "Misiones"
   },
   "dashboard": {
     "title": "Panel General"
@@ -216,5 +216,40 @@
     "updateSuccess": "Actualización realizada con éxito",
     "deleteSuccess": "Eliminado correctamente",
     "languageChanged": "Idioma cambiado a Español"
+  },
+  "missions": {
+    "createNew": "Crear Nueva Misión",
+    "savedMissions": "Misiones Guardadas",
+    "noMissions": "No hay misiones configuradas aún.",
+    "form": {
+      "name": "Nombre de la Misión",
+      "dataToCollect": "Datos a recolectar",
+      "humidity": "Humedad",
+      "soilTemp": "Temp. Suelo",
+      "ph": "pH",
+      "npk": "N-P-K",
+      "solarRad": "Rad. Solar",
+      "width": "Ancho (m)",
+      "angle": "Ángulo (º)",
+      "minBattery": "Bat. Mín (%)",
+      "saveBtn": "Guardar Misión"
+    },
+    "card": {
+      "data": "Datos",
+      "batteryReq": "Batería Req",
+      "deleteBtn": "Eliminar"
+    },
+    "alerts": {
+      "drawAreaFirst": "Por favor, dibuja el área de trabajo en el mapa primero.",
+      "selectData": "Debes seleccionar al menos un dato a recolectar.",
+      "saveSuccess": "Misión guardada correctamente",
+      "polygonError": "El polígono no puede cruzarse a sí mismo."
+    },
+    "map": {
+      "centerRobot": "Centrar en el robot",
+      "heading": "Rumbo",
+      "lat": "Lat",
+      "lon": "Lon"
+    }
   }
 }
