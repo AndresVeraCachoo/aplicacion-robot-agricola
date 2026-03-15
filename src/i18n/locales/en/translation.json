@@ -66,7 +66,18 @@
     "heading": "Heading",
     "queuePoint": "Queued Point",
     "currentTarget": "Current Target",
-    "area": "Area"
+    "area": "Area",
+    "missionsBtn": "Missions",
+    "loadMission": "Load Mission",
+    "loadZone": "📥 Load Zone",
+    "startAuto": "🚀 Start AUTO",
+    "noMissions": "No missions available.",
+    "data": "Data",
+    "batteryReq": "Battery Req",
+    "progress": "Mission Progress",
+    "point": "Point",
+    "of": "of",
+    "completed": "Completed"
   },
   "data": {
     "title": "Advanced Monitor",

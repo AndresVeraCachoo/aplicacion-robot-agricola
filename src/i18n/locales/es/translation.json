@@ -66,7 +66,18 @@
     "heading": "Rumbo",
     "queuePoint": "Punto en cola",
     "currentTarget": "Destino Actual",
-    "area": "Área"
+    "area": "Área",
+    "missionsBtn": "Misiones",
+    "loadMission": "Cargar Misión",
+    "loadZone": "📥 Cargar Zona",
+    "startAuto": "🚀 Iniciar AUTO",
+    "noMissions": "No hay misiones disponibles.",
+    "data": "Datos",
+    "batteryReq": "Batería Req",
+    "progress": "Progreso de la Misión",
+    "point": "Punto",
+    "of": "de",
+    "completed": "Completado"
   },
   "data": {
     "title": "Monitor Avanzado",

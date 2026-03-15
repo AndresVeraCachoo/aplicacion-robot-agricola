@@ -37,6 +37,10 @@ export const useRobotStore = create((set, get) => ({
   safeZone: null,
   navTarget: null, 
   navQueue: [], // Cola de navegación multipunto
+  
+  // NUEVO: Estado global de la misión para la barra de progreso
+  totalMissionPoints: 0,
+  setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
 
   // --- 1. INICIALIZACIÓN Y SOCKETS (Tu código original restaurado) ---
   connectSocket: () => {

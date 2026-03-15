@@ -26,7 +26,7 @@
   background: var(--bg-secondary, #1e1e1e);
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
+  display: block; /* <--- EL CAMBIO CLAVE: Quitamos 'flex' y ponemos 'block' */
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
 }
@@ -35,12 +35,12 @@
 .map-container > div {
   width: 100%;
   height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .control-bottom-row {
-  /* Al no tener 'flex: 1', solo ocupará la altura de su contenido, 
-     pero al estar dentro del contenedor principal de height fija, 
-     se quedará anclado al fondo */
   flex-shrink: 0;
   background: var(--bg-secondary, #1e1e1e);
   border-radius: 8px;

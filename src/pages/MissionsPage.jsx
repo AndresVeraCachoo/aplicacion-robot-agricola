@@ -20,7 +20,6 @@ import { useMissionStore } from "../store/missionStore";
 import { useRobotStore } from "../store/robotStore";
 import "./MissionsPage.css";
 
-// Fixes para ESLint y Leaflet
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
 import iconMarker from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -92,13 +91,12 @@ MapClickHandler.propTypes = {
   setClickedPos: PropTypes.func.isRequired,
 };
 
-const GeomanMissionControls = ({ setAreaTrabajo }) => {
+const GeomanMissionControls = ({ areaTrabajo, setAreaTrabajo, editandoId }) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
 
   useEffect(() => {
     if (!map) return;
-
     map.pm.setGlobalOptions({
       allowSelfIntersection: false,
       snappable: true,
@@ -130,20 +128,15 @@ const GeomanMissionControls = ({ setAreaTrabajo }) => {
         map.removeLayer(layer);
         return;
       }
-
       map.eachLayer((l) => {
         if (l.pm && l !== layer && l instanceof L.Polygon && !l._pmTempLayer) {
           map.removeLayer(l);
         }
       });
-
-      const geoJson = layer.toGeoJSON();
-      setAreaTrabajo(geoJson.geometry);
+      setAreaTrabajo(layer.toGeoJSON().geometry);
     });
 
-    map.on("pm:remove", () => {
-      setAreaTrabajo(null);
-    });
+    map.on("pm:remove", () => setAreaTrabajo(null));
 
     return () => {
       map.pm.removeControls();
@@ -152,20 +145,53 @@ const GeomanMissionControls = ({ setAreaTrabajo }) => {
     };
   }, [map, setAreaTrabajo, i18n.language, t]);
 
+  // NUEVO: Dibujar el polígono automáticamente cuando entramos en modo Edición
+  useEffect(() => {
+    if (editandoId && areaTrabajo?.type === "Polygon") {
+      // Limpiar polígonos viejos
+      map.eachLayer((l) => {
+        if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
+      });
+
+      // Dibujar polígono a editar
+      const latlngs = areaTrabajo.coordinates[0].map((c) => [c[1], c[0]]);
+      const polygon = L.polygon(latlngs, { color: "#3388ff" }).addTo(map);
+
+      // Centrar el mapa en la misión cargada
+      map.fitBounds(polygon.getBounds(), { padding: [20, 20] });
+
+      // Enganchar Geoman a este nuevo polígono
+      polygon.on("pm:edit", (e) =>
+        setAreaTrabajo(e.target.toGeoJSON().geometry),
+      );
+      polygon.on("pm:dragend", (e) =>
+        setAreaTrabajo(e.target.toGeoJSON().geometry),
+      );
+      polygon.on("pm:rotateend", (e) =>
+        setAreaTrabajo(e.target.toGeoJSON().geometry),
+      );
+      polygon.on("pm:cut", (e) => setAreaTrabajo(e.layer.toGeoJSON().geometry));
+    }
+  }, [areaTrabajo, editandoId, map, setAreaTrabajo]); // Solo se ejecuta al cambiar la misión que editamos
+
   return null;
 };
 
 GeomanMissionControls.propTypes = {
+  areaTrabajo: PropTypes.object,
   setAreaTrabajo: PropTypes.func.isRequired,
+  editandoId: PropTypes.number,
 };
 
 function MissionsPage() {
   const { t } = useTranslation();
-  const { misiones, fetchMisiones, createMision, deleteMision } =
+  const { misiones, fetchMisiones, createMision, updateMision, deleteMision } =
     useMissionStore();
   const { position, system } = useRobotStore();
   const mapRef = useRef();
 
+  // Estados
+  const [editandoId, setEditandoId] = useState(null); // NUEVO
   const [nombre, setNombre] = useState("");
   const [sensores, setSensores] = useState({
     humedad: true,
@@ -174,7 +200,6 @@ function MissionsPage() {
     npk: false,
     radiacion: false,
   });
-
   const [anchoTrabajo, setAnchoTrabajo] = useState(2);
   const [anguloPasada, setAnguloPasada] = useState(0);
   const [bateriaMinima, setBateriaMinima] = useState(20);
@@ -189,6 +214,40 @@ function MissionsPage() {
     setSensores({ ...sensores, [sensor]: !sensores[sensor] });
   };
 
+  // NUEVO: Cargar datos de la misión en el formulario
+  const handleEditMission = (m) => {
+    setEditandoId(m.id);
+    setNombre(m.nombre);
+    setAnchoTrabajo(m.ancho_trabajo);
+    setAnguloPasada(m.angulo_pasada);
+    setBateriaMinima(m.bateria_minima);
+    setAreaTrabajo(m.area_trabajo);
+
+    const activeSensors = m.tipo_tarea.toLowerCase();
+    setSensores({
+      humedad: activeSensors.includes("humedad"),
+      temperatura: activeSensors.includes("temp"),
+      ph: activeSensors.includes("ph"),
+      npk: activeSensors.includes("n-p-k") || activeSensors.includes("npk"),
+      radiacion: activeSensors.includes("rad"),
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" }); // Subir al formulario
+  };
+
+  // NUEVO: Cancelar edición y limpiar mapa
+  const handleCancelEdit = () => {
+    setEditandoId(null);
+    setNombre("");
+    setAreaTrabajo(null);
+    if (mapRef.current) {
+      mapRef.current.eachLayer((l) => {
+        if (l instanceof L.Polygon && !l._pmTempLayer)
+          mapRef.current.removeLayer(l);
+      });
+    }
+  };
+
   const handleSaveMission = async (e) => {
     e.preventDefault();
     if (!areaTrabajo) {
@@ -196,7 +255,6 @@ function MissionsPage() {
       return;
     }
 
-    // Traducción dinámica de los sensores para guardarlos en la base de datos
     const mapSensorsToLocale = {
       humedad: t("missions.form.humidity"),
       temperatura: t("missions.form.soilTemp"),
@@ -215,26 +273,26 @@ function MissionsPage() {
       return;
     }
 
-    const exito = await createMision({
+    const missionData = {
       nombre,
       tipo_tarea: sensoresActivos,
       ancho_trabajo: anchoTrabajo,
       angulo_pasada: anguloPasada,
       bateria_minima: bateriaMinima,
       area_trabajo: areaTrabajo,
-    });
+    };
+
+    const exito = editandoId
+      ? await updateMision(editandoId, missionData)
+      : await createMision(missionData);
 
     if (exito) {
-      alert(t("missions.alerts.saveSuccess"));
-      setNombre("");
-      setAreaTrabajo(null);
-      if (mapRef.current) {
-        mapRef.current.eachLayer((layer) => {
-          if (layer instanceof L.Polygon && layer.pm) {
-            mapRef.current.removeLayer(layer);
-          }
-        });
-      }
+      alert(
+        editandoId
+          ? "Misión actualizada correctamente"
+          : t("missions.alerts.saveSuccess"),
+      );
+      handleCancelEdit();
     }
   };
 
@@ -247,7 +305,7 @@ function MissionsPage() {
     <div className="missions-page">
       <div className="missions-layout">
         <aside className="mission-form-panel">
-          <h3>{t("missions.createNew")}</h3>
+          <h3>{editandoId ? "✏️ Editar Misión" : t("missions.createNew")}</h3>
           <form onSubmit={handleSaveMission}>
             <div className="form-group">
               <label htmlFor="mission-name">{t("missions.form.name")}</label>
@@ -261,7 +319,6 @@ function MissionsPage() {
             </div>
 
             <div className="form-group">
-              {/* Solución a SonarLint S6853: Cambiamos <label> por <span> con los mismos estilos */}
               <span
                 style={{
                   fontSize: "0.85rem",
@@ -359,9 +416,35 @@ function MissionsPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-save-mission">
-              {t("missions.form.saveBtn")}
-            </button>
+            <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
+              <button
+                type="submit"
+                className="btn-save-mission"
+                style={{
+                  flex: editandoId ? 1 : "none",
+                  width: editandoId ? "auto" : "100%",
+                }}
+              >
+                {editandoId ? "Actualizar" : t("missions.form.saveBtn")}
+              </button>
+              {editandoId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#f87171",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           </form>
         </aside>
 
@@ -373,13 +456,21 @@ function MissionsPage() {
             style={{
               height: "100%",
               width: "100%",
-              borderRadius: "12px",
+              position: "absolute",
+              top: 0,
+              left: 0,
               zIndex: 1,
             }}
           >
-            <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-
-            <GeomanMissionControls setAreaTrabajo={setAreaTrabajo} />
+            <TileLayer
+              attribution="&copy; OpenStreetMap"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            />
+            <GeomanMissionControls
+              areaTrabajo={areaTrabajo}
+              setAreaTrabajo={setAreaTrabajo}
+              editandoId={editandoId}
+            />
             <CenterButton />
             <MapClickHandler setClickedPos={setClickedPos} />
 
@@ -424,9 +515,30 @@ function MissionsPage() {
                 <strong>{t("missions.card.batteryReq")}:</strong>{" "}
                 {m.bateria_minima}%
               </p>
-              <button onClick={() => deleteMision(m.id)} className="btn-delete">
-                {t("missions.card.deleteBtn")}
-              </button>
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button
+                  onClick={() => handleEditMission(m)}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    padding: "6px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    transition: "0.2s",
+                  }}
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => deleteMision(m.id)}
+                  className="btn-delete"
+                  style={{ flex: 1, margin: 0 }}
+                >
+                  {t("missions.card.deleteBtn")}
+                </button>
+              </div>
             </div>
           ))}
           {misiones.length === 0 && <p>{t("missions.noMissions")}</p>}
