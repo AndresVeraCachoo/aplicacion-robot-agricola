@@ -6,8 +6,17 @@ import "./ControlPanel.css";
 
 const ControlPanel = () => {
   const { t } = useTranslation();
-  const { system, toggleEmergencyStop, setSpeedLimit, setControlMode } =
-    useRobotStore();
+  const {
+    system,
+    setSpeedLimit,
+    setControlMode,
+    safeZone,
+    togglePauseMission,
+    cancelMission,
+  } = useRobotStore();
+
+  const isPaused = system.status === "PAUSED";
+  const hasActiveArea = safeZone !== null && safeZone.length > 0;
 
   return (
     <div className="control-panel-horizontal">
@@ -17,7 +26,6 @@ const ControlPanel = () => {
           <button
             className={system.mode === "AUTO" ? "mode-btn active" : "mode-btn"}
             onClick={() => setControlMode("AUTO")}
-            disabled={system.emergencyStop}
           >
             {t("control.auto")}
           </button>
@@ -26,7 +34,6 @@ const ControlPanel = () => {
               system.mode === "MANUAL" ? "mode-btn active" : "mode-btn"
             }
             onClick={() => setControlMode("MANUAL")}
-            disabled={system.emergencyStop}
           >
             {t("control.manual")}
           </button>
@@ -43,21 +50,30 @@ const ControlPanel = () => {
           max="100"
           step="5"
           value={system.speedLimit}
-          disabled={system.emergencyStop}
           onChange={(e) => setSpeedLimit(Number.parseInt(e.target.value))}
           className={`speed-slider ${system.speedLimit > 80 ? "high-speed" : ""}`}
         />
       </div>
 
-      <div className="panel-col safety-col">
-        <button
-          className={`alert-btn ${system.emergencyStop ? "active" : ""}`}
-          onClick={toggleEmergencyStop}
-        >
-          {system.emergencyStop
-            ? "⚠️ SISTEMA DETENIDO"
-            : "🛑 PARADA DE EMERGENCIA"}
-        </button>
+      {/* Columna de control de la misión: Siempre visible */}
+      <div className="panel-col mission-col">
+        <h4>Control de Misión</h4>
+        <div className="mission-actions">
+          {/* PAUSAR/REANUDAR siempre visible */}
+          <button
+            className={`mission-btn ${isPaused ? "btn-resume" : "btn-pause"}`}
+            onClick={togglePauseMission}
+          >
+            {isPaused ? "▶ REANUDAR" : "⏸ PAUSAR"}
+          </button>
+
+          {/* CANCELAR solo visible si hay área */}
+          {hasActiveArea && (
+            <button className="mission-btn btn-cancel" onClick={cancelMission}>
+              ⏹ CANCELAR MISIÓN
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

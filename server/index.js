@@ -1,70 +1,102 @@
 // server/index.js
 import express from "express";
-import http from "node:http";
+import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+
+// Rutas
 import authRoutes from "./routes/authRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-// 1. Importamos la nueva API de misiones
-import missionRoutes from "./routes/missionRoutes.js"; 
+import missionRoutes from "./routes/missionRoutes.js";
 
-// Importamos TODAS las funciones del simulador
-import { 
-    startRobotSimulation, 
-    setManualVelocity, 
-    setRobotMode, 
-    setNavigationTarget, 
-    setSimulationZone, 
-    clearSimulationZone,
-    setEmergencyStop,
-    setSpeedLimit,
-    queueNavPoint
+// Simulador
+import {
+  startRobotSimulation,
+  setSimulationZone,
+  clearSimulationZone,
+  setRobotMode,
+  setManualVelocity,
+  setSpeedLimit,
+  queueNavPoint,
+  setNavigationTarget,
+  pauseSimulation,
+  resumeSimulation,
+  cancelSimulation
 } from "./simulator.js";
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+});
+
 app.use(cors());
 app.use(express.json());
 
+// Endpoints
 app.use("/api/auth", authRoutes);
 app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
-// 2. Registramos la ruta para que React pueda usarla
 app.use("/api/missions", missionRoutes);
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
-});
-
-// Iniciar el ciclo del simulador
-startRobotSimulation(io);
-
+// Manejo de WebSockets
 io.on("connection", (socket) => {
-  console.log("Cliente conectado:", socket.id);
+  console.log("🟢 Cliente conectado:", socket.id);
 
-  // --- CONTROL BÁSICO ---
-  socket.on("client:manual_control", (data) => setManualVelocity(data.x, data.y));
-  socket.on("client:change_mode", (mode) => setRobotMode(mode));
-  
-  // --- NAVEGACIÓN Y COLA ---
-  socket.on("client:navigate_to", (target) => setNavigationTarget(target.lat, target.lon, target.clearQueue));
-  socket.on("client:queue_point", (point) => queueNavPoint(point));
+  socket.on("client:update_zone", (zone) => {
+    setSimulationZone(zone);
+  });
 
-  // --- SEGURIDAD Y AJUSTES ---
-  socket.on("client:emergency_stop", (active) => setEmergencyStop(active));
-  socket.on("client:set_speed_limit", (limit) => setSpeedLimit(limit));
+  socket.on("client:clear_zone", () => {
+    clearSimulationZone();
+  });
 
-  // --- MAPA ---
-  socket.on("client:update_zone", (zone) => setSimulationZone(zone));
-  socket.on("client:clear_zone", () => clearSimulationZone());
+  socket.on("client:change_mode", (mode) => {
+    setRobotMode(mode);
+  });
+
+  socket.on("client:manual_control", (velocity) => {
+    setManualVelocity(velocity.x, velocity.y);
+  });
+
+  socket.on("client:set_speed_limit", (limit) => {
+    setSpeedLimit(limit);
+  });
+
+  socket.on("client:queue_point", (point) => {
+    queueNavPoint(point);
+  });
+
+  socket.on("client:navigate_to", (data) => {
+    setNavigationTarget(data.lat, data.lon, data.clearQueue);
+  });
+
+  // NUEVOS EVENTOS DE MISIÓN
+  socket.on("client:pause_mission", () => {
+    pauseSimulation();
+  });
+
+  socket.on("client:resume_mission", () => {
+    resumeSimulation();
+  });
+
+  socket.on("client:cancel_mission", () => {
+    cancelSimulation();
+  });
 
   socket.on("disconnect", () => {
-    console.log("Cliente desconectado:", socket.id);
+    console.log("🔴 Cliente desconectado:", socket.id);
   });
 });
 
+// Arrancar la simulación del robot
+startRobotSimulation(io);
+
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });

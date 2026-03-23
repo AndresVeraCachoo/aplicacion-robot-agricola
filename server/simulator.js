@@ -23,12 +23,13 @@ let manualVelocity = { x: 0, y: 0 };
 let navTarget = null;
 let navQueue = [];
 
-let emergencyStop = false;
 let speedLimitPercent = 50;
 
 let safeZonePolygon = null;
 let autoPath = [];
 let currentPathIndex = 0;
+
+let isPaused = false;
 
 const isPointInPolygon = (lat, lon, vs) => {
   let inside = false;
@@ -192,32 +193,6 @@ const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   }
 };
 
-const emitEmergencyStop = (io) => {
-  speed = 0;
-  if (!io) return;
-  io.emit("robot:status", {
-    battery: { percentage: Math.floor(battery), status: "IDLE" },
-    position: { lat: currentLat, lon: currentLon },
-    system: {
-      speed: 0, heading: Math.floor(heading),
-      status: "EMERGENCY_STOP", mode: "MANUAL",
-      emergencyStop: true, speedLimit: speedLimitPercent,
-      target: null, queue: []
-    }
-  });
-};
-
-export const setEmergencyStop = (active) => {
-  emergencyStop = active;
-  console.log(`🚨 E-STOP ${active ? "ACTIVADO" : "DESACTIVADO"}`);
-  if (active) {
-    speed = 0;
-    controlMode = "MANUAL";
-    navTarget = null;
-    navQueue = [];
-  }
-};
-
 export const setSpeedLimit = (limit) => { speedLimitPercent = limit; };
 
 export const queueNavPoint = (point) => { navQueue.push(point); };
@@ -255,18 +230,37 @@ export const setNavigationTarget = (lat, lon, clearQueue = false) => {
   controlMode = "NAVIGATING";
 };
 
+// --- CONTROLADORES DE MISIÓN ---
+export const pauseSimulation = () => {
+  isPaused = true;
+  speed = 0; 
+  console.log("⏸️ Simulación Pausada");
+};
+
+export const resumeSimulation = () => {
+  isPaused = false;
+  console.log("▶️ Simulación Reanudada");
+};
+
+export const cancelSimulation = () => {
+  isPaused = false;
+  safeZonePolygon = null; // Purga el polígono en el backend
+  autoPath = [];
+  currentPathIndex = 0;
+  controlMode = "MANUAL"; // Forzamos manual
+  navTarget = null;
+  navQueue = [];
+  speed = 0;
+  console.log("⏹️ Misión Cancelada");
+};
+
 export const startRobotSimulation = (io) => {
   console.log("🤖 Simulador: ACTIVADO");
 
   setInterval(async () => {
-    if (emergencyStop) {
-      emitEmergencyStop(io);
-      return;
-    }
-
     updateBatteryState();
 
-    if (!isCharging) {
+    if (!isCharging && !isPaused) {
       const speedFactor = speedLimitPercent / 100;
       const { nextLat, nextLon, dLat, dLon } = calculateNextPosition(currentLat, currentLon, speedFactor);
       const { validLat, validLon } = applyGeofencing(currentLat, currentLon, nextLat, nextLon);
@@ -275,9 +269,11 @@ export const startRobotSimulation = (io) => {
 
       currentLat = validLat;
       currentLon = validLon;
+    } else if (isPaused) {
+      speed = 0;
     }
 
-    const currentSystemStatus = getSystemStatus(isCharging, speed);
+    const currentSystemStatus = isPaused ? "PAUSED" : getSystemStatus(isCharging, speed);
 
     try {
       await pool.query(
@@ -292,7 +288,7 @@ export const startRobotSimulation = (io) => {
           system: {
             speed: speed, heading: Math.floor(heading),
             status: currentSystemStatus,
-            mode: controlMode, emergencyStop: false,
+            mode: controlMode,
             speedLimit: speedLimitPercent, target: navTarget, queue: navQueue
           }
         });
@@ -301,7 +297,7 @@ export const startRobotSimulation = (io) => {
   }, MOVEMENT_INTERVAL);
 
   setInterval(async () => {
-    if (isCharging || emergencyStop) return;
+    if (isCharging || isPaused) return;
 
     const factorLat = Math.sin(currentLat * 15000);
     const factorLon = Math.cos(currentLon * 15000);
@@ -319,7 +315,6 @@ export const startRobotSimulation = (io) => {
       let activeExecutionId = null;
       let activeMissionName = null;
 
-      // Solo asociamos los datos si el robot NO está en modo MANUAL
       if (controlMode !== "MANUAL") {
         const activeMissionRes = await pool.query(`
           SELECT e.id, m.nombre 

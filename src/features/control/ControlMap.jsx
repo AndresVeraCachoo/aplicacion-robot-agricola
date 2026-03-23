@@ -231,22 +231,37 @@ const GeomanControls = ({ ignoreClickRef }) => {
     };
   }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate, t, i18n.language]);
 
+  // AQUI OCURRE LA MAGIA PARA BORRAR EL MAPA
   useEffect(() => {
-    if (!map || !safeZone || safeZone.length === 0 || isZoneLoadedRef.current)
+    if (!map) return;
+
+    // Si la zona es nula o vacía (porque se canceló la misión), borramos los polígonos del mapa
+    if (!safeZone || safeZone.length === 0) {
+      map.eachLayer((l) => {
+        if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
+      });
+      isZoneLoadedRef.current = false;
       return;
+    }
+
+    if (isZoneLoadedRef.current) return;
+
     map.eachLayer((l) => {
       if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
     });
+
     const polygon = L.polygon(safeZone, {
       color: "#10b981",
       fillColor: "#10b981",
       fillOpacity: 0.2,
     }).addTo(map);
+
     updateAreaTooltip(polygon, t);
     polygon.on("pm:edit pm:dragend pm:rotateend", (e) =>
       handleZoneUpdate(e.target),
     );
     polygon.on("pm:cut", (e) => handleZoneUpdate(e.layer));
+
     isZoneLoadedRef.current = true;
   }, [map, safeZone, handleZoneUpdate, t]);
 
@@ -348,7 +363,6 @@ const ControlMap = () => {
       ? Math.round((pointsCompleted / totalMissionPoints) * 100)
       : 0;
 
-  // Finalizar misión auto: Resetea cuando se acaban los puntos
   useEffect(() => {
     if (pointsRemaining === 0 && totalMissionPoints > 0) {
       setControlMode("MANUAL");
@@ -383,7 +397,7 @@ const ControlMap = () => {
       loadedMission.ancho_trabajo,
     );
     if (path.length > 0) {
-      setTotalMissionPoints(path.length); // Guardamos la cantidad global
+      setTotalMissionPoints(path.length);
       navigateToPoint(path[0][0], path[0][1]);
       for (let i = 1; i < path.length; i++)
         queueNavigationPoint(path[i][0], path[i][1]);
@@ -418,7 +432,6 @@ const ControlMap = () => {
         🗺️ {t("control.missionsBtn")}
       </button>
 
-      {/* WIDGET DE PROGRESO: Se muestra siempre si hay puntos, sin importar el modo */}
       {totalMissionPoints > 0 && (
         <div className="mission-progress-widget">
           <span className="progress-percent">{progressPercent}%</span>

@@ -11,7 +11,7 @@ const ControlPage = () => {
 
   // Funciones para el Joystick virtual
   const handleMove = (x, y) => {
-    if (system.mode !== "MANUAL" || system.emergencyStop) return;
+    if (system.mode !== "MANUAL") return;
     sendManualMove({ x, y });
   };
 
@@ -37,7 +37,6 @@ const ControlPage = () => {
                 onMouseLeave={handleStop}
                 onTouchStart={() => handleMove(0, 1)}
                 onTouchEnd={handleStop}
-                disabled={system.emergencyStop}
               >
                 ▲
               </button>
@@ -49,7 +48,6 @@ const ControlPage = () => {
                   onMouseLeave={handleStop}
                   onTouchStart={() => handleMove(-1, 0)}
                   onTouchEnd={handleStop}
-                  disabled={system.emergencyStop}
                 >
                   ◀
                 </button>
@@ -60,7 +58,6 @@ const ControlPage = () => {
                   onMouseLeave={handleStop}
                   onTouchStart={() => handleMove(0, -1)}
                   onTouchEnd={handleStop}
-                  disabled={system.emergencyStop}
                 >
                   ▼
                 </button>
@@ -71,7 +68,6 @@ const ControlPage = () => {
                   onMouseLeave={handleStop}
                   onTouchStart={() => handleMove(1, 0)}
                   onTouchEnd={handleStop}
-                  disabled={system.emergencyStop}
                 >
                   ▶
                 </button>

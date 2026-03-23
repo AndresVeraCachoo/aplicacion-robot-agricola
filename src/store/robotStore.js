@@ -23,7 +23,6 @@ export const useRobotStore = create((set, get) => ({
     speed: 0,
     heading: 0,
     mode: "AUTO",
-    emergencyStop: false,
     speedLimit: 50
   },
   
@@ -62,7 +61,6 @@ export const useRobotStore = create((set, get) => ({
         system: { 
             ...state.system, 
             ...data.system,
-            emergencyStop: data.system.emergencyStop ?? state.system.emergencyStop,
             speedLimit: data.system.speedLimit ?? state.system.speedLimit
         },
         navTarget: data.system.target || null,
@@ -118,16 +116,6 @@ export const useRobotStore = create((set, get) => ({
         pathHistory: validData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
       }));
     } catch (error) { console.error("Error carga inicial:", error); }
-  },
-
-  toggleEmergencyStop: () => {
-    const { socket, system } = get();
-    const newState = !system.emergencyStop;
-    
-    set({ system: { ...system, emergencyStop: newState } });
-    if (socket?.connected) {
-        socket.emit("client:emergency_stop", newState);
-    }
   },
 
   setSpeedLimit: (limit) => {
@@ -187,5 +175,30 @@ export const useRobotStore = create((set, get) => ({
       const { socket, system } = get();
       if (system.mode !== "MANUAL") return;
       if (socket?.connected) socket.emit("client:manual_control", velocity);
+  },
+
+  // --- CONTROL DE MISIÓN ---
+  togglePauseMission: () => {
+    const { socket, system } = get();
+    if (!socket?.connected) return;
+
+    if (system.status === "PAUSED") {
+        socket.emit("client:resume_mission");
+    } else {
+        socket.emit("client:pause_mission");
+    }
+  },
+
+  cancelMission: () => {
+    const { socket, system, clearSafeZone } = get();
+    
+    // Forzamos la limpieza explícita de la zona
+    clearSafeZone(); 
+
+    set({ system: { ...system, mode: "MANUAL" } });
+
+    if (socket?.connected) {
+        socket.emit("client:cancel_mission");
+    }
   }
 }));

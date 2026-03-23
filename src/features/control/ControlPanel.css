@@ -1,8 +1,9 @@
 /* src/features/control/ControlPanel.css */
 .control-panel-horizontal {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 40px;
   padding: 15px 20px;
   color: white;
 }
@@ -10,7 +11,6 @@
 .panel-col {
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
 .panel-col h4 {
@@ -25,9 +25,11 @@
 .mode-buttons {
   display: flex;
   gap: 10px;
+  justify-content: flex-start;
 }
+
 .mode-btn {
-  flex: 1;
+  min-width: 110px;
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #444;
@@ -37,22 +39,19 @@
   font-weight: bold;
   transition: 0.2s;
 }
+
 .mode-btn.active {
   background: #4caf50;
   border-color: #4caf50;
 }
+
 .mode-btn:hover:not(:disabled) {
   background: #3a3a3a;
-}
-.mode-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Slider */
 .speed-slider {
-  width: 100%;
-  max-width: 200px;
+  width: 300px;
   height: 8px;
   border-radius: 4px;
   appearance: none;
@@ -70,52 +69,70 @@
   cursor: pointer;
   border: 2px solid #1e1e1e;
 }
+
 .speed-slider.high-speed::-webkit-slider-thumb {
   background: #ff9800;
 }
-.speed-slider:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+/* --- NUEVOS ESTILOS DE MISIÓN --- */
+.mission-col {
+  /* Empujamos esta columna todo lo posible a la derecha usando margin-left auto */
+  margin-left: auto;
+  align-items: flex-end; /* Alinea los botones al final derecho */
 }
 
-/* Parada de Emergencia */
-.safety-col {
-  align-items: flex-end;
-  justify-content: center;
+.mission-actions {
+  display: flex;
+  gap: 15px;
 }
-.alert-btn {
-  background: #d32f2f;
-  color: white;
-  border: none;
-  padding: 15px 30px;
+
+.mission-btn {
+  padding: 12px 20px;
   border-radius: 8px;
+  border: none;
+  color: white;
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 0.9em;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: 0.3s;
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
-}
-.alert-btn:hover {
-  background: #b71c1c;
-  transform: scale(1.05);
-}
-.alert-btn.active {
-  background: #ff9800;
-  animation: pulse 1.5s infinite;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-@keyframes pulse {
+.mission-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+}
+
+.mission-btn:active {
+  transform: translateY(0);
+}
+
+/* Colores de los botones */
+.btn-pause {
+  background-color: #ff9800; /* Naranja/Amarillo de advertencia */
+}
+
+.btn-resume {
+  background-color: #4caf50; /* Verde de éxito */
+  animation: pulse-resume 1.5s infinite;
+}
+
+.btn-cancel {
+  background-color: #f44336; /* Rojo de peligro */
+}
+
+@keyframes pulse-resume {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
   }
 }
 
@@ -125,7 +142,22 @@
     align-items: stretch;
     gap: 20px;
   }
-  .safety-col {
-    align-items: center;
+
+  .mission-col {
+    margin-left: 0;
+    align-items: stretch; /* En móviles los botones ocupan todo el ancho */
+  }
+
+  .mission-actions {
+    flex-direction: column;
+  }
+
+  .mode-buttons {
+    justify-content: center;
+  }
+
+  .speed-slider {
+    width: 100%;
+    max-width: 100%;
   }
 }
