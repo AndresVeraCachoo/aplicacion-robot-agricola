@@ -7,7 +7,6 @@ const API_URL = "http://localhost:3001/api/robot";
 const SOCKET_URL = "http://localhost:3001";
 
 export const useRobotStore = create((set, get) => ({
-  // --- ESTADO INICIAL ---
   socket: null, 
   isConnected: false,
   
@@ -19,14 +18,13 @@ export const useRobotStore = create((set, get) => ({
     timeRemaining: "...",
   },
   
-  // Ahora controlMode está integrado en system para mejor sincronización
   system: {
     status: "IDLE",
     speed: 0,
     heading: 0,
     mode: "AUTO",
-    emergencyStop: false, // E-STOP
-    speedLimit: 50        // Límite de velocidad
+    emergencyStop: false,
+    speedLimit: 50
   },
   
   position: { lat: null, lon: null },
@@ -36,13 +34,11 @@ export const useRobotStore = create((set, get) => ({
   
   safeZone: null,
   navTarget: null, 
-  navQueue: [], // Cola de navegación multipunto
+  navQueue: [],
   
-  // NUEVO: Estado global de la misión para la barra de progreso
   totalMissionPoints: 0,
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
 
-  // --- 1. INICIALIZACIÓN Y SOCKETS (Tu código original restaurado) ---
   connectSocket: () => {
     const { socket } = get();
     if (socket) return; 
@@ -59,7 +55,6 @@ export const useRobotStore = create((set, get) => ({
       set({ isConnected: false });
     });
 
-    // Escuchar estado del robot
     newSocket.on("robot:status", (data) => {
       set((state) => ({
         battery: { ...state.battery, ...data.battery },
@@ -75,7 +70,6 @@ export const useRobotStore = create((set, get) => ({
       }));
     });
 
-    // Escuchar nuevos datos de sensores
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
@@ -126,7 +120,6 @@ export const useRobotStore = create((set, get) => ({
     } catch (error) { console.error("Error carga inicial:", error); }
   },
 
-  // --- 2. ACCIONES DE SEGURIDAD (Nuevas) ---
   toggleEmergencyStop: () => {
     const { socket, system } = get();
     const newState = !system.emergencyStop;
@@ -147,7 +140,6 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
-  // --- 3. ACCIONES DE NAVEGACIÓN (Nuevas) ---
   queueNavigationPoint: (lat, lon) => {
     const { socket, navTarget, navQueue, system, navigateToPoint } = get();
     
@@ -173,7 +165,6 @@ export const useRobotStore = create((set, get) => ({
       }
   },
 
-  // --- 4. ACCIONES DE ZONA Y CONTROL (Modificadas para el nuevo sistema) ---
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
@@ -186,7 +177,6 @@ export const useRobotStore = create((set, get) => ({
     if (socket?.connected) socket.emit("client:clear_zone");
   },
 
-  // Mantenemos esta función por compatibilidad, pero actualiza system.mode
   setControlMode: (mode) => {
       const { socket, system } = get();
       set({ system: { ...system, mode: mode } });

@@ -5,8 +5,6 @@ import { useRobotStore } from "../store/robotStore";
 import ChartWidget from "../features/dashboard/components/ChartWidget";
 import "./DataPage.css";
 
-// --- Funciones Utilitarias ---
-// Añadimos 'lng' para que la hora se adapte al idioma (ej. AM/PM vs 24h)
 const formatDate = (iso, lng) =>
   iso
     ? new Date(iso).toLocaleTimeString(lng || "es-ES", {
@@ -27,7 +25,6 @@ function getPhClass(val) {
   return "ph-neutral";
 }
 
-// --- Componente Principal ---
 function DataPage() {
   const { t, i18n } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +36,6 @@ function DataPage() {
     return Array.isArray(data) ? data : [];
   });
 
-  // --- Lógica Paginación ---
   const totalItems = agronomicData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -73,13 +69,11 @@ function DataPage() {
 
   return (
     <div className="data-page-container">
-      {/* Cabecera Simple */}
       <div className="data-header">
         <h1>{t("data.title")}</h1>
         <p>{t("data.subtitle")}</p>
       </div>
 
-      {/* --- BLOQUE 1: GRÁFICA INDIVIDUAL (Flexible) --- */}
       {agronomicData.length > 0 && (
         <div className="chart-section">
           <ChartWidget
@@ -87,12 +81,10 @@ function DataPage() {
             title={t("data.individualAnalysis")}
             initialType="line"
             initialMetric1="nitrogeno"
-            // allowCompare=true por defecto
           />
         </div>
       )}
 
-      {/* --- BLOQUE 2: GRÁFICA COMPARATIVA (Forzada) --- */}
       {agronomicData.length > 0 && (
         <div className="chart-section">
           <ChartWidget
@@ -101,12 +93,11 @@ function DataPage() {
             initialType="compare"
             initialMetric1="temperatura_suelo"
             initialMetric2="humedad"
-            forcedCompare={true} // Fuerza el modo comparación siempre
+            forcedCompare={true}
           />
         </div>
       )}
 
-      {/* --- BLOQUE 3: TABLA DE DATOS --- */}
       <div className="table-card">
         <div className="table-header-internal">
           <h3>{t("data.recordsTable")}</h3>
@@ -117,6 +108,7 @@ function DataPage() {
             <thead>
               <tr>
                 <th>{t("data.time")}</th>
+                <th>Misión</th>
                 <th>{t("data.location")}</th>
                 <th>{t("data.humidity")}</th>
                 <th>{t("data.temp")}</th>
@@ -132,6 +124,39 @@ function DataPage() {
                     <td className="time-cell">
                       {formatDate(row.timestamp, i18n.language)}
                     </td>
+
+                    <td>
+                      {row.nombre_mision ? (
+                        <span
+                          style={{
+                            background: "#dbeafe",
+                            color: "#1e40af",
+                            padding: "4px 8px",
+                            borderRadius: "12px",
+                            fontSize: "0.85em",
+                            fontWeight: "600",
+                            display: "inline-block",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {row.nombre_mision}
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            background: "#f1f5f9",
+                            color: "#64748b",
+                            padding: "4px 8px",
+                            borderRadius: "12px",
+                            fontSize: "0.85em",
+                            display: "inline-block",
+                          }}
+                        >
+                          Manual
+                        </span>
+                      )}
+                    </td>
+
                     <td style={{ fontFamily: "monospace", fontSize: "0.85em" }}>
                       {formatNum(row.lat, 5)}, {formatNum(row.lon, 5)}
                     </td>
@@ -161,7 +186,7 @@ function DataPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="no-data">
+                  <td colSpan="8" className="no-data">
                     {t("data.waitingData")}
                   </td>
                 </tr>
@@ -170,7 +195,6 @@ function DataPage() {
           </table>
         </div>
 
-        {/* Controles Paginación */}
         {totalItems > 0 && (
           <div className="pagination-footer">
             <div className="pagination-left">

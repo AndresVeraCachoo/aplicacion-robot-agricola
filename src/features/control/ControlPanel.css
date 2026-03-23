@@ -3,9 +3,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Panel mucho más compacto */
-  padding: 8px 15px;
-  gap: 15px;
+  padding: 15px 20px;
   color: white;
 }
 
@@ -13,13 +11,12 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 5px; /* Menos hueco entre título y botón */
 }
 
 .panel-col h4 {
-  margin: 0;
+  margin: 0 0 10px 0;
   color: #aaa;
-  font-size: 0.75em;
+  font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -27,18 +24,17 @@
 /* Modos */
 .mode-buttons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 .mode-btn {
   flex: 1;
-  padding: 8px; /* Aún más fino */
+  padding: 10px;
   border-radius: 6px;
   border: 1px solid #444;
   background: #2a2a2a;
   color: white;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.9em;
   transition: 0.2s;
 }
 .mode-btn.active {
@@ -56,17 +52,19 @@
 /* Slider */
 .speed-slider {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  max-width: 200px;
+  height: 8px;
+  border-radius: 4px;
   appearance: none;
   background: #444;
   outline: none;
-  margin-top: 5px;
+  margin-top: 10px;
 }
+
 .speed-slider::-webkit-slider-thumb {
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #4caf50;
   cursor: pointer;
@@ -80,42 +78,54 @@
   cursor: not-allowed;
 }
 
-/* Botón de Parada (MUCHO MÁS PEQUEÑO) */
+/* Parada de Emergencia */
 .safety-col {
   align-items: flex-end;
+  justify-content: center;
 }
-.estop-btn {
-  width: 100%;
-  max-width: 180px; /* Estrecho */
-  padding: 8px; /* Bajito */
-  font-size: 0.85em; /* Letra pequeña pero negrita */
-  font-weight: 900;
-  background-color: #cc0000;
+.alert-btn {
+  background: #d32f2f;
   color: white;
-  border: 2px solid #ff0000;
-  border-radius: 6px;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
   cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
 }
-.estop-btn:hover:not(:disabled) {
-  background-color: #ff1a1a;
-  transform: translateY(-2px);
+.alert-btn:hover {
+  background: #b71c1c;
+  transform: scale(1.05);
 }
-.estop-btn.active {
-  background-color: #550000;
-  border-color: #ff6666;
-  animation: pulse-red 1s infinite;
+.alert-btn.active {
+  background: #ff9800;
+  animation: pulse 1.5s infinite;
 }
 
-@keyframes pulse-red {
+@keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+    box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+}
+
+@media (max-width: 768px) {
+  .control-panel-horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .safety-col {
+    align-items: center;
   }
 }

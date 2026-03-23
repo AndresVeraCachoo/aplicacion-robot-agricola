@@ -20,16 +20,19 @@ router.get("/estado", authenticateToken, async (req, res) => {
   }
 });
 
-// GET: Historial de Datos Agronómicos (ACTUALIZADO)
+// GET: Historial de Datos Agronómicos (AQUÍ ESTÁ EL FIX DE LA MISIÓN)
 router.get("/datos", authenticateToken, async (req, res) => {
   try {
-    // Seleccionamos TODAS las columnas nuevas ordenadas por fecha más reciente
     const result = await pool.query(`
-      SELECT id, lat, lon, "timestamp", 
-             humedad, temperatura_suelo, ph, 
-             nitrogeno, fosforo, potasio, radiacion_solar
-      FROM robot_datos 
-      ORDER BY "timestamp" DESC
+      SELECT 
+        d.id, d.lat, d.lon, d."timestamp", 
+        d.humedad, d.temperatura_suelo, d.ph, 
+        d.nitrogeno, d.fosforo, d.potasio, d.radiacion_solar,
+        m.nombre AS nombre_mision
+      FROM robot_datos d
+      LEFT JOIN ejecuciones_mision e ON d.ejecucion_id = e.id
+      LEFT JOIN misiones m ON e.mision_id = m.id
+      ORDER BY d."timestamp" DESC
     `);
     res.json(result.rows);
   } catch (err) {

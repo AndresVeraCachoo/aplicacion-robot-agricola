@@ -1,3 +1,4 @@
+// server/simulator.js
 import { pool } from "./config/db.js";
 import * as turf from "@turf/turf";
 
@@ -315,11 +316,39 @@ export const startRobotSimulation = (io) => {
     currentTemp = tempBase + (Math.random() * 1 - 0.5);
 
     try {
+      let activeExecutionId = null;
+      let activeMissionName = null;
+
+      // Solo asociamos los datos si el robot NO está en modo MANUAL
+      if (controlMode !== "MANUAL") {
+        const activeMissionRes = await pool.query(`
+          SELECT e.id, m.nombre 
+          FROM ejecuciones_mision e
+          JOIN misiones m ON e.mision_id = m.id
+          WHERE e.estado IN ('en_curso', 'ejecutando', 'activa')
+          ORDER BY e.id DESC 
+          LIMIT 1
+        `);
+        
+        if (activeMissionRes.rows.length > 0) {
+          activeExecutionId = activeMissionRes.rows[0].id;
+          activeMissionName = activeMissionRes.rows[0].nombre;
+        }
+      }
+
       const newRecord = await pool.query(
-        `INSERT INTO robot_datos (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-        [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), 50, 30, 40, 500]
+        `INSERT INTO robot_datos (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar, ejecucion_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), 50, 30, 40, 500, activeExecutionId]
       );
-      if (io && newRecord.rows[0]) io.emit("robot:new_data", newRecord.rows[0]);
+
+      if (io && newRecord.rows[0]) {
+        const emitData = {
+          ...newRecord.rows[0],
+          nombre_mision: activeMissionName 
+        };
+        io.emit("robot:new_data", emitData);
+      }
+      
       await pool.query(`DELETE FROM robot_datos WHERE id NOT IN (SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1)`, [MAX_HISTORY_RECORDS]);
     } catch (error) { console.error("Error datos:", error.message); }
   }, SENSOR_INTERVAL);

@@ -83,7 +83,7 @@ router.post("/:id/runs", async (req, res) => {
   }
 });
 
-// 6. Actualizar el estado de una ejecución (Ej: Completar, Pausar o Actualizar Progreso)
+// 6. Actualizar el estado de una ejecución genérica
 router.put("/runs/:run_id", async (req, res) => {
   const { run_id } = req.params;
   const { estado, fecha_fin, bateria_usada, distancia_recorrida, tiempo_transcurrido, progreso } = req.body;

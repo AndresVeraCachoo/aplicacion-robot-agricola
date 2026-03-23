@@ -35,7 +35,6 @@ export const useMissionStore = create((set) => ({
     }
   },
 
-  // NUEVO: Función para actualizar misiones existentes
   updateMision: async (id, missionData) => {
     try {
       const response = await fetch(`http://localhost:3001/api/missions/${id}`, {

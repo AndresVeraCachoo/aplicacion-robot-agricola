@@ -11,7 +11,6 @@ const ControlPanel = () => {
 
   return (
     <div className="control-panel-horizontal">
-      {/* 1. Modos de Conducción */}
       <div className="panel-col">
         <h4>{t("control.drivingMode")}</h4>
         <div className="mode-buttons">
@@ -34,7 +33,6 @@ const ControlPanel = () => {
         </div>
       </div>
 
-      {/* 2. Control de Velocidad */}
       <div className="panel-col">
         <h4>
           {t("control.speedLimit")}: {system.speedLimit}%
@@ -51,15 +49,14 @@ const ControlPanel = () => {
         />
       </div>
 
-      {/* 3. Parada de Emergencia */}
       <div className="panel-col safety-col">
         <button
-          className={`estop-btn ${system.emergencyStop ? "active" : ""}`}
+          className={`alert-btn ${system.emergencyStop ? "active" : ""}`}
           onClick={toggleEmergencyStop}
         >
           {system.emergencyStop
-            ? t("control.rearmSystem")
-            : t("control.emergencyStop")}
+            ? "⚠️ SISTEMA DETENIDO"
+            : "🛑 PARADA DE EMERGENCIA"}
         </button>
       </div>
     </div>
