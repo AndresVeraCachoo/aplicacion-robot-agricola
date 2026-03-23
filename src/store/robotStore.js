@@ -36,6 +36,10 @@ export const useRobotStore = create((set, get) => ({
   navQueue: [],
   
   totalMissionPoints: 0,
+  
+  // NUEVO: Lista negra para bloquear misiones que el usuario ha decidido borrar
+  deletedSessionKeys: [],
+
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
 
   connectSocket: () => {
@@ -70,6 +74,12 @@ export const useRobotStore = create((set, get) => ({
 
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
+        // Filtramos por la lista negra antes de añadirlo
+        const key = newRecord.ejecucion_id ? `exec-${newRecord.ejecucion_id}` : `miss-${newRecord.nombre_mision}`;
+        if (state.deletedSessionKeys.includes(key)) {
+            return state; // Si está borrada, la ignoramos completamente
+        }
+
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
         const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
         return {
@@ -96,25 +106,32 @@ export const useRobotStore = create((set, get) => ({
       const datosRes = await axios.get(`${API_URL}/datos`);
       const validData = Array.isArray(datosRes.data) ? datosRes.data : [];
 
-      set((state) => ({
-        ...state,
-        battery: {
-          percentage: estadoRes.data.battery_percentage,
-          status: estadoRes.data.battery_status,
-          voltage: 12.5,
-          temperature: 30,
-          timeRemaining: "Calculando...",
-        },
-        position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
-        system: {
-            ...state.system,
-            speed: estadoRes.data.system_speed,
-            heading: estadoRes.data.system_heading,
-            status: estadoRes.data.system_status
-        },
-        agronomicData: validData,
-        pathHistory: validData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
-      }));
+      set((state) => {
+        // Al recargar desde la BD, purgamos las misiones borradas usando la lista negra
+        const filteredData = validData.filter(d => {
+            const key = d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`;
+            return !state.deletedSessionKeys.includes(key);
+        });
+
+        return {
+            battery: {
+            percentage: estadoRes.data.battery_percentage,
+            status: estadoRes.data.battery_status,
+            voltage: 12.5,
+            temperature: 30,
+            timeRemaining: "Calculando...",
+            },
+            position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
+            system: {
+                ...state.system,
+                speed: estadoRes.data.system_speed,
+                heading: estadoRes.data.system_heading,
+                status: estadoRes.data.system_status
+            },
+            agronomicData: filteredData,
+            pathHistory: filteredData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
+        };
+      });
     } catch (error) { console.error("Error carga inicial:", error); }
   },
 
@@ -177,7 +194,6 @@ export const useRobotStore = create((set, get) => ({
       if (socket?.connected) socket.emit("client:manual_control", velocity);
   },
 
-  // --- CONTROL DE MISIÓN ---
   togglePauseMission: () => {
     const { socket, system } = get();
     if (!socket?.connected) return;
@@ -192,13 +208,28 @@ export const useRobotStore = create((set, get) => ({
   cancelMission: () => {
     const { socket, system, clearSafeZone } = get();
     
-    // Forzamos la limpieza explícita de la zona
     clearSafeZone(); 
-
     set({ system: { ...system, mode: "MANUAL" } });
 
     if (socket?.connected) {
         socket.emit("client:cancel_mission");
     }
+  },
+
+  // Función CORREGIDA de borrado: Actualiza la lista negra para evitar reapariciones
+  deleteSessionData: (sessionKey) => {
+    set((state) => {
+      const newDeletedKeys = [...state.deletedSessionKeys, sessionKey];
+      
+      const filteredData = state.agronomicData.filter(d => {
+        const key = d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`;
+        return key !== sessionKey;
+      });
+      
+      return { 
+          agronomicData: filteredData,
+          deletedSessionKeys: newDeletedKeys 
+      };
+    });
   }
 }));
