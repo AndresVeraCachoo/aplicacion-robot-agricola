@@ -2,6 +2,7 @@
 
 .sidebar {
   width: 260px;
+  box-sizing: border-box; /* Evita que el borde sume píxeles extra */
   height: 100%;
   background-color: var(--primary-dark);
   color: #dcfce7;
@@ -12,23 +13,20 @@
   overflow-y: auto;
   z-index: 2000;
 
-  /* TRANSICIÓN SUAVE */
-  transition:
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Estado normal (abierto) */
+  margin-left: 0;
+
+  /* TRANSICIÓN DEFINITIVA: Al animar solo el margen, el Header es succionado a la misma velocidad sin lag */
+  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Estado cuando está CERRADA (Escritorio) */
 .sidebar.closed {
-  transform: translateX(-100%);
-  margin-left: -260px;
-  border-right-width: 0;
+  margin-left: -260px; /* Esconde el panel y estira el Header a la vez */
 }
 
 /* Estado cuando está ABIERTA */
 .sidebar.open {
-  transform: translateX(0);
   margin-left: 0;
 }
 
@@ -37,6 +35,7 @@
   display: none;
 }
 
+/* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -44,11 +43,18 @@
     left: 0;
     width: 280px;
     z-index: 2100;
+    /* En móvil, como el Sidebar flota por encima del Header, SÍ usamos transform por rendimiento */
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.closed {
     transform: translateX(-100%);
-    margin-left: 0; /* En móvil no necesitamos margin negativo */
+    margin-left: 0; /* Anulamos el margin en móvil */
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    margin-left: 0; /* Anulamos el margin en móvil */
   }
 
   .sidebar-overlay-bg {
@@ -58,7 +64,7 @@
     background-color: rgba(0, 0, 0, 0);
     z-index: 2050;
     pointer-events: none;
-    transition: background-color 0.4s ease;
+    transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar-overlay-bg.visible {
@@ -249,31 +255,4 @@ body.dark-mode .sidebar-footer {
 
 .logout-button:active {
   transform: scale(0.98);
-}
-
-/* --- RESPONSIVE MOBILE --- */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 80%; /* Sidebar más ancho en móvil para mejor tacto */
-    max-width: 300px;
-    height: 100vh;
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
-    border-right: none;
-  }
-
-  .sidebar-header-mobile {
-    display: flex;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .sidebar.closed {
-    transform: translateX(-100%);
-    margin-left: 0;
-    border-right-width: 0;
-  }
 }

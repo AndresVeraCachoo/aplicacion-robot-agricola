@@ -1,0 +1,33 @@
+name: SonarCloud Analysis
+
+# Esto le dice a GitHub que ejecute el análisis cuando haga push a la rama principal
+# o cuando abra un Pull Request.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scanner
+    runs-on: ubuntu-latest
+    steps:
+      # Clona tu repositorio en el servidor virtual de GitHub
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Necesario para que Sonar evalúe el código nuevo vs antiguo
+
+      # Instala Node.js para poder analizar JavaScript/React
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      # Ejecuta el escáner oficial de SonarCloud
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token automático de GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # El token que configurarás en la web

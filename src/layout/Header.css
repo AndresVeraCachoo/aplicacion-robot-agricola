@@ -1,4 +1,16 @@
 /* src/layout/Header.css */
+
+/* --- REGLA DE SINCRONIZACIÓN DEL CONTENEDOR --- */
+.main-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* ¡CRUCIAL! Hemos quitado la transición de aquí. 
+     Flexbox ajustará esto de manera instantánea y perfecta 
+     mientras el Sidebar mueve su margin-left */
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -7,9 +19,12 @@
   background-color: var(--background-app);
   border-bottom: 4px solid var(--primary-dark);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  position: sticky; /*Mantiene el encabezado arriba al hacer scroll*/
+  position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+  /* Solo animamos colores, NO el ancho. El ancho lo controla el Flexbox del padre */
   transition:
     background-color 0.3s,
     border-color 0.3s;
@@ -98,14 +113,14 @@
 
 /* Modo Oscuro */
 body.dark-mode .system-status-pill.online {
-  background-color: #064e3b; /* Verde esmeralda muy oscuro sólido */
-  color: #6ee7b7; /* Verde claro de alto contraste */
+  background-color: #064e3b;
+  color: #6ee7b7;
   border-color: #047857;
 }
 
 body.dark-mode .system-status-pill.offline {
-  background-color: #7f1d1d; /* Rojo muy oscuro sólido */
-  color: #fca5a5; /* Rojo claro de alto contraste */
+  background-color: #7f1d1d;
+  color: #fca5a5;
   border-color: #b91c1c;
 }
 
