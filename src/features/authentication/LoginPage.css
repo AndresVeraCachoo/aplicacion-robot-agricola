@@ -17,7 +17,7 @@
   text-align: center;
 }
 .login-box h2 {
-  margin-bottom: 30px; /* Aumentamos el margen inferior */
+  margin-bottom: 30px;
   color: var(--primary-darkest);
   font-size: 2em;
   border-bottom: 4px solid var(--primary-dark);
@@ -30,7 +30,7 @@
 .role-button-container {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Espacio entre los botones */
+  gap: 15px;
 }
 
 /* Estilo base para todos los botones de rol */
@@ -47,7 +47,7 @@
     background-color 0.3s,
     box-shadow 0.3s,
     transform 0.2s;
-  border-bottom: 4px solid var(--accent-green-dark); /* Borde inferior simulado */
+  border-bottom: 4px solid var(--accent-green-dark);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -66,7 +66,7 @@
   border-bottom-color: var(--primary-darkest);
 }
 .role-button.admin:hover {
-  background-color: #15803d; /* Un poco más claro que el borde */
+  background-color: #15803d;
 }
 
 .role-button.operator {
@@ -78,7 +78,7 @@
 }
 
 .role-button.user {
-  background-color: #0d9488; /* Un color 'teal' para diferenciar */
+  background-color: #0d9488;
   border-bottom-color: #0f766e;
 }
 .role-button.user:hover {
@@ -103,13 +103,16 @@
   color: var(--primary-darkest);
 }
 
+/* === ESTILOS DEL INPUT (MODO CLARO POR DEFECTO) === */
 .form-group input {
   width: 100%;
   padding: 10px;
-  box-sizing: border-box; /* Importante */
+  box-sizing: border-box;
   border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 1em;
+  background-color: #ffffff; /* Fondo blanco forzado */
+  color: #333333;
 }
 
 .form-group input:focus {
@@ -136,7 +139,7 @@
 }
 
 .login-error {
-  color: #d90429; /* Un rojo para errores */
+  color: #d90429;
   font-weight: bold;
   margin: 0;
   text-align: center;
@@ -164,4 +167,22 @@
 .login-lang-btn:hover {
   background-color: rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
+}
+
+/* MODO OSCURO GLOBAL PARA LA PÁGINA                         */
+
+body.dark-mode .login-box h2,
+body.dark-mode .form-group label {
+  color: var(--text-main);
+}
+
+/* Estilos del input en MODO OSCURO */
+body.dark-mode .form-group input {
+  background-color: var(--background-app);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+body.dark-mode .form-group input:focus {
+  border-color: var(--accent-green);
 }
