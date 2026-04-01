@@ -14,20 +14,20 @@ jobs:
     name: SonarCloud Scanner
     runs-on: ubuntu-latest
     steps:
-      # Clona tu repositorio en el servidor virtual de GitHub
-      - uses: actions/checkout@v3
+      # Clona mi repositorio usando el hash seguro
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           fetch-depth: 0 # Necesario para que Sonar evalúe el código nuevo vs antiguo
 
-      # Instala Node.js para poder analizar JavaScript/React
+      # Instala Node.js usando el hash seguro
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
         with:
           node-version: "22"
 
-      # Ejecuta el escáner oficial de SonarCloud
+      # Ejecuta el escáner oficial de SonarCloud usando el hash seguro
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@149a46a6f68bf262ff4bb285e6cb4dbb0ea971cc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token automático de GitHub
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # El token que configurarás en la web
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

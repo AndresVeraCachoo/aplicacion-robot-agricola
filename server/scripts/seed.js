@@ -1,7 +1,13 @@
 // server/scripts/seed.js
 import bcrypt from "bcrypt";
+import crypto from "node:crypto"; 
 import { pool } from "../config/db.js";
 import { generateCoveragePath } from "../simulator.js"; 
+
+// FIX SONAR S2245: Reemplazo seguro de Math.random()
+const getSecureRandom = () => {
+  return crypto.randomBytes(4).readUInt32LE(0) / (0xffffffff + 1);
+};
 
 export async function runSeed(maxRetries = 5, delayMs = 3000) {
   let retries = maxRetries;
@@ -83,7 +89,7 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
           coordinates: [coordsParaGeoJSON]
         });
 
-        // 🔥 LA MAGIA: Calculamos la ruta sin límites. Dejamos que haga los puntos que necesite.
+        // Calculamos la ruta sin límites. Dejamos que haga los puntos que necesite.
         const rutaPuntos = generateCoveragePath(mision.coords);
         
         // La duración y la batería gastada dependen de lo grande que haya sido la misión
@@ -106,11 +112,11 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
         rutaPuntos.forEach((pt, index) => {
           let lat = pt.lat;
           let lon = pt.lon;
-          let humedad = (50 + Math.random() * 20).toFixed(2);
-          let temp = (20 + Math.random() * 10).toFixed(2);
-          let ph = (6 + Math.random() * 1.5).toFixed(1);
-          let nitrogeno = (40 + Math.random() * 20).toFixed(2);
-          let radiacion = (400 + Math.random() * 200).toFixed(2);
+          let humedad = (50 + getSecureRandom() * 20).toFixed(2);
+          let temp = (20 + getSecureRandom() * 10).toFixed(2);
+          let ph = (6 + getSecureRandom() * 1.5).toFixed(1);
+          let nitrogeno = (40 + getSecureRandom() * 20).toFixed(2);
+          let radiacion = (400 + getSecureRandom() * 200).toFixed(2);
           
           let puntoDate = new Date(fechaInicio.getTime() + index * 90000).toISOString();
 
@@ -118,7 +124,7 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
         });
       }
 
-      // 6. DATOS MANUALES (Sin alterar)
+      // 6. DATOS MANUALES 
       console.log("🌱 [Seed] Generando puntos extra de recorrido manual libre...");
       const startLon = -3.69882;
       const startLat = 42.36317;
@@ -126,9 +132,9 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
       for (let i = 0; i < 40; i++) {
         let lon = startLon + (i * 0.0001);
         let lat = startLat - (i * 0.00005) + Math.sin(i * 0.5) * 0.0002; 
-        let humedad = (40 + Math.random() * 15).toFixed(2);
-        let temp = (22 + Math.random() * 8).toFixed(2);
-        let ph = (6.5 + Math.random() * 1).toFixed(1);
+        let humedad = (40 + getSecureRandom() * 15).toFixed(2);
+        let temp = (22 + getSecureRandom() * 8).toFixed(2);
+        let ph = (6.5 + getSecureRandom() * 1).toFixed(1);
         let manualDate = new Date(now.getTime() - (40 - i) * 60000).toISOString();
         
         valoresInsert.push(`(${lat}, ${lon}, '${manualDate}', ${humedad}, ${temp}, ${ph}, 50.00, 30.00, 40.00, 500, NULL)`);

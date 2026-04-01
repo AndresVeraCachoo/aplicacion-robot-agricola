@@ -30,14 +30,33 @@ import {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+
+const allowedOrigins = new Set([
+  'http://localhost:5173', // Para cuando desarrollas en tu PC
+  'http://localhost:8080', // Para cuando lo arrancas con Docker
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:8080'
+]);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origen (como Postman o curl) o las de la lista blanca
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Bloqueado por política CORS'));
+    }
   },
+  methods: ["GET", "POST", "PUT", "DELETE"]
+};
+
+// Aplicar CORS seguro a Socket.io
+const io = new Server(server, {
+  cors: corsOptions,
 });
 
-app.use(cors());
+// Aplicar CORS seguro a Express
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Endpoints

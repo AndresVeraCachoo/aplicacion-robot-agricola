@@ -15,6 +15,12 @@ import {
 import { useRobotStore } from "../store/robotStore";
 import "./EnergyPage.css";
 
+const getSecureRandom = () => {
+  const array = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(array);
+  return array[0] / (0xffffffff + 1);
+};
+
 // Función auxiliar para simular historial detallado de energía
 const generateEnergyHistory = () => {
   const data = [];
@@ -28,10 +34,10 @@ const generateEnergyHistory = () => {
     const isDay = hour > 6 && hour < 19;
 
     // Consumo base del robot
-    const consumption = Math.random() * 5 + 2;
+    const consumption = getSecureRandom() * 5 + 2;
     // Producción solar (0 de noche, alta a mediodía)
     const solarInput = isDay
-      ? Math.max(0, 15 - Math.abs(12 - hour) * 2) + Math.random() * 2
+      ? Math.max(0, 15 - Math.abs(12 - hour) * 2) + getSecureRandom() * 2
       : 0;
 
     level = Math.max(0, Math.min(100, level - consumption + solarInput));
@@ -57,7 +63,7 @@ function EnergyPage() {
 
   // Cálculos derivados para KPIs
   const currentSolarInput = isCharging
-    ? (Math.random() * 50 + 100).toFixed(0)
+    ? (getSecureRandom() * 50 + 100).toFixed(0)
     : 0;
   const currentAmps = (battery.voltage > 0 ? 120 / battery.voltage : 0).toFixed(
     1,

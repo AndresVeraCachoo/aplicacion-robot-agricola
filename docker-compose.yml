@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile
     container_name: robot_agricola_frontend
     ports:
-      - "8080:80"
+      - "8080:8080" # <-- CORREGIDO: Ambos en 8080 (Seguridad sin root)
     depends_on:
       - backend
     restart: unless-stopped

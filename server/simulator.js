@@ -1,4 +1,5 @@
 // server/simulator.js
+import crypto from "node:crypto"; 
 import { pool } from "./config/db.js";
 import * as turf from "@turf/turf";
 
@@ -30,6 +31,11 @@ let autoPath = [];
 let currentPathIndex = 0;
 
 let isPaused = false;
+
+// FIX SONAR S2245: Reemplazo seguro de Math.random()
+const getSecureRandom = () => {
+  return crypto.randomBytes(4).readUInt32LE(0) / (0xffffffff + 1);
+};
 
 const isPointInPolygon = (lat, lon, vs) => {
   let inside = false;
@@ -307,9 +313,9 @@ export const startRobotSimulation = (io) => {
     const phBase = 5 + (intensity * 3);
     const tempBase = 15 + (intensity * 20);
 
-    currentHumidity = Math.max(0, Math.min(100, humedadBase + (Math.random() * 4 - 2)));
-    currentPh = Math.max(4, Math.min(10, phBase + (Math.random() * 0.4 - 0.2)));
-    currentTemp = tempBase + (Math.random() * 1 - 0.5);
+    currentHumidity = Math.max(0, Math.min(100, humedadBase + (getSecureRandom() * 4 - 2)));
+    currentPh = Math.max(4, Math.min(10, phBase + (getSecureRandom() * 0.4 - 0.2)));
+    currentTemp = tempBase + (getSecureRandom() * 1 - 0.5);
 
     try {
       let activeExecutionId = null;
