@@ -1,5 +1,6 @@
 // src/pages/DataPage.jsx
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import { useRobotStore } from "../store/robotStore";
 import { useMissionStore } from "../store/missionStore";
@@ -10,6 +11,7 @@ import {
   Polygon,
   CircleMarker,
   Popup,
+  useMap,
 } from "react-leaflet";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -18,7 +20,10 @@ import "./DataPage.css";
 
 const formatDate = (iso, lng) =>
   iso
-    ? new Date(iso).toLocaleTimeString(lng || "es-ES", {
+    ? new Date(iso).toLocaleString(lng || "es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
@@ -35,6 +40,22 @@ function getPhClass(val) {
   if (ph > 8) return "ph-alkaline";
   return "ph-neutral";
 }
+
+// --- VIGILANTE PARA CENTRAR EL MAPA DINÁMICAMENTE ---
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, 17, { duration: 1.5 });
+    }
+  }, [center, map]);
+  return null;
+}
+
+// FIX SONAR (javascript:S6774): React components should validate prop types
+MapUpdater.propTypes = {
+  center: PropTypes.arrayOf(PropTypes.number).isRequired,
+};
 
 function DataPage() {
   const { t, i18n } = useTranslation();
@@ -128,6 +149,15 @@ function DataPage() {
       c[1],
       c[0],
     ]) || [];
+
+  // --- LÓGICA PARA CALCULAR EL CENTRO DEL MAPA ---
+  let mapCenter = [42.36317, -3.69882]; // Default a coordenadas iniciales
+
+  if (polygonCoords.length > 0) {
+    mapCenter = polygonCoords[0];
+  } else if (filteredMissionData.length > 0) {
+    mapCenter = [filteredMissionData[0].lat, filteredMissionData[0].lon];
+  }
 
   // Cálculos de Misión (Tiempo y Batería)
   let durationStr = "--";
@@ -400,7 +430,7 @@ function DataPage() {
                     className="btn-delete-session"
                     title="Eliminar del historial"
                     aria-label="Eliminar misión"
-                    type="button" /* Asegura su prioridad sobre forms */
+                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -460,14 +490,13 @@ function DataPage() {
 
                 <div className="mission-map-container">
                   <MapContainer
-                    center={
-                      polygonCoords.length > 0
-                        ? polygonCoords[0]
-                        : [42.36317, -3.69882]
-                    }
+                    center={mapCenter}
                     zoom={17}
                     style={{ height: "100%", width: "100%", zIndex: 1 }}
                   >
+                    {/* INYECCIÓN DEL VIGILANTE PARA CENTRAR DINÁMICAMENTE */}
+                    <MapUpdater center={mapCenter} />
+
                     <TileLayer
                       attribution="&copy; OpenStreetMap"
                       url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"

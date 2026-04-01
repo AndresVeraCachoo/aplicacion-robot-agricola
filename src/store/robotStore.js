@@ -80,7 +80,7 @@ export const useRobotStore = create((set, get) => ({
             return state; // Si está borrada, la ignoramos completamente
         }
 
-        const updatedData = [newRecord, ...state.agronomicData].slice(0, 50);
+        const updatedData = [newRecord, ...state.agronomicData].slice(0, 1000);
         const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
         return {
           agronomicData: updatedData,

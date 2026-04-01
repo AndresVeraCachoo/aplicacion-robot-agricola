@@ -10,6 +10,9 @@ import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import missionRoutes from "./routes/missionRoutes.js";
 
+// Importar la Semilla Inteligente
+import { runSeed } from "./scripts/seed.js";
+
 // Simulador
 import {
   startRobotSimulation,
@@ -75,7 +78,6 @@ io.on("connection", (socket) => {
     setNavigationTarget(data.lat, data.lon, data.clearQueue);
   });
 
-  // NUEVOS EVENTOS DE MISIÓN
   socket.on("client:pause_mission", () => {
     pauseSimulation();
   });
@@ -97,6 +99,14 @@ io.on("connection", (socket) => {
 startRobotSimulation(io);
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-});
+
+// EJECUTAR SEED Y LUEGO ARRANCAR EL SERVIDOR
+try {
+  await runSeed();
+  server.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  });
+} catch (err) {
+  console.error("❌ Arranque abortado por fallo crítico en la BD:", err.message);
+  process.exit(1); // Apagamos el contenedor para evitar falsos positivos
+}

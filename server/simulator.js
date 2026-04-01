@@ -4,7 +4,7 @@ import * as turf from "@turf/turf";
 
 const MOVEMENT_INTERVAL = 1000;
 const SENSOR_INTERVAL = 5000;
-const MAX_HISTORY_RECORDS = 50;
+const MAX_HISTORY_RECORDS = 1000;
 
 let currentLat = 42.36317;
 let currentLon = -3.69882;
@@ -42,7 +42,7 @@ const isPointInPolygon = (lat, lon, vs) => {
   return inside;
 };
 
-const generateCoveragePath = (zone) => {
+export const generateCoveragePath = (zone) => {
   try {
     if (!zone || zone.length < 3) return [];
     const finalPath = [];
