@@ -1,12 +1,25 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit"; 
 import { pool } from "../config/db.js";
+import { authenticateToken } from "../middlewares/auth.js";
 import "dotenv/config";
 
 const router = Router();
 
-router.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // Límite de 5 intentos
+  message: { error: "Demasiados intentos fallidos. Por favor, espera 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.body.name || req.ip;
+  }
+});
+
+router.post("/login", loginLimiter, async (req, res) => {
   const { name, password } = req.body;
   if (!name || !password) {
     return res.status(400).json({ error: "Nombre de usuario y contraseña requeridos" });
@@ -29,7 +42,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user.id, name: user.name, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "7d" } // <-- Tu acceso ininterrumpido de 7 días
     );
 
     res.json({
@@ -40,6 +53,10 @@ router.post("/login", async (req, res) => {
     console.error(err.message);
     res.status(500).json({ error: "Error en el servidor" });
   }
+});
+
+router.get("/verify", authenticateToken, (req, res) => {
+  res.json({ valid: true, user: req.user });
 });
 
 export default router;

@@ -231,11 +231,9 @@ const GeomanControls = ({ ignoreClickRef }) => {
     };
   }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate, t, i18n.language]);
 
-  // AQUI OCURRE LA MAGIA PARA BORRAR EL MAPA
   useEffect(() => {
     if (!map) return;
 
-    // Si la zona es nula o vacía (porque se canceló la misión), borramos los polígonos del mapa
     if (!safeZone || safeZone.length === 0) {
       map.eachLayer((l) => {
         if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
@@ -462,10 +460,12 @@ const ControlMap = () => {
         <GeomanControls ignoreClickRef={ignoreClickRef} />
         <CenterButton />
 
+        {/* ESCUDOS APLICADOS (pmIgnore={true}) EN PREVISUALIZACIONES */}
         {showMissionsPanel && hoveredMission && hoveredPolygon.length > 0 && (
           <>
             <Polygon
               positions={hoveredPolygon}
+              pmIgnore={true}
               pathOptions={{
                 color: "gray",
                 fillColor: "gray",
@@ -475,14 +475,17 @@ const ControlMap = () => {
             />
             <Polyline
               positions={hoveredZigZag}
+              pmIgnore={true}
               pathOptions={{ color: "#d1d5db", weight: 2, dashArray: "5,5" }}
             />
           </>
         )}
 
+        {/* ESCUDOS APLICADOS (pmIgnore={true}) EN EL ROBOT */}
         <Marker
           position={[position.lat, position.lon]}
           icon={createRobotArrowIcon(system.heading || 0)}
+          pmIgnore={true}
         >
           <Popup>
             AgriRobot
@@ -496,6 +499,7 @@ const ControlMap = () => {
           color="yellow"
           weight={2}
           opacity={0.6}
+          pmIgnore={true}
         />
 
         {fullQueuePath.length > 0 && (
@@ -505,11 +509,12 @@ const ControlMap = () => {
             weight={3}
             dashArray="10, 10"
             opacity={0.8}
+            pmIgnore={true}
           />
         )}
 
         {navTarget && (
-          <Marker position={[navTarget.lat, navTarget.lon]}>
+          <Marker position={[navTarget.lat, navTarget.lon]} pmIgnore={true}>
             <Popup>{t("control.currentTarget")}</Popup>
           </Marker>
         )}

@@ -3,6 +3,7 @@ import express from "express";
 import http from "node:http";
 import { Server } from "socket.io";
 import cors from "cors";
+import helmet from "helmet";
 
 // Rutas
 import authRoutes from "./routes/authRoutes.js";
@@ -29,35 +30,45 @@ import {
 } from "./simulator.js";
 
 const app = express();
+
+// <-- AÑADIDO: Crucial para que express-rate-limit vea las IPs reales detrás del proxy de Docker
+app.set('trust proxy', 1); 
+
 const server = http.createServer(app);
 
 const allowedOrigins = new Set([
-  'http://localhost:5173', // Para cuando desarrollas en tu PC
-  'http://localhost:8080', // Para cuando lo arrancas con Docker
+  'http://localhost:5173', 
+  'http://localhost:8080', 
   'http://127.0.0.1:5173',
   'http://127.0.0.1:8080'
 ]);
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir peticiones sin origen (como Postman o curl) o las de la lista blanca
     if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Bloqueado por política CORS'));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"]
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  optionsSuccessStatus: 200 
 };
 
-// Aplicar CORS seguro a Socket.io
 const io = new Server(server, {
   cors: corsOptions,
 });
 
-// Aplicar CORS seguro a Express
+app.use(helmet({
+  contentSecurityPolicy: false, 
+  crossOriginResourcePolicy: { policy: "cross-origin" } 
+}));
+
 app.use(cors(corsOptions));
-app.use(express.json());
+
+// 1. TAREA CERRADA: LÍMITE DE 1MB (Bomba JSON neutralizada)
+app.use(express.json({ limit: "1mb" }));
 
 // Endpoints
 app.use("/api/auth", authRoutes);
@@ -69,57 +80,26 @@ app.use("/api/missions", missionRoutes);
 io.on("connection", (socket) => {
   console.log("🟢 Cliente conectado:", socket.id);
 
-  socket.on("client:update_zone", (zone) => {
-    setSimulationZone(zone);
-  });
-
-  socket.on("client:clear_zone", () => {
-    clearSimulationZone();
-  });
-
-  socket.on("client:change_mode", (mode) => {
-    setRobotMode(mode);
-  });
-
-  socket.on("client:manual_control", (velocity) => {
-    setManualVelocity(velocity.x, velocity.y);
-  });
-
-  socket.on("client:set_speed_limit", (limit) => {
-    setSpeedLimit(limit);
-  });
-
-  socket.on("client:queue_point", (point) => {
-    queueNavPoint(point);
-  });
-
-  socket.on("client:navigate_to", (data) => {
-    setNavigationTarget(data.lat, data.lon, data.clearQueue);
-  });
-
-  socket.on("client:pause_mission", () => {
-    pauseSimulation();
-  });
-
-  socket.on("client:resume_mission", () => {
-    resumeSimulation();
-  });
-
-  socket.on("client:cancel_mission", () => {
-    cancelSimulation();
-  });
+  socket.on("client:update_zone", (zone) => setSimulationZone(zone));
+  socket.on("client:clear_zone", () => clearSimulationZone());
+  socket.on("client:change_mode", (mode) => setRobotMode(mode));
+  socket.on("client:manual_control", (velocity) => setManualVelocity(velocity.x, velocity.y));
+  socket.on("client:set_speed_limit", (limit) => setSpeedLimit(limit));
+  socket.on("client:queue_point", (point) => queueNavPoint(point));
+  socket.on("client:navigate_to", (data) => setNavigationTarget(data.lat, data.lon, data.clearQueue));
+  socket.on("client:pause_mission", () => pauseSimulation());
+  socket.on("client:resume_mission", () => resumeSimulation());
+  socket.on("client:cancel_mission", () => cancelSimulation());
 
   socket.on("disconnect", () => {
     console.log("🔴 Cliente desconectado:", socket.id);
   });
 });
 
-// Arrancar la simulación del robot
 startRobotSimulation(io);
 
 const PORT = process.env.PORT || 3001;
 
-// EJECUTAR SEED Y LUEGO ARRANCAR EL SERVIDOR
 try {
   await runSeed();
   server.listen(PORT, () => {
@@ -127,5 +107,5 @@ try {
   });
 } catch (err) {
   console.error("❌ Arranque abortado por fallo crítico en la BD:", err.message);
-  process.exit(1); // Apagamos el contenedor para evitar falsos positivos
+  process.exit(1);
 }

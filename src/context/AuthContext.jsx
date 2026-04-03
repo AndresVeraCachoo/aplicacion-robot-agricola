@@ -23,19 +23,34 @@ export function AuthProvider({ children }) {
   );
   const navigate = useNavigate();
 
+  // El Efecto Centinela (Para el arranque de la app)
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-      localStorage.setItem("token", token);
-      if (userRole) localStorage.setItem("userRole", userRole);
-      setIsLoggedIn(true);
-    } else {
-      delete axios.defaults.headers.common["Authorization"];
-      localStorage.removeItem("token");
-      localStorage.removeItem("userRole");
-      setIsLoggedIn(false);
-    }
-  }, [token, userRole]);
+    const verifyAuthStatus = async () => {
+      if (token) {
+        try {
+          axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+          await axios.get(`${API_URL}/auth/verify`);
+          setIsLoggedIn(true);
+        } catch (error) {
+          console.warn("Sesión caducada. Detalle:", error.message);
+          delete axios.defaults.headers.common["Authorization"];
+          localStorage.removeItem("token");
+          localStorage.removeItem("userRole");
+          setToken(null);
+          setUserRole(null);
+          setIsLoggedIn(false);
+          navigate("/login");
+        }
+      } else {
+        delete axios.defaults.headers.common["Authorization"];
+        localStorage.removeItem("token");
+        localStorage.removeItem("userRole");
+        setIsLoggedIn(false);
+      }
+    };
+
+    verifyAuthStatus();
+  }, [token, navigate]);
 
   const login = useCallback(
     async (name, password) => {
@@ -47,8 +62,13 @@ export function AuthProvider({ children }) {
 
         if (response.data.token) {
           const { token: newToken, user } = response.data;
+          localStorage.setItem("token", newToken);
+          localStorage.setItem("userRole", user.role);
+          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
+
           setToken(newToken);
           setUserRole(user.role);
+          setIsLoggedIn(true);
           navigate("/app");
           return { success: true };
         }
@@ -64,11 +84,42 @@ export function AuthProvider({ children }) {
   );
 
   const logout = useCallback(() => {
+    delete axios.defaults.headers.common["Authorization"];
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
     setToken(null);
     setUserRole(null);
     setIsLoggedIn(false);
     navigate("/login");
   }, [navigate]);
+
+  // 3. TAREA CERRADA: INTERCEPTOR AXIOS (El cazador de tokens caducados en vuelo)
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // Si el servidor responde 401 (No autorizado) o 403 (Prohibido)
+        if (
+          error.response &&
+          (error.response.status === 401 || error.response.status === 403)
+        ) {
+          const url = error.config.url || "";
+          // Ignoramos los endpoints de login y verify para evitar bucles de navegación
+          if (!url.includes("/auth/login") && !url.includes("/auth/verify")) {
+            console.warn(
+              "Interceptor: Token caducado detectado enviando petición. Cerrando sesión forzosamente...",
+            );
+            logout();
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [logout]);
 
   const contextValue = useMemo(
     () => ({ isLoggedIn, userRole, login, logout }),
