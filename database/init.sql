@@ -64,3 +64,13 @@ CREATE TABLE IF NOT EXISTS robot_datos (
     radiacion_solar DECIMAL(6, 2),
     ejecucion_id INT REFERENCES ejecuciones_mision (id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS historial_energia (
+    id SERIAL PRIMARY KEY,
+    "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    bateria_porcentaje DECIMAL(5, 2) NOT NULL,
+    estado VARCHAR(50) NOT NULL,
+    radiacion_solar DECIMAL(6, 2) DEFAULT 0,
+    energia_consumida DECIMAL(6, 2) DEFAULT 0,
+    energia_generada DECIMAL(6, 2) DEFAULT 0
+);

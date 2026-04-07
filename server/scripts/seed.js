@@ -2,7 +2,7 @@
 import bcrypt from "bcrypt";
 import crypto from "node:crypto"; 
 import { pool } from "../config/db.js";
-import { generateCoveragePath } from "../simulator.js"; 
+import { generateCoveragePath, calculateSolarRadiation } from "../simulator.js"; 
 
 // FIX SONAR S2245: Reemplazo seguro de Math.random()
 const getSecureRandom = () => {
@@ -14,7 +14,6 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
   
   while (retries > 0) {
     try {
-      // 1. Comprobar si ya hay datos
       const result = await pool.query("SELECT COUNT(*) FROM usuarios");
       const userCount = Number.parseInt(result.rows[0].count, 10);
 
@@ -25,7 +24,6 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
 
       console.log("🌱 [Seed] BD vacía detectada. Iniciando simulación de misiones 100% orgánicas...");
 
-      // 2. Crear Usuarios Dinámicamente
       const adminHash = await bcrypt.hash("admin123", 10);
       const operadorHash = await bcrypt.hash("operador123", 10);
       const usuarioHash = await bcrypt.hash("usuario123", 10);
@@ -37,65 +35,32 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
         ('usuario', $3, 'usuario')
       `, [adminHash, operadorHash, usuarioHash]);
 
-      // 3. Crear Estado del Robot (TOTALMENTE PARADO - Batería al 85%)
       await pool.query(`
         INSERT INTO robot_estado (battery_percentage, battery_status, battery_voltage, battery_temperature, battery_time_remaining, system_status, system_speed, system_heading, current_lat, current_lon)
         VALUES (85, 'IDLE', 24.10, 32.00, '5h 10m', 'IDLE', 0.00, 90, 42.36317, -3.69882)
       `);
 
-      // 4. DEFINICIÓN DE LAS 4 MISIONES
       const misionesDef = [
-        {
-          nombre: 'Misión Norte',
-          tipo: 'Triángulo',
-          diasAtras: 4,
-          hora: 10, minuto: 30,
-          coords: [[42.3647, -3.699], [42.3647, -3.698], [42.3652, -3.6985], [42.3647, -3.699]]
-        },
-        {
-          nombre: 'Misión Sur',
-          tipo: 'Cuadrado',
-          diasAtras: 3,
-          hora: 16, minuto: 15,
-          coords: [[42.3612, -3.699], [42.3612, -3.698], [42.3617, -3.698], [42.3617, -3.699], [42.3612, -3.699]]
-        },
-        {
-          nombre: 'Misión Este',
-          tipo: 'Pentágono Regular',
-          diasAtras: 2,
-          hora: 9, minuto: 0,
-          coords: [[42.3627, -3.6962], [42.3627, -3.6957], [42.3631, -3.6955], [42.3634, -3.696], [42.3631, -3.6965], [42.3627, -3.6962]]
-        },
-        {
-          nombre: 'Misión Oeste',
-          tipo: 'Hexágono Irregular',
-          diasAtras: 1,
-          hora: 12, minuto: 45,
-          coords: [[42.3627, -3.702], [42.3625, -3.7015], [42.3629, -3.701], [42.3634, -3.701], [42.3636, -3.7015], [42.3632, -3.702], [42.3627, -3.702]]
-        }
+        { nombre: 'Misión Norte', tipo: 'Triángulo', diasAtras: 4, hora: 10, minuto: 30, coords: [[42.3647, -3.699], [42.3647, -3.698], [42.3652, -3.6985], [42.3647, -3.699]] },
+        { nombre: 'Misión Sur', tipo: 'Cuadrado', diasAtras: 3, hora: 16, minuto: 15, coords: [[42.3612, -3.699], [42.3612, -3.698], [42.3617, -3.698], [42.3617, -3.699], [42.3612, -3.699]] },
+        { nombre: 'Misión Este', tipo: 'Pentágono Regular', diasAtras: 2, hora: 9, minuto: 0, coords: [[42.3627, -3.6962], [42.3627, -3.6957], [42.3631, -3.6955], [42.3634, -3.696], [42.3631, -3.6965], [42.3627, -3.6962]] },
+        { nombre: 'Misión Oeste', tipo: 'Hexágono Irregular', diasAtras: 1, hora: 12, minuto: 45, coords: [[42.3627, -3.702], [42.3625, -3.7015], [42.3629, -3.701], [42.3634, -3.701], [42.3636, -3.7015], [42.3632, -3.702], [42.3627, -3.702]] }
       ];
 
       let valoresInsert = [];
       const now = new Date();
 
-      // 5. PROCESAR CADA MISIÓN (Duración y puntos naturales)
       for (const mision of misionesDef) {
         const fechaInicio = new Date(now.getTime() - (mision.diasAtras * 24 * 60 * 60 * 1000));
         fechaInicio.setHours(mision.hora, mision.minuto, 0, 0);
 
         const coordsParaGeoJSON = mision.coords.map(c => [c[1], c[0]]);
-        const areaGeoJSON = JSON.stringify({
-          type: "Polygon",
-          coordinates: [coordsParaGeoJSON]
-        });
+        const areaGeoJSON = JSON.stringify({ type: "Polygon", coordinates: [coordsParaGeoJSON] });
 
-        // Calculamos la ruta sin límites. Dejamos que haga los puntos que necesite.
         const rutaPuntos = generateCoveragePath(mision.coords);
-        
-        // La duración y la batería gastada dependen de lo grande que haya sido la misión
         const duracionMilisegundos = rutaPuntos.length * 90000; 
         const fechaFin = new Date(fechaInicio.getTime() + duracionMilisegundos);
-        const bateriaGastada = Math.min(100, Math.ceil(rutaPuntos.length * 0.5)); // 0.5% por punto recorrido
+        const bateriaGastada = Math.min(100, Math.ceil(rutaPuntos.length * 0.5));
 
         const missionRes = await pool.query(`
           INSERT INTO misiones (nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, area_trabajo, fecha_creacion, fecha_programada)
@@ -116,15 +81,16 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
           let temp = (20 + getSecureRandom() * 10).toFixed(2);
           let ph = (6 + getSecureRandom() * 1.5).toFixed(1);
           let nitrogeno = (40 + getSecureRandom() * 20).toFixed(2);
-          let radiacion = (400 + getSecureRandom() * 200).toFixed(2);
+          let fosforo = (20 + getSecureRandom() * 15).toFixed(2);
+          let potasio = (100 + getSecureRandom() * 50).toFixed(2);
           
-          let puntoDate = new Date(fechaInicio.getTime() + index * 90000).toISOString();
+          let puntoDateObj = new Date(fechaInicio.getTime() + index * 90000);
+          let radiacion = calculateSolarRadiation(puntoDateObj).toFixed(2);
 
-          valoresInsert.push(`(${lat}, ${lon}, '${puntoDate}', ${humedad}, ${temp}, ${ph}, ${nitrogeno}, 30.00, 40.00, ${radiacion}, ${ejecucionId})`);
+          valoresInsert.push(`(${lat}, ${lon}, '${puntoDateObj.toISOString()}', ${humedad}, ${temp}, ${ph}, ${nitrogeno}, ${fosforo}, ${potasio}, ${radiacion}, ${ejecucionId})`);
         });
       }
 
-      // 6. DATOS MANUALES 
       console.log("🌱 [Seed] Generando puntos extra de recorrido manual libre...");
       const startLon = -3.69882;
       const startLat = 42.36317;
@@ -135,12 +101,16 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
         let humedad = (40 + getSecureRandom() * 15).toFixed(2);
         let temp = (22 + getSecureRandom() * 8).toFixed(2);
         let ph = (6.5 + getSecureRandom() * 1).toFixed(1);
-        let manualDate = new Date(now.getTime() - (40 - i) * 60000).toISOString();
+        let nitrogeno = (40 + getSecureRandom() * 20).toFixed(2);
+        let fosforo = (20 + getSecureRandom() * 15).toFixed(2);
+        let potasio = (100 + getSecureRandom() * 50).toFixed(2);
         
-        valoresInsert.push(`(${lat}, ${lon}, '${manualDate}', ${humedad}, ${temp}, ${ph}, 50.00, 30.00, 40.00, 500, NULL)`);
+        let manualDateObj = new Date(now.getTime() - (40 - i) * 60000);
+        let radiacion = calculateSolarRadiation(manualDateObj).toFixed(2);
+        
+        valoresInsert.push(`(${lat}, ${lon}, '${manualDateObj.toISOString()}', ${humedad}, ${temp}, ${ph}, ${nitrogeno}, ${fosforo}, ${potasio}, ${radiacion}, NULL)`);
       }
 
-      // 7. INYECTAR 
       console.log(`🌱 [Seed] Inyectando un total de ${valoresInsert.length} registros orgánicos...`);
       const insertQuery = `
         INSERT INTO robot_datos (lat, lon, "timestamp", humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar, ejecucion_id) 
@@ -148,7 +118,7 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
       `;
       await pool.query(insertQuery);
 
-      console.log("✅ [Seed] BD sembrada con éxito. Variedad de puntos lograda.");
+      console.log("✅ [Seed] BD sembrada con éxito.");
       return; 
 
     } catch (err) {
@@ -157,7 +127,7 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
         retries--;
         await new Promise(res => setTimeout(res, delayMs)); 
       } else {
-        console.error("❌ [Seed] Error de lógica al inyectar datos:", err);
+        console.error("❌ [Seed] Error al inyectar datos:", err);
         throw err; 
       }
     }

@@ -5,12 +5,13 @@ import * as turf from "@turf/turf";
 
 const MOVEMENT_INTERVAL = 1000;
 const SENSOR_INTERVAL = 5000;
+const ENERGY_LOG_INTERVAL = 5000; // Tick Engine para energía
 const MAX_HISTORY_RECORDS = 1000;
 
 let currentLat = 42.36317;
 let currentLon = -3.69882;
 let battery = 100;
-let isCharging = false;
+let isCharging = false; 
 let heading = 0;
 let speed = 0;
 
@@ -31,6 +32,10 @@ let autoPath = [];
 let currentPathIndex = 0;
 
 let isPaused = false;
+
+// Acumuladores de energía para el Tick Engine
+let accumulatedConsumed = 0;
+let accumulatedGenerated = 0;
 
 // FIX SONAR S2245: Reemplazo seguro de Math.random()
 const getSecureRandom = () => {
@@ -165,18 +170,58 @@ const calculateNextPosition = (lat, lon, speedFactor) => {
   return { nextLat: lat, nextLon: lon, dLat: 0, dLon: 0 };
 };
 
+// --- RADIACIÓN SOLAR DEPENDIENTE DE LA HORA ---
+export const calculateSolarRadiation = (dateObj) => {
+  const hour = dateObj.getHours() + (dateObj.getMinutes() / 60);
+  if (hour < 6 || hour > 20) return 0; // Noche = 0W
+  
+  const radiationWave = Math.sin(Math.PI * (hour - 6) / 14); 
+  const noiseFactor = 0.9 + (getSecureRandom() * 0.2); 
+  return Math.max(0, radiationWave * 1000 * noiseFactor);
+};
+
+// --- MOTOR FÍSICO DE BATERÍA  ---
 const updateBatteryState = () => {
+  const currentRadiation = calculateSolarRadiation(new Date());
+  let consumedThisTick = 0;
+  let generatedThisTick = 0;
+
   if (isCharging) {
-    battery += 5;
+    // Carga de emergencia súper rápida en base (5% por segundo)
+    generatedThisTick = 5; 
     speed = 0;
+    battery += generatedThisTick;
     if (battery >= 100) { 
       battery = 100; 
       isCharging = false; 
     }
   } else {
-    battery -= 0.5;
-    if (battery <= 10) isCharging = true;
+    // 1. Generación por Panel Solar (Acelerado: Pico 1000W = ~0.5% por segundo)
+    generatedThisTick = currentRadiation * 0.0005;
+
+    // 2. Consumo Energético (Acelerado)
+    if (isPaused) {
+      consumedThisTick = 0.1; // Electrónica base en pausa
+    } else {
+      consumedThisTick = 0.2; // Sensores y CPU activos
+      if (Number.parseFloat(speed) > 0) {
+        // Motores de tracción (Drena hasta un 1.2% por segundo a toda velocidad)
+        consumedThisTick += 0.5 + ((speedLimitPercent / 100) * 0.5);
+      }
+    }
+
+    battery = battery - consumedThisTick + generatedThisTick;
+    
+    // Si baja de 10, forzamos simulación de vuelta a base y carga de emergencia
+    if (battery <= 10) {
+      isCharging = true; 
+    }
   }
+
+  battery = Math.max(0, Math.min(100, battery));
+
+  accumulatedConsumed += consumedThisTick;
+  accumulatedGenerated += generatedThisTick;
 };
 
 const applyGeofencing = (cLat, cLon, nLat, nLon) => {
@@ -200,17 +245,13 @@ const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
 };
 
 export const setSpeedLimit = (limit) => { speedLimitPercent = limit; };
-
 export const queueNavPoint = (point) => { navQueue.push(point); };
-
 export const clearNavQueue = () => { navQueue = []; };
-
 export const setSimulationZone = (zone) => {
   safeZonePolygon = zone;
   autoPath = generateCoveragePath(zone);
   currentPathIndex = 0;
 };
-
 export const clearSimulationZone = () => {
   safeZonePolygon = null;
   autoPath = [];
@@ -236,7 +277,6 @@ export const setNavigationTarget = (lat, lon, clearQueue = false) => {
   controlMode = "NAVIGATING";
 };
 
-// --- CONTROLADORES DE MISIÓN ---
 export const pauseSimulation = () => {
   isPaused = true;
   speed = 0; 
@@ -250,10 +290,10 @@ export const resumeSimulation = () => {
 
 export const cancelSimulation = () => {
   isPaused = false;
-  safeZonePolygon = null; // Purga el polígono en el backend
+  safeZonePolygon = null; 
   autoPath = [];
   currentPathIndex = 0;
-  controlMode = "MANUAL"; // Forzamos manual
+  controlMode = "MANUAL"; 
   navTarget = null;
   navQueue = [];
   speed = 0;
@@ -261,8 +301,9 @@ export const cancelSimulation = () => {
 };
 
 export const startRobotSimulation = (io) => {
-  console.log("🤖 Simulador: ACTIVADO");
+  console.log("🤖 Simulador: ACTIVADO (Motor Energético Online - MODO TEST ACELERADO)");
 
+  // 1. BUCLE DE MOVIMIENTO (1 Segundo)
   setInterval(async () => {
     updateBatteryState();
 
@@ -302,8 +343,39 @@ export const startRobotSimulation = (io) => {
     } catch (error) { console.error("Error estado:", error.message); }
   }, MOVEMENT_INTERVAL);
 
+  // 2. BUCLE TICK ENGINE: HISTÓRICO DE ENERGÍA (5 Segundos)
   setInterval(async () => {
-    if (isCharging || isPaused) return;
+    const currentStatus = isPaused ? "PAUSED" : getSystemStatus(isCharging, speed);
+    const currentRadiation = calculateSolarRadiation(new Date());
+
+    const logConsumed = accumulatedConsumed;
+    const logGenerated = accumulatedGenerated;
+    accumulatedConsumed = 0; 
+    accumulatedGenerated = 0;
+
+    try {
+      await pool.query(
+        `INSERT INTO historial_energia (bateria_porcentaje, estado, radiacion_solar, energia_consumida, energia_generada) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          battery.toFixed(2), 
+          currentStatus, 
+          currentRadiation.toFixed(2), 
+          logConsumed.toFixed(4), 
+          logGenerated.toFixed(4)
+        ]
+      );
+      
+      await pool.query(`DELETE FROM historial_energia WHERE id NOT IN (SELECT id FROM historial_energia ORDER BY timestamp DESC LIMIT $1)`, [MAX_HISTORY_RECORDS]);
+
+    } catch (err) {
+      console.error("Error guardando Tick de Energía:", err.message);
+    }
+  }, ENERGY_LOG_INTERVAL);
+
+  // 3. BUCLE DE TELEMETRÍA AGRONÓMICA (5 Segundos)
+  setInterval(async () => {
+    if (isCharging || isPaused || Number.parseFloat(speed) === 0) return;
 
     const factorLat = Math.sin(currentLat * 15000);
     const factorLon = Math.cos(currentLon * 15000);
@@ -317,18 +389,21 @@ export const startRobotSimulation = (io) => {
     currentPh = Math.max(4, Math.min(10, phBase + (getSecureRandom() * 0.4 - 0.2)));
     currentTemp = tempBase + (getSecureRandom() * 1 - 0.5);
 
+    const currentNitrogen = 20 + (getSecureRandom() * 60);
+    const currentPhosphorus = 15 + (getSecureRandom() * 45);
+    const currentPotassium = 100 + (getSecureRandom() * 150);
+    const currentSolarRadiation = calculateSolarRadiation(new Date());
+
     try {
       let activeExecutionId = null;
       let activeMissionName = null;
 
       if (controlMode !== "MANUAL") {
         const activeMissionRes = await pool.query(`
-          SELECT e.id, m.nombre 
-          FROM ejecuciones_mision e
+          SELECT e.id, m.nombre FROM ejecuciones_mision e
           JOIN misiones m ON e.mision_id = m.id
           WHERE e.estado IN ('en_curso', 'ejecutando', 'activa')
-          ORDER BY e.id DESC 
-          LIMIT 1
+          ORDER BY e.id DESC LIMIT 1
         `);
         
         if (activeMissionRes.rows.length > 0) {
@@ -339,18 +414,16 @@ export const startRobotSimulation = (io) => {
 
       const newRecord = await pool.query(
         `INSERT INTO robot_datos (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar, ejecucion_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-        [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), 50, 30, 40, 500, activeExecutionId]
+        [currentLat, currentLon, currentHumidity.toFixed(1), currentTemp.toFixed(1), currentPh.toFixed(1), currentNitrogen.toFixed(2), currentPhosphorus.toFixed(2), currentPotassium.toFixed(2), currentSolarRadiation.toFixed(2), activeExecutionId]
       );
 
       if (io && newRecord.rows[0]) {
-        const emitData = {
-          ...newRecord.rows[0],
-          nombre_mision: activeMissionName 
-        };
-        io.emit("robot:new_data", emitData);
+        io.emit("robot:new_data", { ...newRecord.rows[0], nombre_mision: activeMissionName });
       }
       
       await pool.query(`DELETE FROM robot_datos WHERE id NOT IN (SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1)`, [MAX_HISTORY_RECORDS]);
-    } catch (error) { console.error("Error datos:", error.message); }
+    } catch (error) { 
+      console.error("Error datos:", error.message); 
+    }
   }, SENSOR_INTERVAL);
 };

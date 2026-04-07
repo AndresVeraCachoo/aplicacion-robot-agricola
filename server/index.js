@@ -60,8 +60,16 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
+// FIX SONAR S5728: CSP habilitado con directivas restrictivas para el origen
 app.use(helmet({
-  contentSecurityPolicy: false, 
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
   crossOriginResourcePolicy: { policy: "cross-origin" } 
 }));
 
