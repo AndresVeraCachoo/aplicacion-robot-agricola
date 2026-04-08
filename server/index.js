@@ -1,119 +1,80 @@
-// server/index.js
-import express from "express";
-import http from "node:http";
-import { Server } from "socket.io";
-import cors from "cors";
-import helmet from "helmet";
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
+import dotenv from 'dotenv';
 
-// Rutas
-import authRoutes from "./routes/authRoutes.js";
-import robotRoutes from "./routes/robotRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import missionRoutes from "./routes/missionRoutes.js";
-
-// Importar la Semilla Inteligente
-import { runSeed } from "./scripts/seed.js";
-
-// Simulador
-import {
-  startRobotSimulation,
-  setSimulationZone,
-  clearSimulationZone,
-  setRobotMode,
-  setManualVelocity,
-  setSpeedLimit,
-  queueNavPoint,
-  setNavigationTarget,
-  pauseSimulation,
-  resumeSimulation,
-  cancelSimulation
-} from "./simulator.js";
+dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: "*", methods: ["GET", "POST"] }
+});
 
-// <-- AÑADIDO: Crucial para que express-rate-limit vea las IPs reales detrás del proxy de Docker
-app.set('trust proxy', 1); 
+app.use(cors());
+app.use(express.json());
 
-const server = http.createServer(app);
-
-const allowedOrigins = new Set([
-  'http://localhost:5173', 
-  'http://localhost:8080', 
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:8080'
-]);
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Bloqueado por política CORS'));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  optionsSuccessStatus: 200 
+// --- ESTADO DEL ROBOT (Simulador) ---
+let robotState = {
+  id: "ROBOT-01",
+  bateria: 100,
+  posicion: { lat: 40.4167, lng: -3.7033 }, // Base de carga
+  estado: "DISPONIBLE",
+  misionActual: null
 };
 
-const io = new Server(server, {
-  cors: corsOptions,
+// --- RUTAS ---
+app.get('/api/robot', (req, res) => res.json(robotState));
+
+app.post('/api/auth/login', (req, res) => {
+  const { name, password } = req.body;
+  // Login simple para desarrollo
+  if (name === "admin" && password === "admin") {
+    return res.json({ 
+      token: "fake-jwt-token", 
+      user: { name: "Admin", role: "ADMIN" } 
+    });
+  }
+  res.status(401).json({ error: "Credenciales inválidas" });
 });
 
-// FIX SONAR S5728: CSP habilitado con directivas restrictivas para el origen
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
-  },
-  crossOriginResourcePolicy: { policy: "cross-origin" } 
-}));
+app.get('/api/auth/verify', (req, res) => res.json({ valid: true }));
 
-app.use(cors(corsOptions));
+app.get('/api/missions', (req, res) => {
+  res.json([
+    { id: 1, nombre: "Ruta Olivos Norte", puntos: [] },
+    { id: 2, nombre: "Cosecha Sector B", puntos: [] }
+  ]);
+});
 
-// 1. TAREA CERRADA: LÍMITE DE 1MB (Bomba JSON neutralizada)
-app.use(express.json({ limit: "1mb" }));
+// --- LÓGICA DEL SOCKET Y SIMULACIÓN ---
+io.on('connection', (socket) => {
+  console.log('🟢 Cliente conectado:', socket.id);
+  
+  socket.emit('robot_update', robotState);
 
-// Endpoints
-app.use("/api/auth", authRoutes);
-app.use("/api/robot", robotRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/missions", missionRoutes);
-
-// Manejo de WebSockets
-io.on("connection", (socket) => {
-  console.log("🟢 Cliente conectado:", socket.id);
-
-  socket.on("client:update_zone", (zone) => setSimulationZone(zone));
-  socket.on("client:clear_zone", () => clearSimulationZone());
-  socket.on("client:change_mode", (mode) => setRobotMode(mode));
-  socket.on("client:manual_control", (velocity) => setManualVelocity(velocity.x, velocity.y));
-  socket.on("client:set_speed_limit", (limit) => setSpeedLimit(limit));
-  socket.on("client:queue_point", (point) => queueNavPoint(point));
-  socket.on("client:navigate_to", (data) => setNavigationTarget(data.lat, data.lon, data.clearQueue));
-  socket.on("client:pause_mission", () => pauseSimulation());
-  socket.on("client:resume_mission", () => resumeSimulation());
-  socket.on("client:cancel_mission", () => cancelSimulation());
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Cliente desconectado:", socket.id);
+  socket.on('manual_control', (data) => {
+    // Lógica simple de movimiento manual
+    robotState.posicion.lat += data.dy || 0;
+    robotState.posicion.lng += data.dx || 0;
+    robotState.bateria -= 0.01;
+    io.emit('robot_update', robotState);
   });
+
+  socket.on('disconnect', () => console.log('🔴 Cliente desconectado'));
 });
 
-startRobotSimulation(io);
+// Loop del simulador (Batería y movimiento autónomo básico)
+setInterval(() => {
+  if (robotState.estado === "EJECUTANDO") {
+    robotState.bateria -= 0.05;
+    if (robotState.bateria <= 0) robotState.bateria = 0;
+    io.emit('robot_update', robotState);
+  }
+}, 2000);
 
 const PORT = process.env.PORT || 3001;
-
-try {
-  await runSeed();
-  server.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  });
-} catch (err) {
-  console.error("❌ Arranque abortado por fallo crítico en la BD:", err.message);
-  process.exit(1);
-}
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Servidor en http://localhost:${PORT}`);
+});

@@ -16,10 +16,29 @@ import ControlPage from "./pages/ControlPage";
 import "./App.css";
 
 function ProtectedRoute({ children }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isLoading } = useAuth();
+
+  // FIX: Evita el Login Fantasma esperando a que se lea el localStorage
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          color: "white",
+        }}
+      >
+        Verificando sesión segura...
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
+
   return children;
 }
 

@@ -269,6 +269,15 @@ GeomanControls.propTypes = {
   ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
 };
 
+// ICONO DE LA BASE DE CARGA
+const baseIcon = new L.DivIcon({
+  className: "base-station-icon",
+  html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);">⚡</div>`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -20],
+});
+
 const createRobotArrowIcon = (heading) =>
   new L.DivIcon({
     className: "robot-arrow-icon",
@@ -480,6 +489,11 @@ const ControlMap = () => {
             />
           </>
         )}
+
+        {/* BASE DE CARGA */}
+        <Marker position={[42.36317, -3.69882]} icon={baseIcon} pmIgnore={true}>
+          <Popup>{t("control.baseStation", "Base de Carga (Home)")}</Popup>
+        </Marker>
 
         {/* ESCUDOS APLICADOS (pmIgnore={true}) EN EL ROBOT */}
         <Marker

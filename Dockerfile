@@ -12,13 +12,17 @@ COPY . .
 
 RUN npm run build
 
-# 1. Usamos la imagen oficial de Nginx SIN privilegios de root (Fix S6471)
+# 1. Usamos la imagen oficial de Nginx SIN privilegios de root
 FROM nginxinc/nginx-unprivileged:alpine
 
-# 2. Copiamos la build
+# 2. ELIMINAR configuración por defecto y COPIAR la profesional
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 3. Copiamos la build generada por Vite
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 3. Exponemos el puerto 8080 (los puertos por debajo de 1024 requieren root)
+# 4. Exponemos el puerto definido en tu docker-compose.yml
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

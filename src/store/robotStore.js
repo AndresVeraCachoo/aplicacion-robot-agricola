@@ -37,7 +37,7 @@ export const useRobotStore = create((set, get) => ({
   
   totalMissionPoints: 0,
   
-  // NUEVO: Lista negra para bloquear misiones que el usuario ha decidido borrar
+  // Lista negra para bloquear misiones que el usuario ha decidido borrar
   deletedSessionKeys: [],
 
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
@@ -102,8 +102,13 @@ export const useRobotStore = create((set, get) => ({
 
   fetchInitialData: async () => {
     try {
-      const estadoRes = await axios.get(`${API_URL}/estado`);
-      const datosRes = await axios.get(`${API_URL}/datos`);
+      // FIX F5: Extraemos el token y preparamos las cabeceras de autorización
+      const token = localStorage.getItem("token");
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+      // Inyectamos la configuración con el token en las peticiones Axios
+      const estadoRes = await axios.get(`${API_URL}/estado`, config);
+      const datosRes = await axios.get(`${API_URL}/datos`, config);
       const validData = Array.isArray(datosRes.data) ? datosRes.data : [];
 
       set((state) => {
@@ -132,7 +137,9 @@ export const useRobotStore = create((set, get) => ({
             pathHistory: filteredData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
         };
       });
-    } catch (error) { console.error("Error carga inicial:", error); }
+    } catch (error) { 
+      console.error("Error carga inicial:", error); 
+    }
   },
 
   setSpeedLimit: (limit) => {

@@ -20,14 +20,13 @@ function MainLayout() {
     disconnectSocket,
     isConnected,
     system,
-    battery,
   } = useRobotStore();
 
   const { addToast } = useToast();
 
-  // Refs para evitar notificaciones iniciales falsas
   const lastEmergencyState = useRef(system.emergencyStop);
-  const batteryAlertFired = useRef(false);
+  const rtlAlertFired = useRef(false);
+  const connectionAlertFired = useRef(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -35,24 +34,21 @@ function MainLayout() {
     return () => disconnectSocket();
   }, [fetchInitialData, connectSocket, disconnectSocket]);
 
-  // Asegúrate de definir esta referencia arriba junto a las otras (lastEmergencyState, etc.)
-  const connectionAlertFired = useRef(false);
-
-  // 1. Notificación de Conexión (ARREGALDA)
+  // 1. Notificación de Conexión
   useEffect(() => {
-    // Solo avisa si está conectado Y si no ha avisado antes
     if (isConnected && !connectionAlertFired.current) {
-      addToast(t("notifications.connectionSuccess"), "success");
+      addToast(
+        t("notifications.connectionSuccess", "Conectado al Robot Agrícola"),
+        "success",
+      );
       connectionAlertFired.current = true;
     } else if (!isConnected) {
-      // Si se desconecta, reseteamos el seguro para que avise la próxima vez
       connectionAlertFired.current = false;
     }
   }, [isConnected, addToast, t]);
 
   // 2. Vigilancia de PARADA DE EMERGENCIA
   useEffect(() => {
-    // SEGURO: Si no estamos conectados, solo sincronizamos el estado en silencio
     if (!isConnected) {
       lastEmergencyState.current = system.emergencyStop;
       return;
@@ -60,40 +56,42 @@ function MainLayout() {
 
     if (system.emergencyStop !== lastEmergencyState.current) {
       if (system.emergencyStop) {
-        addToast(t("notifications.emergencyActive"), "error");
+        addToast(
+          t("notifications.emergencyActive", "Parada de Emergencia Activada"),
+          "error",
+        );
       } else {
-        addToast(t("notifications.systemReady"), "success");
+        addToast(
+          t("notifications.systemReady", "Sistemas en Línea"),
+          "success",
+        );
       }
       lastEmergencyState.current = system.emergencyStop;
     }
   }, [system.emergencyStop, isConnected, addToast, t]);
 
-  // 3. Vigilancia de BATERÍA BAJA
+  // 3. Vigilancia de BATERÍA Y RTL (INTELIGENTE)
   useEffect(() => {
-    // SEGURO: Evitar falsos positivos cuando arranca en 0% o no hay conexión
-    if (
-      !isConnected ||
-      battery.percentage === 0 ||
-      battery.percentage === null
-    ) {
-      return;
+    if (!isConnected) return;
+
+    // Si el estado cambia a RTL_ACTIVE (Retorno a la Base)
+    if (system.status === "RTL_ACTIVE" && !rtlAlertFired.current) {
+      // Notificamos al agricultor
+      addToast(
+        t(
+          "notifications.rtlActive",
+          "Batería justa. Volviendo a base automáticamente para recargar.",
+        ),
+        "warning",
+      );
+      rtlAlertFired.current = true;
     }
 
-    // Si baja del 20% y no hemos avisado aún
-    if (
-      battery.percentage <= 20 &&
-      !batteryAlertFired.current &&
-      battery.status !== "CHARGING"
-    ) {
-      addToast(t("notifications.batteryLow"), "warning");
-      batteryAlertFired.current = true;
+    // Resetear el seguro cuando el robot ya no esté volviendo a la base (cuando llegue a CHARGING o pase a MANUAL/IDLE)
+    if (system.status !== "RTL_ACTIVE") {
+      rtlAlertFired.current = false;
     }
-
-    // Resetear el aviso si se pone a cargar o sube la batería
-    if (battery.percentage > 25 || battery.status === "CHARGING") {
-      batteryAlertFired.current = false;
-    }
-  }, [battery.percentage, battery.status, isConnected, addToast, t]);
+  }, [system.status, isConnected, addToast, t]);
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -108,7 +106,7 @@ function MainLayout() {
         <button
           className="sidebar-overlay"
           onClick={toggleSidebar}
-          aria-label={t("modal.close")}
+          aria-label={t("modal.close", "Cerrar")}
           style={{ border: "none", padding: 0 }}
         ></button>
       )}

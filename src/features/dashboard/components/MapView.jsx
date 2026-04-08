@@ -22,32 +22,145 @@ import { useToast } from "../../../context/ToastContext.jsx";
 import FieldDataOverlay from "./FieldDataOverlay.jsx";
 import "./MapView.css";
 
+// --- Constantes ---
+const BASE_STATION_COORDS = [42.36317, -3.69882];
+const DEFAULT_COORDS = [42.3525, -3.6845];
+
+// FIX SONAR: Extraído del render para evitar recreaciones en memoria
+const baseStationIcon = L.divIcon({
+  html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.4);">⚡</div>`,
+  className: "base-marker-icon",
+  iconSize: [45, 45],
+  iconAnchor: [22, 22],
+  zIndexOffset: -100,
+});
+
+const getRobotIcon = (heading) => {
+  return L.divIcon({
+    html: `<img src="/robot-arrow.svg" style="transform: rotate(${heading || 0}deg); width: 100%; height: 100%;" />`,
+    className: "robot-marker-icon",
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+};
+
 // --- Funciones Auxiliares ---
 
 const isPointInPolygon = (point, vs) => {
-  const x = point[0],
-    y = point[1];
+  // FIX SONAR S1222: Declaraciones de variables separadas
+  const x = point[0];
+  const y = point[1];
   let inside = false;
+
   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-    const xi = vs[i][0],
-      yi = vs[i][1];
-    const xj = vs[j][0],
-      yj = vs[j][1];
+    const xi = vs[i][0];
+    const yi = vs[i][1];
+    const xj = vs[j][0];
+    const yj = vs[j][1];
+
     const intersect =
       yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
+    // FIX SONAR S2681: Uso de llaves obligatorio
+    if (intersect) {
+      inside = !inside;
+    }
   }
   return inside;
 };
 
 const getColorByPH = (phVal) => {
   const ph = Number(phVal);
-  if (ph < 6) return "#ef4444";
-  if (ph > 7.5) return "#3b82f6";
+  if (ph < 6) {
+    return "#ef4444";
+  }
+  if (ph > 7.5) {
+    return "#3b82f6";
+  }
   return "#22c55e";
 };
 
+// FIX SONAR S3776: Extraer la reducción de datos para bajar la Complejidad Cognitiva
+const calculateZoneStats = (safeZone, agronomicData) => {
+  if (!safeZone || agronomicData.length === 0) {
+    return null;
+  }
+
+  const pointsInZone = agronomicData.filter((p) => {
+    if (!p.lat || !p.lon) {
+      return false;
+    }
+    return isPointInPolygon([Number(p.lat), Number(p.lon)], safeZone);
+  });
+
+  if (pointsInZone.length === 0) {
+    return null;
+  }
+
+  const sum = pointsInZone.reduce(
+    (acc, p) => ({
+      ph: acc.ph + Number(p.ph),
+      hum: acc.hum + Number(p.humedad),
+      temp: acc.temp + Number(p.temperatura_suelo),
+      n: acc.n + Number(p.nitrogeno),
+      p: acc.p + Number(p.fosforo),
+      k: acc.k + Number(p.potasio),
+    }),
+    { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 },
+  );
+
+  const count = pointsInZone.length;
+  return {
+    count,
+    avgPh: (sum.ph / count).toFixed(1),
+    avgHum: (sum.hum / count).toFixed(0),
+    avgTemp: (sum.temp / count).toFixed(1),
+    avgN: (sum.n / count).toFixed(0),
+    avgP: (sum.p / count).toFixed(0),
+    avgK: (sum.k / count).toFixed(0),
+  };
+};
+
 // --- Subcomponentes ---
+
+// FIX SONAR S836: Extraer el marcador a un componente evita crear funciones inline en los bucles map
+function SampleMarker({ sample, isVisible, onClick }) {
+  if (!sample.lat || !sample.lon) {
+    return null;
+  }
+
+  const handleClick = (e) => {
+    L.DomEvent.stopPropagation(e);
+    if (isVisible) {
+      onClick(sample);
+    }
+  };
+
+  return (
+    <CircleMarker
+      center={[sample.lat, sample.lon]}
+      radius={isVisible ? 6 : 2}
+      pathOptions={{
+        color: "white",
+        weight: 1,
+        fillColor: getColorByPH(sample.ph),
+        fillOpacity: isVisible ? 0.9 : 0.1,
+      }}
+      eventHandlers={{ click: handleClick }}
+    >
+      {isVisible && (
+        <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+          <span>pH: {sample.ph}</span>
+        </Tooltip>
+      )}
+    </CircleMarker>
+  );
+}
+
+SampleMarker.propTypes = {
+  sample: PropTypes.object.isRequired,
+  isVisible: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
 
 function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
   const [points, setPoints] = useState([]);
@@ -78,7 +191,9 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
 
   useMapEvents({
     click(e) {
-      if (!isDrawing) return;
+      if (!isDrawing) {
+        return;
+      }
       const newPoint = [e.latlng.lat, e.latlng.lng];
       if (points.length >= 3) {
         const firstPoint = points[0];
@@ -92,11 +207,15 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
       setPoints((prev) => [...prev, newPoint]);
     },
     mousemove(e) {
-      if (isDrawing) setMousePos([e.latlng.lat, e.latlng.lng]);
+      if (isDrawing) {
+        setMousePos([e.latlng.lat, e.latlng.lng]);
+      }
     },
   });
 
-  if (!isDrawing || points.length === 0) return null;
+  if (!isDrawing || points.length === 0) {
+    return null;
+  }
 
   const previewPositions = mousePos ? [...points, mousePos] : points;
 
@@ -149,20 +268,17 @@ function CenterButtonInternal() {
   const map = useMap();
   const position = useRobotStore((state) => state.position);
 
-  const centerView = () => {
+  const centerView = (e) => {
+    e.stopPropagation();
     if (position.lat && position.lon) {
-      const currentPosition = [position.lat, position.lon];
-      map.setView(currentPosition, 18);
+      map.setView([position.lat, position.lon], 18);
     }
   };
 
   return (
     <button
       type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        centerView();
-      }}
+      onClick={centerView}
       className="center-map-button"
       title={t("control.centerRobot")}
     >
@@ -178,6 +294,7 @@ function MapView() {
   const position = useRobotStore((state) => state.position);
   const pathHistory = useRobotStore((state) => state.pathHistory);
   const heading = useRobotStore((state) => state.system.heading);
+
   const agronomicData = useRobotStore((state) => {
     const data = state.agronomicData;
     return Array.isArray(data) ? data : [];
@@ -192,55 +309,19 @@ function MapView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastClickedCoords, setLastClickedCoords] = useState(null);
   const [showZoneSummary, setShowZoneSummary] = useState(false);
-
   const [selectedMetric, setSelectedMetric] = useState("none");
 
   const initialPosition =
     position.lat && position.lon
       ? [position.lat, position.lon]
-      : [42.3525, -3.6845];
+      : DEFAULT_COORDS;
   const pathCoords = pathHistory.map((p) => [p.lat, p.lon]);
 
-  const robotIcon = L.divIcon({
-    html: `<img src="/robot-arrow.svg" style="transform: rotate(${
-      heading || 0
-    }deg); width: 100%; height: 100%;" />`,
-    className: "robot-marker-icon",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
-
-  const zoneStats = useMemo(() => {
-    if (!safeZone || agronomicData.length === 0) return null;
-    const pointsInZone = agronomicData.filter(
-      (p) =>
-        p.lat &&
-        p.lon &&
-        isPointInPolygon([Number(p.lat), Number(p.lon)], safeZone),
-    );
-    if (pointsInZone.length === 0) return null;
-    const sum = pointsInZone.reduce(
-      (acc, p) => ({
-        ph: acc.ph + Number(p.ph),
-        hum: acc.hum + Number(p.humedad),
-        temp: acc.temp + Number(p.temperatura_suelo),
-        n: acc.n + Number(p.nitrogeno),
-        p: acc.p + Number(p.fosforo),
-        k: acc.k + Number(p.potasio),
-      }),
-      { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 },
-    );
-    const count = pointsInZone.length;
-    return {
-      count,
-      avgPh: (sum.ph / count).toFixed(1),
-      avgHum: (sum.hum / count).toFixed(0),
-      avgTemp: (sum.temp / count).toFixed(1),
-      avgN: (sum.n / count).toFixed(0),
-      avgP: (sum.p / count).toFixed(0),
-      avgK: (sum.k / count).toFixed(0),
-    };
-  }, [safeZone, agronomicData]);
+  // FIX SONAR: Memoización limpia y extraída
+  const zoneStats = useMemo(
+    () => calculateZoneStats(safeZone, agronomicData),
+    [safeZone, agronomicData],
+  );
 
   const handleStartDrawing = () => {
     setIsDrawingZone(true);
@@ -290,8 +371,17 @@ function MapView() {
   };
 
   const isInsideZone = (lat, lon) => {
-    if (!safeZone) return true;
+    if (!safeZone) {
+      return true;
+    }
     return isPointInPolygon([lat, lon], safeZone);
+  };
+
+  const handlePolygonClick = (e) => {
+    L.DomEvent.stopPropagation(e);
+    if (zoneStats) {
+      setShowZoneSummary(true);
+    }
   };
 
   return (
@@ -330,23 +420,22 @@ function MapView() {
               fillOpacity: 0.15,
               dashArray: "5, 10",
             }}
-            eventHandlers={{
-              click: (e) => {
-                L.DomEvent.stopPropagation(e);
-                if (zoneStats) setShowZoneSummary(true);
-              },
-            }}
+            eventHandlers={{ click: handlePolygonClick }}
           />
         )}
 
-        <Marker position={initialPosition} icon={robotIcon} />
+        {/* MARCADOR DE LA BASE DE CARGA */}
+        <Marker position={BASE_STATION_COORDS} icon={baseStationIcon} />
+
+        {/* MARCADOR DEL ROBOT */}
+        <Marker position={initialPosition} icon={getRobotIcon(heading)} />
+
         <Polyline
           pathOptions={{ color: "cyan", weight: 3, opacity: 0.7 }}
           positions={pathCoords}
         />
 
         {agronomicData.map((sample, index) => {
-          if (!sample.lat || !sample.lon) return null;
           const isVisible = isInsideZone(
             Number(sample.lat),
             Number(sample.lon),
@@ -356,29 +445,12 @@ function MapView() {
             : `sample-idx-${index}`;
 
           return (
-            <CircleMarker
+            <SampleMarker
               key={markerKey}
-              center={[sample.lat, sample.lon]}
-              radius={isVisible ? 6 : 2}
-              pathOptions={{
-                color: "white",
-                weight: 1,
-                fillColor: getColorByPH(sample.ph),
-                fillOpacity: isVisible ? 0.9 : 0.1,
-              }}
-              eventHandlers={{
-                click: (e) => {
-                  L.DomEvent.stopPropagation(e);
-                  if (isVisible) handleMarkerClick(sample);
-                },
-              }}
-            >
-              {isVisible && (
-                <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                  <span>pH: {sample.ph}</span>
-                </Tooltip>
-              )}
-            </CircleMarker>
+              sample={sample}
+              isVisible={isVisible}
+              onClick={handleMarkerClick}
+            />
           );
         })}
 
