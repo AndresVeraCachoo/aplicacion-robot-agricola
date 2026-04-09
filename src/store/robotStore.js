@@ -10,12 +10,16 @@ export const useRobotStore = create((set, get) => ({
   socket: null, 
   isConnected: false,
   
+  // --- THE ENTERPRISE WAY: Ampliamos el modelo de la batería ---
   battery: {
     percentage: 0,
-    status: "IDLE",
+    status: "IDLE", // Solo "IDLE" o "CHARGING" (Físico)
     voltage: 0,
     temperature: 0,
     timeRemaining: "...",
+    solarInput: 0,   // Energía que entra del sol (W)
+    consumption: 0,  // Energía que gastan los motores/cerebro (W)
+    netPower: 0,     // Balance neto: solarInput - consumption
   },
   
   system: {
@@ -36,8 +40,6 @@ export const useRobotStore = create((set, get) => ({
   navQueue: [],
   
   totalMissionPoints: 0,
-  
-  // Lista negra para bloquear misiones que el usuario ha decidido borrar
   deletedSessionKeys: [],
 
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
@@ -58,26 +60,42 @@ export const useRobotStore = create((set, get) => ({
       set({ isConnected: false });
     });
 
+    // --- RECEPCIÓN DE TELEMETRÍA EN VIVO ---
     newSocket.on("robot:status", (data) => {
-      set((state) => ({
-        battery: { ...state.battery, ...data.battery },
-        position: data.position,
-        system: { 
+      set((state) => {
+        // Extraemos los datos crudos que envíe el backend
+        const newBatteryData = data.battery || {};
+        
+        // Mantenemos los datos anteriores si el backend omite alguno
+        const currentSolar = newBatteryData.solarInput ?? state.battery.solarInput;
+        const currentCons = newBatteryData.consumption ?? state.battery.consumption;
+        
+        // CÁLCULO DEL BALANCE NETO EN TIEMPO REAL
+        const calculatedNetPower = currentSolar - currentCons;
+
+        return {
+          battery: { 
+            ...state.battery, 
+            ...newBatteryData,
+            netPower: calculatedNetPower 
+          },
+          position: data.position,
+          system: { 
             ...state.system, 
             ...data.system,
-            speedLimit: data.system.speedLimit ?? state.system.speedLimit
-        },
-        navTarget: data.system.target || null,
-        navQueue: data.system.queue || []
-      }));
+            speedLimit: data.system?.speedLimit ?? state.system.speedLimit
+          },
+          navTarget: data.system?.target || null,
+          navQueue: data.system?.queue || []
+        };
+      });
     });
 
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
-        // Filtramos por la lista negra antes de añadirlo
         const key = newRecord.ejecucion_id ? `exec-${newRecord.ejecucion_id}` : `miss-${newRecord.nombre_mision}`;
         if (state.deletedSessionKeys.includes(key)) {
-            return state; // Si está borrada, la ignoramos completamente
+            return state; 
         }
 
         const updatedData = [newRecord, ...state.agronomicData].slice(0, 1000);
@@ -102,17 +120,14 @@ export const useRobotStore = create((set, get) => ({
 
   fetchInitialData: async () => {
     try {
-      // FIX F5: Extraemos el token y preparamos las cabeceras de autorización
       const token = localStorage.getItem("token");
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      // Inyectamos la configuración con el token en las peticiones Axios
       const estadoRes = await axios.get(`${API_URL}/estado`, config);
       const datosRes = await axios.get(`${API_URL}/datos`, config);
       const validData = Array.isArray(datosRes.data) ? datosRes.data : [];
 
       set((state) => {
-        // Al recargar desde la BD, purgamos las misiones borradas usando la lista negra
         const filteredData = validData.filter(d => {
             const key = d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`;
             return !state.deletedSessionKeys.includes(key);
@@ -120,11 +135,15 @@ export const useRobotStore = create((set, get) => ({
 
         return {
             battery: {
-            percentage: estadoRes.data.battery_percentage,
-            status: estadoRes.data.battery_status,
-            voltage: 12.5,
-            temperature: 30,
-            timeRemaining: "Calculando...",
+              percentage: estadoRes.data.battery_percentage,
+              status: estadoRes.data.battery_status,
+              voltage: estadoRes.data.battery_voltage || 12.5,
+              temperature: estadoRes.data.battery_temperature || 30,
+              timeRemaining: estadoRes.data.battery_time_remaining || "Calculando...",
+              // Valores iniciales por defecto al cargar la página
+              solarInput: 0, 
+              consumption: 0.5,
+              netPower: -0.5 
             },
             position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
             system: {
@@ -223,7 +242,6 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
-  // Función CORREGIDA de borrado: Actualiza la lista negra para evitar reapariciones
   deleteSessionData: (sessionKey) => {
     set((state) => {
       const newDeletedKeys = [...state.deletedSessionKeys, sessionKey];

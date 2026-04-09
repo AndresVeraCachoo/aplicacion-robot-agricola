@@ -312,3 +312,38 @@ body.dark-mode .battery-widget.good {
     font-size: 0.9em;
   }
 }
+
+/* =========================================
+   NUEVOS ESTILOS: ESTADO SOLAR ENTERPRISE
+   ========================================= */
+
+.battery-widget.solar {
+  color: #10b981;
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+body.dark-mode .battery-widget.solar {
+  color: #34d399;
+  border-color: #047857;
+  background-color: rgba(4, 120, 87, 0.2);
+}
+
+.solar-icon {
+  font-size: 1.2em;
+  margin-right: 2px;
+  animation: float-sun 3s ease-in-out infinite;
+}
+
+@keyframes float-sun {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}

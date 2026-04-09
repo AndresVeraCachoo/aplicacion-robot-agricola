@@ -20,7 +20,7 @@ router.get("/estado", authenticateToken, async (req, res) => {
   }
 });
 
-// GET: Historial de Datos Agronómicos (AQUÍ ESTÁ EL FIX DE LA MISIÓN)
+// GET: Historial de Datos Agronómicos
 router.get("/datos", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
@@ -33,6 +33,25 @@ router.get("/datos", authenticateToken, async (req, res) => {
       LEFT JOIN ejecuciones_mision e ON d.ejecucion_id = e.id
       LEFT JOIN misiones m ON e.mision_id = m.id
       ORDER BY d."timestamp" DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+// NUEVO GET: Historial Físico de Energía y Paneles Solares
+router.get("/energia/historial", authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        "timestamp", 
+        bateria_porcentaje, 
+        radiacion_solar, 
+        estado 
+      FROM historial_energia 
+      ORDER BY "timestamp" ASC
     `);
     res.json(result.rows);
   } catch (err) {

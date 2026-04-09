@@ -8,25 +8,26 @@ import "dotenv/config";
 
 const router = Router();
 
+// FIX: Límite ampliado y keyGenerator eliminado para evitar el bloqueo ERR_ERL_KEY_GEN_IPV6 en Docker
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // Límite de 5 intentos
+  max: 100, // Límite de 100 intentos en desarrollo
   message: { error: "Demasiados intentos fallidos. Por favor, espera 15 minutos." },
   standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.body.name || req.ip;
-  }
+  legacyHeaders: false
 });
 
 router.post("/login", loginLimiter, async (req, res) => {
-  const { name, password } = req.body;
-  if (!name || !password) {
+  const { name, username, password } = req.body;
+  // Aceptamos 'name' o 'username' por si el frontend varía la petición
+  const userIdentifier = name || username;
+
+  if (!userIdentifier || !password) {
     return res.status(400).json({ error: "Nombre de usuario y contraseña requeridos" });
   }
 
   try {
-    const result = await pool.query("SELECT * FROM usuarios WHERE name = $1", [name]);
+    const result = await pool.query("SELECT * FROM usuarios WHERE name = $1", [userIdentifier]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Credenciales inválidas" });
@@ -42,7 +43,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     const token = jwt.sign(
       { id: user.id, name: user.name, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" } // <-- Tu acceso ininterrumpido de 7 días
+      { expiresIn: "7d" }
     );
 
     res.json({

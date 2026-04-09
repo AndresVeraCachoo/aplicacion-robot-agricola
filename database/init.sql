@@ -72,5 +72,6 @@ CREATE TABLE IF NOT EXISTS historial_energia (
     estado VARCHAR(50) NOT NULL,
     radiacion_solar DECIMAL(6, 2) DEFAULT 0,
     energia_consumida DECIMAL(6, 2) DEFAULT 0,
-    energia_generada DECIMAL(6, 2) DEFAULT 0
+    energia_generada DECIMAL(6, 2) DEFAULT 0,
+    temperatura DECIMAL(5, 2) DEFAULT 25.00
 );

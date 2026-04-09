@@ -15,15 +15,21 @@ function Header({ onMenuClick }) {
   const isConnected = useRobotStore((state) => state.isConnected);
   const { addToast } = useToast();
 
-  const { percentage, status } = battery;
+  // THE ENTERPRISE WAY: Extraemos porcentaje, el estado del enchufe, y el balance neto (netPower)
+  const { percentage, status, netPower = 0 } = battery;
   const { isDarkMode, toggleTheme } = useTheme();
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
   const closeBatteryModal = () => setIsBatteryModalOpen(false);
 
+  // Lógica derivada pura (Separación de conceptos)
+  const isPluggedIn = status === "CHARGING";
+  const isSolarGaining = !isPluggedIn && netPower > 0 && percentage < 100; // Si no está en la base y gana energía, es el Sol.
+
   const getBatteryClass = () => {
-    if (status === "CHARGING") return "charging";
+    if (isPluggedIn) return "charging";
+    if (isSolarGaining) return "solar";
     if (percentage < 10) return "critical";
     if (percentage <= 50) return "low";
     return "good";
@@ -70,7 +76,6 @@ function Header({ onMenuClick }) {
         </div>
 
         <div className="header-right-controls">
-          {/* Nuevo botón de idioma estilizado */}
           <button
             className="lang-toggle-btn"
             onClick={toggleLanguage}
@@ -98,9 +103,8 @@ function Header({ onMenuClick }) {
             title={`${t("header.battery")}: ${percentage}%`}
           >
             <span className="battery-text">
-              {status === "CHARGING" && (
-                <span className="charging-bolt">⚡</span>
-              )}
+              {isPluggedIn && <span className="charging-bolt">⚡</span>}
+              {isSolarGaining && <span className="solar-icon">🌤️</span>}
               {percentage}%
             </span>
             <div className="battery-icon">

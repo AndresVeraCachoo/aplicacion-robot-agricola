@@ -8,6 +8,9 @@ const SENSOR_INTERVAL = 5000;
 const ENERGY_LOG_INTERVAL = 5000; 
 const MAX_HISTORY_RECORDS = 1000;
 
+// --- CONSTANTES FÍSICAS DEL ROBOT ---
+const SOLAR_EFFICIENCY = 0.005; 
+
 // COORDENADAS FIJAS DE LA BASE DE CARGA
 const BASE_LAT = 42.36317;
 const BASE_LON = -3.69882;
@@ -214,7 +217,8 @@ export const calculateSolarRadiation = (dateObj) => {
   const hour = dateObj.getHours() + (dateObj.getMinutes() / 60);
   if (hour < 6 || hour > 20) return 0; 
   const radiationWave = Math.sin(Math.PI * (hour - 6) / 14); 
-  return Math.max(0, radiationWave * 1000 * (0.9 + getSecureRandom() * 0.2));
+  // 🐛 FIX UI: Eliminado el ruido aleatorio para que la UI no parpadee al borde del consumo
+  return Math.max(0, radiationWave * 1000); 
 };
 
 const executeRTLSequence = () => {
@@ -254,9 +258,13 @@ const handleBaseCharging = () => {
 };
 
 const calculateTickConsumption = () => {
-  if (isPaused) return 0.1;
-  const movingGasto = Number.parseFloat(speed) > 0 ? (0.5 + ((speedLimitPercent / 100) * 0.5)) : 0;
-  return 0.2 + movingGasto;
+  if (isPaused) return 0.1; // Consumo mínimo (solo el "cerebro" encendido)
+  
+  const movingGasto = Number.parseFloat(speed) > 0 
+    ? (1.5 + ((speedLimitPercent / 100) * 1.5)) 
+    : 0;
+    
+  return 0.2 + movingGasto; 
 };
 
 const triggerFailsafeBattery = () => {
@@ -270,8 +278,9 @@ const triggerFailsafeBattery = () => {
 };
 
 const handleFieldDischarging = (currentRadiation) => {
-  const generatedThisTick = currentRadiation * 0.0005;
+  const generatedThisTick = currentRadiation * SOLAR_EFFICIENCY;
   const consumedThisTick = calculateTickConsumption();
+  
   battery = battery - consumedThisTick + generatedThisTick;
   
   if (battery <= 0) {
@@ -377,17 +386,31 @@ const processMovementTick = async (io) => {
 
   const currentSystemStatus = isPaused ? "PAUSED" : getSystemStatus(isCharging, speed);
 
+  const radiacion = calculateSolarRadiation(new Date());
+  const solarInput = radiacion * SOLAR_EFFICIENCY; 
+  const consumoActual = isCharging ? 0 : calculateTickConsumption(); 
+
   try {
     await pool.query(
       `UPDATE robot_estado SET current_lat = $1, current_lon = $2, battery_percentage = $3, battery_status = $4, system_status = $5, system_speed = $6, system_heading = $7 WHERE id = 1`,
-      [currentLat, currentLon, Math.floor(battery), isCharging ? "CHARGING" : "IDLE", currentSystemStatus, speed, Math.floor(heading)]
+      // 🐛 FIX DB: Usamos Math.round para mayor precisión en BBDD
+      [currentLat, currentLon, Math.round(battery), isCharging ? "CHARGING" : "IDLE", currentSystemStatus, speed, Math.round(heading)]
     );
 
     if (io) {
       io.emit("robot:status", {
-        battery: { percentage: Math.floor(battery), status: isCharging ? "CHARGING" : "IDLE", voltage: 12.5, temperature: 35, timeRemaining: isCharging ? "Cargando..." : `${Math.floor(battery * 1.5)} min` },
+        battery: { 
+          // 🐛 FIX UI: Usamos Math.round para que no parpadee entre 99 y 100
+          percentage: Math.round(battery), 
+          status: isCharging ? "CHARGING" : "IDLE", 
+          voltage: 12.5, 
+          temperature: 35, 
+          timeRemaining: isCharging ? "Cargando..." : `${Math.round(battery * 1.5)} min`,
+          solarInput: solarInput, 
+          consumption: consumoActual
+        },
         position: { lat: currentLat, lon: currentLon },
-        system: { speed: speed, heading: Math.floor(heading), status: currentSystemStatus, mode: controlMode, speedLimit: speedLimitPercent, target: navTarget, queue: navQueue }
+        system: { speed: speed, heading: Math.round(heading), status: currentSystemStatus, mode: controlMode, speedLimit: speedLimitPercent, target: navTarget, queue: navQueue }
       });
     }
   } catch (error) { 
@@ -461,7 +484,7 @@ const processAgronomicTick = async (io) => {
 };
 
 export const startRobotSimulation = (io) => {
-  console.log("🤖 Simulador: ACTIVADO (RTL Autónomo / SonarQube Cleaned 100%)");
+  console.log("🤖 Simulador: ACTIVADO (Física Solar Estable)");
   setInterval(() => processMovementTick(io), MOVEMENT_INTERVAL);
   setInterval(() => processEnergyTick(), ENERGY_LOG_INTERVAL);
   setInterval(() => processAgronomicTick(io), SENSOR_INTERVAL);
