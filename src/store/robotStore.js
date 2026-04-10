@@ -10,7 +10,12 @@ export const useRobotStore = create((set, get) => ({
   socket: null, 
   isConnected: false,
   
-  // --- THE ENTERPRISE WAY: Ampliamos el modelo de la batería ---
+  // --- ESTADO GLOBAL DE LA INTERFAZ (SIDEBAR) ---
+  isSidebarOpen: window.innerWidth > 768,
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
+
+  // --- THE ENTERPRISE WAY: Modelo avanzado de batería ---
   battery: {
     percentage: 0,
     status: "IDLE", // Solo "IDLE" o "CHARGING" (Físico)
@@ -63,10 +68,8 @@ export const useRobotStore = create((set, get) => ({
     // --- RECEPCIÓN DE TELEMETRÍA EN VIVO ---
     newSocket.on("robot:status", (data) => {
       set((state) => {
-        // Extraemos los datos crudos que envíe el backend
         const newBatteryData = data.battery || {};
         
-        // Mantenemos los datos anteriores si el backend omite alguno
         const currentSolar = newBatteryData.solarInput ?? state.battery.solarInput;
         const currentCons = newBatteryData.consumption ?? state.battery.consumption;
         
@@ -140,7 +143,6 @@ export const useRobotStore = create((set, get) => ({
               voltage: estadoRes.data.battery_voltage || 12.5,
               temperature: estadoRes.data.battery_temperature || 30,
               timeRemaining: estadoRes.data.battery_time_remaining || "Calculando...",
-              // Valores iniciales por defecto al cargar la página
               solarInput: 0, 
               consumption: 0.5,
               netPower: -0.5 

@@ -1,28 +1,35 @@
 # /Dockerfile
-
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm ci
 
-COPY . .
+# Copiamos la configuración base
+COPY vite.config.js eslint.config.js index.html ./
+# Copiamos las carpetas de recursos y código fuente
+COPY public ./public
+COPY src ./src
+
+# Inyección de variables de entorno para Vite 
+ARG VITE_API_URL
+ARG VITE_SOCKET_URL
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
 
 RUN npm run build
 
-# 1. Usamos la imagen oficial de Nginx SIN privilegios de root
+# --- ETAPA DE PRODUCCIÓN ---
 FROM nginxinc/nginx-unprivileged:alpine
 
-# 2. ELIMINAR configuración por defecto y COPIAR la profesional
+# Limpiamos configuración por defecto y metemos la nuestra
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 3. Copiamos la build generada por Vite
+# Solo copiamos los archivos estáticos minificados 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 4. Exponemos el puerto definido en tu docker-compose.yml
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

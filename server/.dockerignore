@@ -1,4 +1,12 @@
 # server/.dockerignore
+.git
+.gitignore
+.github
+.vscode
 node_modules
-npm-debug.log
+npm-debug.log*
 .env
+.env.*
+Dockerfile
+database/
+*.md

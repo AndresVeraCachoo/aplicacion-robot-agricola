@@ -1,5 +1,5 @@
 // src/layout/MainLayout.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "./Header.jsx";
@@ -10,11 +10,11 @@ import { useToast } from "../context/ToastContext.jsx";
 
 function MainLayout() {
   const { t } = useTranslation();
-  const [isSidebarOpen, setSidebarOpen] = useState(
-    () => window.innerWidth > 768,
-  );
 
   const {
+    isSidebarOpen,
+    setSidebarOpen,
+    toggleSidebar,
     fetchInitialData,
     connectSocket,
     disconnectSocket,
@@ -74,9 +74,7 @@ function MainLayout() {
   useEffect(() => {
     if (!isConnected) return;
 
-    // Si el estado cambia a RTL_ACTIVE (Retorno a la Base)
     if (system.status === "RTL_ACTIVE" && !rtlAlertFired.current) {
-      // Notificamos al agricultor
       addToast(
         t(
           "notifications.rtlActive",
@@ -87,13 +85,10 @@ function MainLayout() {
       rtlAlertFired.current = true;
     }
 
-    // Resetear el seguro cuando el robot ya no esté volviendo a la base (cuando llegue a CHARGING o pase a MANUAL/IDLE)
     if (system.status !== "RTL_ACTIVE") {
       rtlAlertFired.current = false;
     }
   }, [system.status, isConnected, addToast, t]);
-
-  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
   const closeMobileSidebar = () => {
     if (window.innerWidth <= 768) setSidebarOpen(false);
@@ -102,14 +97,6 @@ function MainLayout() {
   return (
     <div className="dashboard-layout">
       <Sidebar isOpen={isSidebarOpen} onClose={closeMobileSidebar} />
-      {isSidebarOpen && window.innerWidth <= 768 && (
-        <button
-          className="sidebar-overlay"
-          onClick={toggleSidebar}
-          aria-label={t("modal.close", "Cerrar")}
-          style={{ border: "none", padding: 0 }}
-        ></button>
-      )}
       <div className="main-content-wrapper">
         <Header onMenuClick={toggleSidebar} />
         <main>

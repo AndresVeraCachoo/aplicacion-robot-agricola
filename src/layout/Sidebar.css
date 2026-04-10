@@ -3,7 +3,7 @@
 .sidebar {
   width: 260px;
   box-sizing: border-box; /* Evita que el borde sume píxeles extra */
-  height: 100%;
+  height: 100vh;
   background-color: var(--primary-dark);
   color: #dcfce7;
   display: flex;
@@ -16,7 +16,7 @@
   /* Estado normal (abierto) */
   margin-left: 0;
 
-  /* TRANSICIÓN DEFINITIVA: Al animar solo el margen, el Header es succionado a la misma velocidad sin lag */
+  /* TRANSICIÓN DEFINITIVA */
   transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -30,47 +30,9 @@
   margin-left: 0;
 }
 
-/* --- VELO OSCURO PARA MÓVIL --- */
+/* --- VELO OSCURO PARA MÓVIL (Oculto en PC) --- */
 .sidebar-overlay-bg {
   display: none;
-}
-
-/* --- RESPONSIVE MOBILE --- */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    z-index: 2100;
-    /* En móvil, como el Sidebar flota por encima del Header, SÍ usamos transform por rendimiento */
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .sidebar.closed {
-    transform: translateX(-100%);
-    margin-left: 0; /* Anulamos el margin en móvil */
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    margin-left: 0; /* Anulamos el margin en móvil */
-  }
-
-  .sidebar-overlay-bg {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0);
-    z-index: 2050;
-    pointer-events: none;
-    transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .sidebar-overlay-bg.visible {
-    background-color: rgba(0, 0, 0, 0.5);
-    pointer-events: auto;
-  }
 }
 
 /* Ajuste específico para MODO OSCURO */
@@ -80,7 +42,7 @@ body.dark-mode .sidebar {
   border-right: 1px solid var(--border-light);
 }
 
-/* --- CABECERA MÓVIL --- */
+/* --- CABECERA MÓVIL (Oculta en PC) --- */
 .sidebar-header-mobile {
   display: none;
   padding: 15px 20px;
@@ -255,4 +217,48 @@ body.dark-mode .sidebar-footer {
 
 .logout-button:active {
   transform: scale(0.98);
+}
+
+/* ====================================================
+   RESPONSIVE MOBILE (Blindado solo para < 768px)
+   ==================================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 2100;
+    margin-left: 0 !important; /* Desactiva la lógica de PC en móvil */
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay-bg {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 2050;
+    pointer-events: none;
+    border: none;
+    outline: none;
+    transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-overlay-bg.visible {
+    background-color: rgba(0, 0, 0, 0.6);
+    pointer-events: auto;
+  }
+
+  .sidebar-header-mobile {
+    display: flex;
+  }
 }

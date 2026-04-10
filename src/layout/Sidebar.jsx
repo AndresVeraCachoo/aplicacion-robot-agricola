@@ -27,6 +27,7 @@ function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
+      {/* Velo oscuro para tapar el contenido en móviles */}
       <button
         type="button"
         className={`sidebar-overlay-bg ${isOpen ? "visible" : ""}`}
@@ -36,9 +37,14 @@ function Sidebar({ isOpen, onClose }) {
       />
 
       <aside className={`sidebar ${isOpen ? "open" : "closed"}`}>
+        {/* Cabecera exclusiva para móviles */}
         <div className="sidebar-header-mobile">
           <h3>{t("sidebar.menu")}</h3>
-          <button className="close-menu-btn" onClick={onClose}>
+          <button
+            className="close-menu-btn"
+            onClick={onClose}
+            aria-label={t("modal.close")}
+          >
             &times;
           </button>
         </div>
@@ -50,7 +56,7 @@ function Sidebar({ isOpen, onClose }) {
             onClick={onClose}
           >
             <div className="profile-image-container">
-              <img src={avatar} alt="Usuario" className="sidebar-avatar" />
+              <img src={avatar} alt="" className="sidebar-avatar" />
             </div>
             <div className="profile-text">
               <span className="profile-greeting">{t("sidebar.profile")}</span>
@@ -102,7 +108,7 @@ function Sidebar({ isOpen, onClose }) {
           <button
             onClick={() => {
               logout();
-              if (onClose) onClose();
+              onClose();
             }}
             className="logout-button"
           >

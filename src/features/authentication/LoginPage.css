@@ -186,3 +186,12 @@ body.dark-mode .form-group input {
 body.dark-mode .form-group input:focus {
   border-color: var(--accent-green);
 }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .login-card {
+    width: 90%;
+    padding: 20px;
+    margin: 20px auto;
+  }
+}

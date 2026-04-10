@@ -2,9 +2,11 @@
 
 .dashboard-layout {
   display: flex;
+  flex-direction: row; /* 🛡️ Fuerza que el menú y el contenido estén lado a lado */
   height: 100vh; /* Ocupa exactamente el 100% de la pantalla */
   width: 100vw;
   overflow: hidden; /* Elimina el scroll global de la ventana */
+  background-color: var(--background-app); /* Evita fondos verdes vacíos */
 }
 
 .main-content-wrapper {
@@ -33,4 +35,34 @@ main {
 .map-widget-wrapper {
   flex: 1;
   min-height: 400px;
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+  .dashboard-grid,
+  .dashboard-cards,
+  .widget-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 15px;
+    padding: 10px;
+  }
+
+  .chart-widget,
+  .map-widget {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    flex: none !important;
+  }
+
+  .map-widget .leaflet-container,
+  .dashboard-map-container {
+    height: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .dashboard-page-container {
+    padding: 10px;
+  }
 }
