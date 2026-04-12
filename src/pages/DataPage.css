@@ -12,6 +12,10 @@
   gap: 30px;
   height: 100%;
   overflow-y: auto;
+
+  /* Evita el arrastre horizontal y cubre el fondo para evitar el "efecto goma" */
+  overflow-x: hidden;
+  background-color: var(--background-app);
 }
 
 .data-header {
@@ -33,6 +37,8 @@
   border: 1px solid #eee;
   padding: 20px;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ========================================================= */
@@ -46,6 +52,8 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .table-header-internal {
@@ -61,6 +69,7 @@
 .table-responsive {
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: auto;
   position: relative;
 }
 
@@ -92,7 +101,6 @@
   background-color: #f9fafb;
 }
 
-/* Corrección de contraste */
 .time-cell {
   font-weight: 500;
   color: #1e293b;
@@ -109,7 +117,6 @@
   display: inline-block;
   white-space: nowrap;
 }
-
 .mission-badge-manual {
   background: #e2e8f0;
   color: #334155;
@@ -132,12 +139,10 @@
   align-items: center;
   gap: 8px;
 }
-
 .humidity-bar-container span {
   min-width: 35px;
   font-weight: 500;
 }
-
 .progress-track {
   width: 60px;
   height: 6px;
@@ -145,7 +150,6 @@
   border-radius: 3px;
   overflow: hidden;
 }
-
 .progress-fill {
   height: 100%;
   background: #3b82f6;
@@ -163,7 +167,6 @@
   min-width: 30px;
   text-align: center;
 }
-
 .ph-acid {
   background-color: #ef4444;
 }
@@ -190,18 +193,15 @@
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
 }
-
 .pagination-left,
 .pagination-right {
   flex: 1;
   color: #334155;
   font-size: 0.9em;
 }
-
 .pagination-right {
   text-align: right;
 }
-
 .pagination-center {
   display: flex;
   align-items: center;
@@ -222,12 +222,10 @@
   font-weight: bold;
   transition: all 0.2s;
 }
-
 .pagination-btn:hover:not(:disabled) {
   background: #e2e8f0;
   border-color: #94a3b8;
 }
-
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -237,7 +235,6 @@
   display: flex;
   gap: 5px;
 }
-
 .pagination-jump input {
   width: 50px;
   padding: 4px 8px;
@@ -246,11 +243,9 @@
   text-align: center;
   outline: none;
 }
-
 .pagination-jump input:focus {
   border-color: #3b82f6;
 }
-
 .pagination-jump button {
   background: var(--primary-darkest, #14532d);
   color: white;
@@ -260,7 +255,6 @@
   cursor: pointer;
   font-weight: 500;
 }
-
 .pagination-jump button:disabled {
   background: #64748b;
   cursor: not-allowed;
@@ -279,6 +273,7 @@
   overflow: hidden;
   height: 550px;
   flex-shrink: 0;
+  width: 100%;
 }
 
 /* --- Columna Izquierda (Lista) --- */
@@ -290,25 +285,21 @@
   display: flex;
   flex-direction: column;
 }
-
 .mission-list-header {
   padding: 20px;
   border-bottom: 1px solid #e2e8f0;
   background: white;
 }
-
 .mission-list-header h3 {
   margin: 0 0 5px 0;
   color: #0f172a;
   font-size: 1.1em;
 }
-
 .mission-list-header p {
   margin: 0;
   font-size: 0.8em;
   color: #334155;
 }
-
 .mission-items {
   flex-grow: 1;
   overflow-y: auto;
@@ -326,19 +317,17 @@
   transition: all 0.2s;
   overflow: hidden;
 }
-
 .mission-item-wrapper:hover {
   border-color: #94a3b8;
   transform: translateY(-1px);
 }
-
 .mission-item-wrapper.active {
   border-color: #2563eb;
   background: #eff6ff;
   box-shadow: 0 2px 5px rgba(59, 130, 246, 0.1);
 }
 
-/* Botón principal (ocupa todo el lado izquierdo) */
+/* Botón principal */
 .mission-item-main {
   flex-grow: 1;
   background: transparent;
@@ -349,17 +338,16 @@
   font-family: inherit;
   outline: none;
 }
-
 .mission-item-main h4 {
   margin: 0 0 5px 0;
   color: #0f172a;
   font-size: 1em;
 }
 
-/* Botón de papelera (ocupa la franja derecha) */
+/* Botón de papelera */
 .btn-delete-session {
   position: relative;
-  z-index: 10; /* Asegura que la papelera atrape el clic */
+  z-index: 10;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -374,7 +362,6 @@
   justify-content: center;
   border-left: 1px solid transparent;
 }
-
 .btn-delete-session:hover {
   opacity: 1;
   transform: scale(1.15);
@@ -390,7 +377,6 @@
   justify-content: space-between;
   align-items: center;
 }
-
 .points-badge {
   background: #e2e8f0;
   padding: 3px 8px;
@@ -398,7 +384,6 @@
   color: #1e293b;
   font-weight: 600;
 }
-
 .no-missions-text {
   text-align: center;
   color: #475569;
@@ -414,7 +399,6 @@
   background: white;
   position: relative;
 }
-
 .mission-map-header {
   padding: 15px 25px;
   display: flex;
@@ -423,12 +407,10 @@
   border-bottom: 1px solid #e2e8f0;
   background: white;
 }
-
 .mission-map-header h3 {
   margin: 0 0 5px 0;
   color: #0f172a;
 }
-
 .mission-map-header p {
   margin: 0;
   font-size: 0.85em;
@@ -439,7 +421,6 @@
   display: flex;
   gap: 10px;
 }
-
 .btn-export {
   color: white;
   border: none;
@@ -449,14 +430,12 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .btn-export.csv {
   background: #10b981;
 }
 .btn-export.csv:hover {
   background: #059669;
 }
-
 .btn-export.pdf {
   background: #ef4444;
 }
@@ -470,7 +449,6 @@
   flex-grow: 1;
   background: white;
 }
-
 .mission-physical-stats {
   display: flex;
   gap: 20px;
@@ -478,12 +456,10 @@
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .stat-pill {
   color: #0f172a;
   font-size: 0.95em;
 }
-
 .mission-map-container {
   flex-grow: 1;
   width: 100%;
@@ -499,13 +475,11 @@
   padding: 15px;
   border-top: 1px solid #e2e8f0;
 }
-
 .summary-item {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .summary-item span {
   font-size: 0.8em;
   color: #334155;
@@ -514,13 +488,12 @@
   letter-spacing: 0.5px;
   font-weight: 600;
 }
-
 .summary-item strong {
   font-size: 1.2em;
   color: #0f172a;
 }
 
-/* --- Estado Vacío (Sin selección) --- */
+/* --- Estado Vacío --- */
 .no-mission-selected {
   display: flex;
   flex-direction: column;
@@ -529,24 +502,23 @@
   height: 100%;
   color: #475569;
 }
-
 .no-mission-selected .icon {
   font-size: 3em;
   margin-bottom: 15px;
   opacity: 0.8;
 }
-
 .no-mission-selected h3 {
   margin: 0 0 10px 0;
   color: #1e293b;
 }
-
 .no-mission-selected p {
   margin: 0;
   font-size: 0.9em;
 }
 
-/* --- Media Queries (Móviles) --- */
+/* ========================================================= */
+/* 📱 RESPONSIVE MOBILE: GENERAL (Vertical y Horizontal)     */
+/* ========================================================= */
 @media (max-width: 900px) {
   .mission-analysis-widget {
     flex-direction: column;
@@ -565,67 +537,131 @@
 }
 
 /* ========================================================= */
-/* MODO OSCURO GLOBAL PARA LA PÁGINA (CORRECCIONES DE CONTRASTE LINTER S7924) */
+/* 📱 RESPONSIVE MOBILE: ESTRICTAMENTE VERTICAL (Portrait)   */
 /* ========================================================= */
+@media (max-width: 768px) and (orientation: portrait) {
+  .data-page-container {
+    padding: 15px;
+    gap: 20px;
+  }
+
+  /* 🛡️ FIX: Le damos una altura mínima real en píxeles a la tarjeta para que Recharts no colapse */
+  .chart-section {
+    padding: 20px 10px;
+    height: auto !important;
+    min-height: 520px !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Obligamos a los controles de la gráfica a apilarse */
+  .chart-section > div > div:first-child,
+  .chart-section .controls-wrapper,
+  .chart-section header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    width: 100%;
+  }
+
+  /* Los menús desplegables ya no se saldrán de la pantalla */
+  .chart-section select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+  }
+
+  /* 🛡️ FIX: Obligamos a la gráfica a tener exactamente 300px de alto, ni más ni menos */
+  .chart-section .recharts-responsive-container {
+    height: 300px !important;
+    min-height: 300px !important;
+    width: 100% !important;
+    margin-left: -15px !important;
+    margin-top: 15px;
+  }
+
+  /* 🛡️ FIX LEYENDA: Sacamos la leyenda del flujo "absoluto" para que expanda la tarjeta de forma natural */
+  .recharts-legend-wrapper {
+    position: relative !important;
+    bottom: auto !important;
+    margin-top: 20px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .mission-physical-stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .export-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-export {
+    width: 100%;
+  }
+
+  .pagination-footer {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+/* ========================================================= */
+/* MODO OSCURO GLOBAL PARA LA PÁGINA                         */
+/* ========================================================= */
+body.dark-mode .data-page-container {
+  background-color: var(--background-app);
+}
 body.dark-mode .chart-section,
 body.dark-mode .table-card,
 body.dark-mode .mission-analysis-widget {
   background-color: var(--background-widget);
   border-color: var(--border-light);
 }
-
 body.dark-mode .table-header-internal {
   border-bottom-color: var(--border-light);
 }
-
 body.dark-mode .table-header-internal h3 {
   color: var(--text-main);
 }
-
 body.dark-mode .data-table th {
   background-color: var(--background-app);
   color: var(--text-main);
 }
-
 body.dark-mode .data-table td {
   color: var(--text-main);
   border-bottom-color: var(--border-light);
 }
-
 body.dark-mode .data-table tr:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
-
 body.dark-mode .time-cell,
 body.dark-mode .npk-cell,
 body.dark-mode .no-data {
   color: #f8fafc;
 }
-
 body.dark-mode .progress-track {
   background: #334155;
 }
-
 body.dark-mode .pagination-footer {
   background: var(--background-app);
   border-top-color: var(--border-light);
 }
-
 body.dark-mode .pagination-left,
 body.dark-mode .pagination-right {
   color: #f8fafc;
 }
-
 body.dark-mode .pagination-btn {
   background: var(--background-widget);
   border-color: var(--border-light);
   color: #f8fafc;
 }
-
 body.dark-mode .pagination-btn:hover:not(:disabled) {
   background: #334155;
 }
-
 body.dark-mode .pagination-jump input {
   background: var(--background-widget);
   border-color: var(--border-light);
@@ -640,17 +676,14 @@ body.dark-mode .mission-list-header {
   background-color: var(--background-app);
   border-color: var(--border-light);
 }
-
 body.dark-mode .mission-report-wrapper,
 body.dark-mode .mission-map-header {
   background-color: var(--background-widget);
 }
-
 body.dark-mode .mission-item-wrapper {
   background-color: var(--background-widget);
   border-color: var(--border-light);
 }
-
 body.dark-mode .mission-item-main h4,
 body.dark-mode .mission-map-header h3,
 body.dark-mode .mission-list-header h3,
@@ -658,32 +691,26 @@ body.dark-mode .summary-item strong,
 body.dark-mode .stat-pill {
   color: #ffffff;
 }
-
 body.dark-mode .mission-map-header p,
 body.dark-mode .mission-list-header p,
 body.dark-mode .summary-item span {
   color: #cbd5e1;
 }
-
 body.dark-mode .mission-item-wrapper.active {
   background: rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
 }
-
 body.dark-mode .points-badge {
   background: #334155;
   color: #f8fafc;
 }
-
 body.dark-mode .mission-item-meta {
   color: #cbd5e1;
 }
-
 body.dark-mode .btn-delete-session:hover {
   background: rgba(239, 68, 68, 0.2);
   border-left-color: var(--border-light);
 }
-
 body.dark-mode .no-mission-selected p,
 body.dark-mode .no-mission-selected h3 {
   color: #f8fafc;

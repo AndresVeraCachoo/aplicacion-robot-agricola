@@ -2,26 +2,26 @@
 
 /* Contenedor principal que ocupa todo el espacio de <main> */
 .camera-page-immersive {
-  position: relative; /* Necesario para posicionar el minimapa absolutamente */
+  position: relative;
   width: 100%;
-  height: 100%; /* Ocupa toda la altura disponible en MainLayout */
-  background-color: #111; /* Fondo oscuro para el modo inmersivo */
-  display: flex; /* Centra el feed si es necesario, o lo deja ocupar todo */
+  height: 100%;
+  background-color: #111;
+  display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden; /* Evita barras de scroll inesperadas */
+  overflow: hidden;
 }
 
 /* Estilos para el placeholder del feed principal */
 .main-camera-feed {
-  width: 100%; /* Ocupa todo el ancho */
-  height: 100%; /* Ocupa toda la altura */
-  background-color: #222; /* Fondo del "vídeo" */
+  width: 100%;
+  height: 100%;
+  background-color: #222;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #ccc; /* Color del texto sobre el fondo oscuro */
+  color: #ccc;
 }
 
 /* Adaptación de los estilos del placeholder para que sean más grandes */
@@ -65,7 +65,7 @@
   background-color: #ff3b30;
   border-radius: 50%;
   box-shadow: 0 0 15px #ff3b30;
-  animation: blink 1.5s infinite ease-in-out; /* Efecto parpadeo */
+  animation: blink 1.5s infinite ease-in-out;
 }
 
 @keyframes blink {
@@ -83,14 +83,18 @@
   position: absolute;
   bottom: 20px;
   right: 20px;
-  width: 250px; /* Ancho del minimapa */
-  height: 180px; /* Alto del minimapa */
-  border: 3px solid rgba(255, 255, 255, 0.7); /* Borde semitransparente */
+
+  /* Ancho dinámico y altura proporcional (apaisada 16:9) */
+  width: clamp(200px, 25vw, 350px);
+  aspect-ratio: 16 / 9;
+  height: auto;
+
+  border: 3px solid rgba(255, 255, 255, 0.7);
   border-radius: 8px;
-  overflow: hidden; /* Para que el mapa se ajuste al borde redondeado */
+  overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  z-index: 10; /* Asegura que esté por encima del feed principal */
-  background-color: #333; /* Fondo base por si tarda en cargar */
+  z-index: 10;
+  background-color: #333;
 }
 
 .minimap-container .leaflet-map-container {
@@ -101,9 +105,9 @@
 .minimap-container .map-view-container {
   width: 100% !important;
   height: 100% !important;
-  min-height: unset !important; /* Quitar altura mínima */
-  box-shadow: none !important; /* Quitar sombra si la tuviera */
-  border-radius: 0 !important; /* Quitar borde redondeado si lo tuviera */
+  min-height: unset !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* Opcional: Ocultar controles de zoom y atribución en el minimapa */
@@ -112,7 +116,9 @@
   display: none !important;
 }
 
-/* --- OVERRIDES ESPECÍFICOS DEL MINIMAPA --- */
+/* ========================================================
+   --- OVERRIDES ESPECÍFICOS DEL MINIMAPA ---
+   ======================================================== */
 
 /* 1. Ocultar el botón de "Delimitar Área" solo en este mapa */
 .minimap-container .map-controls-overlay {
@@ -121,28 +127,28 @@
 
 /* 2. Hacer pequeño el botón de centrar y pegarlo a la esquina */
 .minimap-container .center-map-button {
-  width: 24px !important;
-  height: 24px !important;
-  bottom: 5px !important;
-  right: 5px !important;
-  border-radius: 4px !important; /* Un poco más cuadrado para encajar */
+  width: 28px !important;
+  height: 28px !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  border-radius: 4px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
 }
 
 .minimap-container .center-map-button span {
-  font-size: 0.9em !important; /* Emoji más pequeño */
+  font-size: 1.1em !important;
   line-height: 1 !important;
 }
 
 /* 3. Estilo de coordenadas compacto para el minimapa */
 .minimap-container .clicked-coords-display {
-  bottom: 5px !important;
-  left: 5px !important;
-  padding: 2px 5px !important;
-  font-size: 0.7em !important; /* Letra pequeña */
+  bottom: 8px !important;
+  left: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 0.75em !important;
   background-color: rgba(255, 255, 255, 0.9) !important;
   border-radius: 3px !important;
-  max-width: 180px;
+  max-width: 200px;
 }
 
 /* Ajuste coordenadas minimapa en modo oscuro */
@@ -150,4 +156,29 @@ body.dark-mode .minimap-container .clicked-coords-display {
   background-color: rgba(15, 23, 42, 0.9) !important;
   color: #e2e8f0 !important;
   border: 1px solid #475569;
+}
+
+/* 🛡️ FIX NUEVO: 4. Encoger icono de la Base de Carga y del Robot (60% de su tamaño original) */
+.minimap-container .base-marker-icon,
+.minimap-container .robot-marker-icon {
+  transform: scale(0.6) !important;
+  transform-origin: center center !important;
+}
+
+/* 🛡️ FIX NUEVO: 5. Hacer el botón de capas (Satélite/Calle) más pequeño */
+.minimap-container .leaflet-control-layers {
+  border-radius: 4px !important;
+}
+
+.minimap-container .leaflet-control-layers-toggle {
+  width: 28px !important;
+  height: 28px !important;
+  background-size: 16px 16px !important;
+  background-position: center !important;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .minimap-container .clicked-coords-display {
+    display: none !important;
+  }
 }

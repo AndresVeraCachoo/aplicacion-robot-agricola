@@ -48,7 +48,9 @@ body {
   font-family: var(--font-family);
   background-color: var(--background-color);
   color: var(--text-main);
-  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease; /* Transición suave */
 }
 
 /* Forzar color de texto en elementos específicos para que respeten el modo oscuro */

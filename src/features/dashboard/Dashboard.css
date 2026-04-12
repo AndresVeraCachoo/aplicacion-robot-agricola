@@ -1,12 +1,15 @@
 /* src/features/dashboard/Dashboard.css */
 
+/* ========================================================
+   1. ESTILOS GLOBALES DE LA ESTRUCTURA (Layout)
+   ======================================================== */
 .dashboard-layout {
   display: flex;
-  flex-direction: row; /* 🛡️ Fuerza que el menú y el contenido estén lado a lado */
-  height: 100vh; /* Ocupa exactamente el 100% de la pantalla */
+  flex-direction: row;
+  height: 100vh;
   width: 100vw;
-  overflow: hidden; /* Elimina el scroll global de la ventana */
-  background-color: var(--background-app); /* Evita fondos verdes vacíos */
+  overflow: hidden;
+  background-color: var(--background-app);
 }
 
 .main-content-wrapper {
@@ -18,51 +21,84 @@
 }
 
 main {
-  flex: 1; /* Ocupa todo el alto que sobra debajo del Header */
-  overflow-y: auto; /* Si el perfil es muy largo, el scroll solo sale aquí dentro */
+  flex: 1;
+  overflow-y: auto;
   position: relative;
 }
 
-/* Ajustes para la página del Dashboard en sí */
+/* ========================================================
+   2. PÁGINA DE DASHBOARD (Contenedor)
+   ======================================================== */
 .dashboard-page-container {
   height: 100%;
   padding: 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  animation: fadeIn 0.3s ease-out;
 }
 
+/* Tarjeta premium que envuelve el mapa */
 .map-widget-wrapper {
   flex: 1;
-  min-height: 400px;
+  position: relative;
+
+  /* 🛡️ FIX CRÍTICO: min-height 0 permite que el mapa se encoja en pantallas horizontales sin desbordarse */
+  min-height: 0;
+
+  /* Estética de tarjeta (Premium) */
+  background-color: var(--background-widget, #fff);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Garantiza que el mapa no se salga por las esquinas redondeadas */
 }
 
-/* --- RESPONSIVE MOBILE --- */
-@media (max-width: 768px) {
-  .dashboard-grid,
-  .dashboard-cards,
-  .widget-container {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 15px;
-    padding: 10px;
-  }
+/* Soporte para Modo Oscuro */
+body.dark-mode .map-widget-wrapper {
+  border-color: rgba(255, 255, 255, 0.05);
+}
 
-  .chart-widget,
-  .map-widget {
-    width: 100% !important;
-    min-width: 100% !important;
-    height: auto !important;
-    flex: none !important;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-
-  .map-widget .leaflet-container,
-  .dashboard-map-container {
-    height: 350px !important;
-    min-height: 350px !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
+/* ========================================================
+   📱 RESPONSIVE: MÓVILES VERTICALES (Portrait)
+   ======================================================== */
+@media (max-width: 768px) and (orientation: portrait) {
   .dashboard-page-container {
-    padding: 10px;
+    padding: 12px; /* Reducimos el marco exterior para dar más espacio al mapa */
+  }
+
+  .map-widget-wrapper {
+    border-radius: 12px; /* Redondeo ligeramente inferior en móviles */
+  }
+}
+
+/* ========================================================
+   📱 RESPONSIVE: MÓVILES HORIZONTALES (Landscape)
+   ======================================================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dashboard-page-container {
+    /* En horizontal, la altura de la pantalla es oro puro. 
+       Reducimos el padding al mínimo absoluto. */
+    padding: 8px;
+  }
+
+  .map-widget-wrapper {
+    border-radius: 8px;
+  }
+
+  /* 🛡️ FIX: Forzamos que el 'main' no intente hacer scroll vertical si el mapa cabe justo */
+  main {
+    overflow: hidden !important;
   }
 }

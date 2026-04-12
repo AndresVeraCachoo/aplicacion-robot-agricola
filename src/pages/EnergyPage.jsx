@@ -133,48 +133,68 @@ function EnergyPage() {
       </div>
 
       <div className="energy-charts-section">
-        <h3 className="section-title">Balance Energético Real (Últimas 24h)</h3>
-        <ResponsiveContainer width="100%" height={400}>
+        <h3 className="section-title">Balance Energético (24h)</h3>
+        <ResponsiveContainer width="100%" height="100%">
           {chartData.length > 0 ? (
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              /* 🛡️ FIX: Márgenes de Recharts reducidos al mínimo para aprovechar el ancho */
+              margin={{ top: 10, right: 0, left: -20, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="colorBat" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="colorSolar" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="time"
-                tick={{ fill: "var(--text-main)" }}
-                minTickGap={30}
+                tick={{
+                  fill: "var(--text-main)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+                tickMargin={10}
+                minTickGap={40}
               />
               <YAxis
                 yAxisId="left"
                 orientation="left"
-                tick={{ fill: "var(--text-main)" }}
+                tick={{
+                  fill: "var(--text-main)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
                 domain={[0, 100]}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fill: "var(--text-main)" }}
+                tick={{
+                  fill: "var(--text-main)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
               />
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <CartesianGrid
+                strokeDasharray="4 4"
+                vertical={false}
+                opacity={0.15}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "var(--card-bg)",
                   borderColor: "var(--border-light)",
                   color: "var(--text-main)",
+                  borderRadius: "10px",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ paddingTop: "15px" }} />
 
               <Area
                 yAxisId="left"
@@ -182,8 +202,10 @@ function EnergyPage() {
                 dataKey="batteryLevel"
                 name={t("battery.level") + " (%)"}
                 stroke="#22c55e"
+                strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorBat)"
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
               <Area
                 yAxisId="right"
@@ -191,13 +213,22 @@ function EnergyPage() {
                 dataKey="solarWatts"
                 name="Input Solar (W/m²)"
                 stroke="#f59e0b"
+                strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorSolar)"
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
             </AreaChart>
           ) : (
-            <div style={{ padding: "2rem", textAlign: "center" }}>
-              Sincronizando telemetría...
+            <div
+              style={{
+                padding: "3rem",
+                textAlign: "center",
+                fontSize: "1.2em",
+                color: "#64748b",
+              }}
+            >
+              Sincronizando telemetría en tiempo real...
             </div>
           )}
         </ResponsiveContainer>

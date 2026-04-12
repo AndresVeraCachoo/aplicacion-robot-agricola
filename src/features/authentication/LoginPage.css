@@ -1,197 +1,306 @@
 /* src/features/authentication/LoginPage.css */
+
+/* === FONDO Y CONTENEDOR (Fijado y centrado absoluto) === */
 .login-container {
+  position: fixed;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: 100vw;
-  background-color: var(--background-app);
+  background: radial-gradient(
+    circle at top,
+    var(--background-app) 0%,
+    var(--primary-darkest) 150%
+  );
+  z-index: 9999;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
+
+/* === MODAL DE LOGIN === */
 .login-box {
   background-color: var(--background-widget);
   padding: 40px;
-  border-radius: 20px;
-  border: 4px solid var(--primary-dark);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  width: 300px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
   text-align: center;
+  margin: auto;
+  animation: modalEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .login-box h2 {
   margin-bottom: 30px;
   color: var(--primary-darkest);
-  font-size: 2em;
-  border-bottom: 4px solid var(--primary-dark);
-  padding-bottom: 10px;
-  border-radius: 10px;
-  display: inline-block;
+  font-size: 1.8em;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
-/* Contenedor de los botones de rol */
+/* === BOTONES DE ROL (Por si los vuelves a usar) === */
 .role-button-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
 }
 
-/* Estilo base para todos los botones de rol */
 .role-button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
-  font-size: 1.1em;
+  font-size: 1.05em;
+  font-weight: 600;
   font-family: var(--font-family);
   cursor: pointer;
-  transition:
-    background-color 0.3s,
-    box-shadow 0.3s,
-    transform 0.2s;
-  border-bottom: 4px solid var(--accent-green-dark);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .role-button:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
-
 .role-button:active {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transform: translateY(1px);
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Colores específicos para cada rol */
 .role-button.admin {
   background-color: var(--primary-dark);
-  border-bottom-color: var(--primary-darkest);
 }
 .role-button.admin:hover {
   background-color: #15803d;
 }
-
 .role-button.operator {
   background-color: var(--accent-green);
-  border-bottom-color: var(--accent-green-dark);
 }
 .role-button.operator:hover {
   background-color: var(--accent-green-hover);
 }
-
 .role-button.user {
   background-color: #0d9488;
-  border-bottom-color: #0f766e;
 }
 .role-button.user:hover {
   background-color: #0f766e;
 }
 
+/* === FORMULARIO E INPUTS === */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 18px;
+  margin-top: 25px;
 }
 
 .form-group {
   text-align: left;
 }
-
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.9em;
   color: var(--primary-darkest);
+  opacity: 0.9;
 }
 
-/* === ESTILOS DEL INPUT (MODO CLARO POR DEFECTO) === */
 .form-group input {
   width: 100%;
-  padding: 10px;
+  padding: 12px 14px;
   box-sizing: border-box;
   border: 2px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1em;
-  background-color: #ffffff; /* Fondo blanco forzado */
+  background-color: #ffffff;
   color: #333333;
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: var(--primary-dark);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
   outline: none;
 }
 
+/* === BOTÓN DE ENTRAR === */
 .login-submit-button {
-  padding: 12px;
+  padding: 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: white;
+  font-weight: 700;
   font-size: 1.1em;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background-color 0.3s;
-  border-bottom: 4px solid var(--accent-green-dark);
   background-color: var(--accent-green);
   margin-top: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
 }
 
 .login-submit-button:hover {
   background-color: var(--accent-green-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(34, 197, 94, 0.3);
 }
 
 .login-error {
-  color: #d90429;
-  font-weight: bold;
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.9em;
   margin: 0;
   text-align: center;
+  background-color: #fef2f2;
+  padding: 10px;
+  border-radius: 8px;
 }
 
+/* === BOTÓN DE IDIOMA === */
 .login-lang-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 20px;
+  right: 20px;
   background-color: rgba(0, 0, 0, 0.05);
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--primary-darkest);
   font-size: 0.85em;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
-  color: inherit;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: all 0.2s;
-  font-family: monospace;
+  backdrop-filter: blur(5px);
+  z-index: 10000;
 }
-
 .login-lang-btn:hover {
   background-color: rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
-/* MODO OSCURO GLOBAL PARA LA PÁGINA                         */
-
+/* === MODO OSCURO === */
 body.dark-mode .login-box h2,
 body.dark-mode .form-group label {
   color: var(--text-main);
 }
-
-/* Estilos del input en MODO OSCURO */
 body.dark-mode .form-group input {
-  background-color: var(--background-app);
+  background-color: rgba(0, 0, 0, 0.2);
   color: var(--text-main);
-  border-color: var(--border-light);
+  border-color: rgba(255, 255, 255, 0.1);
 }
-
 body.dark-mode .form-group input:focus {
   border-color: var(--accent-green);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+body.dark-mode .login-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+body.dark-mode .login-lang-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+body.dark-mode .login-lang-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* --- RESPONSIVE --- */
+/* =========================================
+   📱 RESPONSIVE MOBILE: VERTICAL
+   ========================================= */
 @media (max-width: 768px) {
-  .login-card {
-    width: 90%;
+  .login-container {
     padding: 20px;
-    margin: 20px auto;
+  }
+  .login-box {
+    padding: 30px 20px;
+    border-radius: 20px;
+  }
+  .login-box input,
+  .login-box button {
+    font-size: 16px !important;
+    min-height: 50px;
+  }
+}
+
+/* =========================================
+   📱 RESPONSIVE: MÓVILES EN HORIZONTAL
+   ========================================= */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-container {
+    padding: 10px;
+    align-items: center;
+  }
+
+  .login-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra todo su contenido horizontalmente */
+    max-width: 300px !important; /* Ancho estrecho proporcional al PC */
+    padding: 15px 30px !important; /* Reducimos paddings verticales para que quepa en la pantalla */
+  }
+
+  .login-box h2 {
+    margin-bottom: 10px;
+    font-size: 1.4em;
+  }
+
+  .login-form {
+    margin-top: 0;
+    gap: 12px; /* Reducimos el espacio entre input y contraseña */
+    width: 100%; /* Ocupa el 100% de los 380px del modal */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra los elementos internos */
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  .form-group label {
+    margin-bottom: 4px;
+    font-size: 0.85em;
+  }
+
+  .form-group input {
+    padding: 6px 10px;
+    min-height: 38px !important; /* Ligeramente más bajo para ahorrar espacio vertical */ /* 🛡️ FIX: Texto que escribe el usuario centrado */
+  }
+
+  .login-submit-button {
+    width: 100%; /* El botón ocupará exactamente el mismo ancho que los inputs */
+    padding: 10px;
+    min-height: 42px !important;
+    margin-top: 5px;
+  }
+
+  .login-lang-btn {
+    top: 10px;
+    right: 15px;
+    padding: 4px 12px;
+    font-size: 0.75em;
   }
 }

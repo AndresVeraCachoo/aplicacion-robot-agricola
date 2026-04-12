@@ -123,22 +123,58 @@ const updateAreaTooltip = (layer, t) => {
     });
 };
 
+// 🛡️ FIX DEFINITIVO PARA EL MAPA GRIS AL ABRIR EL PANEL
 const MapResizer = ({ showPanel }) => {
   const map = useMap();
   useEffect(() => {
-    let startTime = performance.now();
-    let animationFrame;
-    const animate = (time) => {
+    // Cuando el panel cambia de estado (abre/cierra), forzamos al mapa a redibujarse
+    // repetidamente durante el tiempo que suele durar una animación de CSS (aprox 400ms)
+    let animationInterval;
+    let startTime = Date.now();
+
+    const updateSize = () => {
       map.invalidateSize({ animate: false });
-      if (time - startTime < 350)
-        animationFrame = requestAnimationFrame(animate);
+      if (Date.now() - startTime < 450) {
+        animationInterval = requestAnimationFrame(updateSize);
+      }
     };
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
+
+    updateSize();
+
+    return () => {
+      if (animationInterval) cancelAnimationFrame(animationInterval);
+    };
   }, [showPanel, map]);
   return null;
 };
 MapResizer.propTypes = { showPanel: PropTypes.bool.isRequired };
+
+// 🛡️ NUEVA LÓGICA: SEGUIDOR DEL ROBOT CUANDO EL MAPA ES PIP (MINIMAPA)
+const MapFollower = ({ isPip }) => {
+  const map = useMap();
+  const position = useRobotStore((state) => state.position);
+
+  // Recalcular el tamaño del mapa cuando entra/sale del modo PiP
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize({ animate: true });
+    }, 450); // Damos margen a que termine la animación PiP de CSS
+    return () => clearTimeout(timer);
+  }, [isPip, map]);
+
+  // Si estamos en modo minimapa, el mapa sigue al robot incondicionalmente
+  useEffect(() => {
+    if (isPip && position?.lat && position?.lon) {
+      map.setView([position.lat, position.lon], map.getZoom(), {
+        animate: true,
+        duration: 0.5,
+      });
+    }
+  }, [position, isPip, map]);
+
+  return null;
+};
+MapFollower.propTypes = { isPip: PropTypes.bool.isRequired };
 
 const GeomanControls = ({ ignoreClickRef }) => {
   const { t, i18n } = useTranslation();
@@ -335,7 +371,8 @@ const CenterButton = () => {
   );
 };
 
-const ControlMap = () => {
+// 🛡️ MODIFICACIÓN: Aceptamos isPip por props para que la pantalla de control nos diga cuándo somos pequeños
+const ControlMap = ({ isPip = false }) => {
   const { t } = useTranslation();
   const {
     position,
@@ -433,7 +470,7 @@ const ControlMap = () => {
   return (
     <div className="control-map-wrapper">
       <button
-        className="toggle-missions-btn"
+        className="toggle-missions-btn btn-misiones" /* 🛡️ CLASE AÑADIDA AQUÍ PARA OCULTARLA EN PIP */
         onClick={() => setShowMissionsPanel(!showMissionsPanel)}
       >
         🗺️ {t("control.missionsBtn")}
@@ -461,6 +498,10 @@ const ControlMap = () => {
         className="control-leaflet-map"
       >
         <MapResizer showPanel={showMissionsPanel} />
+
+        {/* 🛡️ INYECTAMOS EL SEGUIDOR DE MAPA QUE ACTÚA SOLO EN PIP */}
+        <MapFollower isPip={isPip} />
+
         <TileLayer
           attribution="&copy; OpenStreetMap"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -590,6 +631,10 @@ const ControlMap = () => {
       </div>
     </div>
   );
+};
+
+ControlMap.propTypes = {
+  isPip: PropTypes.bool,
 };
 
 export default ControlMap;

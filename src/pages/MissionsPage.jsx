@@ -91,7 +91,13 @@ MapClickHandler.propTypes = {
   setClickedPos: PropTypes.func.isRequired,
 };
 
-const GeomanMissionControls = ({ areaTrabajo, setAreaTrabajo, editandoId }) => {
+// 🛡️ MODIFICADO: Recibe showToast como prop para poder mostrar errores del polígono
+const GeomanMissionControls = ({
+  areaTrabajo,
+  setAreaTrabajo,
+  editandoId,
+  showToast,
+}) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
 
@@ -124,7 +130,8 @@ const GeomanMissionControls = ({ areaTrabajo, setAreaTrabajo, editandoId }) => {
     map.on("pm:create", (e) => {
       const { layer } = e;
       if (layer.pm?.hasSelfIntersection()) {
-        alert(t("missions.alerts.polygonError"));
+        // 🛡️ FIX: Usamos el Toast en lugar de alert()
+        showToast(t("missions.alerts.polygonError"), "error");
         map.removeLayer(layer);
         return;
       }
@@ -143,24 +150,19 @@ const GeomanMissionControls = ({ areaTrabajo, setAreaTrabajo, editandoId }) => {
       map.off("pm:create");
       map.off("pm:remove");
     };
-  }, [map, setAreaTrabajo, i18n.language, t]);
+  }, [map, setAreaTrabajo, i18n.language, t, showToast]);
 
-  // NUEVO: Dibujar el polígono automáticamente cuando entramos en modo Edición
   useEffect(() => {
     if (editandoId && areaTrabajo?.type === "Polygon") {
-      // Limpiar polígonos viejos
       map.eachLayer((l) => {
         if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
       });
 
-      // Dibujar polígono a editar
       const latlngs = areaTrabajo.coordinates[0].map((c) => [c[1], c[0]]);
       const polygon = L.polygon(latlngs, { color: "#3388ff" }).addTo(map);
 
-      // Centrar el mapa en la misión cargada
       map.fitBounds(polygon.getBounds(), { padding: [20, 20] });
 
-      // Enganchar Geoman a este nuevo polígono
       polygon.on("pm:edit", (e) =>
         setAreaTrabajo(e.target.toGeoJSON().geometry),
       );
@@ -172,7 +174,7 @@ const GeomanMissionControls = ({ areaTrabajo, setAreaTrabajo, editandoId }) => {
       );
       polygon.on("pm:cut", (e) => setAreaTrabajo(e.layer.toGeoJSON().geometry));
     }
-  }, [areaTrabajo, editandoId, map, setAreaTrabajo]); // Solo se ejecuta al cambiar la misión que editamos
+  }, [areaTrabajo, editandoId, map, setAreaTrabajo]);
 
   return null;
 };
@@ -181,6 +183,7 @@ GeomanMissionControls.propTypes = {
   areaTrabajo: PropTypes.object,
   setAreaTrabajo: PropTypes.func.isRequired,
   editandoId: PropTypes.number,
+  showToast: PropTypes.func.isRequired,
 };
 
 function MissionsPage() {
@@ -190,8 +193,8 @@ function MissionsPage() {
   const { position, system } = useRobotStore();
   const mapRef = useRef();
 
-  // Estados
-  const [editandoId, setEditandoId] = useState(null); // NUEVO
+  // Estados del Formulario
+  const [editandoId, setEditandoId] = useState(null);
   const [nombre, setNombre] = useState("");
   const [sensores, setSensores] = useState({
     humedad: true,
@@ -206,15 +209,29 @@ function MissionsPage() {
   const [areaTrabajo, setAreaTrabajo] = useState(null);
   const [clickedPos, setClickedPos] = useState(null);
 
+  // 🛡️ NUEVO ESTADO: Controla las notificaciones flotantes (Toasts)
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "success",
+  });
+
   useEffect(() => {
     fetchMisiones();
   }, [fetchMisiones]);
+
+  // 🛡️ NUEVA FUNCIONALIDAD: Muestra el toast durante 3 segundos y luego lo oculta
+  const showToast = (message, type = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success" });
+    }, 3000);
+  };
 
   const handleCheckboxChange = (sensor) => {
     setSensores({ ...sensores, [sensor]: !sensores[sensor] });
   };
 
-  // NUEVO: Cargar datos de la misión en el formulario
   const handleEditMission = (m) => {
     setEditandoId(m.id);
     setNombre(m.nombre);
@@ -232,10 +249,9 @@ function MissionsPage() {
       radiacion: activeSensors.includes("rad"),
     });
 
-    window.scrollTo({ top: 0, behavior: "smooth" }); // Subir al formulario
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // NUEVO: Cancelar edición y limpiar mapa
   const handleCancelEdit = () => {
     setEditandoId(null);
     setNombre("");
@@ -251,7 +267,8 @@ function MissionsPage() {
   const handleSaveMission = async (e) => {
     e.preventDefault();
     if (!areaTrabajo) {
-      alert(t("missions.alerts.drawAreaFirst"));
+      // 🛡️ FIX: Reemplazado alert por showToast de error
+      showToast(t("missions.alerts.drawAreaFirst"), "error");
       return;
     }
 
@@ -269,7 +286,8 @@ function MissionsPage() {
       .join(", ");
 
     if (!sensoresActivos) {
-      alert(t("missions.alerts.selectData"));
+      // 🛡️ FIX: Reemplazado alert por showToast de error
+      showToast(t("missions.alerts.selectData"), "error");
       return;
     }
 
@@ -287,10 +305,12 @@ function MissionsPage() {
       : await createMision(missionData);
 
     if (exito) {
-      alert(
+      // 🛡️ FIX: Reemplazado alert por showToast de éxito
+      showToast(
         editandoId
           ? "Misión actualizada correctamente"
           : t("missions.alerts.saveSuccess"),
+        "success",
       );
       handleCancelEdit();
     }
@@ -303,6 +323,14 @@ function MissionsPage() {
 
   return (
     <div className="missions-page">
+      {/* 🛡️ NUEVO COMPONENTE: El Toast Notificador */}
+      {toast.visible && (
+        <div className={`custom-toast toast-${toast.type}`}>
+          {toast.type === "error" ? "⚠️ " : "✅ "}
+          {toast.message}
+        </div>
+      )}
+
       <div className="missions-layout">
         <aside className="mission-form-panel">
           <h3>{editandoId ? "✏️ Editar Misión" : t("missions.createNew")}</h3>
@@ -323,8 +351,10 @@ function MissionsPage() {
                 style={{
                   fontSize: "0.85rem",
                   marginBottom: "5px",
-                  color: "#94a3b8",
+                  color: "var(--text-main)",
+                  opacity: 0.9,
                   display: "block",
+                  fontWeight: "600",
                 }}
               >
                 {t("missions.form.dataToCollect")}
@@ -433,12 +463,13 @@ function MissionsPage() {
                   onClick={handleCancelEdit}
                   style={{
                     flex: 1,
-                    backgroundColor: "#f87171",
+                    backgroundColor: "#ef4444",
                     color: "white",
                     border: "none",
                     borderRadius: "8px",
                     cursor: "pointer",
                     fontWeight: "bold",
+                    fontSize: "1.05rem",
                   }}
                 >
                   Cancelar
@@ -466,10 +497,12 @@ function MissionsPage() {
               attribution="&copy; OpenStreetMap"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
+            {/* 🛡️ FIX: Le pasamos la función al componente del mapa */}
             <GeomanMissionControls
               areaTrabajo={areaTrabajo}
               setAreaTrabajo={setAreaTrabajo}
               editandoId={editandoId}
+              showToast={showToast}
             />
             <CenterButton />
             <MapClickHandler setClickedPos={setClickedPos} />
@@ -506,7 +539,7 @@ function MissionsPage() {
             <div key={m.id} className="mission-card">
               <h4>{m.nombre}</h4>
               <p>
-                <strong style={{ color: "#10b981" }}>
+                <strong style={{ color: "var(--accent-green)" }}>
                   {t("missions.card.data")}:
                 </strong>{" "}
                 {m.tipo_tarea}
@@ -515,19 +548,10 @@ function MissionsPage() {
                 <strong>{t("missions.card.batteryReq")}:</strong>{" "}
                 {m.bateria_minima}%
               </p>
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
                 <button
                   onClick={() => handleEditMission(m)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    padding: "6px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    transition: "0.2s",
-                  }}
+                  className="btn-edit-mission"
                 >
                   Editar
                 </button>

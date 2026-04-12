@@ -1,29 +1,23 @@
 /* src/features/dashboard/components/MapView.css */
-.map-view-container {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
-  z-index: 1;
-  position: relative;
-  font-family: var(--font-family, sans-serif);
-}
 
-/* src/features/dashboard/components/MapView.css */
-
+.map-view-container,
 .map-wrapper {
   width: 100%;
   height: 100%;
-  min-height: 400px;
+  /* 🛡️ FIX CRÍTICO: Reducido de 400px a 200px para que el mapa pueda encogerse 
+     cuando giras el móvil en horizontal y los botones sigan subiendo */
+  min-height: 200px;
   z-index: 1;
   position: relative;
   font-family: var(--font-family, sans-serif);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .leaflet-map-container {
   width: 100%;
-  flex: 1; /* Esto obliga al mapa a estirarse y llenar el hueco */
+  flex: 1;
   z-index: 1;
 }
 
@@ -33,180 +27,219 @@
 }
 .robot-marker-icon img {
   display: block;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
 }
 
-/* --- 1. POSICIONAMIENTO DE CONTROLES --- */
+/* ========================================================
+   1. ESTILO GLOBAL UNIFICADO (Bordes redondeados y limpios)
+   ======================================================== */
+
+.leaflet-control {
+  margin: 0 !important;
+}
+
+.map-btn,
+.center-map-button,
+.clicked-coords-display,
+.zone-summary-panel,
+.leaflet-control-zoom,
+.leaflet-control-layers {
+  background-color: #ffffff !important;
+  border: 2px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12) !important;
+  color: #333333 !important;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.map-btn:hover,
+.center-map-button:hover {
+  background-color: #f4f4f4 !important;
+  transform: translateY(-1px);
+}
+
+.map-btn.active {
+  background-color: #ebf8ff !important;
+  color: #0369a1 !important;
+  border-color: #0369a1 !important;
+}
+
+.map-btn.danger {
+  color: #b91c1c !important;
+}
+.map-btn.danger:hover {
+  background-color: #fef2f2 !important;
+}
+.map-btn.info {
+  color: #0369a1 !important;
+}
+
+.leaflet-control-zoom {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.leaflet-control-zoom a {
+  border: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background: transparent !important;
+  color: #333 !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+.leaflet-control-zoom a:last-child {
+  border-bottom: none !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: #f4f4f4 !important;
+}
+
+/* ========================================================
+   2. POSICIONAMIENTOS EXACTOS (Margen Global: 14px)
+   ======================================================== */
+
+.leaflet-top.leaflet-right {
+  top: 14px !important;
+  right: 14px !important;
+}
 .leaflet-top.leaflet-left {
-  top: 10px !important;
-  left: 10px !important;
+  top: 56px !important;
+  left: 14px !important;
 }
 
-/* --- 2. PANEL DE BOTONES (IZQUIERDA) --- */
 .map-controls-overlay {
   position: absolute;
-  top: 42px; /* Posición original solicitada */
-  left: 80px; /* Posición original solicitada */
-
-  /* CLAVE: z-index menor que el modal (que suele ser 1000+) */
-  z-index: 900 !important;
-
+  top: 14px;
+  left: 14px;
+  z-index: 1000 !important;
   display: flex;
   gap: 10px;
+  pointer-events: none;
 }
-
+.map-controls-overlay > * {
+  pointer-events: auto;
+}
 .zone-active-controls {
   display: flex;
   gap: 10px;
 }
 
 .map-btn {
-  background-color: white;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  padding: 6px 12px;
-  border-radius: 20px;
+  padding: 0 14px;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.9em;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-  color: #444;
   display: flex;
   align-items: center;
   gap: 8px;
   height: 34px;
 }
 
-.map-btn:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+select.map-btn {
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 10px auto;
 }
 
-.map-btn.active {
-  background-color: #1d4ed8;
-  color: white;
-  border-color: #1e40af;
-}
-
-.map-btn.danger {
-  color: #b91c1c;
-  border-color: #fca5a5;
-}
-.map-btn.danger:hover {
-  background-color: #fef2f2;
-}
-
-.map-btn.info {
-  color: #0369a1;
-  border-color: #bae6fd;
-}
-
-/* --- 3. BOTÓN DE CENTRADO --- */
-.center-map-button {
-  position: absolute !important;
-  bottom: 25px !important;
-  right: 25px !important;
-  z-index: 900 !important;
-
-  background-color: white !important;
-  color: #333 !important;
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 50% !important;
-  border: 2px solid rgba(0, 0, 0, 0.2) !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
-
-  display: flex !important;
-  justify-content: center;
-  align-items: center !important;
-  cursor: pointer;
-  padding: 0 !important;
-}
-.center-map-button:hover {
-  background-color: #f0f0f0 !important;
-  transform: scale(1.05);
-}
-
-/* --- 4. PANEL DE COORDENADAS --- */
 .clicked-coords-display {
   position: absolute !important;
-  bottom: 25px !important;
-  left: 20px !important;
+  bottom: 14px !important;
+  left: 14px !important;
   z-index: 900 !important;
-
-  background-color: white !important;
-  padding: 6px 12px !important;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 6px 14px !important;
   font-size: 0.85em;
   font-weight: 600;
-  color: #115c1bd8;
   font-family: monospace;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   pointer-events: none;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* --- 5. PANEL DE RESUMEN DE ZONA --- */
+.center-map-button {
+  position: absolute !important;
+  bottom: 14px !important;
+  right: 14px !important;
+  z-index: 900 !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  justify-content: center;
+  align-items: center !important;
+  cursor: pointer;
+  padding: 0 !important;
+}
+
+.center-map-button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
 .zone-summary-panel {
   position: absolute;
-  top: 90px;
-  left: 80px;
-  width: 220px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  z-index: 900;
-  border: 1px solid #eee;
-  animation: slideInLeft 0.3s ease-out;
+  top: 135px;
+  left: 14px;
+  width: 240px;
+  padding: 16px;
+  z-index: 1000 !important;
+  pointer-events: auto;
+  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 .summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 8px;
 }
 .summary-header h4 {
   margin: 0;
-  font-size: 0.95em;
+  font-size: 1em;
   color: #333;
-  font-weight: 700;
+  font-weight: 800;
 }
 .summary-header button {
   background: none;
   border: none;
-  font-size: 1.2em;
+  font-size: 1.4em;
   cursor: pointer;
   color: #999;
 }
-
+.summary-header button:hover {
+  color: #ef4444;
+}
 .summary-metric.main {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   background: #f0fdf4;
-  padding: 8px;
+  padding: 10px;
   border-radius: 6px;
+  border: 1px solid #dcfce7;
 }
 .summary-metric.main .label {
   display: block;
-  font-size: 0.7em;
+  font-size: 0.75em;
   color: #166534;
   text-transform: uppercase;
+  font-weight: 700;
 }
 .summary-metric.main .value {
-  font-size: 1.8em;
+  font-size: 2em;
   font-weight: 800;
   line-height: 1;
   color: #166534;
 }
-
 .summary-grid {
   display: flex;
   flex-wrap: wrap;
@@ -215,8 +248,8 @@
 .metric-box {
   flex: 1 1 40%;
   background: #f8fafc;
-  padding: 6px;
-  border-radius: 4px;
+  padding: 8px;
+  border-radius: 6px;
   text-align: center;
   border: 1px solid #e2e8f0;
 }
@@ -224,44 +257,44 @@
   display: block;
   font-size: 0.7em;
   color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 .metric-box strong {
-  font-size: 1em;
+  font-size: 1.1em;
   color: #333;
 }
 .metric-box.full {
   flex: 1 1 100%;
 }
-
 .mini-npk {
   display: flex;
   justify-content: space-around;
-  margin-top: 2px;
-  font-weight: bold;
-  font-size: 0.85em;
+  margin-top: 4px;
+  font-weight: 800;
+  font-size: 0.9em;
 }
 .mini-npk .n {
   color: #0284c7;
 }
 .mini-npk .p {
-  color: #b45309;
+  color: #d97706;
 }
 .mini-npk .k {
   color: #7c3aed;
 }
-
 .summary-footer {
-  margin-top: 8px;
+  margin-top: 12px;
   text-align: center;
-  font-size: 0.7em;
+  font-size: 0.75em;
   color: #999;
-  font-style: italic;
+  font-weight: 600;
 }
 
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateX(-20px);
   }
   to {
     opacity: 1;
@@ -269,66 +302,69 @@
   }
 }
 
-/* --- 6. ESTILOS DEL POPUP DE DETALLE --- */
+/* ========================================================
+   3. POPUP DE DETALLE Y MODO OSCURO
+   ======================================================== */
 .sample-popup-content {
   color: #333;
   font-family: var(--font-family, sans-serif);
-  min-width: 200px;
+  min-width: 220px;
 }
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
 }
-
 .popup-kpi {
   text-align: center;
-  background-color: #f1f5f9;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background-color: #f8fafc;
+  padding: 10px 16px;
+  border-radius: 6px;
   min-width: 60px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 .popup-kpi .label {
   font-size: 0.75em;
   text-transform: uppercase;
   color: #64748b;
   display: block;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 2px;
 }
 .popup-kpi .value {
-  font-size: 1.8em;
+  font-size: 2em;
   font-weight: 800;
   line-height: 1;
 }
-
 .popup-date {
   font-size: 0.8em;
-  color: #64748b;
+  color: #94a3b8;
   text-align: right;
-  max-width: 140px;
+  max-width: 120px;
   line-height: 1.4;
+  font-weight: 600;
 }
 .popup-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .popup-row {
   display: flex;
   justify-content: space-between;
   font-size: 1.05em;
   align-items: center;
+  padding: 4px 0;
 }
 .popup-row span {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: #64748b;
+  font-weight: 600;
 }
 .popup-row strong {
   color: #333;
@@ -336,17 +372,16 @@
 .popup-divider {
   border: 0;
   border-top: 1px solid #e2e8f0;
-  margin: 5px 0;
+  margin: 8px 0;
 }
-
 .popup-nutrients {
   display: flex;
   justify-content: space-around;
   margin-top: 5px;
   background-color: #f8fafc;
-  padding: 12px 10px;
-  border-radius: 8px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  padding: 14px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
 }
 .nutrient-item {
   display: flex;
@@ -356,108 +391,60 @@
 }
 .nutrient-label {
   font-weight: 900;
-  font-size: 0.8em;
+  font-size: 0.85em;
   text-transform: uppercase;
 }
 .nutrient-label.n {
   color: #0284c7;
 }
 .nutrient-label.p {
-  color: #b45309;
+  color: #d97706;
 }
 .nutrient-label.k {
   color: #7c3aed;
 }
 .nutrient-val {
-  font-weight: bold;
-  font-size: 1.1em;
+  font-weight: 800;
+  font-size: 1.2em;
   color: #333;
 }
 
-/* --- 7. AJUSTES MODO OSCURO --- */
-body.dark-mode .map-btn {
-  background-color: #1e293b;
-  color: #e2e8f0;
-  border-color: #475569;
-}
-body.dark-mode .map-btn:hover {
-  background-color: #334155;
-}
-body.dark-mode .map-controls-overlay {
-  background-color: rgba(30, 41, 59, 0.9);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-}
-
+/* MODO OSCURO */
+body.dark-mode .map-btn,
+body.dark-mode .center-map-button,
 body.dark-mode .clicked-coords-display,
 body.dark-mode .zone-summary-panel,
-body.dark-mode .center-map-button {
+body.dark-mode .leaflet-control-zoom,
+body.dark-mode .leaflet-control-layers {
   background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-color: #475569 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
 }
-
+body.dark-mode .map-btn:hover,
+body.dark-mode .center-map-button:hover {
+  background-color: #334155 !important;
+}
+body.dark-mode .leaflet-control-zoom a {
+  color: #f8fafc !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-mode .leaflet-control-zoom a:hover {
+  background-color: #334155 !important;
+}
+body.dark-mode select.map-btn {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23f8fafc%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
 body.dark-mode .summary-header h4,
-body.dark-mode .metric-box strong {
-  color: #e2e8f0;
+body.dark-mode .metric-box strong,
+body.dark-mode .popup-row strong,
+body.dark-mode .nutrient-val {
+  color: #f8fafc;
 }
-body.dark-mode .metric-box {
-  background-color: #334155;
-  border-color: #475569;
-}
-
-body.dark-mode .leaflet-popup-content-wrapper,
-body.dark-mode .leaflet-popup-tip {
-  background-color: #1e293b !important;
-  color: #f1f5f9 !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-body.dark-mode .leaflet-popup-close-button {
-  color: #94a3b8 !important;
-}
-body.dark-mode .leaflet-popup-close-button:hover {
-  color: #fff !important;
-}
-
-body.dark-mode .sample-popup-content {
-  color: #e2e8f0;
-}
-body.dark-mode .popup-header {
-  border-bottom-color: #334155;
-}
-body.dark-mode .popup-kpi {
-  background-color: #0f172a;
-  border: 1px solid #334155;
-}
-body.dark-mode .popup-kpi .label {
-  color: #b8a594;
-}
-body.dark-mode .popup-date {
-  color: #94a3b8;
-}
-body.dark-mode .popup-row span {
-  color: #4ade80;
-}
-body.dark-mode .popup-grid strong {
-  color: #86efac;
-}
-body.dark-mode .popup-divider {
-  border-top-color: #334155;
-}
+body.dark-mode .metric-box,
+body.dark-mode .popup-kpi,
 body.dark-mode .popup-nutrients {
   background-color: #0f172a;
-  border: 1px solid #334155;
-}
-body.dark-mode .nutrient-val {
-  color: #ffffff;
-}
-body.dark-mode .nutrient-label.n {
-  color: #38bdf8;
-}
-body.dark-mode .nutrient-label.p {
-  color: #fbbf24;
-}
-body.dark-mode .nutrient-label.k {
-  color: #a78bfa;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Ajuste específico minimapa */
@@ -465,21 +452,58 @@ body.dark-mode .nutrient-label.k {
   display: none !important;
 }
 .minimap-container .center-map-button {
-  width: 24px !important;
-  height: 24px !important;
-  bottom: 5px !important;
-  right: 5px !important;
+  width: 28px !important;
+  height: 28px !important;
+  bottom: 10px !important;
+  right: 10px !important;
+  border-radius: 6px !important;
+}
+.minimap-container .center-map-button svg {
+  width: 14px;
+  height: 14px;
 }
 .minimap-container .clicked-coords-display {
-  bottom: 5px !important;
-  left: 5px !important;
-  padding: 2px 5px !important;
-  font-size: 0.7em !important;
-  background-color: rgba(255, 255, 255, 0.9) !important;
+  bottom: 10px !important;
+  left: 10px !important;
+  padding: 4px 8px !important;
+  font-size: 0.75em !important;
   max-width: 180px;
 }
-body.dark-mode .minimap-container .clicked-coords-display {
-  background-color: rgba(15, 23, 42, 0.9) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #475569;
+
+/* ========================================================
+   📱 RESPONSIVE: MÓVILES EN HORIZONTAL (Altura Pequeña)
+   ======================================================== */
+@media (max-height: 450px) {
+  /* Comprimimos los huecos para que el panel de resumen no choque con el zoom ni con las coordenadas */
+  .leaflet-top.leaflet-right {
+    top: 8px !important;
+    right: 8px !important;
+  }
+  .map-controls-overlay {
+    top: 8px;
+    left: 8px;
+  }
+  .leaflet-top.leaflet-left {
+    top: 48px !important;
+    left: 8px !important;
+  }
+
+  .clicked-coords-display {
+    bottom: 8px !important;
+    left: 8px !important;
+    padding: 4px 8px !important;
+  }
+  .center-map-button {
+    bottom: 8px !important;
+    right: 8px !important;
+  }
+
+  .zone-summary-panel {
+    top: 95px;
+    left: 8px;
+    /* Si la pantalla es súper bajita, forzamos que el panel de datos tenga scroll y no pise las coordenadas */
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding: 10px;
+  }
 }

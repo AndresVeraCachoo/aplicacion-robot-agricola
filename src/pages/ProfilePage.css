@@ -5,12 +5,32 @@
   margin: 0 auto;
   padding: 30px;
   color: #333;
+
+  /* Hacemos que la página sea un entorno controlado */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  /* Scroll por defecto (se sobreescribe en PC) */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ocultar barra de scroll en navegadores móviles/tablets */
+.profile-container::-webkit-scrollbar {
+  width: 6px;
+}
+.profile-container::-webkit-scrollbar-thumb {
+  background-color: rgba(22, 101, 52, 0.3);
+  border-radius: 10px;
 }
 
 .profile-header {
   border-bottom: 2px solid var(--primary-dark, #166534);
   margin-bottom: 30px;
   padding-bottom: 10px;
+  flex-shrink: 0; /* Evita que el título se aplaste si falta espacio */
 }
 
 .profile-header h1 {
@@ -23,6 +43,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 30px;
+  flex: 1; /* Toma todo el espacio sobrante debajo del título */
 }
 
 @media (min-width: 768px) {
@@ -67,7 +88,6 @@
   padding: 5px 10px;
   border-radius: 15px;
   font-size: 0.8em;
-  /* Sin efectos de hover ni cursor pointer */
 }
 
 .info-details {
@@ -95,6 +115,7 @@
   border: 1px solid var(--border-light, #86efac);
   border-radius: 12px;
   padding: 25px;
+  height: fit-content; /* Evita que se estire inútilmente */
 }
 
 .password-section h2 {
@@ -165,4 +186,70 @@
   background-color: #fee2e2;
   color: #991b1b;
   border: 1px solid #fecaca;
+}
+
+/* =========================================================
+   🖥️ RESPONSIVE ESCRITORIO (PC) - Sin scroll
+   ========================================================= */
+@media (min-width: 1024px) {
+  .profile-container {
+    overflow: hidden; /* Aniquila la barra de scroll en PC */
+    justify-content: center; /* Centra el bloque verticalmente si la pantalla es muy grande */
+  }
+
+  .profile-content-grid {
+    align-items: start; /* Asegura que las tarjetas no intenten rellenar la altura vacía causando un falso scroll */
+  }
+}
+
+/* =========================================================
+   📱 RESPONSIVE MÓVIL (Vertical)
+   ========================================================= */
+@media (max-width: 767px) {
+  .profile-container {
+    padding: 15px;
+  }
+  .profile-header {
+    margin-bottom: 20px;
+  }
+  .profile-content-grid {
+    gap: 20px;
+  }
+}
+
+/* =========================================================
+   📱 RESPONSIVE MÓVIL (Horizontal / Landscape)
+   ========================================================= */
+@media (max-height: 600px) and (orientation: landscape) {
+  .profile-container {
+    padding: 15px 25px;
+  }
+
+  .profile-content-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+  }
+
+  .password-section {
+    padding: 15px;
+  }
+
+  .password-section h2 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+  }
+
+  .password-form .form-group {
+    margin-bottom: 10px;
+  }
+
+  .password-form input {
+    padding: 8px;
+  }
 }

@@ -26,7 +26,6 @@ import "./MapView.css";
 const BASE_STATION_COORDS = [42.36317, -3.69882];
 const DEFAULT_COORDS = [42.3525, -3.6845];
 
-// FIX SONAR: Extraído del render para evitar recreaciones en memoria
 const baseStationIcon = L.divIcon({
   html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.4);">⚡</div>`,
   className: "base-marker-icon",
@@ -45,9 +44,7 @@ const getRobotIcon = (heading) => {
 };
 
 // --- Funciones Auxiliares ---
-
 const isPointInPolygon = (point, vs) => {
-  // FIX SONAR S1222: Declaraciones de variables separadas
   const x = point[0];
   const y = point[1];
   let inside = false;
@@ -60,7 +57,6 @@ const isPointInPolygon = (point, vs) => {
 
     const intersect =
       yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    // FIX SONAR S2681: Uso de llaves obligatorio
     if (intersect) {
       inside = !inside;
     }
@@ -70,31 +66,20 @@ const isPointInPolygon = (point, vs) => {
 
 const getColorByPH = (phVal) => {
   const ph = Number(phVal);
-  if (ph < 6) {
-    return "#ef4444";
-  }
-  if (ph > 7.5) {
-    return "#3b82f6";
-  }
+  if (ph < 6) return "#ef4444";
+  if (ph > 7.5) return "#3b82f6";
   return "#22c55e";
 };
 
-// FIX SONAR S3776: Extraer la reducción de datos para bajar la Complejidad Cognitiva
 const calculateZoneStats = (safeZone, agronomicData) => {
-  if (!safeZone || agronomicData.length === 0) {
-    return null;
-  }
+  if (!safeZone || agronomicData.length === 0) return null;
 
   const pointsInZone = agronomicData.filter((p) => {
-    if (!p.lat || !p.lon) {
-      return false;
-    }
+    if (!p.lat || !p.lon) return false;
     return isPointInPolygon([Number(p.lat), Number(p.lon)], safeZone);
   });
 
-  if (pointsInZone.length === 0) {
-    return null;
-  }
+  if (pointsInZone.length === 0) return null;
 
   const sum = pointsInZone.reduce(
     (acc, p) => ({
@@ -122,17 +107,12 @@ const calculateZoneStats = (safeZone, agronomicData) => {
 
 // --- Subcomponentes ---
 
-// FIX SONAR S836: Extraer el marcador a un componente evita crear funciones inline en los bucles map
 function SampleMarker({ sample, isVisible, onClick }) {
-  if (!sample.lat || !sample.lon) {
-    return null;
-  }
+  if (!sample.lat || !sample.lon) return null;
 
   const handleClick = (e) => {
     L.DomEvent.stopPropagation(e);
-    if (isVisible) {
-      onClick(sample);
-    }
+    if (isVisible) onClick(sample);
   };
 
   return (
@@ -149,7 +129,7 @@ function SampleMarker({ sample, isVisible, onClick }) {
     >
       {isVisible && (
         <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-          <span>pH: {sample.ph}</span>
+          <span style={{ fontWeight: 600 }}>pH: {sample.ph}</span>
         </Tooltip>
       )}
     </CircleMarker>
@@ -181,9 +161,7 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape" && isDrawing) {
-        onCancel();
-      }
+      if (e.key === "Escape" && isDrawing) onCancel();
     };
     globalThis.addEventListener("keydown", handleEsc);
     return () => globalThis.removeEventListener("keydown", handleEsc);
@@ -191,9 +169,7 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
 
   useMapEvents({
     click(e) {
-      if (!isDrawing) {
-        return;
-      }
+      if (!isDrawing) return;
       const newPoint = [e.latlng.lat, e.latlng.lng];
       if (points.length >= 3) {
         const firstPoint = points[0];
@@ -207,15 +183,11 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
       setPoints((prev) => [...prev, newPoint]);
     },
     mousemove(e) {
-      if (isDrawing) {
-        setMousePos([e.latlng.lat, e.latlng.lng]);
-      }
+      if (isDrawing) setMousePos([e.latlng.lat, e.latlng.lng]);
     },
   });
 
-  if (!isDrawing || points.length === 0) {
-    return null;
-  }
+  if (!isDrawing || points.length === 0) return null;
 
   const previewPositions = mousePos ? [...points, mousePos] : points;
 
@@ -223,7 +195,7 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
     <>
       <Polyline
         positions={previewPositions}
-        pathOptions={{ color: "orange", dashArray: "5, 5", weight: 3 }}
+        pathOptions={{ color: "#f97316", dashArray: "5, 5", weight: 3 }}
       />
       {points.map((p, i) => (
         <CircleMarker
@@ -231,9 +203,10 @@ function ZoneDrawer({ isDrawing, onZoneComplete, onCancel }) {
           center={p}
           radius={5}
           pathOptions={{
-            color: i === 0 ? "red" : "orange",
+            color: i === 0 ? "#ef4444" : "#f97316",
             fillColor: "white",
             fillOpacity: 1,
+            weight: 2,
           }}
         />
       ))}
@@ -250,9 +223,7 @@ ZoneDrawer.propTypes = {
 function MapClickHandler({ onMapClick, isDrawing }) {
   useMapEvents({
     click(e) {
-      if (!isDrawing) {
-        onMapClick(e.latlng);
-      }
+      if (!isDrawing) onMapClick(e.latlng);
     },
   });
   return null;
@@ -271,7 +242,7 @@ function CenterButtonInternal() {
   const centerView = (e) => {
     e.stopPropagation();
     if (position.lat && position.lon) {
-      map.setView([position.lat, position.lon], 18);
+      map.setView([position.lat, position.lon], 18, { animate: true });
     }
   };
 
@@ -282,7 +253,9 @@ function CenterButtonInternal() {
       className="center-map-button"
       title={t("control.centerRobot")}
     >
-      <span style={{ fontSize: "1.2em" }}>🎯</span>
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm7.93-3h-1.02a6.992 6.992 0 0 0-5.91-5.91V4.07h-2v1.02a6.992 6.992 0 0 0-5.91 5.91H4.07v2h1.02a6.992 6.992 0 0 0 5.91 5.91v1.02h2v-1.02a6.992 6.992 0 0 0 5.91-5.91h1.02v-2zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+      </svg>
     </button>
   );
 }
@@ -317,7 +290,6 @@ function MapView() {
       : DEFAULT_COORDS;
   const pathCoords = pathHistory.map((p) => [p.lat, p.lon]);
 
-  // FIX SONAR: Memoización limpia y extraída
   const zoneStats = useMemo(
     () => calculateZoneStats(safeZone, agronomicData),
     [safeZone, agronomicData],
@@ -371,17 +343,13 @@ function MapView() {
   };
 
   const isInsideZone = (lat, lon) => {
-    if (!safeZone) {
-      return true;
-    }
+    if (!safeZone) return true;
     return isPointInPolygon([lat, lon], safeZone);
   };
 
   const handlePolygonClick = (e) => {
     L.DomEvent.stopPropagation(e);
-    if (zoneStats) {
-      setShowZoneSummary(true);
-    }
+    if (zoneStats) setShowZoneSummary(true);
   };
 
   return (
@@ -424,14 +392,11 @@ function MapView() {
           />
         )}
 
-        {/* MARCADOR DE LA BASE DE CARGA */}
         <Marker position={BASE_STATION_COORDS} icon={baseStationIcon} />
-
-        {/* MARCADOR DEL ROBOT */}
         <Marker position={initialPosition} icon={getRobotIcon(heading)} />
 
         <Polyline
-          pathOptions={{ color: "cyan", weight: 3, opacity: 0.7 }}
+          pathOptions={{ color: "#06b6d4", weight: 4, opacity: 0.8 }}
           positions={pathCoords}
         />
 
@@ -463,110 +428,110 @@ function MapView() {
           onMapClick={handleMapClick}
           isDrawing={isDrawingZone}
         />
+
+        {/* BOTÓN DE CENTRAR MAPA RECUPERADO */}
         <CenterButtonInternal />
-      </MapContainer>
 
-      {lastClickedCoords && !isDrawingZone && (
-        <div className="clicked-coords-display">
-          <span style={{ color: "#ef4444", marginRight: "5px" }}>📍</span>
-          Lat: {lastClickedCoords.lat.toFixed(5)} | Lon:{" "}
-          {lastClickedCoords.lng.toFixed(5)}
-        </div>
-      )}
-
-      <div className="map-controls-overlay">
-        <select
-          className="map-btn"
-          value={selectedMetric}
-          onChange={(e) => setSelectedMetric(e.target.value)}
-          title={t("mapAdv.selectHeatmap")}
-          style={{
-            outline: "none",
-            cursor: "pointer",
-            WebkitAppearance: "none",
-            appearance: "auto",
-          }}
-        >
-          <option value="none">{t("mapAdv.layerOff")}</option>
-          <option value="humedad">{t("mapAdv.layerHum")}</option>
-          <option value="ph">{t("mapAdv.layerPh")}</option>
-          <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
-        </select>
-
-        {safeZone ? (
-          <div className="zone-active-controls">
-            <button
-              type="button"
-              className="map-btn info"
-              onClick={() => setShowZoneSummary(!showZoneSummary)}
-              title={t("mapAdv.viewData")}
-            >
-              {showZoneSummary ? t("mapAdv.hideData") : t("mapAdv.viewData")}
-            </button>
-            <button
-              type="button"
-              className="map-btn danger"
-              onClick={handleClearZone}
-              title={t("mapAdv.clearLimit")}
-            >
-              🗑️ {t("mapAdv.clear")}
-            </button>
+        {/* COORDENADAS RECUPERADAS */}
+        {lastClickedCoords && !isDrawingZone && (
+          <div className="clicked-coords-display">
+            <span style={{ color: "#ef4444", fontSize: "1.2em" }}>📍</span>
+            Lat: {lastClickedCoords.lat.toFixed(5)} | Lon:{" "}
+            {lastClickedCoords.lng.toFixed(5)}
           </div>
-        ) : (
-          <button
-            type="button"
-            className={`map-btn ${isDrawingZone ? "active" : ""}`}
-            onClick={toggleDrawing}
-            title={t("mapAdv.drawArea")}
-          >
-            {isDrawingZone
-              ? `❌ ${t("users.cancel")}`
-              : `🌾 ${t("mapAdv.drawArea")}`}
-          </button>
         )}
-      </div>
 
-      {showZoneSummary && zoneStats && (
-        <div className="zone-summary-panel">
-          <div className="summary-header">
-            <h4>{t("mapAdv.areaSummary")}</h4>
-            <button type="button" onClick={() => setShowZoneSummary(false)}>
-              &times;
-            </button>
-          </div>
-          <div className="summary-metric main">
-            <span className="label">{t("mapAdv.avgPh")}</span>
-            <span
-              className="value"
-              style={{ color: getColorByPH(zoneStats.avgPh) }}
+        {/* CONTROLES DE HERRAMIENTAS RECUPERADOS */}
+        <div className="map-controls-overlay">
+          <select
+            className="map-btn"
+            value={selectedMetric}
+            onChange={(e) => setSelectedMetric(e.target.value)}
+            title={t("mapAdv.selectHeatmap")}
+          >
+            <option value="none">{t("mapAdv.layerOff")}</option>
+            <option value="humedad">{t("mapAdv.layerHum")}</option>
+            <option value="ph">{t("mapAdv.layerPh")}</option>
+            <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
+          </select>
+
+          {safeZone ? (
+            <div className="zone-active-controls">
+              <button
+                type="button"
+                className="map-btn info"
+                onClick={() => setShowZoneSummary(!showZoneSummary)}
+                title={t("mapAdv.viewData")}
+              >
+                {showZoneSummary ? t("mapAdv.hideData") : t("mapAdv.viewData")}
+              </button>
+              <button
+                type="button"
+                className="map-btn danger"
+                onClick={handleClearZone}
+                title={t("mapAdv.clearLimit")}
+              >
+                <span style={{ fontSize: "1.2em" }}>🗑️</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={`map-btn ${isDrawingZone ? "active danger" : ""}`}
+              onClick={toggleDrawing}
+              title={t("mapAdv.drawArea")}
             >
-              {zoneStats.avgPh}
-            </span>
-          </div>
-          <div className="summary-grid">
-            <div className="metric-box">
-              <span>{t("mapAdv.humidity")}</span>
-              <strong>{zoneStats.avgHum}%</strong>
+              {isDrawingZone
+                ? `❌ ${t("users.cancel")}`
+                : `✏️ ${t("mapAdv.drawArea")}`}
+            </button>
+          )}
+        </div>
+
+        {/* RESUMEN DE ZONA RECUPERADO */}
+        {showZoneSummary && zoneStats && (
+          <div className="zone-summary-panel">
+            <div className="summary-header">
+              <h4>{t("mapAdv.areaSummary")}</h4>
+              <button type="button" onClick={() => setShowZoneSummary(false)}>
+                &times;
+              </button>
             </div>
-            <div className="metric-box">
-              <span>{t("mapAdv.temp")}</span>
-              <strong>{zoneStats.avgTemp}°C</strong>
+            <div className="summary-metric main">
+              <span className="label">{t("mapAdv.avgPh")}</span>
+              <span
+                className="value"
+                style={{ color: getColorByPH(zoneStats.avgPh) }}
+              >
+                {zoneStats.avgPh}
+              </span>
             </div>
-            <div className="metric-box full">
-              <span>{t("mapAdv.avgNutrients")}</span>
-              <div className="mini-npk">
-                <span className="n">N: {zoneStats.avgN}</span>
-                <span className="p">P: {zoneStats.avgP}</span>
-                <span className="k">K: {zoneStats.avgK}</span>
+            <div className="summary-grid">
+              <div className="metric-box">
+                <span>{t("mapAdv.humidity")}</span>
+                <strong>{zoneStats.avgHum}%</strong>
+              </div>
+              <div className="metric-box">
+                <span>{t("mapAdv.temp")}</span>
+                <strong>{zoneStats.avgTemp}°C</strong>
+              </div>
+              <div className="metric-box full">
+                <span>{t("mapAdv.avgNutrients")}</span>
+                <div className="mini-npk">
+                  <span className="n">N: {zoneStats.avgN}</span>
+                  <span className="p">P: {zoneStats.avgP}</span>
+                  <span className="k">K: {zoneStats.avgK}</span>
+                </div>
               </div>
             </div>
+            <div className="summary-footer">
+              {zoneStats.count} {t("mapAdv.samplesAnalyzed")}
+            </div>
           </div>
-          <div className="summary-footer">
-            {zoneStats.count} {t("mapAdv.samplesAnalyzed")}
-          </div>
-        </div>
-      )}
+        )}
+      </MapContainer>
 
+      {/* MODAL EXTERNO INTACTO */}
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}

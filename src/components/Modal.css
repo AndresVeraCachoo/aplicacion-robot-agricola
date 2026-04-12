@@ -3,19 +3,16 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  /* Empieza transparente */
   background-color: rgba(0, 0, 0, 0);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999 !important;
   padding: 20px;
-  /* Animación suave de fondo */
   transition: background-color 0.3s ease;
   pointer-events: none;
 }
 
-/* Cuando recibe la clase visible, se oscurece */
 .modal-overlay.visible {
   background-color: rgba(0, 0, 0, 0.75) !important;
   pointer-events: auto;
@@ -36,28 +33,25 @@
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  max-width: 600px;
-  width: 95%;
+  max-width: 500px; /* 🛡️ Reducido para que no sea un bloque inmenso */
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-
-  /* Empieza pequeño y transparente */
+  display: flex;
+  flex-direction: column;
   opacity: 0;
   transform: scale(0.95) translateY(20px);
-  /* Animación suave de la ventana */
   transition:
     opacity 0.3s ease,
     transform 0.3s ease;
 }
 
-/* Cuando recibe la clase visible, crece y aparece */
 .modal-content.visible {
   opacity: 1;
   transform: scale(1) translateY(0);
 }
 
-/* src/components/Modal.css */
 .modal-close-button {
   position: absolute;
   top: 15px;
@@ -86,16 +80,22 @@
 }
 
 .modal-header {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   padding-right: 40px;
   border-bottom: none;
+  flex-shrink: 0;
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.5em;
+  font-size: 1.4em;
   font-weight: 800;
   color: var(--text-main, #1e293b);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: visible;
 }
 
 /* --- MODO OSCURO --- */
@@ -103,17 +103,46 @@ body.dark-mode .modal-content {
   background-color: var(--card-bg, #1e293b);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
-
 body.dark-mode .modal-close-button {
   background-color: #0f172a;
   color: #94a3b8;
 }
-
 body.dark-mode .modal-close-button:hover {
   background-color: #dc2626;
   color: #ffffff;
 }
-
 body.dark-mode .modal-title {
   color: #f1f5f9;
+}
+
+/* =========================================
+   📱 RESPONSIVE: MÓVILES EN HORIZONTAL
+   ========================================= */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-overlay {
+    padding: 15px; /* 🛡️ FIX: Mantiene un margen exterior visible */
+  }
+
+  .modal-content {
+    /* 🛡️ FIX: No llega al 100% de la pantalla, deja respirar al modal */
+    max-height: 85vh;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .modal-close-button {
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 1.2em;
+  }
+
+  .modal-header {
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-size: 1.2em;
+  }
 }
