@@ -22,7 +22,7 @@ jobs:
           node-version: "22"
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v4 # master
+        uses: SonarSource/sonarqube-scan-action@53c3e3207df5b6d48e3d8ce3924213f20ce5eeb3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

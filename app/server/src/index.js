@@ -1,4 +1,4 @@
-// server/index.js
+// app/server/src/index.js
 import express from "express";
 import http from "node:http";
 import { Server } from "socket.io";
@@ -13,6 +13,9 @@ import missionRoutes from "./routes/missionRoutes.js";
 
 // Importar la Semilla Inteligente
 import { runSeed } from "./scripts/seed.js";
+
+// Importar el Manejador de Errores Global
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Simulador
 import {
@@ -31,7 +34,7 @@ import {
 
 const app = express();
 
-// <-- AÑADIDO: Crucial para que express-rate-limit vea las IPs reales detrás del proxy de Docker
+// Crucial para que express-rate-limit vea las IPs reales detrás del proxy de Docker
 app.set('trust proxy', 1); 
 
 const server = http.createServer(app);
@@ -60,7 +63,7 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
-// FIX SONAR S5728: CSP habilitado con directivas restrictivas para el origen
+// CSP habilitado con directivas restrictivas para el origen
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -75,7 +78,7 @@ app.use(helmet({
 
 app.use(cors(corsOptions));
 
-// 1. TAREA CERRADA: LÍMITE DE 1MB (Bomba JSON neutralizada)
+// LÍMITE DE 1MB
 app.use(express.json({ limit: "1mb" }));
 
 // Endpoints
@@ -83,6 +86,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/missions", missionRoutes);
+
+// 🚀 MIDDLEWARE DE ERRORES GLOBAL (Siempre al final de las rutas)
+app.use(errorHandler);
 
 // Manejo de WebSockets
 io.on("connection", (socket) => {

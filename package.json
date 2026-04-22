@@ -1,45 +1,17 @@
 {
-  "name": "aplicacion-robot-agricola",
+  "name": "aplicacion-robot-agricola-root",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "workspaces": [
+    "app/client",
+    "app/server"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "lint:report": "eslint . -f json -o eslint-report.json",
-    "sonar": "npm run lint:report && node sonar-scanner.js"
-  },
-  "dependencies": {
-    "@geoman-io/leaflet-geoman-free": "^2.19.2",
-    "@turf/turf": "^7.3.4",
-    "axios": "^1.13.2",
-    "html2canvas": "^1.4.1",
-    "i18next": "^25.8.17",
-    "i18next-browser-languagedetector": "^8.2.1",
-    "jspdf": "^4.2.1",
-    "leaflet": "^1.9.4",
-    "leaflet.heat": "^0.2.0",
-    "prop-types": "^15.8.1",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-i18next": "^16.5.6",
-    "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.9.4",
-    "recharts": "^3.5.0",
-    "socket.io-client": "^4.8.1",
-    "zustand": "^5.0.8"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react-swc": "^4.1.0",
-    "eslint": "^9.36.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "globals": "^16.4.0",
-    "sonarqube-scanner": "^4.3.4",
-    "vite": "^7.1.7"
+    "install:all": "npm install",
+    "dev:client": "npm run dev -w app/client",
+    "dev:server": "npm start -w app/server",
+    "dev": "npm run dev:server & npm run dev:client",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down"
   }
 }

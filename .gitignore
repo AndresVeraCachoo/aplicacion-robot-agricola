@@ -7,14 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencias 
+node_modules/
+app/client/node_modules/
+app/server/node_modules/
+
+# Compilados y builds
 dist
 dist-ssr
-*.local
+build/
+.cache/
 
 # Variables de entorno 
 .env
 .env.*
+*.local
+
+# Docker logs y volúmenes locales
+docker-volumes/
 
 # Editor directories and files
 .vscode/*

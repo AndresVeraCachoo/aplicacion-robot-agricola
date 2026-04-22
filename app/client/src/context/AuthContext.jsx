@@ -62,12 +62,29 @@ export function AuthProvider({ children }) {
 
         if (response.data.token) {
           const { token: newToken, user } = response.data;
-          localStorage.setItem("token", newToken);
-          localStorage.setItem("userRole", user.role);
-          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
 
-          setToken(newToken);
-          setUserRole(user.role);
+          // 🛡️ SANITIZACIÓN DE DATOS (Para evitar inyección en LocalStorage - SonarCloud S8475)
+
+          // 1. Limpiamos el token permitiendo solo formato JWT estándar (letras, números, puntos, guiones)
+          const sanitizedToken = String(newToken).replace(
+            /[^a-zA-Z0-9\-_.]/g,
+            "",
+          );
+
+          // 2. Validamos el rol contra una lista estricta permitida (Allowlist)
+          const allowedRoles = ["admin", "operador", "usuario"];
+          const sanitizedRole = allowedRoles.includes(user?.role)
+            ? user.role
+            : "usuario";
+
+          // Guardamos los datos limpios
+          localStorage.setItem("token", sanitizedToken);
+          localStorage.setItem("userRole", sanitizedRole);
+          axios.defaults.headers.common["Authorization"] =
+            "Bearer " + sanitizedToken;
+
+          setToken(sanitizedToken);
+          setUserRole(sanitizedRole);
           setIsLoggedIn(true);
           navigate("/app");
           return { success: true };
