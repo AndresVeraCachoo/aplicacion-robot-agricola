@@ -168,30 +168,52 @@
   flex: 1;
 }
 
-.btn-save-mission {
+.form-actions-row {
+  display: flex;
+  gap: 10px;
   margin-top: 15px;
   width: 100%;
+}
+
+.btn-save-mission,
+.btn-cancel-mission {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
   padding: 14px;
-  background-color: var(--accent-green, #10b981);
-  color: white;
-  border: none;
+  color: white !important;
+  border: none !important;
   border-radius: 8px;
   font-weight: bold;
   font-size: 1.05rem;
   cursor: pointer;
   transition: all 0.2s;
+  box-sizing: border-box;
+  margin: 0 !important;
+}
+
+.btn-save-mission {
+  background-color: var(--accent-green, #10b981) !important;
   box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
-  flex-shrink: 0;
 }
 
 .btn-save-mission:hover {
-  background-color: #059669;
+  background-color: #059669 !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 10px rgba(16, 185, 129, 0.3);
+}
+
+.btn-cancel-mission {
+  background-color: #ef4444 !important;
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+}
+
+.btn-cancel-mission:hover {
+  background-color: #dc2626 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 10px rgba(239, 68, 68, 0.3);
 }
 
 /* --- MAPA --- */
@@ -248,7 +270,7 @@
 
 .btn-edit-mission {
   flex: 1;
-  background-color: #3b82f6;
+  background-color: #3370d3;
   color: white;
   border: none;
   padding: 8px;
@@ -281,7 +303,7 @@
 
 .btn-delete:hover,
 .btn-delete:focus {
-  background-color: #ef4444;
+  background-color: #dc2626;
   color: white;
 }
 

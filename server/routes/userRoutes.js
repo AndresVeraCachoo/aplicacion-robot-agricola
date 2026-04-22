@@ -1,4 +1,3 @@
-/* eslint-env node */
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { pool } from "../config/db.js";
@@ -111,9 +110,18 @@ router.put("/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE: Eliminar usuario (NO ELIMINAR ÚLTIMO ADMIN)
+// DELETE: Eliminar usuario (NO ELIMINAR ÚLTIMO ADMIN, NI USUARIOS SEMILLA)
 router.delete("/:id", requireAdmin, async (req, res) => {
   const { id } = req.params;
+  
+  // 🛡️ GUARDIÁN: Protegemos los IDs 1, 2 y 3 (creados por el seed.js)
+  // El ID viene como string en la URL
+  if (["1", "2", "3"].includes(id)) {
+    return res.status(409).json({ 
+      error: "Acción denegada: Los usuarios predeterminados del sistema no pueden ser eliminados." 
+    });
+  }
+
   try {
     // Verificar el rol del usuario que se intenta borrar
     const userResult = await pool.query("SELECT role FROM usuarios WHERE id = $1", [id]);

@@ -165,7 +165,7 @@
 }
 
 .login-error {
-  color: #ef4444;
+  color: #b91c1c;
   font-weight: 600;
   font-size: 0.9em;
   margin: 0;
@@ -215,11 +215,11 @@ body.dark-mode .form-group input:focus {
   background-color: rgba(0, 0, 0, 0.4);
 }
 body.dark-mode .login-error {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(54, 14, 14, 0.1);
   color: #f87171;
 }
 body.dark-mode .login-lang-btn {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(29, 28, 28, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   color: white;
 }

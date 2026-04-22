@@ -31,11 +31,14 @@ const CameraFeed = () => {
       <div className="camera-hud-bottom">
         <div className="hud-metric">
           <span className="label">SPD</span>
-          <span className="value">{system.speed} m/s</span>
+          {/* También he añadido un toFixed(1) opcional por si la velocidad tiene muchos decimales */}
+          <span className="value">
+            {Number(system.speed || 0).toFixed(1)} m/s
+          </span>
         </div>
         <div className="hud-metric">
           <span className="label">HDG</span>
-          <span className="value">{system.heading}°</span>
+          <span className="value">{Math.round(system.heading || 0)}°</span>
         </div>
       </div>
     </div>

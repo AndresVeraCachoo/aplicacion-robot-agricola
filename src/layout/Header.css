@@ -313,20 +313,18 @@ body.dark-mode .battery-widget.good {
   }
 }
 
-/* =========================================
-   NUEVOS ESTILOS: ESTADO SOLAR ENTERPRISE
-   ========================================= */
+/* ESTADO SOLAR */
 
 .battery-widget.solar {
-  color: #10b981;
-  border-color: #10b981;
-  background-color: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+  border-color: #059669;
+  background-color: rgba(6, 78, 59, 0.4);
 }
 
 body.dark-mode .battery-widget.solar {
-  color: #34d399;
-  border-color: #047857;
-  background-color: rgba(4, 120, 87, 0.2);
+  color: #6ee7b7;
+  border-color: #059669;
+  background-color: rgba(6, 78, 59, 0.4);
 }
 
 .solar-icon {

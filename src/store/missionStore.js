@@ -42,14 +42,19 @@ export const useMissionStore = create((set) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(missionData),
       });
-      if (!response.ok) throw new Error("Error al actualizar la misión");
+      
+      if (!response.ok) {
+        throw new Error(`Error al actualizar la misión: ${response.status}`);
+      }
+      
       const updatedMission = await response.json();
+      
       set((state) => ({
         misiones: state.misiones.map((m) => (m.id === id ? updatedMission : m)),
       }));
       return true;
     } catch (error) {
-      console.error(error);
+      console.error("Error al actualizar la misión en el store:", error);
       return false;
     }
   },

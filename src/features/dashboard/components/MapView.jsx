@@ -31,7 +31,6 @@ const baseStationIcon = L.divIcon({
   className: "base-marker-icon",
   iconSize: [45, 45],
   iconAnchor: [22, 22],
-  zIndexOffset: -100,
 });
 
 const getRobotIcon = (heading) => {
@@ -392,8 +391,18 @@ function MapView() {
           />
         )}
 
-        <Marker position={BASE_STATION_COORDS} icon={baseStationIcon} />
-        <Marker position={initialPosition} icon={getRobotIcon(heading)} />
+        {/* Aseguramos que la base se pinte con zIndex menor a 1000 por si acaso */}
+        <Marker
+          position={BASE_STATION_COORDS}
+          icon={baseStationIcon}
+          zIndexOffset={-10}
+        />
+
+        <Marker
+          position={initialPosition}
+          icon={getRobotIcon(heading)}
+          zIndexOffset={1000}
+        />
 
         <Polyline
           pathOptions={{ color: "#06b6d4", weight: 4, opacity: 0.8 }}

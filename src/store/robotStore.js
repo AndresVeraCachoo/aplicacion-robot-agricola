@@ -6,6 +6,27 @@ import { io } from "socket.io-client";
 const API_URL = "http://localhost:3001/api/robot";
 const SOCKET_URL = "http://localhost:3001";
 
+// 🧭 FÓRMULA MATEMÁTICA: Calcula el ángulo exacto (Bearing) entre dos coordenadas GPS
+const calculateBearing = (startLat, startLng, destLat, destLng) => {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const toDeg = (rad) => (rad * 180) / Math.PI;
+
+  const startLatRad = toRad(startLat);
+  const destLatRad = toRad(destLat);
+  const dLng = toRad(destLng - startLng);
+
+  const y = Math.sin(dLng) * Math.cos(destLatRad);
+  const x =
+    Math.cos(startLatRad) * Math.sin(destLatRad) -
+    Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(dLng);
+
+  let bearing = toDeg(Math.atan2(y, x));
+  
+  /*Giro la imagen del robot para que coincida con la trayectoria, ya que el .png no esta recto*/
+  const offset = 80; 
+  return (bearing - offset + 360) % 360; 
+};
+
 export const useRobotStore = create((set, get) => ({
   socket: null, 
   isConnected: false,
@@ -15,16 +36,16 @@ export const useRobotStore = create((set, get) => ({
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
-  // --- THE ENTERPRISE WAY: Modelo avanzado de batería ---
+  // --- Modelo avanzado de batería ---
   battery: {
     percentage: 0,
-    status: "IDLE", // Solo "IDLE" o "CHARGING" (Físico)
+    status: "IDLE",
     voltage: 0,
     temperature: 0,
     timeRemaining: "...",
-    solarInput: 0,   // Energía que entra del sol (W)
-    consumption: 0,  // Energía que gastan los motores/cerebro (W)
-    netPower: 0,     // Balance neto: solarInput - consumption
+    solarInput: 0,
+    consumption: 0,
+    netPower: 0,
   },
   
   system: {
@@ -69,12 +90,24 @@ export const useRobotStore = create((set, get) => ({
     newSocket.on("robot:status", (data) => {
       set((state) => {
         const newBatteryData = data.battery || {};
-        
         const currentSolar = newBatteryData.solarInput ?? state.battery.solarInput;
         const currentCons = newBatteryData.consumption ?? state.battery.consumption;
-        
-        // CÁLCULO DEL BALANCE NETO EN TIEMPO REAL
         const calculatedNetPower = currentSolar - currentCons;
+
+        // 🚀 CÁLCULO AUTOMÁTICO DE RUMBO (Ya incluye el desfase de 45°)
+        let newHeading = state.system.heading;
+        
+        if (data.position?.lat && data.position.lon && state.position.lat && state.position.lon) {
+           const distance = Math.sqrt(
+             Math.pow(data.position.lat - state.position.lat, 2) + 
+             Math.pow(data.position.lon - state.position.lon, 2)
+           );
+
+           // Solo actualizamos si el movimiento es real (evita temblores del GPS)
+           if (distance > 0.000005) { 
+             newHeading = calculateBearing(state.position.lat, state.position.lon, data.position.lat, data.position.lon);
+           }
+        }
 
         return {
           battery: { 
@@ -86,7 +119,8 @@ export const useRobotStore = create((set, get) => ({
           system: { 
             ...state.system, 
             ...data.system,
-            speedLimit: data.system?.speedLimit ?? state.system.speedLimit
+            speedLimit: data.system?.speedLimit ?? state.system.speedLimit,
+            heading: newHeading 
           },
           navTarget: data.system?.target || null,
           navQueue: data.system?.queue || []
@@ -163,39 +197,28 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
+  // ... (Resto de funciones: setSpeedLimit, navigateToPoint, etc. se mantienen igual)
   setSpeedLimit: (limit) => {
     const { socket, system } = get();
     const newLimit = Math.max(0, Math.min(100, limit));
-    
     set({ system: { ...system, speedLimit: newLimit } });
-    if (socket?.connected) {
-        socket.emit("client:set_speed_limit", newLimit);
-    }
+    if (socket?.connected) socket.emit("client:set_speed_limit", newLimit);
   },
 
   queueNavigationPoint: (lat, lon) => {
     const { socket, navTarget, navQueue, system, navigateToPoint } = get();
-    
     if (!navTarget && system.mode !== "NAVIGATING") {
         navigateToPoint(lat, lon);
     } else {
         set({ navQueue: [...navQueue, { lat, lon }] });
-        if (socket?.connected) {
-            socket.emit("client:queue_point", { lat, lon });
-        }
+        if (socket?.connected) socket.emit("client:queue_point", { lat, lon });
     }
   },
 
   navigateToPoint: (lat, lon) => {
       const { socket, system } = get();
-      set({ 
-          navTarget: { lat, lon }, 
-          navQueue: [], 
-          system: { ...system, mode: "NAVIGATING" } 
-      }); 
-      if (socket?.connected) {
-          socket.emit("client:navigate_to", { lat, lon, clearQueue: true });
-      }
+      set({ navTarget: { lat, lon }, navQueue: [], system: { ...system, mode: "NAVIGATING" } }); 
+      if (socket?.connected) socket.emit("client:navigate_to", { lat, lon, clearQueue: true });
   },
 
   setSafeZone: (bounds) => {
@@ -225,7 +248,6 @@ export const useRobotStore = create((set, get) => ({
   togglePauseMission: () => {
     const { socket, system } = get();
     if (!socket?.connected) return;
-
     if (system.status === "PAUSED") {
         socket.emit("client:resume_mission");
     } else {
@@ -235,28 +257,19 @@ export const useRobotStore = create((set, get) => ({
 
   cancelMission: () => {
     const { socket, system, clearSafeZone } = get();
-    
     clearSafeZone(); 
     set({ system: { ...system, mode: "MANUAL" } });
-
-    if (socket?.connected) {
-        socket.emit("client:cancel_mission");
-    }
+    if (socket?.connected) socket.emit("client:cancel_mission");
   },
 
   deleteSessionData: (sessionKey) => {
     set((state) => {
       const newDeletedKeys = [...state.deletedSessionKeys, sessionKey];
-      
       const filteredData = state.agronomicData.filter(d => {
         const key = d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`;
         return key !== sessionKey;
       });
-      
-      return { 
-          agronomicData: filteredData,
-          deletedSessionKeys: newDeletedKeys 
-      };
+      return { agronomicData: filteredData, deletedSessionKeys: newDeletedKeys };
     });
   }
 }));

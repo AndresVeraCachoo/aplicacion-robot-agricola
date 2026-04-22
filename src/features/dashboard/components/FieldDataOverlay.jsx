@@ -15,7 +15,7 @@ const FieldDataOverlay = ({ metric }) => {
     if (!agronomicData || agronomicData.length === 0 || metric === "none")
       return;
 
-    // 1. Extraer los puntos y calcular la intensidad (0.0 a 1.0)
+    // Extraer los puntos y calcular la intensidad (0.0 a 1.0)
     const heatPoints = agronomicData
       .filter((d) => d.lat && d.lon && d[metric] != null)
       .map((d) => {
@@ -36,23 +36,23 @@ const FieldDataOverlay = ({ metric }) => {
 
     if (heatPoints.length === 0) return;
 
-    // 2. Definir los colores
+    // Definir los colores
     // Empezamos en 0.0 para que el azul cubra más rápido los valores bajos
     const unifiedGradient = { 0: "blue", 0.5: "yellow", 1: "red" };
 
-    // 3. Pintar la capa en el mapa
+    // Pintar la capa en el mapa
     const heatLayer = L.heatLayer(heatPoints, {
       radius: 45,
       blur: 45,
       maxZoom: 19,
       max: 1,
-      minOpacity: 0.4, // <-- NUEVO: Fuerza a que los valores bajos (azul) nunca sean invisibles
+      minOpacity: 0.4,
       gradient: unifiedGradient,
     });
 
     heatLayer.addTo(map);
 
-    // 4. Limpiar el mapa cuando cambiemos de métrica en el desplegable
+    // Limpiar el mapa cuando cambiemos de métrica en el desplegable
     return () => {
       map.removeLayer(heatLayer);
     };

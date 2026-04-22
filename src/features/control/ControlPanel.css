@@ -98,19 +98,18 @@
 .mission-actions {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* 🚀 FIX: Forzamos a que siempre se queden en la misma fila */
   justify-content: center;
 }
 
-/* 🛡️ Botones de Misión (Misma altura, MÁS ANCHOS) */
 .mission-btn {
-  min-width: 180px; /* 🚀 ESTIRADO EN EL EJE X */
-  padding: 10px 20px; /* 🛡️ Altura original */
+  min-width: 140px;
+  padding: 10px 20px;
   border-radius: 6px;
   border: none;
   color: white;
   font-weight: bold;
-  font-size: 0.9rem; /* 🛡️ Letra original */
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   display: flex;

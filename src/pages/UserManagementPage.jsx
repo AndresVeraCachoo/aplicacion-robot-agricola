@@ -22,6 +22,8 @@ function UserManagementPage() {
     role: "usuario",
   });
 
+  const [userToDelete, setUserToDelete] = useState(null);
+
   const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get(API_URL);
@@ -62,7 +64,10 @@ function UserManagementPage() {
     try {
       if (currentUser.id) {
         await axios.put(`${API_URL}/${currentUser.id}`, userData);
-        addToast(`${t("users.updated")} "${userData.name}"`, "success");
+        addToast(
+          `${t("users.updated", "Usuario actualizado:")} "${userData.name}"`,
+          "success",
+        );
       } else {
         if (!userData.password) {
           addToast(t("users.pwdRequired"), "warning");
@@ -75,22 +80,38 @@ function UserManagementPage() {
       fetchUsers();
     } catch (err) {
       console.error("Error al guardar usuario:", err);
-      // Ignoramos el mensaje del backend para mantener la internacionalización
       addToast(t("users.errorSave"), "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (globalThis.confirm(t("users.confirmDelete"))) {
-      try {
-        await axios.delete(`${API_URL}/${id}`);
-        addToast(t("users.deleted"), "success");
-        fetchUsers();
-      } catch (err) {
-        console.error("Error al eliminar usuario:", err);
-        // Ignoramos el mensaje del backend para mantener la internacionalización
+  const executeDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await axios.delete(`${API_URL}/${userToDelete}`);
+      addToast(
+        t("users.deleted", "Usuario eliminado correctamente"),
+        "success",
+      );
+      fetchUsers();
+      setUserToDelete(null);
+    } catch (err) {
+      console.error("Error al eliminar usuario:", err);
+      // Capturamos el 409 o 403 y mostramos un mensaje amigable en vez de fallar
+      if (
+        err.response &&
+        (err.response.status === 409 || err.response.status === 403)
+      ) {
+        addToast(
+          t(
+            "users.protectedError",
+            "No puedes eliminar a los usuarios predeterminados del sistema",
+          ),
+          "error",
+        );
+      } else {
         addToast(t("users.errorDelete"), "error");
       }
+      setUserToDelete(null);
     }
   };
 
@@ -117,9 +138,30 @@ function UserManagementPage() {
               <button className="btn-edit" onClick={() => openEditModal(user)}>
                 {t("users.edit")}
               </button>
+
+              {/* 🚀 BOTÓN DESHABILITADO PARA LOS USUARIOS PROTEGIDOS (1, 2, 3) */}
               <button
                 className="btn-delete"
-                onClick={() => handleDelete(user.id)}
+                onClick={() => setUserToDelete(user.id)}
+                disabled={["1", "2", "3"].includes(String(user.id))}
+                style={
+                  ["1", "2", "3"].includes(String(user.id))
+                    ? {
+                        opacity: 0.4,
+                        cursor: "not-allowed",
+                        backgroundColor: "#9ca3af",
+                        color: "#f3f4f6",
+                      }
+                    : {}
+                }
+                title={
+                  ["1", "2", "3"].includes(String(user.id))
+                    ? t(
+                        "users.protectedTooltip",
+                        "Usuario del sistema protegido",
+                      )
+                    : ""
+                }
               >
                 {t("users.delete")}
               </button>
@@ -179,6 +221,53 @@ function UserManagementPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        title={t("users.confirmDeleteTitle", "Eliminar Usuario")}
+      >
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          <p style={{ marginBottom: "20px", color: "var(--text-main)" }}>
+            {t(
+              "users.confirmDelete",
+              "¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.",
+            )}
+          </p>
+          <div
+            style={{ display: "flex", gap: "15px", justifyContent: "center" }}
+          >
+            <button
+              onClick={() => setUserToDelete(null)}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "6px",
+                border: "1px solid #555",
+                background: "transparent",
+                color: "var(--text-main)",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {t("users.cancel", "Cancelar")}
+            </button>
+            <button
+              onClick={executeDeleteUser}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#ef4444",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {t("users.delete", "Eliminar")}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

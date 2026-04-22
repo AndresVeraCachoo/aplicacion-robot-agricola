@@ -16,6 +16,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import { useMissionStore } from "../../store/missionStore";
+import { useToast } from "../../context/ToastContext"; // 🛡️ AÑADIDO PARA ELIMINAR ALERTAS NATIVAS
 import "./ControlMap.css";
 
 import "@geoman-io/leaflet-geoman-free";
@@ -32,7 +33,6 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Funciones Matemáticas
 const calculateGeodesicArea = (latLngs) => {
   const EARTH_RADIUS = 6378137;
   let area = 0;
@@ -123,12 +123,9 @@ const updateAreaTooltip = (layer, t) => {
     });
 };
 
-// 🛡️ FIX DEFINITIVO PARA EL MAPA GRIS AL ABRIR EL PANEL
 const MapResizer = ({ showPanel }) => {
   const map = useMap();
   useEffect(() => {
-    // Cuando el panel cambia de estado (abre/cierra), forzamos al mapa a redibujarse
-    // repetidamente durante el tiempo que suele durar una animación de CSS (aprox 400ms)
     let animationInterval;
     let startTime = Date.now();
 
@@ -149,20 +146,17 @@ const MapResizer = ({ showPanel }) => {
 };
 MapResizer.propTypes = { showPanel: PropTypes.bool.isRequired };
 
-// 🛡️ NUEVA LÓGICA: SEGUIDOR DEL ROBOT CUANDO EL MAPA ES PIP (MINIMAPA)
 const MapFollower = ({ isPip }) => {
   const map = useMap();
   const position = useRobotStore((state) => state.position);
 
-  // Recalcular el tamaño del mapa cuando entra/sale del modo PiP
   useEffect(() => {
     const timer = setTimeout(() => {
       map.invalidateSize({ animate: true });
-    }, 450); // Damos margen a que termine la animación PiP de CSS
+    }, 450);
     return () => clearTimeout(timer);
   }, [isPip, map]);
 
-  // Si estamos en modo minimapa, el mapa sigue al robot incondicionalmente
   useEffect(() => {
     if (isPip && position?.lat && position?.lon) {
       map.setView([position.lat, position.lon], map.getZoom(), {
@@ -180,6 +174,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
+  const { addToast } = useToast(); // 🚀 Importado para los errores del mapa
   const isZoneLoadedRef = useRef(false);
 
   const handleZoneUpdate = useCallback(
@@ -237,7 +232,14 @@ const GeomanControls = ({ ignoreClickRef }) => {
 
     map.on("pm:create", (e) => {
       if (e.layer.pm?.hasSelfIntersection()) {
-        alert(t("control.polygonError"));
+        // 🚀 FIX: Eliminado alert nativo
+        addToast(
+          t(
+            "control.polygonError",
+            "El polígono no puede cruzarse a sí mismo.",
+          ),
+          "error",
+        );
         map.removeLayer(e.layer);
         return;
       }
@@ -265,7 +267,15 @@ const GeomanControls = ({ ignoreClickRef }) => {
         "pm:create pm:remove pm:drawstart pm:drawend pm:globaldragmodetoggled pm:globalrotatemodetoggled",
       );
     };
-  }, [map, clearSafeZone, ignoreClickRef, handleZoneUpdate, t, i18n.language]);
+  }, [
+    map,
+    clearSafeZone,
+    ignoreClickRef,
+    handleZoneUpdate,
+    t,
+    i18n.language,
+    addToast,
+  ]);
 
   useEffect(() => {
     if (!map) return;
@@ -305,7 +315,6 @@ GeomanControls.propTypes = {
   ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
 };
 
-// ICONO DE LA BASE DE CARGA
 const baseIcon = new L.DivIcon({
   className: "base-station-icon",
   html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);">⚡</div>`,
@@ -371,7 +380,6 @@ const CenterButton = () => {
   );
 };
 
-// 🛡️ MODIFICACIÓN: Aceptamos isPip por props para que la pantalla de control nos diga cuándo somos pequeños
 const ControlMap = ({ isPip = false }) => {
   const { t } = useTranslation();
   const {
@@ -389,6 +397,7 @@ const ControlMap = ({ isPip = false }) => {
   } = useRobotStore();
 
   const { misiones, fetchMisiones, startMissionRun } = useMissionStore();
+  const { addToast } = useToast(); // 🚀 IMPORTAMOS EL TOAST AQUÍ TAMBIÉN
   const ignoreClickRef = useRef(false);
 
   const [showMissionsPanel, setShowMissionsPanel] = useState(false);
@@ -399,7 +408,6 @@ const ControlMap = ({ isPip = false }) => {
     fetchMisiones();
   }, [fetchMisiones]);
 
-  // Lógica de Barra de Progreso
   const pointsRemaining = navQueue.length + (navTarget ? 1 : 0);
   const pointsCompleted = Math.max(0, totalMissionPoints - pointsRemaining);
   const progressPercent =
@@ -421,8 +429,10 @@ const ControlMap = ({ isPip = false }) => {
 
   const handleLoadMission = (mission) => {
     if (system.battery < mission.bateria_minima) {
-      alert(
+      // 🚀 FIX: Eliminado alert nativo de batería insuficiente
+      addToast(
         `⚠️ Batería insuficiente. La misión requiere ${mission.bateria_minima}%, pero el robot tiene ${system.battery}%`,
+        "error",
       );
       return;
     }
@@ -470,7 +480,7 @@ const ControlMap = ({ isPip = false }) => {
   return (
     <div className="control-map-wrapper">
       <button
-        className="toggle-missions-btn btn-misiones" /* 🛡️ CLASE AÑADIDA AQUÍ PARA OCULTARLA EN PIP */
+        className="toggle-missions-btn btn-misiones"
         onClick={() => setShowMissionsPanel(!showMissionsPanel)}
       >
         🗺️ {t("control.missionsBtn")}
@@ -498,8 +508,6 @@ const ControlMap = ({ isPip = false }) => {
         className="control-leaflet-map"
       >
         <MapResizer showPanel={showMissionsPanel} />
-
-        {/* 🛡️ INYECTAMOS EL SEGUIDOR DE MAPA QUE ACTÚA SOLO EN PIP */}
         <MapFollower isPip={isPip} />
 
         <TileLayer
@@ -510,7 +518,6 @@ const ControlMap = ({ isPip = false }) => {
         <GeomanControls ignoreClickRef={ignoreClickRef} />
         <CenterButton />
 
-        {/* ESCUDOS APLICADOS (pmIgnore={true}) EN PREVISUALIZACIONES */}
         {showMissionsPanel && hoveredMission && hoveredPolygon.length > 0 && (
           <>
             <Polygon
@@ -531,16 +538,20 @@ const ControlMap = ({ isPip = false }) => {
           </>
         )}
 
-        {/* BASE DE CARGA */}
-        <Marker position={[42.36317, -3.69882]} icon={baseIcon} pmIgnore={true}>
+        <Marker
+          position={[42.36317, -3.69882]}
+          icon={baseIcon}
+          pmIgnore={true}
+          zIndexOffset={-10}
+        >
           <Popup>{t("control.baseStation", "Base de Carga (Home)")}</Popup>
         </Marker>
 
-        {/* ESCUDOS APLICADOS (pmIgnore={true}) EN EL ROBOT */}
         <Marker
           position={[position.lat, position.lon]}
           icon={createRobotArrowIcon(system.heading || 0)}
           pmIgnore={true}
+          zIndexOffset={1000}
         >
           <Popup>
             AgriRobot

@@ -18,6 +18,8 @@ import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 
 import { useMissionStore } from "../store/missionStore";
 import { useRobotStore } from "../store/robotStore";
+import { useToast } from "../context/ToastContext";
+import Modal from "../components/Modal";
 import "./MissionsPage.css";
 
 import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
@@ -91,15 +93,15 @@ MapClickHandler.propTypes = {
   setClickedPos: PropTypes.func.isRequired,
 };
 
-// 🛡️ MODIFICADO: Recibe showToast como prop para poder mostrar errores del polígono
 const GeomanMissionControls = ({
   areaTrabajo,
   setAreaTrabajo,
   editandoId,
-  showToast,
+  addToast,
 }) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
+  const polygonLoadedRef = useRef(null);
 
   useEffect(() => {
     if (!map) return;
@@ -122,7 +124,7 @@ const GeomanMissionControls = ({
       drawCircle: false,
       editMode: true,
       dragMode: true,
-      cutPolygon: false,
+      cutPolygon: true,
       rotateMode: true,
       removalMode: true,
     });
@@ -130,8 +132,13 @@ const GeomanMissionControls = ({
     map.on("pm:create", (e) => {
       const { layer } = e;
       if (layer.pm?.hasSelfIntersection()) {
-        // 🛡️ FIX: Usamos el Toast en lugar de alert()
-        showToast(t("missions.alerts.polygonError"), "error");
+        addToast(
+          t(
+            "control.polygonError",
+            "El polígono no puede cruzarse a sí mismo.",
+          ),
+          "error",
+        );
         map.removeLayer(layer);
         return;
       }
@@ -141,6 +148,16 @@ const GeomanMissionControls = ({
         }
       });
       setAreaTrabajo(layer.toGeoJSON().geometry);
+
+      layer.on(
+        "pm:edit pm:dragend pm:rotateend pm:markerdragend pm:vertexadded pm:vertexremoved",
+        (evt) => {
+          setAreaTrabajo(evt.target.toGeoJSON().geometry);
+        },
+      );
+      layer.on("pm:cut", (evt) => {
+        setAreaTrabajo(evt.layer.toGeoJSON().geometry);
+      });
     });
 
     map.on("pm:remove", () => setAreaTrabajo(null));
@@ -150,10 +167,12 @@ const GeomanMissionControls = ({
       map.off("pm:create");
       map.off("pm:remove");
     };
-  }, [map, setAreaTrabajo, i18n.language, t, showToast]);
+  }, [map, setAreaTrabajo, i18n.language, t, addToast]);
 
   useEffect(() => {
     if (editandoId && areaTrabajo?.type === "Polygon") {
+      if (polygonLoadedRef.current === editandoId) return;
+
       map.eachLayer((l) => {
         if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
       });
@@ -163,16 +182,15 @@ const GeomanMissionControls = ({
 
       map.fitBounds(polygon.getBounds(), { padding: [20, 20] });
 
-      polygon.on("pm:edit", (e) =>
-        setAreaTrabajo(e.target.toGeoJSON().geometry),
-      );
-      polygon.on("pm:dragend", (e) =>
-        setAreaTrabajo(e.target.toGeoJSON().geometry),
-      );
-      polygon.on("pm:rotateend", (e) =>
-        setAreaTrabajo(e.target.toGeoJSON().geometry),
+      polygon.on(
+        "pm:edit pm:dragend pm:rotateend pm:markerdragend pm:vertexadded pm:vertexremoved",
+        (e) => setAreaTrabajo(e.target.toGeoJSON().geometry),
       );
       polygon.on("pm:cut", (e) => setAreaTrabajo(e.layer.toGeoJSON().geometry));
+
+      polygonLoadedRef.current = editandoId;
+    } else if (!editandoId) {
+      polygonLoadedRef.current = null;
     }
   }, [areaTrabajo, editandoId, map, setAreaTrabajo]);
 
@@ -183,7 +201,7 @@ GeomanMissionControls.propTypes = {
   areaTrabajo: PropTypes.object,
   setAreaTrabajo: PropTypes.func.isRequired,
   editandoId: PropTypes.number,
-  showToast: PropTypes.func.isRequired,
+  addToast: PropTypes.func.isRequired,
 };
 
 function MissionsPage() {
@@ -191,9 +209,9 @@ function MissionsPage() {
   const { misiones, fetchMisiones, createMision, updateMision, deleteMision } =
     useMissionStore();
   const { position, system } = useRobotStore();
+  const { addToast } = useToast();
   const mapRef = useRef();
 
-  // Estados del Formulario
   const [editandoId, setEditandoId] = useState(null);
   const [nombre, setNombre] = useState("");
   const [sensores, setSensores] = useState({
@@ -209,24 +227,11 @@ function MissionsPage() {
   const [areaTrabajo, setAreaTrabajo] = useState(null);
   const [clickedPos, setClickedPos] = useState(null);
 
-  // 🛡️ NUEVO ESTADO: Controla las notificaciones flotantes (Toasts)
-  const [toast, setToast] = useState({
-    visible: false,
-    message: "",
-    type: "success",
-  });
+  const [missionToDelete, setMissionToDelete] = useState(null);
 
   useEffect(() => {
     fetchMisiones();
   }, [fetchMisiones]);
-
-  // 🛡️ NUEVA FUNCIONALIDAD: Muestra el toast durante 3 segundos y luego lo oculta
-  const showToast = (message, type = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-    }, 3000);
-  };
 
   const handleCheckboxChange = (sensor) => {
     setSensores({ ...sensores, [sensor]: !sensores[sensor] });
@@ -255,6 +260,16 @@ function MissionsPage() {
   const handleCancelEdit = () => {
     setEditandoId(null);
     setNombre("");
+    setAnchoTrabajo(2);
+    setAnguloPasada(0);
+    setBateriaMinima(20);
+    setSensores({
+      humedad: true,
+      temperatura: false,
+      ph: false,
+      npk: false,
+      radiacion: false,
+    });
     setAreaTrabajo(null);
     if (mapRef.current) {
       mapRef.current.eachLayer((l) => {
@@ -267,8 +282,13 @@ function MissionsPage() {
   const handleSaveMission = async (e) => {
     e.preventDefault();
     if (!areaTrabajo) {
-      // 🛡️ FIX: Reemplazado alert por showToast de error
-      showToast(t("missions.alerts.drawAreaFirst"), "error");
+      addToast(
+        t(
+          "missions.alerts.drawAreaFirst",
+          "Dibuja el área de trabajo en el mapa primero.",
+        ),
+        "error",
+      );
       return;
     }
 
@@ -281,13 +301,15 @@ function MissionsPage() {
     };
 
     const sensoresActivos = Object.entries(sensores)
-      .filter(([activo]) => activo)
+      .filter(([, activo]) => activo)
       .map(([key]) => mapSensorsToLocale[key])
       .join(", ");
 
     if (!sensoresActivos) {
-      // 🛡️ FIX: Reemplazado alert por showToast de error
-      showToast(t("missions.alerts.selectData"), "error");
+      addToast(
+        t("missions.alerts.selectData", "Selecciona al menos un tipo de dato."),
+        "error",
+      );
       return;
     }
 
@@ -300,19 +322,49 @@ function MissionsPage() {
       area_trabajo: areaTrabajo,
     };
 
-    const exito = editandoId
-      ? await updateMision(editandoId, missionData)
-      : await createMision(missionData);
+    try {
+      if (editandoId) {
+        const exito = await updateMision(editandoId, missionData);
+        if (exito) {
+          addToast(
+            t(
+              "missions.alerts.updateSuccess",
+              "Misión actualizada correctamente",
+            ),
+            "success",
+          );
+        } else {
+          addToast("Error al actualizar la misión", "error");
+        }
+      } else {
+        await createMision(missionData);
+        addToast(
+          t("missions.alerts.saveSuccess", "¡Misión creada con éxito!"),
+          "success",
+        );
+      }
 
-    if (exito) {
-      // 🛡️ FIX: Reemplazado alert por showToast de éxito
-      showToast(
-        editandoId
-          ? "Misión actualizada correctamente"
-          : t("missions.alerts.saveSuccess"),
-        "success",
-      );
       handleCancelEdit();
+      fetchMisiones();
+    } catch (error) {
+      console.error("Error al guardar la misión:", error);
+      addToast("Ocurrió un error al guardar la misión", "error");
+    }
+  };
+
+  const executeDeleteMission = async () => {
+    if (!missionToDelete) return;
+    try {
+      await deleteMision(missionToDelete);
+      setMissionToDelete(null);
+      addToast(
+        t("missions.card.deleteSuccess", "Misión eliminada correctamente"),
+        "error",
+      );
+      fetchMisiones();
+    } catch (error) {
+      console.error("Error al eliminar la misión:", error);
+      addToast("Error al eliminar la misión", "error");
     }
   };
 
@@ -323,17 +375,14 @@ function MissionsPage() {
 
   return (
     <div className="missions-page">
-      {/* 🛡️ NUEVO COMPONENTE: El Toast Notificador */}
-      {toast.visible && (
-        <div className={`custom-toast toast-${toast.type}`}>
-          {toast.type === "error" ? "⚠️ " : "✅ "}
-          {toast.message}
-        </div>
-      )}
-
       <div className="missions-layout">
         <aside className="mission-form-panel">
-          <h3>{editandoId ? "✏️ Editar Misión" : t("missions.createNew")}</h3>
+          <h3>
+            {editandoId
+              ? `✏️ ${t("missions.editTitle", "Editar Misión")}`
+              : t("missions.createNew")}
+          </h3>
+
           <form onSubmit={handleSaveMission}>
             <div className="form-group">
               <label htmlFor="mission-name">{t("missions.form.name")}</label>
@@ -446,33 +495,20 @@ function MissionsPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
-              <button
-                type="submit"
-                className="btn-save-mission"
-                style={{
-                  flex: editandoId ? 1 : "none",
-                  width: editandoId ? "auto" : "100%",
-                }}
-              >
-                {editandoId ? "Actualizar" : t("missions.form.saveBtn")}
+            <div className="form-actions-row">
+              <button type="submit" className="btn-save-mission">
+                {editandoId
+                  ? t("missions.form.updateBtn", "Actualizar")
+                  : t("missions.form.saveBtn", "Guardar Misión")}
               </button>
+
               {editandoId && (
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#ef4444",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    fontSize: "1.05rem",
-                  }}
+                  className="btn-cancel-mission"
                 >
-                  Cancelar
+                  {t("users.cancel", "Cancelar")}
                 </button>
               )}
             </div>
@@ -497,12 +533,11 @@ function MissionsPage() {
               attribution="&copy; OpenStreetMap"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
-            {/* 🛡️ FIX: Le pasamos la función al componente del mapa */}
             <GeomanMissionControls
               areaTrabajo={areaTrabajo}
               setAreaTrabajo={setAreaTrabajo}
               editandoId={editandoId}
-              showToast={showToast}
+              addToast={addToast}
             />
             <CenterButton />
             <MapClickHandler setClickedPos={setClickedPos} />
@@ -553,10 +588,10 @@ function MissionsPage() {
                   onClick={() => handleEditMission(m)}
                   className="btn-edit-mission"
                 >
-                  Editar
+                  {t("users.edit", "Editar")}
                 </button>
                 <button
-                  onClick={() => deleteMision(m.id)}
+                  onClick={() => setMissionToDelete(m.id)}
                   className="btn-delete"
                   style={{ flex: 1, margin: 0 }}
                 >
@@ -568,6 +603,53 @@ function MissionsPage() {
           {misiones.length === 0 && <p>{t("missions.noMissions")}</p>}
         </div>
       </section>
+
+      <Modal
+        isOpen={!!missionToDelete}
+        onClose={() => setMissionToDelete(null)}
+        title={t("missions.confirmDeleteTitle", "Eliminar Misión")}
+      >
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          <p style={{ marginBottom: "20px", color: "var(--text-main)" }}>
+            {t(
+              "missions.confirmDelete",
+              "¿Estás seguro de que deseas eliminar esta misión? Esta acción no se puede deshacer.",
+            )}
+          </p>
+          <div
+            style={{ display: "flex", gap: "15px", justifyContent: "center" }}
+          >
+            <button
+              onClick={() => setMissionToDelete(null)}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "6px",
+                border: "1px solid #555",
+                background: "transparent",
+                color: "var(--text-main)",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {t("users.cancel", "Cancelar")}
+            </button>
+            <button
+              onClick={executeDeleteMission}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#ef4444",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {t("missions.card.deleteBtn", "Eliminar")}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
