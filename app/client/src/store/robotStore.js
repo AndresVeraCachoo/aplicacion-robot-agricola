@@ -94,16 +94,21 @@ export const useRobotStore = create((set, get) => ({
         const currentCons = newBatteryData.consumption ?? state.battery.consumption;
         const calculatedNetPower = currentSolar - currentCons;
 
-        // 🚀 CÁLCULO AUTOMÁTICO DE RUMBO (Ya incluye el desfase de 45°)
+        // 🚀 CÁLCULO INTELIGENTE DE RUMBO
         let newHeading = state.system.heading;
-        
-        if (data.position?.lat && data.position.lon && state.position.lat && state.position.lon) {
+        const currentMode = data.system?.mode || state.system.mode;
+
+        if (currentMode === "MANUAL" && data.system?.heading !== undefined) {
+            // 🚜 FIX: En manual, obligamos a usar el ángulo real del motor para poder rotar en el sitio
+            // Aplicamos el -80 del offset visual del PNG para que quede recto
+            newHeading = (data.system.heading - 80 + 360) % 360;
+        } else if (data.position?.lat && data.position.lon && state.position.lat && state.position.lon) {
+           // 🤖 En automático, calculamos con el GPS para corregir micro-desviaciones de la ruta
            const distance = Math.sqrt(
              Math.pow(data.position.lat - state.position.lat, 2) + 
              Math.pow(data.position.lon - state.position.lon, 2)
            );
 
-           // Solo actualizamos si el movimiento es real (evita temblores del GPS)
            if (distance > 0.000005) { 
              newHeading = calculateBearing(state.position.lat, state.position.lon, data.position.lat, data.position.lon);
            }
@@ -197,7 +202,6 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
-  // ... (Resto de funciones: setSpeedLimit, navigateToPoint, etc. se mantienen igual)
   setSpeedLimit: (limit) => {
     const { socket, system } = get();
     const newLimit = Math.max(0, Math.min(100, limit));

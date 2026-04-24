@@ -39,7 +39,7 @@ export const getDatosAgronomicos = catchAsync(async (req, res, next) => {
   // Filtro de Misiones (ID numérico)
   if (misionId && misionId !== 'null' && misionId !== '') {
     whereClauses.push(`m.id = $${values.length + 1}`);
-    values.push(Number.parseInt(misionId));
+    values.push(Number.parseInt(misionId, 10));
   }
 
   if (whereClauses.length > 0) {
@@ -53,13 +53,30 @@ export const getDatosAgronomicos = catchAsync(async (req, res, next) => {
 });
 
 export const getHistorialEnergia = catchAsync(async (req, res, next) => {
-  const { start, end } = req.query;
+  const { start, end, misionId } = req.query; // 👈 AHORA RECIBE misionId
+  
   let query = `SELECT "timestamp", bateria_porcentaje, radiacion_solar, estado FROM historial_energia`;
   const values = [];
+  const whereClauses = [];
 
+  // 1. Si nos dan fechas directas (Filtro por fechas)
   if (start && end) {
-    query += ` WHERE "timestamp" >= $1 AND "timestamp" <= $2`;
+    whereClauses.push(`"timestamp" >= $${values.length + 1} AND "timestamp" <= $${values.length + 2}`);
     values.push(start, end);
+  }
+
+  // 2. Si nos dan una MISIÓN (Busca el historial de energía durante esa misión)
+  if (misionId && misionId !== 'null' && misionId !== '') {
+    whereClauses.push(`
+      "timestamp" >= (SELECT fecha_inicio FROM ejecuciones_mision WHERE mision_id = $${values.length + 1} ORDER BY fecha_inicio DESC LIMIT 1)
+      AND 
+      "timestamp" <= (SELECT COALESCE(fecha_fin, NOW()) FROM ejecuciones_mision WHERE mision_id = $${values.length + 1} ORDER BY fecha_inicio DESC LIMIT 1)
+    `);
+    values.push(Number.parseInt(misionId, 10));
+  }
+
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
   }
 
   query += ` ORDER BY "timestamp" ASC`;

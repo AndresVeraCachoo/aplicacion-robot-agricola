@@ -10,6 +10,8 @@ const MAX_HISTORY_RECORDS = 1000;
 
 // --- CONSTANTES FÍSICAS DEL ROBOT ---
 const SOLAR_EFFICIENCY = 0.005; 
+const IDLE_CHARGE_THRESHOLD = 30; // Segundos de inactividad total para forzar rescate
+const BASE_CHARGE_DELAY = 5;      // Segundos aparcado en la base antes de enchufarse
 
 // COORDENADAS FIJAS DE LA BASE DE CARGA
 const BASE_LAT = 42.36317;
@@ -21,6 +23,8 @@ let battery = 100;
 let isCharging = false; 
 let heading = 0;
 let speed = 0;
+let baseIdleCounter = 0; 
+let idleTicksCounter = 0;
 
 let controlMode = "MANUAL"; // MANUAL, AUTO, NAVIGATING, RETURNING_TO_BASE, RESUMING_MISSION
 let manualVelocity = { x: 0, y: 0 };
@@ -183,8 +187,7 @@ const handleNavigatingMode = (lat, lon, speedFactor, customTargetLat, customTarg
 const handleRtlMode = (lat, lon, speedFactor) => {
   const result = handleNavigatingMode(lat, lon, Math.max(0.5, speedFactor), BASE_LAT, BASE_LON, true);
   if (result.reached) {
-    console.log("🛬 Robot ha llegado a la base. Iniciando recarga rápida.");
-    isCharging = true;
+    console.log("🛬 Robot ha llegado a la base. Esperando para cargar...");
     speed = 0;
   }
   return result;
@@ -202,13 +205,73 @@ const handleResumingMode = (lat, lon, speedFactor) => {
   return result;
 };
 
+// 🚜 --- FÍSICA MODO MANUAL (TANQUE / COCHE) ---
+const handleManualMode = (lat, lon, speedFactor) => {
+  // 1. Giro sobre eje
+  if (manualVelocity.x !== 0) {
+    heading = (heading + (manualVelocity.x * 15)) % 360;
+    if (heading < 0) heading += 360;
+  }
+  // Si no hay acelerador, no hay avance
+  if (manualVelocity.y === 0) {
+    return { nextLat: lat, nextLon: lon, dLat: 0, dLon: 0 };
+  }
+  // 2. Tracción (positiva para avanzar, negativa para marcha atrás)
+  const baseSpeed = 0.00015 * speedFactor;
+  const driveForce = manualVelocity.y * baseSpeed; 
+  // 3. Trigonometría
+  const headingRad = heading * (Math.PI / 180);
+  const dLat = Math.cos(headingRad) * driveForce;
+  const dLon = Math.sin(headingRad) * driveForce;
+
+  return { nextLat: lat + dLat, nextLon: lon + dLon, dLat: dLat, dLon: dLon };
+};
+
 const calculateNextPosition = (lat, lon, speedFactor) => {
   switch(controlMode) {
     case "AUTO": return handleAutoMode(lat, lon, speedFactor);
     case "NAVIGATING": return handleNavigatingMode(lat, lon, speedFactor);
     case "RETURNING_TO_BASE": return handleRtlMode(lat, lon, speedFactor);
     case "RESUMING_MISSION": return handleResumingMode(lat, lon, speedFactor);
-    case "MANUAL": default: return { nextLat: lat + manualVelocity.y * speedFactor, nextLon: lon + manualVelocity.x * speedFactor, dLat: manualVelocity.y * speedFactor, dLon: manualVelocity.x * speedFactor };
+    case "MANUAL": default: return handleManualMode(lat, lon, speedFactor);
+  }
+};
+
+// 🔌 --- LÓGICAS DE CARGA E INACTIVIDAD ---
+const checkBaseProximityForCharge = () => {
+  const distToBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON);
+
+  if (Number(speed) === 0 && !isCharging && distToBase <= 3) {
+      baseIdleCounter++;
+      if (baseIdleCounter >= BASE_CHARGE_DELAY) {
+          isCharging = true;
+          currentLat = BASE_LAT; 
+          currentLon = BASE_LON;
+          baseIdleCounter = 0;
+          idleTicksCounter = 0;
+          
+          if (controlMode === "RETURNING_TO_BASE") {
+            controlMode = interruptedState ? "RESUMING_MISSION" : "MANUAL";
+          }
+      }
+  } else {
+      baseIdleCounter = 0;
+  }
+};
+
+const checkIdleAutoCharge = () => {
+  if (controlMode === "MANUAL" && Number(speed) === 0 && !isCharging) {
+      idleTicksCounter++;
+      if (idleTicksCounter >= IDLE_CHARGE_THRESHOLD) {
+          console.log("⏱️ Timeout de inactividad superado. Robot en modo de auto-carga de rescate.");
+          isCharging = true;
+          currentLat = BASE_LAT;
+          currentLon = BASE_LON;
+          idleTicksCounter = 0;
+          baseIdleCounter = 0;
+      }
+  } else {
+      idleTicksCounter = 0;
   }
 };
 
@@ -217,7 +280,6 @@ export const calculateSolarRadiation = (dateObj) => {
   const hour = dateObj.getHours() + (dateObj.getMinutes() / 60);
   if (hour < 6 || hour > 20) return 0; 
   const radiationWave = Math.sin(Math.PI * (hour - 6) / 14); 
-  // 🐛 FIX UI: Eliminado el ruido aleatorio para que la UI no parpadee al borde del consumo
   return Math.max(0, radiationWave * 1000); 
 };
 
@@ -249,9 +311,9 @@ const handleBaseCharging = () => {
   if (battery >= 100) { 
     battery = 100; 
     isCharging = false; 
-    controlMode = interruptedState ? "RESUMING_MISSION" : "MANUAL";
     if (interruptedState) {
       console.log("🔋 Batería 100%. Desplegando hacia interrupción...");
+      controlMode = "RESUMING_MISSION";
     }
   }
   return { consumedThisTick: 0, generatedThisTick };
@@ -259,11 +321,9 @@ const handleBaseCharging = () => {
 
 const calculateTickConsumption = () => {
   if (isPaused) return 0.1; // Consumo mínimo (solo el "cerebro" encendido)
-  
   const movingGasto = Number.parseFloat(speed) > 0 
     ? (1.5 + ((speedLimitPercent / 100) * 1.5)) 
     : 0;
-    
   return 0.2 + movingGasto; 
 };
 
@@ -314,8 +374,10 @@ const applyGeofencing = (cLat, cLon, nLat, nLon) => {
 
 const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   if (Math.abs(nLat - cLat) > 0 || Math.abs(nLon - cLon) > 0 || Math.abs(dLat) > 0) {
-    if (Math.abs(dLat) > 0 || Math.abs(dLon) > 0) {
-      heading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+    if (controlMode !== "MANUAL") {
+        if (Math.abs(dLat) > 0 || Math.abs(dLon) > 0) {
+        heading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+        }
     }
     speed = (Math.hypot(nLat - cLat, nLon - cLon) * 100000).toFixed(2);
   } else {
@@ -323,6 +385,7 @@ const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   }
 };
 
+// --- MÉTODOS EXPORTADOS ---
 export const setSpeedLimit = (limit) => { speedLimitPercent = limit; };
 export const queueNavPoint = (point) => { navQueue.push(point); };
 export const clearNavQueue = () => { navQueue = []; };
@@ -345,7 +408,7 @@ export const setRobotMode = (mode) => {
 
 export const setManualVelocity = (vx, vy) => { 
   if (controlMode === "MANUAL") {
-    manualVelocity = { x: vx * 0.00015, y: vy * 0.00015 }; 
+    manualVelocity = { x: vx, y: vy }; 
   }
 };
 
@@ -372,6 +435,8 @@ export const cancelSimulation = () => {
 // --- PROCESAMIENTO PRINCIPAL DE TICKS ---
 const processMovementTick = async (io) => {
   checkRTLRequired();
+  checkIdleAutoCharge(); 
+  checkBaseProximityForCharge();
   updateBatteryState();
 
   if (!isCharging && !isPaused) {
@@ -393,14 +458,12 @@ const processMovementTick = async (io) => {
   try {
     await pool.query(
       `UPDATE robot_estado SET current_lat = $1, current_lon = $2, battery_percentage = $3, battery_status = $4, system_status = $5, system_speed = $6, system_heading = $7 WHERE id = 1`,
-      // 🐛 FIX DB: Usamos Math.round para mayor precisión en BBDD
       [currentLat, currentLon, Math.round(battery), isCharging ? "CHARGING" : "IDLE", currentSystemStatus, speed, Math.round(heading)]
     );
 
     if (io) {
       io.emit("robot:status", {
         battery: { 
-          // 🐛 FIX UI: Usamos Math.round para que no parpadee entre 99 y 100
           percentage: Math.round(battery), 
           status: isCharging ? "CHARGING" : "IDLE", 
           voltage: 12.5, 
@@ -484,7 +547,7 @@ const processAgronomicTick = async (io) => {
 };
 
 export const startRobotSimulation = (io) => {
-  console.log("🤖 Simulador: ACTIVADO (Física Solar Estable)");
+  console.log("🤖 Simulador: ACTIVADO (Completo)");
   setInterval(() => processMovementTick(io), MOVEMENT_INTERVAL);
   setInterval(() => processEnergyTick(), ENERGY_LOG_INTERVAL);
   setInterval(() => processAgronomicTick(io), SENSOR_INTERVAL);

@@ -2,11 +2,17 @@
 
 .energy-page-container {
   padding: 30px;
-  max-width: 1400px; 
+  max-width: 1400px;
   margin: 0 auto;
   color: var(--text-main);
   animation: fadeIn 0.3s ease-out;
   box-sizing: border-box;
+
+  /* 👈 FIX SCROLL: Fuerza a que la página tenga scroll propio si es muy larga */
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iPhones */
+  padding-bottom: 50px; /* Margen extra abajo para no chocar con el borde del móvil */
 }
 
 .energy-header {
@@ -70,7 +76,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .kpi-card:hover {
@@ -110,56 +118,125 @@
    ======================================================== */
 .energy-charts-section {
   background-color: var(--card-bg);
-  /* 🛡️ FIX: Padding lateral reducido para exprimir el ancho del mapa */
-  padding: 25px 15px; 
+  padding: 25px 20px;
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--border-light);
-  height: 60vh;
-  min-height: 500px; 
+  height: auto;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
+.charts-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
 .section-title {
-  margin: 0 0 20px 0;
+  margin: 0;
   color: var(--primary-dark);
   font-size: 1.4em;
   font-weight: 800;
-  /* 🛡️ FIX: Título perfectamente centrado */
-  text-align: center; 
+  text-align: center;
+}
+
+/* 👈 Tamaños base de la gráfica pasados al CSS */
+.chart-wrapper {
+  margin-top: 20px;
+  width: 100%;
+  height: 400px;
+  min-height: 400px;
 }
 
 /* Estados Específicos */
-.status-charging { color: #22c55e; }
-.status-draining { color: #f59e0b; }
+.status-charging {
+  color: #22c55e;
+}
+.status-draining {
+  color: #f59e0b;
+}
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Modo Oscuro */
-body.dark-mode .kpi-label { color: #94a3b8; }
-body.dark-mode .kpi-sub { color: #64748b; }
-body.dark-mode .kpi-card { border-color: rgba(255,255,255,0.05); }
+body.dark-mode .kpi-label {
+  color: #94a3b8;
+}
+body.dark-mode .kpi-sub {
+  color: #64748b;
+}
+body.dark-mode .kpi-card {
+  border-color: rgba(255, 255, 255, 0.05);
+}
 
 /* ========================================================
-   📱 RESPONSIVE: TABLETS Y MÓVILES HORIZONTALES
+   📱 RESPONSIVE: MÓVILES HORIZONTALES (LANDSCAPE)
+   (Poca altura, mucho ancho)
    ======================================================== */
-@media (max-width: 1024px) {
+@media (max-height: 600px) and (orientation: landscape) {
+  .energy-page-container {
+    padding: 15px;
+  }
+  .energy-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+  }
+  .energy-kpi-grid {
+    /* Mantener 4 columnas, pero más compactas */
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .kpi-card {
+    padding: 10px;
+  }
+  .kpi-icon {
+    font-size: 1.5em;
+    margin-bottom: 5px;
+  }
+  .kpi-value {
+    font-size: 1.4em;
+  }
+
+  .energy-charts-section {
+    min-height: 350px;
+    padding: 15px 10px;
+  }
+  /* 👈 Achatar la gráfica para que quepa en la pantalla horizontal */
+  .chart-wrapper {
+    height: 250px;
+    min-height: 250px;
+  }
+}
+
+/* ========================================================
+   📱 RESPONSIVE: TABLETS 
+   ======================================================== */
+@media (max-width: 1024px) and (orientation: portrait) {
   .energy-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
 /* ========================================================
-   📱 RESPONSIVE: MÓVILES VERTICALES
+   📱 RESPONSIVE: MÓVILES VERTICALES (PORTRAIT)
    ======================================================== */
-@media (max-width: 768px) {
+@media (max-width: 768px) and (orientation: portrait) {
   .energy-page-container {
-    padding: 15px; 
+    padding: 15px;
   }
 
   .energy-header {
@@ -167,40 +244,44 @@ body.dark-mode .kpi-card { border-color: rgba(255,255,255,0.05); }
     padding-bottom: 10px;
   }
 
-  .energy-header h1 { font-size: 1.5em; }
+  .energy-header h1 {
+    font-size: 1.5em;
+  }
 
   .energy-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px; 
+    gap: 12px;
     margin-bottom: 20px;
   }
 
   .kpi-card {
-    padding: 16px 10px; 
+    padding: 16px 10px;
     border-radius: 12px;
   }
 
   .kpi-icon {
-    font-size: 1.8em; 
+    font-size: 1.8em;
     margin-bottom: 8px;
   }
-
   .kpi-label {
-    font-size: 0.7em; 
+    font-size: 0.7em;
     letter-spacing: 0;
   }
-
   .kpi-value {
-    font-size: 1.5em; 
+    font-size: 1.5em;
     margin: 5px 0;
   }
-
-  .kpi-sub { font-size: 0.7em; }
+  .kpi-sub {
+    font-size: 0.7em;
+  }
 
   .energy-charts-section {
-    padding: 20px 5px 10px 0; /* Apretado al máximo para móviles */
-    height: 55vh; 
+    padding: 20px 5px 10px 0;
     min-height: 400px;
     border-radius: 16px;
+  }
+  .chart-wrapper {
+    height: 300px;
+    min-height: 300px;
   }
 }

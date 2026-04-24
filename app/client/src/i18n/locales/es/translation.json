@@ -77,7 +77,9 @@
     "progress": "Progreso de la Misión",
     "point": "Punto",
     "of": "de",
-    "completed": "Completado"
+    "completed": "Completado",
+    "returningToBase": "Dirigiéndose a la base...",
+    "baseStation": "Base de Carga (Home)"
   },
   "data": {
     "title": "Centro de Análisis de Datos",
@@ -217,7 +219,14 @@
     "realTimeConsumption": "Consumo en Tiempo Real",
     "tractionMotors": "Motores Tracción",
     "navSystem": "Sistema Navegación",
-    "sensorsCamera": "Sensores y Cámara"
+    "sensorsCamera": "Sensores y Cámara",
+    "solarInput": "Entrada Solar",
+    "panelActive": "Panel Activo",
+    "standby": "Standby / Noche",
+    "balance": "Balance Energético",
+    "balance24h": "Balance Energético (24h)",
+    "fetchingData": "Buscando telemetría... ⏳",
+    "noData": "No se encontraron registros de energía para este filtro."
   },
   "modal": {
     "close": "Cerrar modal"

@@ -49,9 +49,11 @@ async function seedMissionsAndData(now) {
     const areaGeoJSON = JSON.stringify({ type: "Polygon", coordinates: [coordsParaGeoJSON] });
 
     const rutaPuntos = generateCoveragePath(mision.coords);
-    const duracionMilisegundos = rutaPuntos.length * 90000; 
+    
+    // 👈 Modificado a 5 minutos (300000ms) por punto para que la misión dure lo suficiente y baje la batería
+    const duracionMilisegundos = rutaPuntos.length * 300000; 
     const fechaFin = new Date(fechaInicio.getTime() + duracionMilisegundos);
-    const bateriaGastada = Math.min(100, Math.ceil(rutaPuntos.length * 0.5));
+    const bateriaGastada = Math.min(100, Math.ceil(rutaPuntos.length * 2));
 
     const missionRes = await pool.query(`
       INSERT INTO misiones (nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, area_trabajo, fecha_creacion, fecha_programada)
@@ -75,7 +77,8 @@ async function seedMissionsAndData(now) {
       let fosforo = (20 + getSecureRandom() * 15).toFixed(2);
       let potasio = (100 + getSecureRandom() * 50).toFixed(2);
       
-      let puntoDateObj = new Date(fechaInicio.getTime() + index * 90000);
+      // 👈 Intervalos de 5 minutos
+      let puntoDateObj = new Date(fechaInicio.getTime() + index * 300000);
       let radiacion = calculateSolarRadiation(puntoDateObj).toFixed(2);
 
       valoresInsert.push(`(${lat}, ${lon}, '${puntoDateObj.toISOString()}', ${humedad}, ${temp}, ${ph}, ${nitrogeno}, ${fosforo}, ${potasio}, ${radiacion}, ${ejecucionId})`);
@@ -92,10 +95,14 @@ async function seedMissionsAndData(now) {
 }
 
 async function seedEnergyHistory(now) {
-  console.log("🌱 [Seed] Generando historial de energía con simulación solar (48h)...");
+  console.log("🌱 [Seed] Generando historial de energía con simulación solar y consumo (4 Días)...");
   let energiaInsert = [];
-  let simBattery = 100; 
-  const historyPoints = 576; // 48 horas en ticks de 5 min
+  
+  // 👈 Empezamos al 40% hace 4 días para que la gráfica tenga margen de subir con el sol
+  let simBattery = 40; 
+  
+  // 👈 Ampliado a 4 días completos (1152 ticks de 5 min) para englobar todas las misiones
+  const historyPoints = 1152; 
   
   const ejecuciones = await pool.query("SELECT fecha_inicio, fecha_fin FROM ejecuciones_mision");
   const ejecs = ejecuciones.rows;
@@ -103,20 +110,20 @@ async function seedEnergyHistory(now) {
   for (let i = historyPoints; i >= 0; i--) {
     let tickTime = new Date(now.getTime() - (i * 5 * 60000));
     let estado = 'IDLE';
-    let consumo = 0.5; // Consumo base estando quieto
+    let consumo = 0.05; // 👈 Consumo base bajísimo (0.6% por hora de noche)
 
-    // Comprobar si el robot estaba trabajando en una misión en este momento
+    // Comprobar si el robot estaba en misión
     for (let e of ejecs) {
       if (tickTime >= new Date(e.fecha_inicio) && tickTime <= new Date(e.fecha_fin)) {
         estado = 'WORKING';
-        consumo = 4.5; // Consumo altísimo en misión
+        consumo = 2; // 👈 Consumo altísimo en misión (24% por hora)
         break;
       }
     }
 
-    // El sol lo recarga poco a poco
+    // El panel solar recarga de día
     let radiacion = calculateSolarRadiation(tickTime);
-    let generado = radiacion * 0.005; 
+    let generado = radiacion * 0.0015; // 👈 Max 1000W genera ~1.5% cada 5 min (18% por hora al mediodía)
     
     simBattery = simBattery - consumo + generado;
     simBattery = Math.max(0, Math.min(100, simBattery)); // Tope en 0% y 100%
@@ -148,17 +155,15 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
       console.log("🌱 [Seed] BD vacía detectada. Iniciando simulación de misiones 100% orgánicas...");
       const now = new Date();
 
-      // Orquestación limpia y legible
       await seedUsers();
       await seedRobotState();
       await seedMissionsAndData(now);
       await seedEnergyHistory(now);
 
-      console.log("✅ [Seed] BD sembrada con éxito con física de baterías incluida.");
+      console.log("✅ [Seed] BD sembrada con éxito con física de baterías y panel solar.");
       return; 
 
     } catch (err) {
-      // Manejo de errores validado por ESLint
       if (err.code === 'ECONNREFUSED' || err.code === '57P03' || err.message.includes('termin')) {
         retries--;
         if (retries === 0) {

@@ -11,12 +11,13 @@ import {
   Polygon,
   useMapEvents,
   useMap,
+  Tooltip, // 👈 AÑADIDO: Importamos Tooltip
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import { useMissionStore } from "../../store/missionStore";
-import { useToast } from "../../context/ToastContext"; // 🛡️ AÑADIDO PARA ELIMINAR ALERTAS NATIVAS
+import { useToast } from "../../context/ToastContext";
 import "./ControlMap.css";
 
 import "@geoman-io/leaflet-geoman-free";
@@ -174,7 +175,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
-  const { addToast } = useToast(); // 🚀 Importado para los errores del mapa
+  const { addToast } = useToast();
   const isZoneLoadedRef = useRef(false);
 
   const handleZoneUpdate = useCallback(
@@ -232,7 +233,6 @@ const GeomanControls = ({ ignoreClickRef }) => {
 
     map.on("pm:create", (e) => {
       if (e.layer.pm?.hasSelfIntersection()) {
-        // 🚀 FIX: Eliminado alert nativo
         addToast(
           t(
             "control.polygonError",
@@ -315,9 +315,10 @@ GeomanControls.propTypes = {
   ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
 };
 
+// 👈 FIX: Añadido cursor: pointer al icono de la base
 const baseIcon = new L.DivIcon({
   className: "base-station-icon",
-  html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);">⚡</div>`,
+  html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); cursor: pointer;">⚡</div>`,
   iconSize: [35, 35],
   iconAnchor: [17, 17],
   popupAnchor: [0, -20],
@@ -397,7 +398,7 @@ const ControlMap = ({ isPip = false }) => {
   } = useRobotStore();
 
   const { misiones, fetchMisiones, startMissionRun } = useMissionStore();
-  const { addToast } = useToast(); // 🚀 IMPORTAMOS EL TOAST AQUÍ TAMBIÉN
+  const { addToast } = useToast();
   const ignoreClickRef = useRef(false);
 
   const [showMissionsPanel, setShowMissionsPanel] = useState(false);
@@ -429,7 +430,6 @@ const ControlMap = ({ isPip = false }) => {
 
   const handleLoadMission = (mission) => {
     if (system.battery < mission.bateria_minima) {
-      // 🚀 FIX: Eliminado alert nativo de batería insuficiente
       addToast(
         `⚠️ Batería insuficiente. La misión requiere ${mission.bateria_minima}%, pero el robot tiene ${system.battery}%`,
         "error",
@@ -457,6 +457,14 @@ const ControlMap = ({ isPip = false }) => {
         queueNavigationPoint(path[i][0], path[i][1]);
     }
     setShowMissionsPanel(false);
+  };
+
+  // 👈 NUEVA FUNCIÓN: Al hacer click en la base, manda al robot y detiene eventos
+  const handleBaseStationClick = (e) => {
+    L.DomEvent.stopPropagation(e);
+    // Mandamos el robot a las coordenadas base predefinidas
+    navigateToPoint(42.36317, -3.69882);
+    addToast(t("control.returningToBase", "Dirigiéndose a la base..."), "info");
   };
 
   if (!position.lat)
@@ -538,13 +546,19 @@ const ControlMap = ({ isPip = false }) => {
           </>
         )}
 
+        {/* 👈 FIX: Tooltip (hover) y EventHandler (click) añadidos a la base */}
         <Marker
           position={[42.36317, -3.69882]}
           icon={baseIcon}
           pmIgnore={true}
           zIndexOffset={-10}
+          eventHandlers={{ click: handleBaseStationClick }}
         >
-          <Popup>{t("control.baseStation", "Base de Carga (Home)")}</Popup>
+          <Tooltip direction="top" offset={[0, -20]} opacity={0.9}>
+            <span style={{ fontWeight: "bold", fontSize: "14px" }}>
+              {t("control.baseStation", "Base de Carga (Home)")}
+            </span>
+          </Tooltip>
         </Marker>
 
         <Marker

@@ -77,7 +77,9 @@
     "progress": "Mission Progress",
     "point": "Point",
     "of": "of",
-    "completed": "Completed"
+    "completed": "Completed",
+    "returningToBase": "Returning to base...",
+    "baseStation": "Charging Station (Home)"
   },
   "data": {
     "title": "Data Analysis Center",
@@ -217,7 +219,14 @@
     "realTimeConsumption": "Real-Time Consumption",
     "tractionMotors": "Traction Motors",
     "navSystem": "Navigation System",
-    "sensorsCamera": "Sensors and Camera"
+    "sensorsCamera": "Sensors and Camera",
+    "solarInput": "Solar Input",
+    "panelActive": "Active Panel",
+    "standby": "Standby / Night",
+    "balance": "Energy Balance",
+    "balance24h": "Energy Balance (24h)",
+    "fetchingData": "Fetching telemetry... ⏳",
+    "noData": "No energy records found for this filter."
   },
   "modal": {
     "close": "Close modal"

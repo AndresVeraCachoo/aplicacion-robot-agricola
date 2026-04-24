@@ -57,20 +57,22 @@ const ControlPanel = () => {
 
       {/* Columna de control de la misión: Siempre visible */}
       <div className="panel-col mission-col">
-        <h4>Control de Misión</h4>
+        <h4>{t("control.missionControl", "Control de Misión")}</h4>
         <div className="mission-actions">
           {/* PAUSAR/REANUDAR siempre visible */}
           <button
             className={`mission-btn ${isPaused ? "btn-resume" : "btn-pause"}`}
             onClick={togglePauseMission}
           >
-            {isPaused ? "▶ REANUDAR" : "⏸ PAUSAR"}
+            {isPaused
+              ? `▶ ${t("control.resume", "REANUDAR")}`
+              : `⏸ ${t("control.pause", "PAUSAR")}`}
           </button>
 
           {/* CANCELAR solo visible si hay área */}
           {hasActiveArea && (
             <button className="mission-btn btn-cancel" onClick={cancelMission}>
-              ⏹ CANCELAR MISIÓN
+              ⏹ {t("control.cancelMission", "CANCELAR MISIÓN")}
             </button>
           )}
         </div>
