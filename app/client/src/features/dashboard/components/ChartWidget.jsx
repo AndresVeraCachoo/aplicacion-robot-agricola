@@ -19,9 +19,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import "./ChartWidget.css";
 
-// SOLUCIÓN SONARLINT: Componente declarado FUERA del componente principal
 const MetricOptions = ({ t }) => (
   <>
     <optgroup label={t("chart.climateSoil")}>
@@ -37,10 +38,7 @@ const MetricOptions = ({ t }) => (
     </optgroup>
   </>
 );
-
-MetricOptions.propTypes = {
-  t: PropTypes.func.isRequired,
-};
+MetricOptions.propTypes = { t: PropTypes.func.isRequired };
 
 function ChartWidget({
   data,
@@ -54,32 +52,16 @@ function ChartWidget({
   const [metric1, setMetric1] = useState(initialMetric1);
   const [metric2, setMetric2] = useState(initialMetric2);
   const [chartType, setChartType] = useState(initialType);
-  const [timeRange, setTimeRange] = useState("all");
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
-
-    const now = new Date();
-    let processedData = [...data].reverse();
-
-    if (timeRange !== "all") {
-      const cutoff = new Date();
-      if (timeRange === "1h") cutoff.setHours(now.getHours() - 1);
-      if (timeRange === "24h") cutoff.setHours(now.getHours() - 24);
-      if (timeRange === "7d") cutoff.setDate(now.getDate() - 7);
-
-      processedData = processedData.filter(
-        (d) => new Date(d.timestamp) >= cutoff,
-      );
-    }
+    let processedData = [...data].sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+    );
 
     return processedData.map((d) => ({
       ...d,
-      timeStr: new Date(d.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
+      timeMs: new Date(d.timestamp).getTime(),
       humedad: Number(d.humedad),
       temperatura_suelo: Number(d.temperatura_suelo),
       ph: Number(d.ph),
@@ -88,7 +70,7 @@ function ChartWidget({
       potasio: Number(d.potasio),
       radiacion_solar: Number(d.radiacion_solar),
     }));
-  }, [data, timeRange]);
+  }, [data]);
 
   const config = {
     humedad: {
@@ -126,16 +108,24 @@ function ChartWidget({
 
   const conf1 = config[metric1] || config["humedad"];
   const conf2 = config[metric2] || config["temperatura_suelo"];
-
   const isComparing = forcedCompare || chartType === "compare";
+
+  const formatXAxis = (tickItem) => {
+    // 👈 AHORA MUESTRA EL DÍA Y MES TAMBIÉN
+    return format(new Date(tickItem), "dd/MM HH:mm", { locale: es });
+  };
 
   const CommonAxis = (
     <>
       <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
       <XAxis
-        dataKey="timeStr"
+        dataKey="timeMs"
+        type="number"
+        scale="time"
+        domain={["dataMin", "dataMax"]}
+        tickFormatter={formatXAxis}
         tick={{ fontSize: 10, fill: "var(--text-main)" }}
-        minTickGap={30}
+        minTickGap={50}
         axisLine={false}
         tickLine={false}
       />
@@ -160,12 +150,14 @@ function ChartWidget({
         />
       )}
       <Tooltip
+        labelFormatter={(label) =>
+          format(new Date(label), "PPpp", { locale: es })
+        }
         contentStyle={{
           backgroundColor: "var(--card-bg, #fff)",
           borderColor: "var(--border-light, #ccc)",
           borderRadius: "8px",
           color: "var(--text-main)",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
         }}
       />
       <Legend wrapperStyle={{ paddingTop: "10px" }} />
@@ -175,7 +167,6 @@ function ChartWidget({
   const renderChart = () => {
     if (chartData.length === 0)
       return <div className="no-data-chart">{t("chart.noData")}</div>;
-
     if (isComparing) {
       return (
         <ComposedChart
@@ -212,16 +203,19 @@ function ChartWidget({
         </ComposedChart>
       );
     }
-
     if (chartType === "scatter") {
       return (
         <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis
-            dataKey="timeStr"
+            dataKey="timeMs"
+            type="number"
+            scale="time"
+            domain={["dataMin", "dataMax"]}
+            tickFormatter={formatXAxis}
             name={t("chart.time")}
             tick={{ fontSize: 10 }}
-            minTickGap={30}
+            minTickGap={50}
           />
           <YAxis
             type="number"
@@ -230,14 +224,18 @@ function ChartWidget({
             domain={conf1.domain}
             tick={{ fontSize: 11, fill: conf1.color }}
           />
-          <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+          <Tooltip
+            cursor={{ strokeDasharray: "3 3" }}
+            labelFormatter={(label) =>
+              format(new Date(label), "PPpp", { locale: es })
+            }
+          />
           <Legend />
           <Scatter name={conf1.label} data={chartData} fill={conf1.color} />
         </ScatterChart>
       );
     }
-
-    if (chartType === "bar") {
+    if (chartType === "bar")
       return (
         <BarChart
           data={chartData}
@@ -252,9 +250,7 @@ function ChartWidget({
           />
         </BarChart>
       );
-    }
-
-    if (chartType === "line") {
+    if (chartType === "line")
       return (
         <LineChart
           data={chartData}
@@ -273,7 +269,6 @@ function ChartWidget({
           />
         </LineChart>
       );
-    }
 
     return (
       <AreaChart
@@ -310,76 +305,54 @@ function ChartWidget({
   return (
     <div className="chart-widget-container">
       <div className="chart-header">
-        <h3 className="chart-title">{title}</h3>
-
-        <div className="chart-controls-row">
-          <div className="control-group">
-            <span className="control-label">{t("chart.range")}</span>
-            <div className="time-pills">
-              <button
-                type="button"
-                className={timeRange === "1h" ? "active" : ""}
-                onClick={() => setTimeRange("1h")}
-              >
-                1h
-              </button>
-              <button
-                type="button"
-                className={timeRange === "24h" ? "active" : ""}
-                onClick={() => setTimeRange("24h")}
-              >
-                24h
-              </button>
-              <button
-                type="button"
-                className={timeRange === "all" ? "active" : ""}
-                onClick={() => setTimeRange("all")}
-              >
-                {t("chart.all")}
-              </button>
-            </div>
-          </div>
-
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "15px",
+          }}
+        >
+          <h3 className="chart-title" style={{ margin: 0 }}>
+            {title}
+          </h3>
           {!forcedCompare && (
-            <div className="control-group">
-              <div className="btn-group">
-                <button
-                  type="button"
-                  className={chartType === "area" ? "active" : ""}
-                  onClick={() => setChartType("area")}
-                  title="Área"
-                >
-                  📈
-                </button>
-                <button
-                  type="button"
-                  className={chartType === "line" ? "active" : ""}
-                  onClick={() => setChartType("line")}
-                  title="Línea"
-                >
-                  〰️
-                </button>
-                <button
-                  type="button"
-                  className={chartType === "bar" ? "active" : ""}
-                  onClick={() => setChartType("bar")}
-                  title="Barras"
-                >
-                  📊
-                </button>
-                <button
-                  type="button"
-                  className={chartType === "scatter" ? "active" : ""}
-                  onClick={() => setChartType("scatter")}
-                  title="Dispersión"
-                >
-                  ∴
-                </button>
-              </div>
+            <div className="btn-group" style={{ display: "flex", gap: "5px" }}>
+              <button
+                type="button"
+                className={chartType === "area" ? "active" : ""}
+                onClick={() => setChartType("area")}
+                title="Área"
+              >
+                📈
+              </button>
+              <button
+                type="button"
+                className={chartType === "line" ? "active" : ""}
+                onClick={() => setChartType("line")}
+                title="Línea"
+              >
+                〰️
+              </button>
+              <button
+                type="button"
+                className={chartType === "bar" ? "active" : ""}
+                onClick={() => setChartType("bar")}
+                title="Barras"
+              >
+                📊
+              </button>
+              <button
+                type="button"
+                className={chartType === "scatter" ? "active" : ""}
+                onClick={() => setChartType("scatter")}
+                title="Dispersión"
+              >
+                ∴
+              </button>
             </div>
           )}
         </div>
-
         <div className="metric-selectors-row">
           <select
             value={metric1}
@@ -388,7 +361,6 @@ function ChartWidget({
           >
             <MetricOptions t={t} />
           </select>
-
           {isComparing && (
             <>
               <span className="vs-badge">vs</span>
@@ -403,7 +375,6 @@ function ChartWidget({
           )}
         </div>
       </div>
-
       <div className="chart-responsive-wrapper">
         <ResponsiveContainer width="100%" height="100%">
           {renderChart()}
@@ -421,5 +392,4 @@ ChartWidget.propTypes = {
   initialMetric2: PropTypes.string,
   forcedCompare: PropTypes.bool,
 };
-
 export default ChartWidget;

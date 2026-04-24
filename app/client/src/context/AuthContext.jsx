@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
   );
   const navigate = useNavigate();
 
-  // El Efecto Centinela (Para el arranque de la app)
+  // El Efecto Centinela
   useEffect(() => {
     const verifyAuthStatus = async () => {
       if (token) {
@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
     verifyAuthStatus();
   }, [token, navigate]);
 
+  // Función de Login con Sanitización Estricta (Fix para Sonar S8475)
   const login = useCallback(
     async (name, password) => {
       try {
@@ -63,28 +64,29 @@ export function AuthProvider({ children }) {
         if (response.data.token) {
           const { token: newToken, user } = response.data;
 
-          // 🛡️ SANITIZACIÓN DE DATOS (Para evitar inyección en LocalStorage - SonarCloud S8475)
+          // Validación estricta del Token mediante Regex
+          const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
+          if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
+            throw new Error(
+              "El servidor devolvió un token con formato inválido",
+            );
+          }
 
-          // 1. Limpiamos el token permitiendo solo formato JWT estándar (letras, números, puntos, guiones)
-          const sanitizedToken = String(newToken).replace(
-            /[^a-zA-Z0-9\-_.]/g,
-            "",
-          );
+          // Descontaminación del Rol
+          let safeRole = "usuario";
+          if (user?.role === "admin") {
+            safeRole = "admin";
+          } else if (user?.role === "operador") {
+            safeRole = "operador";
+          }
 
-          // 2. Validamos el rol contra una lista estricta permitida (Allowlist)
-          const allowedRoles = ["admin", "operador", "usuario"];
-          const sanitizedRole = allowedRoles.includes(user?.role)
-            ? user.role
-            : "usuario";
+          // Guardamos los datos limpios en el navegador
+          localStorage.setItem("token", newToken);
+          localStorage.setItem("userRole", safeRole);
+          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
 
-          // Guardamos los datos limpios
-          localStorage.setItem("token", sanitizedToken);
-          localStorage.setItem("userRole", sanitizedRole);
-          axios.defaults.headers.common["Authorization"] =
-            "Bearer " + sanitizedToken;
-
-          setToken(sanitizedToken);
-          setUserRole(sanitizedRole);
+          setToken(newToken);
+          setUserRole(safeRole);
           setIsLoggedIn(true);
           navigate("/app");
           return { success: true };
@@ -100,6 +102,7 @@ export function AuthProvider({ children }) {
     [navigate],
   );
 
+  // 3. Función de Logout
   const logout = useCallback(() => {
     delete axios.defaults.headers.common["Authorization"];
     localStorage.removeItem("token");
@@ -110,7 +113,7 @@ export function AuthProvider({ children }) {
     navigate("/login");
   }, [navigate]);
 
-  // 3. TAREA CERRADA: INTERCEPTOR AXIOS (El cazador de tokens caducados en vuelo)
+  // INTERCEPTOR AXIOS
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
