@@ -4,9 +4,9 @@ import axios from "axios";
 import { useTranslation } from "react-i18next";
 import "./ProfilePage.css";
 
-const API_URL = "http://localhost:3001/api/users";
+const API_URL = `${import.meta.env.VITE_API_URL}/users`;
 
-// Avatar por defecto (silueta genérica)
+// Avatar por defecto
 const DEFAULT_AVATAR =
   "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
 

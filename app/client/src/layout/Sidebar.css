@@ -4,6 +4,8 @@
   width: 260px;
   box-sizing: border-box; /* Evita que el borde sume píxeles extra */
   height: 100vh;
+  /* 👇 FIX CRÍTICO: Añadido para que respete la pantalla en escritorios modernos/tablets */
+  height: 100dvh;
   background-color: var(--primary-dark);
   color: #dcfce7;
   display: flex;
@@ -228,6 +230,9 @@ body.dark-mode .sidebar-footer {
     top: 0;
     left: 0;
     width: 100vw;
+    /* 👇 FIX CRÍTICO MÓVIL: Añadido para que el menú no se corte por debajo de la barra del navegador */
+    height: 100vh;
+    height: 100dvh;
     z-index: 2100;
     margin-left: 0 !important; /* Desactiva la lógica de PC en móvil */
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);

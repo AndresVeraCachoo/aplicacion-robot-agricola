@@ -20,7 +20,7 @@ import { useMissionStore } from "../store/missionStore";
 import { DateRangePicker } from "../components/DateRangePicker";
 import "./EnergyPage.css";
 
-const API_URL = "http://localhost:3001/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function EnergyPage() {
   const { t, i18n } = useTranslation();
@@ -209,7 +209,7 @@ function EnergyPage() {
               {chartData.length > 0 ? (
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  margin={{ top: 10, right: 0, left: -20, bottom: 25 }}
                 >
                   <defs>
                     <linearGradient id="colorBat" x1="0" y1="0" x2="0" y2="1">

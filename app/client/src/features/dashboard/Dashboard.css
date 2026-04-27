@@ -1,12 +1,13 @@
 /* src/features/dashboard/Dashboard.css */
 
 /* ========================================================
-   1. ESTILOS GLOBALES DE LA ESTRUCTURA (Layout)
+   ESTILOS GLOBALES DE LA ESTRUCTURA (Layout)
    ======================================================== */
 .dashboard-layout {
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  height: 100vh; /* Fallback para navegadores muy antiguos */
+  height: 100dvh; /* 📱 FIX: Altura dinámica que respeta la barra del navegador en el móvil */
   width: 100vw;
   overflow: hidden;
   background-color: var(--background-app);
@@ -17,6 +18,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* 📱 FIX: Mantiene el contenido estrictamente dentro de la pantalla */
   overflow: hidden;
 }
 
@@ -27,7 +29,7 @@ main {
 }
 
 /* ========================================================
-   2. PÁGINA DE DASHBOARD (Contenedor)
+   PÁGINA DE DASHBOARD (Contenedor)
    ======================================================== */
 .dashboard-page-container {
   height: 100%;
@@ -42,8 +44,6 @@ main {
 .map-widget-wrapper {
   flex: 1;
   position: relative;
-
-  /* 🛡️ FIX CRÍTICO: min-height 0 permite que el mapa se encoja en pantallas horizontales sin desbordarse */
   min-height: 0;
 
   /* Estética de tarjeta (Premium) */
@@ -71,11 +71,12 @@ body.dark-mode .map-widget-wrapper {
 }
 
 /* ========================================================
-   📱 RESPONSIVE: MÓVILES VERTICALES (Portrait)
+   RESPONSIVE: MÓVILES VERTICALES 
    ======================================================== */
 @media (max-width: 768px) and (orientation: portrait) {
   .dashboard-page-container {
-    padding: 12px; /* Reducimos el marco exterior para dar más espacio al mapa */
+    /* Mantenemos márgenes laterales pequeños pero dejamos un margen extra abajo */
+    padding: 12px 12px 24px 12px;
   }
 
   .map-widget-wrapper {
@@ -84,7 +85,7 @@ body.dark-mode .map-widget-wrapper {
 }
 
 /* ========================================================
-   📱 RESPONSIVE: MÓVILES HORIZONTALES (Landscape)
+   RESPONSIVE: MÓVILES HORIZONTALES 
    ======================================================== */
 @media (max-height: 500px) and (orientation: landscape) {
   .dashboard-page-container {

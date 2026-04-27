@@ -1,8 +1,0 @@
-# server/.gitignore
-
-# Ignorar todas las dependencias de node
-node_modules
-npm-debug.log
-
-# Ignorar el archivo de variables de entorno (por si se crea uno residual)
-.env

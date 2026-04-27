@@ -3,10 +3,10 @@ import { create } from 'zustand';
 import axios from "axios";
 import { io } from "socket.io-client"; 
 
-const API_URL = "http://localhost:3001/api/robot";
-const SOCKET_URL = "http://localhost:3001";
+const API_URL = `${import.meta.env.VITE_API_URL}/robot`;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
-// 🧭 FÓRMULA MATEMÁTICA: Calcula el ángulo exacto (Bearing) entre dos coordenadas GPS
+// Calcula el ángulo exacto (Bearing) entre dos coordenadas GPS
 const calculateBearing = (startLat, startLng, destLat, destLng) => {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;

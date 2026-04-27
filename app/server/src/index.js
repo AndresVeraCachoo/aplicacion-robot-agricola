@@ -1,4 +1,3 @@
-// app/server/src/index.js
 import express from "express";
 import http from "node:http";
 import { Server } from "socket.io";
@@ -11,10 +10,7 @@ import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import missionRoutes from "./routes/missionRoutes.js";
 
-// Importar la Semilla Inteligente
 import { runSeed } from "./scripts/seed.js";
-
-// Importar el Manejador de Errores Global
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Simulador
@@ -33,25 +29,20 @@ import {
 } from "./simulator.js";
 
 const app = express();
-
-// Crucial para que express-rate-limit vea las IPs reales detrás del proxy de Docker
 app.set('trust proxy', 1); 
 
 const server = http.createServer(app);
 
-const allowedOrigins = new Set([
-  'http://localhost:5173', 
-  'http://localhost:8080', 
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:8080'
-]);
-
+// CONFIGURACIÓN CORS INTELIGENTE PARA PODER CONECTAR MI MOVIL AL COMPARTIR IP
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (!origin || 
+        /^http:\/\/localhost:\d+$/.test(origin) || 
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) || 
+        /^http:\/\/192\.168\.\d+\.\d+:\d+$/.test(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Bloqueado por política CORS'));
+      callback(new Error('Bloqueado por política CORS: ' + origin));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -63,7 +54,6 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
-// CSP habilitado con directivas restrictivas para el origen
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -77,8 +67,6 @@ app.use(helmet({
 }));
 
 app.use(cors(corsOptions));
-
-// LÍMITE DE 1MB
 app.use(express.json({ limit: "1mb" }));
 
 // Endpoints
@@ -87,7 +75,6 @@ app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/missions", missionRoutes);
 
-// 🚀 MIDDLEWARE DE ERRORES GLOBAL (Siempre al final de las rutas)
 app.use(errorHandler);
 
 // Manejo de WebSockets

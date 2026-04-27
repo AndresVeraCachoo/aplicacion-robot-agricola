@@ -14,6 +14,7 @@ app/server/node_modules/
 
 # Compilados y builds
 dist
+dev-dist/
 dist-ssr
 build/
 .cache/

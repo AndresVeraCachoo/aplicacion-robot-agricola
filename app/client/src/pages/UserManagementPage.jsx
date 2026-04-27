@@ -6,7 +6,7 @@ import Modal from "../components/Modal";
 import "./UserManagementPage.css";
 import { useToast } from "../context/ToastContext";
 
-const API_URL = "http://localhost:3001/api/users";
+const API_URL = `${import.meta.env.VITE_API_URL}/users`;
 
 function UserManagementPage() {
   const { t } = useTranslation();

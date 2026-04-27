@@ -1,6 +1,8 @@
 // src/store/missionStore.js
 import { create } from "zustand";
 
+const API_URL = `${import.meta.env.VITE_API_URL}/missions`;
+
 export const useMissionStore = create((set) => ({
   misiones: [],
   isLoading: false,
@@ -9,7 +11,7 @@ export const useMissionStore = create((set) => ({
   fetchMisiones: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("http://localhost:3001/api/missions");
+      const response = await fetch(API_URL);
       if (!response.ok) throw new Error("Error al obtener las misiones");
       const data = await response.json();
       set({ misiones: data, isLoading: false });
@@ -20,7 +22,7 @@ export const useMissionStore = create((set) => ({
 
   createMision: async (missionData) => {
     try {
-      const response = await fetch("http://localhost:3001/api/missions", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(missionData),
@@ -37,7 +39,7 @@ export const useMissionStore = create((set) => ({
 
   updateMision: async (id, missionData) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/missions/${id}`, {
+      const response = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(missionData),
@@ -61,7 +63,7 @@ export const useMissionStore = create((set) => ({
 
   deleteMision: async (id) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/missions/${id}`, {
+      const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Error al eliminar la misión");
@@ -73,7 +75,7 @@ export const useMissionStore = create((set) => ({
 
   startMissionRun: async (misionId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/missions/${misionId}/runs`, {
+      const response = await fetch(`${API_URL}/${misionId}/runs`, {
         method: "POST"
       });
       if (!response.ok) throw new Error("Error al iniciar la ejecución de la misión");

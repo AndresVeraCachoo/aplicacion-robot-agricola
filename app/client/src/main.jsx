@@ -1,4 +1,3 @@
-// src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -10,6 +9,22 @@ import "./i18n/index.js";
 
 import "leaflet/dist/leaflet.css";
 import "./index.css";
+
+// Registro automático de la PWA
+import { registerSW } from "virtual:pwa-register";
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (
+      confirm("Hay una nueva versión de AgroSkopos disponible. ¿Actualizar?")
+    ) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log("AgroSkopos está lista para trabajar offline.");
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

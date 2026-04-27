@@ -20,7 +20,7 @@ import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./DataPage.css";
 
-const API_URL = "http://localhost:3001/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ==========================================
 // 🧠 FUNCIONES PURAS EXTRÍDAS
@@ -302,13 +302,17 @@ function DataPage() {
 
             <div
               className="table-responsive"
-              style={{ maxHeight: "none", overflow: "visible" }}
+              style={{
+                maxHeight: "none",
+                overflowX: "auto",
+                WebkitOverflowScrolling: "touch",
+              }}
             >
               <table className="data-table" style={{ marginBottom: "0px" }}>
                 <thead>
                   <tr>
                     <th>{t("data.time")}</th>
-                    <th>{t("nav.missions")}</th>
+                    <th>{t("data.missions")}</th>
                     <th>{t("data.location")}</th>
                     <th>{t("data.humidity")}</th>
                     <th>{t("data.temp")}</th>
