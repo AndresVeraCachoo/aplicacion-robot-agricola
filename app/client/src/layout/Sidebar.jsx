@@ -6,8 +6,7 @@ import { useTranslation } from "react-i18next";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 
-const DEFAULT_AVATAR =
-  "https://cdn-icons-png.flaticon.com/512/1077/1077114.png";
+const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
 
 function Sidebar({ isOpen, onClose }) {
   const { t } = useTranslation();

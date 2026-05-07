@@ -1,3 +1,4 @@
+// src/controllers/authController.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../config/db.js";
@@ -37,7 +38,12 @@ export const login = catchAsync(async (req, res, next) => {
 
   res.json({
     token,
-    user: { id: user.id, name: user.name, role: user.role },
+    user: { 
+      id: user.id, 
+      name: user.name, 
+      role: user.role, 
+      avatar: user.avatar 
+    },
   });
 });
 

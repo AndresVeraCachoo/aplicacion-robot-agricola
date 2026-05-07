@@ -51,7 +51,9 @@
     "updatePassword": "Update Password",
     "personalInfo": "Personal Information",
     "changePhoto": "Change Photo",
-    "save": "Save Changes"
+    "save": "Save Changes",
+    "avatarSuccess": "You have changed your avatar successfully!",
+    "updateButton": "Confirm"
   },
   "control": {
     "drivingMode": "Driving Mode",

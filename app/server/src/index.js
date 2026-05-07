@@ -1,3 +1,4 @@
+// server/index.js
 import express from "express";
 import http from "node:http";
 import { Server } from "socket.io";
@@ -33,7 +34,6 @@ app.set('trust proxy', 1);
 
 const server = http.createServer(app);
 
-// CONFIGURACIÓN CORS INTELIGENTE PARA PODER CONECTAR MI MOVIL AL COMPARTIR IP
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || 
@@ -50,9 +50,7 @@ const corsOptions = {
   optionsSuccessStatus: 200 
 };
 
-const io = new Server(server, {
-  cors: corsOptions,
-});
+const io = new Server(server, { cors: corsOptions });
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -60,6 +58,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       objectSrc: ["'none'"],
+      imgSrc: ["'self'", "data:", "blob:", "*"],
       upgradeInsecureRequests: [],
     },
   },
@@ -77,10 +76,9 @@ app.use("/api/missions", missionRoutes);
 
 app.use(errorHandler);
 
-// Manejo de WebSockets
+// WebSockets
 io.on("connection", (socket) => {
   console.log("🟢 Cliente conectado:", socket.id);
-
   socket.on("client:update_zone", (zone) => setSimulationZone(zone));
   socket.on("client:clear_zone", () => clearSimulationZone());
   socket.on("client:change_mode", (mode) => setRobotMode(mode));
@@ -91,10 +89,7 @@ io.on("connection", (socket) => {
   socket.on("client:pause_mission", () => pauseSimulation());
   socket.on("client:resume_mission", () => resumeSimulation());
   socket.on("client:cancel_mission", () => cancelSimulation());
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Cliente desconectado:", socket.id);
-  });
+  socket.on("disconnect", () => console.log("🔴 Cliente desconectado:", socket.id));
 });
 
 startRobotSimulation(io);
@@ -103,10 +98,11 @@ const PORT = process.env.PORT || 3001;
 
 try {
   await runSeed();
+  
   server.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   });
 } catch (err) {
-  console.error("❌ Arranque abortado por fallo crítico en la BD:", err.message);
+  console.error("❌ Arranque abortado:", err.message);
   process.exit(1);
 }

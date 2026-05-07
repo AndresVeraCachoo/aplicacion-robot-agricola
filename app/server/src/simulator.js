@@ -291,11 +291,8 @@ const checkRTLRequired = () => {
   if (isCharging || controlMode === "RETURNING_TO_BASE" || controlMode === "RESUMING_MISSION") return;
 
   const speedFactor = Math.max(10, speedLimitPercent) / 100;
-  const speedMetersPerSec = (0.0002 * speedFactor) * 111000;
-  const secondsToReachBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON) / (speedMetersPerSec || 1);
-  
-  // Consumo realista: ~0.006% por segundo + 2% de margen físico estricto
-  const batteryNeededForRTL = (secondsToReachBase * 0.006) + 2; 
+  const timeToReachBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON) / ((0.0002 * speedFactor) * 111000 || 1); 
+  const batteryNeededForRTL = (timeToReachBase * (0.2 + 0.5 + (speedFactor * 0.5))) + 5;
 
   if (battery > 0 && battery <= batteryNeededForRTL) {
     executeRTLSequence();
@@ -317,12 +314,11 @@ const handleBaseCharging = () => {
 };
 
 const calculateTickConsumption = () => {
-  if (isPaused) return 0.001; 
-  // Consumo realista: base + factor de velocidad
+  if (isPaused) return 0.1; 
   const movingGasto = Number.parseFloat(speed) > 0 
-    ? (0.005 + ((speedLimitPercent / 100) * 0.005)) 
+    ? (1.5 + ((speedLimitPercent / 100) * 1.5)) 
     : 0;
-  return 0.001 + movingGasto; 
+  return 0.2 + movingGasto; 
 };
 
 const triggerFailsafeBattery = () => {
@@ -362,12 +358,41 @@ const updateBatteryState = () => {
   accumulatedGenerated += tickData.generatedThisTick;
 };
 
+// ----------------------------------------------------
+// 🧠 SOLUCIÓN DE GEOFENCING INTELIGENTE APLICADA
+// ----------------------------------------------------
 const applyGeofencing = (cLat, cLon, nLat, nLon) => {
+  // 1. Si no hay polígono configurado, movimiento libre
   if (!safeZonePolygon || safeZonePolygon.length < 3) return { validLat: nLat, validLon: nLon };
+  
+  // 2. Si el robot no se está moviendo, retornamos la misma posición
   if (nLat === cLat && nLon === cLon) return { validLat: nLat, validLon: nLon };
-  if (!isPointInPolygon(nLat, nLon, safeZonePolygon)) return { validLat: cLat, validLon: cLon };
+
+  // 3. Relajamos la barrera para modos automáticos para que pueda entrar y salir de la base
+  if (controlMode !== "MANUAL") {
+    return { validLat: nLat, validLon: nLon };
+  }
+
+  // 4. Modo MANUAL: Comprobamos si actualmente está dentro o fuera de la zona
+  const isCurrentlyInside = isPointInPolygon(cLat, cLon, safeZonePolygon);
+  
+  if (!isCurrentlyInside) {
+    // Si está fuera de la zona, le dejamos moverse libremente hacia donde quiera
+    // Así evitamos que se quede atascado en la base de carga (que está fuera).
+    return { validLat: nLat, validLon: nLon };
+  }
+
+  // 5. Si ya está DENTRO de la zona, activamos la barrera estricta.
+  // Evaluamos si el Siguiente paso le sacaría de la zona.
+  if (!isPointInPolygon(nLat, nLon, safeZonePolygon)) {
+    // Intenta salir de la zona -> Bloqueamos el movimiento y lo dejamos donde está
+    return { validLat: cLat, validLon: cLon };
+  }
+
+  // Movimiento permitido dentro de la zona
   return { validLat: nLat, validLon: nLon };
 };
+// ----------------------------------------------------
 
 const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   if (Math.abs(nLat - cLat) > 0 || Math.abs(nLon - cLon) > 0 || Math.abs(dLat) > 0) {
@@ -514,6 +539,13 @@ const shouldSkipAgronomy = () => {
   if (Number.parseFloat(speed) === 0) return true;
   if (controlMode === "RETURNING_TO_BASE") return true;
   if (controlMode === "RESUMING_MISSION") return true;
+  
+  if (safeZonePolygon && safeZonePolygon.length >= 3) {
+    if (!isPointInPolygon(currentLat, currentLon, safeZonePolygon)) {
+      return true;
+    }
+  }
+  
   return false;
 };
 
@@ -527,7 +559,6 @@ const processAgronomicTick = async (io) => {
     const hasActiveMission = missionCtx.id !== null;
     const tareasStr = missionCtx.tipo_tarea || "";
 
-    // RECOLECCIÓN RESTAURADA AL ESTADO ESTABLE: 
     const collectHum = !hasActiveMission || tareasStr.includes("humedad") || tareasStr.includes("humidity");
     const collectTemp = !hasActiveMission || tareasStr.includes("temp");
     const collectPh = !hasActiveMission || tareasStr.includes("ph");
@@ -560,7 +591,7 @@ const processAgronomicTick = async (io) => {
 };
 
 export const startRobotSimulation = (io) => {
-  console.log("🤖 Simulador: ACTIVADO (Golden State)");
+  console.log("🤖 Simulador: ACTIVADO (Geofencing Inteligente)");
   setInterval(() => processMovementTick(io), MOVEMENT_INTERVAL);
   setInterval(() => processEnergyTick(), ENERGY_LOG_INTERVAL);
   setInterval(() => processAgronomicTick(io), SENSOR_INTERVAL);

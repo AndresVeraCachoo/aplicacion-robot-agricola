@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 /* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
@@ -23,7 +24,20 @@ export function AuthProvider({ children }) {
   );
   const navigate = useNavigate();
 
-  // El Efecto Centinela
+  // Función de Logout 
+  const logout = useCallback(() => {
+    delete axios.defaults.headers.common["Authorization"];
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userAvatar");
+    setToken(null);
+    setUserRole(null);
+    setIsLoggedIn(false);
+    navigate("/login");
+  }, [navigate]);
+
+  // 2. Efecto Centinela
   useEffect(() => {
     const verifyAuthStatus = async () => {
       if (token) {
@@ -32,27 +46,15 @@ export function AuthProvider({ children }) {
           await axios.get(`${API_URL}/auth/verify`);
           setIsLoggedIn(true);
         } catch (error) {
-          console.warn("Sesión caducada. Detalle:", error.message);
-          delete axios.defaults.headers.common["Authorization"];
-          localStorage.removeItem("token");
-          localStorage.removeItem("userRole");
-          setToken(null);
-          setUserRole(null);
-          setIsLoggedIn(false);
-          navigate("/login");
+          console.warn("Sesión caducada:", error.message);
+          logout();
         }
-      } else {
-        delete axios.defaults.headers.common["Authorization"];
-        localStorage.removeItem("token");
-        localStorage.removeItem("userRole");
-        setIsLoggedIn(false);
       }
     };
-
     verifyAuthStatus();
-  }, [token, navigate]);
+  }, [token, logout]);
 
-  // Función de Login con Sanitización Estricta (Fix para Sonar S8475)
+  // Función de Login con Persistencia de Avatar
   const login = useCallback(
     async (name, password) => {
       try {
@@ -64,31 +66,31 @@ export function AuthProvider({ children }) {
         if (response.data.token) {
           const { token: newToken, user } = response.data;
 
-          // Validación estricta del Token mediante Regex
+          // Validación Sonar S8475
           const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
           if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
-            throw new Error(
-              "El servidor devolvió un token con formato inválido",
-            );
+            throw new Error("Token con formato inválido");
           }
 
-          // Descontaminación del Rol
+          // Sanitización de Rol
           let safeRole = "usuario";
-          if (user?.role === "admin") {
-            safeRole = "admin";
-          } else if (user?.role === "operador") {
-            safeRole = "operador";
-          }
+          if (user?.role === "admin") safeRole = "admin";
+          else if (user?.role === "operador") safeRole = "operador";
 
-          // Guardamos los datos limpios en el navegador
           localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
-          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
+          localStorage.setItem("userName", user.name || "");
+          localStorage.setItem("userAvatar", user.avatar || "/avatars/robot-fondo-verde.png");
 
+          // Avisamos a la Sidebar de que los datos han cambiado
+          globalThis.dispatchEvent(new Event("avatarUpdated"));
+
+          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
           setToken(newToken);
           setUserRole(safeRole);
           setIsLoggedIn(true);
-          navigate("/app");
+          
+          navigate("/app/dashboard");
           return { success: true };
         }
       } catch (error) {
@@ -102,43 +104,21 @@ export function AuthProvider({ children }) {
     [navigate],
   );
 
-  // 3. Función de Logout
-  const logout = useCallback(() => {
-    delete axios.defaults.headers.common["Authorization"];
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    setToken(null);
-    setUserRole(null);
-    setIsLoggedIn(false);
-    navigate("/login");
-  }, [navigate]);
-
   // INTERCEPTOR AXIOS
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        // Si el servidor responde 401 (No autorizado) o 403 (Prohibido)
-        if (
-          error.response &&
-          (error.response.status === 401 || error.response.status === 403)
-        ) {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           const url = error.config.url || "";
-          // Ignoramos los endpoints de login y verify para evitar bucles de navegación
           if (!url.includes("/auth/login") && !url.includes("/auth/verify")) {
-            console.warn(
-              "Interceptor: Token caducado detectado enviando petición. Cerrando sesión forzosamente...",
-            );
             logout();
           }
         }
         return Promise.reject(error);
       },
     );
-
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
+    return () => axios.interceptors.response.eject(interceptor);
   }, [logout]);
 
   const contextValue = useMemo(

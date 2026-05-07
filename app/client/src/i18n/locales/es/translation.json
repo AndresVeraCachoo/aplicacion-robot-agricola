@@ -51,7 +51,9 @@
     "updatePassword": "Actualizar Contraseña",
     "personalInfo": "Información Personal",
     "changePhoto": "Cambiar Foto",
-    "save": "Guardar Cambios"
+    "save": "Guardar Cambios",
+    "avatarSuccess": "¡Has cambiado el avatar correctamente!",
+    "updateButton": "Confirmar"
   },
   "control": {
     "drivingMode": "Modo de Conducción",

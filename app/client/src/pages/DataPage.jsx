@@ -54,8 +54,15 @@ const groupSessions = (data, misiones, t) => {
   const map = new Map();
   data.forEach((d) => {
     const isManual = !d.ejecucion_id && !d.nombre_mision;
-    const key = isManual ? "miss-null" : (d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`);
-
+    let key;
+    if (isManual) {
+      key = "miss-null";
+    } else if (d.ejecucion_id) {
+      key = `exec-${d.ejecucion_id}`;
+    } else {
+      key = `miss-${d.nombre_mision}`;
+    }
+    
     if (!map.has(key)) {
       const template = isManual ? null : misiones.find((m) => m.nombre === d.nombre_mision);
       map.set(key, {
@@ -154,6 +161,17 @@ const getMapCenterAndPolygon = (selectedSession, filteredMissionData) => {
   else if (filteredMissionData.length > 0)
     mapCenter = [filteredMissionData[0].lat, filteredMissionData[0].lon];
   return { polygonCoords, mapCenter };
+};
+
+// 🛡️ FIX SonarQube: Componente extraído y movido fuera del componente principal
+const NotCollected = ({ t }) => (
+  <span style={{ color: "#9ca3af", fontStyle: "italic", fontSize: "0.9em", fontWeight: "normal" }}>
+    {t("data.notCollected", "No recogido")}
+  </span>
+);
+
+NotCollected.propTypes = {
+  t: PropTypes.func.isRequired,
 };
 
 // ==========================================
@@ -258,12 +276,6 @@ function DataPage() {
   );
   const { durationStr, batteryEst } = calculateStats(filteredMissionData);
 
-  const NotCollected = () => (
-    <span style={{ color: "#9ca3af", fontStyle: "italic", fontSize: "0.9em", fontWeight: "normal" }}>
-      {t("data.notCollected", "No recogido")}
-    </span>
-  );
-
   return (
     <div className="data-page-container">
       <DateRangePicker onFilter={handleFilter} misiones={misiones} />
@@ -366,7 +378,9 @@ function DataPage() {
                             {formatNum(row.lat, 5)}, {formatNum(row.lon, 5)}
                           </td>
                           <td>
-                            {row.humedad !== null ? (
+                            {row.humedad === null ? (
+                              <NotCollected t={t} />
+                            ) : (
                               <div className="humidity-bar-container">
                                 <span>{formatNum(row.humedad, 0)}%</span>
                                 <div className="progress-track">
@@ -378,38 +392,36 @@ function DataPage() {
                                   ></div>
                                 </div>
                               </div>
-                            ) : (
-                              <NotCollected />
                             )}
                           </td>
                           <td>
-                            {row.temperatura_suelo !== null ? (
+                            {row.temperatura_suelo === null ? (
+                              <NotCollected t={t} />
+                            ) : (
                               `${formatNum(row.temperatura_suelo, 1)}°C`
-                            ) : (
-                              <NotCollected />
                             )}
                           </td>
                           <td>
-                            {row.ph !== null ? (
+                            {row.ph === null ? (
+                              <NotCollected t={t} />
+                            ) : (
                               <span className={`ph-badge ${getPhClass(row.ph)}`}>
                                 {formatNum(row.ph, 1)}
                               </span>
-                            ) : (
-                              <NotCollected />
                             )}
                           </td>
                           <td className="npk-cell">
-                            {row.nitrogeno !== null ? (
-                              `${formatNum(row.nitrogeno, 0)} / ${formatNum(row.fosforo, 0)} / ${formatNum(row.potasio, 0)}`
+                            {row.nitrogeno === null ? (
+                              <NotCollected t={t} />
                             ) : (
-                              <NotCollected />
+                              `${formatNum(row.nitrogeno, 0)} / ${formatNum(row.fosforo, 0)} / ${formatNum(row.potasio, 0)}`
                             )}
                           </td>
                           <td>
-                            {row.radiacion_solar !== null ? (
-                              `${formatNum(row.radiacion_solar, 0)} W`
+                            {row.radiacion_solar === null ? (
+                              <NotCollected t={t} />
                             ) : (
-                              <NotCollected />
+                              `${formatNum(row.radiacion_solar, 0)} W`
                             )}
                           </td>
                         </tr>
@@ -659,12 +671,12 @@ function DataPage() {
                               {formatDate(d.timestamp, i18n.language)}
                               <br />
                               <strong>{t("data.humidity")}:</strong>{" "}
-                              {d.humedad !== null ? `${formatNum(d.humedad, 1)}%` : t("data.notCollected", "No recogido")}<br />
+                              {d.humedad === null ? t("data.notCollected", "No recogido") : `${formatNum(d.humedad, 1)}%`}<br />
                               <strong>{t("data.temp")}:</strong>{" "}
-                              {d.temperatura_suelo !== null ? `${formatNum(d.temperatura_suelo, 1)}°C` : t("data.notCollected", "No recogido")}
+                              {d.temperatura_suelo === null ? t("data.notCollected", "No recogido") : `${formatNum(d.temperatura_suelo, 1)}°C`}
                               <br />
                               <strong>{t("data.ph")}:</strong>{" "}
-                              {d.ph !== null ? formatNum(d.ph, 1) : t("data.notCollected", "No recogido")}
+                              {d.ph === null ? t("data.notCollected", "No recogido") : formatNum(d.ph, 1)}
                             </Popup>
                           </CircleMarker>
                         ))}
@@ -677,7 +689,7 @@ function DataPage() {
                           <strong>
                             {(() => {
                               const validD = filteredMissionData.filter(d => d.humedad !== null);
-                              if (validD.length === 0) return <NotCollected />;
+                              if (validD.length === 0) return <NotCollected t={t} />;
                               const avg = validD.reduce((acc, curr) => acc + Number(curr.humedad), 0) / validD.length;
                               return `${formatNum(avg, 1)}%`;
                             })()}
@@ -688,7 +700,7 @@ function DataPage() {
                           <strong>
                             {(() => {
                               const validD = filteredMissionData.filter(d => d.temperatura_suelo !== null);
-                              if (validD.length === 0) return <NotCollected />;
+                              if (validD.length === 0) return <NotCollected t={t} />;
                               const avg = validD.reduce((acc, curr) => acc + Number(curr.temperatura_suelo), 0) / validD.length;
                               return `${formatNum(avg, 1)}°C`;
                             })()}
@@ -699,7 +711,7 @@ function DataPage() {
                           <strong>
                             {(() => {
                               const validD = filteredMissionData.filter(d => d.ph !== null);
-                              if (validD.length === 0) return <NotCollected />;
+                              if (validD.length === 0) return <NotCollected t={t} />;
                               const avg = validD.reduce((acc, curr) => acc + Number(curr.ph), 0) / validD.length;
                               return formatNum(avg, 1);
                             })()}
