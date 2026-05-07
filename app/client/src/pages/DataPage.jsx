@@ -1,3 +1,4 @@
+// src/pages/DataPage.jsx
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
@@ -39,7 +40,7 @@ const formatDate = (iso, lng) =>
     : "-";
 
 const formatNum = (n, d = 2) =>
-  n === null || Number.isNaN(Number(n)) ? "-" : Number(n).toFixed(d);
+  n === null || n === undefined || Number.isNaN(Number(n)) ? "-" : Number(n).toFixed(d);
 
 const getPhClass = (val) => {
   const ph = Number(val);
@@ -49,19 +50,17 @@ const getPhClass = (val) => {
   return "ph-neutral";
 };
 
-const groupSessions = (data, misiones) => {
+const groupSessions = (data, misiones, t) => {
   const map = new Map();
   data.forEach((d) => {
-    if (!d.nombre_mision) return;
-    const key = d.ejecucion_id
-      ? `exec-${d.ejecucion_id}`
-      : `miss-${d.nombre_mision}`;
+    const isManual = !d.ejecucion_id && !d.nombre_mision;
+    const key = isManual ? "miss-null" : (d.ejecucion_id ? `exec-${d.ejecucion_id}` : `miss-${d.nombre_mision}`);
 
     if (!map.has(key)) {
-      const template = misiones.find((m) => m.nombre === d.nombre_mision);
+      const template = isManual ? null : misiones.find((m) => m.nombre === d.nombre_mision);
       map.set(key, {
         id: key,
-        nombre: d.nombre_mision,
+        nombre: isManual ? t("data.manual", "Manual") : d.nombre_mision,
         template,
         dataPoints: [],
         startTime: d.timestamp,
@@ -104,10 +103,12 @@ const exportToCSV = (missionData, sessionName, lng, addToast, t) => {
   if (missionData.length === 0) return;
   const headers =
     "Hora,Latitud,Longitud,Humedad_%,Temperatura_C,pH,Nitrogeno,Fosforo,Potasio,Rad_Solar_W\n";
+  
+  const fallback = t("data.notCollected", "No recogido");
   const rows = missionData
     .map(
       (d) =>
-        `"${new Date(d.timestamp).toLocaleString(lng)}",${d.lat},${d.lon},${d.humedad},${d.temperatura_suelo},${d.ph},${d.nitrogeno},${d.fosforo},${d.potasio},${d.radiacion_solar}`,
+        `"${new Date(d.timestamp).toLocaleString(lng)}",${d.lat},${d.lon},${d.humedad ?? fallback},${d.temperatura_suelo ?? fallback},${d.ph ?? fallback},${d.nitrogeno ?? fallback},${d.fosforo ?? fallback},${d.potasio ?? fallback},${d.radiacion_solar ?? fallback}`,
     )
     .join("\n");
   const link = document.createElement("a");
@@ -190,14 +191,17 @@ function DataPage() {
 
   const displayDataRaw =
     filteredData === null ? liveAgronomicData : filteredData;
+    
   const displayData = [...displayDataRaw].sort(
-    (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
+  
   const totalPages = Math.ceil(displayData.length / itemsPerPage);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
   }, [totalPages, currentPage]);
+  
   useEffect(() => {
     fetchMisiones();
   }, [fetchMisiones]);
@@ -244,7 +248,7 @@ function DataPage() {
     }
   };
 
-  const executedSessions = groupSessions(displayData, misiones);
+  const executedSessions = groupSessions(displayData, misiones, t);
   const selectedSession =
     executedSessions.find((s) => s.id === selectedSessionId) || null;
   const filteredMissionData = selectedSession ? selectedSession.dataPoints : [];
@@ -253,6 +257,12 @@ function DataPage() {
     filteredMissionData,
   );
   const { durationStr, batteryEst } = calculateStats(filteredMissionData);
+
+  const NotCollected = () => (
+    <span style={{ color: "#9ca3af", fontStyle: "italic", fontSize: "0.9em", fontWeight: "normal" }}>
+      {t("data.notCollected", "No recogido")}
+    </span>
+  );
 
   return (
     <div className="data-page-container">
@@ -343,7 +353,7 @@ function DataPage() {
                               </span>
                             ) : (
                               <span className="mission-badge-manual">
-                                {t("data.manual")}
+                                {t("data.manual", "Manual")}
                               </span>
                             )}
                           </td>
@@ -356,30 +366,52 @@ function DataPage() {
                             {formatNum(row.lat, 5)}, {formatNum(row.lon, 5)}
                           </td>
                           <td>
-                            <div className="humidity-bar-container">
-                              <span>{formatNum(row.humedad, 0)}%</span>
-                              <div className="progress-track">
-                                <div
-                                  className="progress-fill"
-                                  style={{
-                                    width: `${Math.min(row.humedad, 100)}%`,
-                                  }}
-                                ></div>
+                            {row.humedad !== null ? (
+                              <div className="humidity-bar-container">
+                                <span>{formatNum(row.humedad, 0)}%</span>
+                                <div className="progress-track">
+                                  <div
+                                    className="progress-fill"
+                                    style={{
+                                      width: `${Math.min(row.humedad || 0, 100)}%`,
+                                    }}
+                                  ></div>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <NotCollected />
+                            )}
                           </td>
-                          <td>{formatNum(row.temperatura_suelo, 1)}°</td>
                           <td>
-                            <span className={`ph-badge ${getPhClass(row.ph)}`}>
-                              {formatNum(row.ph, 1)}
-                            </span>
+                            {row.temperatura_suelo !== null ? (
+                              `${formatNum(row.temperatura_suelo, 1)}°C`
+                            ) : (
+                              <NotCollected />
+                            )}
+                          </td>
+                          <td>
+                            {row.ph !== null ? (
+                              <span className={`ph-badge ${getPhClass(row.ph)}`}>
+                                {formatNum(row.ph, 1)}
+                              </span>
+                            ) : (
+                              <NotCollected />
+                            )}
                           </td>
                           <td className="npk-cell">
-                            {formatNum(row.nitrogeno, 0)} /{" "}
-                            {formatNum(row.fosforo, 0)} /{" "}
-                            {formatNum(row.potasio, 0)}
+                            {row.nitrogeno !== null ? (
+                              `${formatNum(row.nitrogeno, 0)} / ${formatNum(row.fosforo, 0)} / ${formatNum(row.potasio, 0)}`
+                            ) : (
+                              <NotCollected />
+                            )}
                           </td>
-                          <td>{formatNum(row.radiacion_solar, 0)} W</td>
+                          <td>
+                            {row.radiacion_solar !== null ? (
+                              `${formatNum(row.radiacion_solar, 0)} W`
+                            ) : (
+                              <NotCollected />
+                            )}
+                          </td>
                         </tr>
                       ))
                   ) : (
@@ -627,12 +659,12 @@ function DataPage() {
                               {formatDate(d.timestamp, i18n.language)}
                               <br />
                               <strong>{t("data.humidity")}:</strong>{" "}
-                              {formatNum(d.humedad, 1)}%<br />
+                              {d.humedad !== null ? `${formatNum(d.humedad, 1)}%` : t("data.notCollected", "No recogido")}<br />
                               <strong>{t("data.temp")}:</strong>{" "}
-                              {formatNum(d.temperatura_suelo, 1)}°C
+                              {d.temperatura_suelo !== null ? `${formatNum(d.temperatura_suelo, 1)}°C` : t("data.notCollected", "No recogido")}
                               <br />
                               <strong>{t("data.ph")}:</strong>{" "}
-                              {formatNum(d.ph, 1)}
+                              {d.ph !== null ? formatNum(d.ph, 1) : t("data.notCollected", "No recogido")}
                             </Popup>
                           </CircleMarker>
                         ))}
@@ -643,40 +675,34 @@ function DataPage() {
                         <div className="summary-item">
                           <span>{t("data.avgHumidity")}</span>
                           <strong>
-                            {formatNum(
-                              filteredMissionData.reduce(
-                                (acc, curr) => acc + Number(curr.humedad),
-                                0,
-                              ) / filteredMissionData.length,
-                              1,
-                            )}
-                            %
+                            {(() => {
+                              const validD = filteredMissionData.filter(d => d.humedad !== null);
+                              if (validD.length === 0) return <NotCollected />;
+                              const avg = validD.reduce((acc, curr) => acc + Number(curr.humedad), 0) / validD.length;
+                              return `${formatNum(avg, 1)}%`;
+                            })()}
                           </strong>
                         </div>
                         <div className="summary-item">
                           <span>{t("data.avgTemp")}</span>
                           <strong>
-                            {formatNum(
-                              filteredMissionData.reduce(
-                                (acc, curr) =>
-                                  acc + Number(curr.temperatura_suelo),
-                                0,
-                              ) / filteredMissionData.length,
-                              1,
-                            )}
-                            °C
+                            {(() => {
+                              const validD = filteredMissionData.filter(d => d.temperatura_suelo !== null);
+                              if (validD.length === 0) return <NotCollected />;
+                              const avg = validD.reduce((acc, curr) => acc + Number(curr.temperatura_suelo), 0) / validD.length;
+                              return `${formatNum(avg, 1)}°C`;
+                            })()}
                           </strong>
                         </div>
                         <div className="summary-item">
                           <span>{t("data.avgPh")}</span>
                           <strong>
-                            {formatNum(
-                              filteredMissionData.reduce(
-                                (acc, curr) => acc + Number(curr.ph),
-                                0,
-                              ) / filteredMissionData.length,
-                              1,
-                            )}
+                            {(() => {
+                              const validD = filteredMissionData.filter(d => d.ph !== null);
+                              if (validD.length === 0) return <NotCollected />;
+                              const avg = validD.reduce((acc, curr) => acc + Number(curr.ph), 0) / validD.length;
+                              return formatNum(avg, 1);
+                            })()}
                           </strong>
                         </div>
                       </div>

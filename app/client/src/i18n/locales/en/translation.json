@@ -21,23 +21,23 @@
     "missions": "Missions"
   },
   "dashboard": {
-    "title": "General Dashboard"
+    "title": "Main Dashboard"
   },
   "login": {
     "welcome": "Welcome",
     "username": "Username",
     "pwdText": "Password",
-    "submit": "Login",
+    "submit": "Sign In",
     "errorRequired": "Please enter username and password",
     "invalidCreds": "Invalid credentials"
   },
   "profile": {
     "title": "My Profile",
-    "errorLoadProfile": "Could not load user data.",
+    "errorLoadProfile": "Failed to load user data.",
     "errorMismatch": "New passwords do not match.",
     "errorShort": "New password is too short.",
-    "successUpdate": "Password updated successfully!",
-    "errorServer": "Error connecting to server.",
+    "successUpdate": "Password successfully updated!",
+    "errorServer": "Error connecting to the server.",
     "comingSoon": "Coming Soon",
     "changePhotoBtn": "Change Photo (URL)",
     "name": "Name:",
@@ -64,7 +64,7 @@
     "loadingGPS": "Loading GPS...",
     "centerRobot": "Center on robot",
     "heading": "Heading",
-    "queuePoint": "Queued Point",
+    "queuePoint": "Queued point",
     "currentTarget": "Current Target",
     "area": "Area",
     "missionsBtn": "Missions",
@@ -79,11 +79,11 @@
     "of": "of",
     "completed": "Completed",
     "returningToBase": "Returning to base...",
-    "baseStation": "Charging Station (Home)"
+    "baseStation": "Charging Base (Home)"
   },
   "data": {
     "title": "Data Analysis Center",
-    "subtitle": "Detailed history and agronomic variable analysis.",
+    "subtitle": "Detailed history and agronomic variables analysis.",
     "individualAnalysis": "Individual Analysis",
     "comparativeAnalysis": "Comparative Analysis",
     "recordsTable": "Records Table",
@@ -100,7 +100,8 @@
     "of": "of",
     "searchResults": "Search Results",
     "manual": "Manual",
-    "noDataFilter": "No data found for this filter.",
+    "notCollected": "Not collected",
+    "noDataFilter": "No data for this filter.",
     "go": "Go",
     "totalRecords": "total records",
     "executionHistory": "Execution History",
@@ -112,14 +113,16 @@
     "pdfSuccess": "PDF report generated successfully",
     "pdfError": "An error occurred while generating the PDF.",
     "recordsFound": "Found {{count}} records",
-    "fetchError": "There was an error fetching data from the server.",
+    "fetchError": "Error fetching data from the server.",
     "noSelection": "No Selection",
     "duration": "Duration",
     "batterySpent": "Battery Spent",
-    "avgHumidity": "Avg. Humidity",
-    "avgTemp": "Avg. Temp.",
-    "avgPh": "Avg. pH",
+    "avgHumidity": "Avg Humidity",
+    "avgTemp": "Avg Temp.",
+    "avgPh": "Avg pH",
     "allMissions": "All missions",
+    "allData": "All data",
+    "dataSource": "DATA:",
     "filterMission": "Mission:",
     "filterFrom": "From:",
     "filterTo": "To:",
@@ -133,7 +136,7 @@
   },
   "history": {
     "title": "Data History",
-    "description": "Past records and events will be displayed here."
+    "description": "Here you will find past records and events."
   },
   "chart": {
     "climateSoil": "Climate & Soil",
@@ -148,6 +151,7 @@
     "range": "Range:",
     "all": "All",
     "noData": "No data in this range",
+    "notCollected": "Not collected",
     "time": "Time",
     "humidityLabel": "Humidity (%)",
     "tempLabel": "Temp. (°C)",
@@ -169,7 +173,7 @@
     "createUser": "Create User",
     "name": "Name",
     "password": "Password",
-    "passwordPlaceholder": "(Leave blank to keep current)",
+    "passwordPlaceholder": "(Leave blank to keep unchanged)",
     "role": "Role",
     "roleUser": "User",
     "roleOperator": "Operator",
@@ -177,9 +181,9 @@
     "cancel": "Cancel",
     "save": "Save",
     "errorLoad": "Could not load users.",
-    "updated": "User updated successfully:",
-    "pwdRequired": "Password is required to create a user.",
-    "created": "User created successfully:",
+    "updated": "User successfully updated:",
+    "pwdRequired": "Password is required to create users.",
+    "created": "User successfully created:",
     "errorSave": "Error saving user.",
     "confirmDelete": "Are you sure you want to delete this user?",
     "deleted": "User deleted successfully",
@@ -208,7 +212,7 @@
   },
   "energy": {
     "title": "Energy Management",
-    "subtitle": "Detailed electrical system status.",
+    "subtitle": "Detailed status of the electrical system.",
     "batteryStatus": "Battery Status",
     "charging": "Charging",
     "inUse": "In Use",
@@ -233,7 +237,7 @@
     "close": "Close modal"
   },
   "mapAdv": {
-    "drawInstructions": "Click to add vertices. Click on the red point to close.",
+    "drawInstructions": "Click to add vertices. Click the red point to close.",
     "drawCancelled": "Delimitation cancelled.",
     "areaDelimited": "Area delimited.",
     "limitsRemoved": "Limits removed.",
@@ -248,9 +252,9 @@
     "hideData": "👁️ Hide Data",
     "clearLimit": "Clear Limit",
     "clear": "Clear",
-    "drawArea": "Draw Area",
+    "drawArea": "Delimit Area",
     "areaSummary": "Area Summary",
-    "avgPh": "Avg pH",
+    "avgPh": "Average pH",
     "humidity": "Humidity",
     "temp": "Temp.",
     "avgNutrients": "Nutrients (Avg)",
@@ -258,14 +262,15 @@
     "sample": "Sample",
     "detail": "Detail",
     "soil": "Soil",
-    "rad": "Rad"
+    "rad": "Rad",
+    "notCollected": "Not collected"
   },
   "notifications": {
-    "connectionSuccess": "Connection established with robot",
+    "connectionSuccess": "Connection established with the robot",
     "emergencyActive": "SYSTEM LOCKED: Emergency stop activated",
     "systemReady": "System rearmed and operational",
-    "batteryLow": "Low battery (20%). Route robot to charging point",
-    "updateSuccess": "Update completed successfully",
+    "batteryLow": "Low battery (20%). Direct the robot to the charging point",
+    "updateSuccess": "Update successful",
     "deleteSuccess": "Deleted successfully",
     "languageChanged": "Language changed to English"
   },

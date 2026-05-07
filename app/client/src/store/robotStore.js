@@ -6,7 +6,6 @@ import { io } from "socket.io-client";
 const API_URL = `${import.meta.env.VITE_API_URL}/robot`;
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
-// Calcula el ángulo exacto (Bearing) entre dos coordenadas GPS
 const calculateBearing = (startLat, startLng, destLat, destLng) => {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -21,8 +20,6 @@ const calculateBearing = (startLat, startLng, destLat, destLng) => {
     Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(dLng);
 
   let bearing = toDeg(Math.atan2(y, x));
-  
-  /*Giro la imagen del robot para que coincida con la trayectoria, ya que el .png no esta recto*/
   const offset = 80; 
   return (bearing - offset + 360) % 360; 
 };
@@ -31,12 +28,10 @@ export const useRobotStore = create((set, get) => ({
   socket: null, 
   isConnected: false,
   
-  // --- ESTADO GLOBAL DE LA INTERFAZ (SIDEBAR) ---
   isSidebarOpen: window.innerWidth > 768,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
-  // --- Modelo avanzado de batería ---
   battery: {
     percentage: 0,
     status: "IDLE",
@@ -86,7 +81,6 @@ export const useRobotStore = create((set, get) => ({
       set({ isConnected: false });
     });
 
-    // --- RECEPCIÓN DE TELEMETRÍA EN VIVO ---
     newSocket.on("robot:status", (data) => {
       set((state) => {
         const newBatteryData = data.battery || {};
@@ -94,16 +88,12 @@ export const useRobotStore = create((set, get) => ({
         const currentCons = newBatteryData.consumption ?? state.battery.consumption;
         const calculatedNetPower = currentSolar - currentCons;
 
-        // 🚀 CÁLCULO INTELIGENTE DE RUMBO
         let newHeading = state.system.heading;
         const currentMode = data.system?.mode || state.system.mode;
 
         if (currentMode === "MANUAL" && data.system?.heading !== undefined) {
-            // 🚜 FIX: En manual, obligamos a usar el ángulo real del motor para poder rotar en el sitio
-            // Aplicamos el -80 del offset visual del PNG para que quede recto
             newHeading = (data.system.heading - 80 + 360) % 360;
         } else if (data.position?.lat && data.position.lon && state.position.lat && state.position.lon) {
-           // 🤖 En automático, calculamos con el GPS para corregir micro-desviaciones de la ruta
            const distance = Math.sqrt(
              Math.pow(data.position.lat - state.position.lat, 2) + 
              Math.pow(data.position.lon - state.position.lon, 2)

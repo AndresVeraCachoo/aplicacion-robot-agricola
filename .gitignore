@@ -22,6 +22,7 @@ build/
 # Variables de entorno 
 .env
 .env.*
+!.env.example
 *.local
 
 # Docker logs y volúmenes locales

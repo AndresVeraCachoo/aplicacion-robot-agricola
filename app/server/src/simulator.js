@@ -62,7 +62,7 @@ const isPointInPolygon = (lat, lon, vs) => {
   return inside;
 };
 
-// --- ALGORITMO DE RUTAS ---
+// --- ALGORITMO DE RUTAS ORIGINAL Y ESTABLE ---
 const calculateBestAngle = (zone) => {
   let maxDist = 0;
   let bestAngle = 0;
@@ -205,21 +205,16 @@ const handleResumingMode = (lat, lon, speedFactor) => {
   return result;
 };
 
-// 🚜 --- FÍSICA MODO MANUAL (TANQUE / COCHE) ---
 const handleManualMode = (lat, lon, speedFactor) => {
-  // 1. Giro sobre eje
   if (manualVelocity.x !== 0) {
     heading = (heading + (manualVelocity.x * 15)) % 360;
     if (heading < 0) heading += 360;
   }
-  // Si no hay acelerador, no hay avance
   if (manualVelocity.y === 0) {
     return { nextLat: lat, nextLon: lon, dLat: 0, dLon: 0 };
   }
-  // 2. Tracción (positiva para avanzar, negativa para marcha atrás)
   const baseSpeed = 0.00015 * speedFactor;
   const driveForce = manualVelocity.y * baseSpeed; 
-  // 3. Trigonometría
   const headingRad = heading * (Math.PI / 180);
   const dLat = Math.cos(headingRad) * driveForce;
   const dLon = Math.sin(headingRad) * driveForce;
@@ -237,7 +232,6 @@ const calculateNextPosition = (lat, lon, speedFactor) => {
   }
 };
 
-// 🔌 --- LÓGICAS DE CARGA E INACTIVIDAD ---
 const checkBaseProximityForCharge = () => {
   const distToBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON);
 
@@ -275,7 +269,6 @@ const checkIdleAutoCharge = () => {
   }
 };
 
-// --- GESTIÓN DE ENERGÍA Y RTL ---
 export const calculateSolarRadiation = (dateObj) => {
   const hour = dateObj.getHours() + (dateObj.getMinutes() / 60);
   if (hour < 6 || hour > 20) return 0; 
@@ -293,12 +286,16 @@ const executeRTLSequence = () => {
   controlMode = "RETURNING_TO_BASE";
 };
 
+// --- LÓGICA DE BATERÍA ESTABLE Restaurada ---
 const checkRTLRequired = () => {
   if (isCharging || controlMode === "RETURNING_TO_BASE" || controlMode === "RESUMING_MISSION") return;
 
   const speedFactor = Math.max(10, speedLimitPercent) / 100;
-  const timeToReachBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON) / ((0.0002 * speedFactor) * 111000 || 1); 
-  const batteryNeededForRTL = (timeToReachBase * (0.2 + 0.5 + (speedFactor * 0.5))) + 5;
+  const speedMetersPerSec = (0.0002 * speedFactor) * 111000;
+  const secondsToReachBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON) / (speedMetersPerSec || 1);
+  
+  // Consumo realista: ~0.006% por segundo + 2% de margen físico estricto
+  const batteryNeededForRTL = (secondsToReachBase * 0.006) + 2; 
 
   if (battery > 0 && battery <= batteryNeededForRTL) {
     executeRTLSequence();
@@ -320,11 +317,12 @@ const handleBaseCharging = () => {
 };
 
 const calculateTickConsumption = () => {
-  if (isPaused) return 0.1; // Consumo mínimo (solo el "cerebro" encendido)
+  if (isPaused) return 0.001; 
+  // Consumo realista: base + factor de velocidad
   const movingGasto = Number.parseFloat(speed) > 0 
-    ? (1.5 + ((speedLimitPercent / 100) * 1.5)) 
+    ? (0.005 + ((speedLimitPercent / 100) * 0.005)) 
     : 0;
-  return 0.2 + movingGasto; 
+  return 0.001 + movingGasto; 
 };
 
 const triggerFailsafeBattery = () => {
@@ -364,7 +362,6 @@ const updateBatteryState = () => {
   accumulatedGenerated += tickData.generatedThisTick;
 };
 
-// --- GEOFENCING Y FÍSICAS ---
 const applyGeofencing = (cLat, cLon, nLat, nLon) => {
   if (!safeZonePolygon || safeZonePolygon.length < 3) return { validLat: nLat, validLon: nLon };
   if (nLat === cLat && nLon === cLon) return { validLat: nLat, validLon: nLon };
@@ -385,7 +382,6 @@ const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   }
 };
 
-// --- MÉTODOS EXPORTADOS ---
 export const setSpeedLimit = (limit) => { speedLimitPercent = limit; };
 export const queueNavPoint = (point) => { navQueue.push(point); };
 export const clearNavQueue = () => { navQueue = []; };
@@ -432,7 +428,6 @@ export const cancelSimulation = () => {
   speed = 0; 
 };
 
-// --- PROCESAMIENTO PRINCIPAL DE TICKS ---
 const processMovementTick = async (io) => {
   checkRTLRequired();
   checkIdleAutoCharge(); 
@@ -500,14 +495,17 @@ const processEnergyTick = async () => {
 };
 
 const getActiveMissionContext = async () => {
-  if (controlMode !== "AUTO") {
-    return { id: null, name: null };
-  }
-  const res = await pool.query(`SELECT e.id, m.nombre FROM ejecuciones_mision e JOIN misiones m ON e.mision_id = m.id WHERE e.estado IN ('en_curso', 'ejecutando', 'activa') ORDER BY e.id DESC LIMIT 1`);
+  const res = await pool.query(
+    `SELECT e.id, m.nombre, m.tipo_tarea 
+     FROM ejecuciones_mision e 
+     JOIN misiones m ON e.mision_id = m.id 
+     WHERE e.estado IN ('en_curso', 'ejecutando', 'activa') 
+     ORDER BY e.id DESC LIMIT 1`
+  );
   if (res.rows.length > 0) {
-    return { id: res.rows[0].id, name: res.rows[0].nombre };
+    return { id: res.rows[0].id, name: res.rows[0].nombre, tipo_tarea: res.rows[0].tipo_tarea.toLowerCase() };
   }
-  return { id: null, name: null };
+  return { id: null, name: null, tipo_tarea: "" };
 };
 
 const shouldSkipAgronomy = () => {
@@ -524,16 +522,31 @@ const processAgronomicTick = async (io) => {
     return;
   }
 
-  const intensity = (Math.sin(currentLat * 15000) + Math.cos(currentLon * 15000) + 2) / 4;
-  const cHum = Math.max(0, Math.min(100, (20 + (intensity * 70)) + (getSecureRandom() * 4 - 2)));
-  const cPh = Math.max(4, Math.min(10, (5 + (intensity * 3)) + (getSecureRandom() * 0.4 - 0.2)));
-  const cTemp = (15 + (intensity * 20)) + (getSecureRandom() * 1 - 0.5);
-
   try {
     const missionCtx = await getActiveMissionContext();
+    const hasActiveMission = missionCtx.id !== null;
+    const tareasStr = missionCtx.tipo_tarea || "";
+
+    // RECOLECCIÓN RESTAURADA AL ESTADO ESTABLE: 
+    const collectHum = !hasActiveMission || tareasStr.includes("humedad") || tareasStr.includes("humidity");
+    const collectTemp = !hasActiveMission || tareasStr.includes("temp");
+    const collectPh = !hasActiveMission || tareasStr.includes("ph");
+    const collectNpk = !hasActiveMission || tareasStr.includes("n-p-k") || tareasStr.includes("npk");
+    const collectRad = !hasActiveMission || tareasStr.includes("rad");
+
+    const intensity = (Math.sin(currentLat * 15000) + Math.cos(currentLon * 15000) + 2) / 4;
+    
+    const cHum = collectHum ? Math.max(0, Math.min(100, (20 + (intensity * 70)) + (getSecureRandom() * 4 - 2))).toFixed(1) : null;
+    const cTemp = collectTemp ? ((15 + (intensity * 20)) + (getSecureRandom() * 1 - 0.5)).toFixed(1) : null;
+    const cPh = collectPh ? Math.max(4, Math.min(10, (5 + (intensity * 3)) + (getSecureRandom() * 0.4 - 0.2))).toFixed(1) : null;
+    const cN = collectNpk ? (20 + getSecureRandom() * 60).toFixed(2) : null;
+    const cP = collectNpk ? (15 + getSecureRandom() * 45).toFixed(2) : null;
+    const cK = collectNpk ? (100 + getSecureRandom() * 150).toFixed(2) : null;
+    const cRad = collectRad ? calculateSolarRadiation(new Date()).toFixed(2) : null;
+
     const newRecord = await pool.query(
       `INSERT INTO robot_datos (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar, ejecucion_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [currentLat, currentLon, cHum.toFixed(1), cTemp.toFixed(1), cPh.toFixed(1), (20 + getSecureRandom() * 60).toFixed(2), (15 + getSecureRandom() * 45).toFixed(2), (100 + getSecureRandom() * 150).toFixed(2), calculateSolarRadiation(new Date()).toFixed(2), missionCtx.id]
+      [currentLat, currentLon, cHum, cTemp, cPh, cN, cP, cK, cRad, missionCtx.id]
     );
 
     if (io && newRecord.rows[0]) {
@@ -547,7 +560,7 @@ const processAgronomicTick = async (io) => {
 };
 
 export const startRobotSimulation = (io) => {
-  console.log("🤖 Simulador: ACTIVADO (Completo)");
+  console.log("🤖 Simulador: ACTIVADO (Golden State)");
   setInterval(() => processMovementTick(io), MOVEMENT_INTERVAL);
   setInterval(() => processEnergyTick(), ENERGY_LOG_INTERVAL);
   setInterval(() => processAgronomicTick(io), SENSOR_INTERVAL);

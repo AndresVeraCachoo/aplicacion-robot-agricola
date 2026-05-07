@@ -62,13 +62,13 @@ function ChartWidget({
     return processedData.map((d) => ({
       ...d,
       timeMs: new Date(d.timestamp).getTime(),
-      humedad: Number(d.humedad),
-      temperatura_suelo: Number(d.temperatura_suelo),
-      ph: Number(d.ph),
-      nitrogeno: Number(d.nitrogeno),
-      fosforo: Number(d.fosforo),
-      potasio: Number(d.potasio),
-      radiacion_solar: Number(d.radiacion_solar),
+      humedad: d.humedad !== null && d.humedad !== undefined ? Number(d.humedad) : null,
+      temperatura_suelo: d.temperatura_suelo !== null && d.temperatura_suelo !== undefined ? Number(d.temperatura_suelo) : null,
+      ph: d.ph !== null && d.ph !== undefined ? Number(d.ph) : null,
+      nitrogeno: d.nitrogeno !== null && d.nitrogeno !== undefined ? Number(d.nitrogeno) : null,
+      fosforo: d.fosforo !== null && d.fosforo !== undefined ? Number(d.fosforo) : null,
+      potasio: d.potasio !== null && d.potasio !== undefined ? Number(d.potasio) : null,
+      radiacion_solar: d.radiacion_solar !== null && d.radiacion_solar !== undefined ? Number(d.radiacion_solar) : null,
     }));
   }, [data]);
 
@@ -111,7 +111,6 @@ function ChartWidget({
   const isComparing = forcedCompare || chartType === "compare";
 
   const formatXAxis = (tickItem) => {
-    // 👈 AHORA MUESTRA EL DÍA Y MES TAMBIÉN
     return format(new Date(tickItem), "dd/MM HH:mm", { locale: es });
   };
 
@@ -153,6 +152,7 @@ function ChartWidget({
         labelFormatter={(label) =>
           format(new Date(label), "PPpp", { locale: es })
         }
+        formatter={(value, name) => [value === null || value === undefined ? t("chart.notCollected", "No recogido") : value, name]}
         contentStyle={{
           backgroundColor: "var(--card-bg, #fff)",
           borderColor: "var(--border-light, #ccc)",
@@ -165,8 +165,17 @@ function ChartWidget({
   );
 
   const renderChart = () => {
-    if (chartData.length === 0)
-      return <div className="no-data-chart">{t("chart.noData")}</div>;
+    const hasData1 = chartData.some((d) => d[metric1] !== null);
+    const hasData2 = isComparing ? chartData.some((d) => d[metric2] !== null) : true;
+
+    if (chartData.length === 0 || (!hasData1 && !isComparing) || (isComparing && !hasData1 && !hasData2)) {
+       return (
+         <div className="no-data-chart" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9ca3af", fontStyle: "italic", fontSize: "1.1rem" }}>
+           {t("data.notCollected", "No recogido")}
+         </div>
+       );
+    }
+
     if (isComparing) {
       return (
         <ComposedChart
@@ -189,6 +198,7 @@ function ChartWidget({
             fillOpacity={1}
             fill={`url(#grad-${metric1})`}
             strokeWidth={2}
+            connectNulls={true}
           />
           <Line
             yAxisId="right"
@@ -199,6 +209,7 @@ function ChartWidget({
             strokeWidth={3}
             dot={false}
             activeDot={{ r: 5 }}
+            connectNulls={true}
           />
         </ComposedChart>
       );
@@ -229,6 +240,7 @@ function ChartWidget({
             labelFormatter={(label) =>
               format(new Date(label), "PPpp", { locale: es })
             }
+            formatter={(value, name) => [value === null || value === undefined ? t("chart.notCollected", "No recogido") : value, name]}
           />
           <Legend />
           <Scatter name={conf1.label} data={chartData} fill={conf1.color} />
@@ -266,6 +278,7 @@ function ChartWidget({
             strokeWidth={3}
             dot={false}
             activeDot={{ r: 6 }}
+            connectNulls={true}
           />
         </LineChart>
       );
@@ -297,6 +310,7 @@ function ChartWidget({
           fillOpacity={1}
           fill={`url(#grad-${metric1}-single)`}
           strokeWidth={2}
+          connectNulls={true}
         />
       </AreaChart>
     );

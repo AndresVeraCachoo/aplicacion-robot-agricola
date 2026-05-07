@@ -100,6 +100,7 @@
     "of": "de",
     "searchResults": "Resultados de búsqueda",
     "manual": "Manual",
+    "notCollected": "No recogido",
     "noDataFilter": "No hay datos para este filtro.",
     "go": "Ir",
     "totalRecords": "registros totales",
@@ -120,6 +121,8 @@
     "avgTemp": "Temp. Media",
     "avgPh": "pH Medio",
     "allMissions": "Todas las misiones",
+    "allData": "Todos los datos",
+    "dataSource": "DATOS:",
     "filterMission": "Misión:",
     "filterFrom": "Desde:",
     "filterTo": "Hasta:",
@@ -148,6 +151,7 @@
     "range": "Rango:",
     "all": "Todo",
     "noData": "Sin datos en este rango",
+    "notCollected": "No recogido",
     "time": "Tiempo",
     "humidityLabel": "Humedad (%)",
     "tempLabel": "Temp. (°C)",
@@ -258,7 +262,8 @@
     "sample": "Muestra",
     "detail": "Detalle",
     "soil": "Suelo",
-    "rad": "Rad"
+    "rad": "Rad",
+    "notCollected": "No recogido"
   },
   "notifications": {
     "connectionSuccess": "Conexión establecida con el robot",

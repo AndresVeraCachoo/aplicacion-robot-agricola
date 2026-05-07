@@ -64,6 +64,7 @@ const isPointInPolygon = (point, vs) => {
 };
 
 const getColorByPH = (phVal) => {
+  if (phVal === null || phVal === undefined) return "#9ca3af";
   const ph = Number(phVal);
   if (ph < 6) return "#ef4444";
   if (ph > 7.5) return "#3b82f6";
@@ -80,31 +81,30 @@ const calculateZoneStats = (safeZone, agronomicData) => {
 
   if (pointsInZone.length === 0) return null;
 
-  const sum = pointsInZone.reduce(
-    (acc, p) => ({
-      ph: acc.ph + Number(p.ph),
-      hum: acc.hum + Number(p.humedad),
-      temp: acc.temp + Number(p.temperatura_suelo),
-      n: acc.n + Number(p.nitrogeno),
-      p: acc.p + Number(p.fosforo),
-      k: acc.k + Number(p.potasio),
-    }),
-    { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 },
-  );
+  let totals = { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 };
+  let counts = { ph: 0, hum: 0, temp: 0, n: 0, p: 0, k: 0 };
 
-  const count = pointsInZone.length;
+  pointsInZone.forEach(p => {
+    if (p.ph !== null && p.ph !== undefined) { totals.ph += Number(p.ph); counts.ph++; }
+    if (p.humedad !== null && p.humedad !== undefined) { totals.hum += Number(p.humedad); counts.hum++; }
+    if (p.temperatura_suelo !== null && p.temperatura_suelo !== undefined) { totals.temp += Number(p.temperatura_suelo); counts.temp++; }
+    if (p.nitrogeno !== null && p.nitrogeno !== undefined) { totals.n += Number(p.nitrogeno); counts.n++; }
+    if (p.fosforo !== null && p.fosforo !== undefined) { totals.p += Number(p.fosforo); counts.p++; }
+    if (p.potasio !== null && p.potasio !== undefined) { totals.k += Number(p.potasio); counts.k++; }
+  });
+
   return {
-    count,
-    avgPh: (sum.ph / count).toFixed(1),
-    avgHum: (sum.hum / count).toFixed(0),
-    avgTemp: (sum.temp / count).toFixed(1),
-    avgN: (sum.n / count).toFixed(0),
-    avgP: (sum.p / count).toFixed(0),
-    avgK: (sum.k / count).toFixed(0),
+    count: pointsInZone.length,
+    avgPh: counts.ph > 0 ? (totals.ph / counts.ph).toFixed(1) : "N/A",
+    avgHum: counts.hum > 0 ? (totals.hum / counts.hum).toFixed(0) : "N/A",
+    avgTemp: counts.temp > 0 ? (totals.temp / counts.temp).toFixed(1) : "N/A",
+    avgN: counts.n > 0 ? (totals.n / counts.n).toFixed(0) : "N/A",
+    avgP: counts.p > 0 ? (totals.p / counts.p).toFixed(0) : "N/A",
+    avgK: counts.k > 0 ? (totals.k / counts.k).toFixed(0) : "N/A",
   };
 };
 
-// --- Subcomponentes ---
+// --- Subcomponentes Refactorizados ---
 
 function SampleMarker({ sample, isVisible, onClick }) {
   if (!sample.lat || !sample.lon) return null;
@@ -128,7 +128,7 @@ function SampleMarker({ sample, isVisible, onClick }) {
     >
       {isVisible && (
         <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-          <span style={{ fontWeight: 600 }}>pH: {sample.ph}</span>
+          <span style={{ fontWeight: 600 }}>pH: {sample.ph === null ? 'N/A' : sample.ph}</span>
         </Tooltip>
       )}
     </CircleMarker>
@@ -258,6 +258,209 @@ function CenterButtonInternal() {
     </button>
   );
 }
+
+function MapControlsOverlay({
+  selectedMetric,
+  setSelectedMetric,
+  safeZone,
+  showZoneSummary,
+  setShowZoneSummary,
+  handleClearZone,
+  isDrawingZone,
+  toggleDrawing
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="map-controls-overlay">
+      <select
+        className="map-btn"
+        value={selectedMetric}
+        onChange={(e) => setSelectedMetric(e.target.value)}
+        title={t("mapAdv.selectHeatmap")}
+      >
+        <option value="none">{t("mapAdv.layerOff")}</option>
+        <option value="humedad">{t("mapAdv.layerHum")}</option>
+        <option value="ph">{t("mapAdv.layerPh")}</option>
+        <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
+      </select>
+
+      {safeZone ? (
+        <div className="zone-active-controls">
+          <button
+            type="button"
+            className="map-btn info"
+            onClick={() => setShowZoneSummary(!showZoneSummary)}
+            title={t("mapAdv.viewData")}
+          >
+            {showZoneSummary ? t("mapAdv.hideData") : t("mapAdv.viewData")}
+          </button>
+          <button
+            type="button"
+            className="map-btn danger"
+            onClick={handleClearZone}
+            title={t("mapAdv.clearLimit")}
+          >
+            <span style={{ fontSize: "1.2em" }}>🗑️</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={`map-btn ${isDrawingZone ? "active danger" : ""}`}
+          onClick={toggleDrawing}
+          title={t("mapAdv.drawArea")}
+        >
+          {isDrawingZone
+            ? `❌ ${t("users.cancel")}`
+            : `✏️ ${t("mapAdv.drawArea")}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+MapControlsOverlay.propTypes = {
+  selectedMetric: PropTypes.string.isRequired,
+  setSelectedMetric: PropTypes.func.isRequired,
+  safeZone: PropTypes.array,
+  showZoneSummary: PropTypes.bool.isRequired,
+  setShowZoneSummary: PropTypes.func.isRequired,
+  handleClearZone: PropTypes.func.isRequired,
+  isDrawingZone: PropTypes.bool.isRequired,
+  toggleDrawing: PropTypes.func.isRequired,
+};
+
+function ZoneSummaryPanel({ zoneStats, onClose }) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="zone-summary-panel">
+      <div className="summary-header">
+        <h4>{t("mapAdv.areaSummary")}</h4>
+        <button type="button" onClick={onClose}>
+          &times;
+        </button>
+      </div>
+      <div className="summary-metric main">
+        <span className="label">{t("mapAdv.avgPh")}</span>
+        <span
+          className="value"
+          style={{ color: getColorByPH(zoneStats.avgPh) }}
+        >
+          {zoneStats.avgPh}
+        </span>
+      </div>
+      <div className="summary-grid">
+        <div className="metric-box">
+          <span>{t("mapAdv.humidity")}</span>
+          <strong>{zoneStats.avgHum === "N/A" ? "N/A" : `${zoneStats.avgHum}%`}</strong>
+        </div>
+        <div className="metric-box">
+          <span>{t("mapAdv.temp")}</span>
+          <strong>{zoneStats.avgTemp === "N/A" ? "N/A" : `${zoneStats.avgTemp}°C`}</strong>
+        </div>
+        <div className="metric-box full">
+          <span>{t("mapAdv.avgNutrients")}</span>
+          <div className="mini-npk">
+            <span className="n">N: {zoneStats.avgN}</span>
+            <span className="p">P: {zoneStats.avgP}</span>
+            <span className="k">K: {zoneStats.avgK}</span>
+          </div>
+        </div>
+      </div>
+      <div className="summary-footer">
+        {zoneStats.count} {t("mapAdv.samplesAnalyzed")}
+      </div>
+    </div>
+  );
+}
+
+ZoneSummaryPanel.propTypes = {
+  zoneStats: PropTypes.object.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+function SampleModal({ isOpen, onClose, sample }) {
+  const { t } = useTranslation();
+
+  if (!sample) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        sample.id
+          ? `${t("mapAdv.sample")} #${sample.id}`
+          : t("mapAdv.detail")
+      }
+    >
+      <div className="sample-popup-content">
+        <div className="popup-header">
+          <div className="popup-kpi">
+            <span className="label">pH</span>
+            <span
+              className="value"
+              style={{ color: getColorByPH(sample.ph) }}
+            >
+              {sample.ph === null ? t("mapAdv.notCollected", "No recogido") : sample.ph}
+            </span>
+          </div>
+          <div className="popup-date">
+            {sample.timestamp
+              ? new Date(sample.timestamp).toLocaleString()
+              : "-"}
+          </div>
+        </div>
+
+        <div className="popup-grid">
+          <div className="popup-row">
+            <span>🌡️ {t("mapAdv.soil")}:</span>{" "}
+            <strong>{sample.temperatura_suelo === null ? t("mapAdv.notCollected", "No recogido") : `${sample.temperatura_suelo}°C`}</strong>
+          </div>
+          <div className="popup-row">
+            <span>💧 {t("mapAdv.humidity")}:</span>{" "}
+            <strong>{sample.humedad === null ? t("mapAdv.notCollected", "No recogido") : `${sample.humedad}%`}</strong>
+          </div>
+          <div className="popup-row">
+            <span>☀️ {t("mapAdv.rad")}:</span>{" "}
+            <strong>{sample.radiacion_solar === null ? t("mapAdv.notCollected", "No recogido") : `${sample.radiacion_solar} W`}</strong>
+          </div>
+
+          <hr className="popup-divider" />
+
+          <div className="popup-nutrients">
+            <div className="nutrient-item">
+              <span className="nutrient-label n">N</span>
+              <span className="nutrient-val">
+                {sample.nitrogeno === null ? "-" : sample.nitrogeno}
+              </span>
+            </div>
+            <div className="nutrient-item">
+              <span className="nutrient-label p">P</span>
+              <span className="nutrient-val">
+                  {sample.fosforo === null ? "-" : sample.fosforo}
+              </span>
+            </div>
+            <div className="nutrient-item">
+              <span className="nutrient-label k">K</span>
+              <span className="nutrient-val">
+                  {sample.potasio === null ? "-" : sample.potasio}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+SampleModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  sample: PropTypes.object,
+};
 
 // --- Componente Principal ---
 
@@ -391,7 +594,6 @@ function MapView() {
           />
         )}
 
-        {/* Aseguramos que la base se pinte con zIndex menor a 1000 por si acaso */}
         <Marker
           position={BASE_STATION_COORDS}
           icon={baseStationIcon}
@@ -438,10 +640,8 @@ function MapView() {
           isDrawing={isDrawingZone}
         />
 
-        {/* BOTÓN DE CENTRAR MAPA RECUPERADO */}
         <CenterButtonInternal />
 
-        {/* COORDENADAS RECUPERADAS */}
         {lastClickedCoords && !isDrawingZone && (
           <div className="clicked-coords-display">
             <span style={{ color: "#ef4444", fontSize: "1.2em" }}>📍</span>
@@ -450,161 +650,30 @@ function MapView() {
           </div>
         )}
 
-        {/* CONTROLES DE HERRAMIENTAS RECUPERADOS */}
-        <div className="map-controls-overlay">
-          <select
-            className="map-btn"
-            value={selectedMetric}
-            onChange={(e) => setSelectedMetric(e.target.value)}
-            title={t("mapAdv.selectHeatmap")}
-          >
-            <option value="none">{t("mapAdv.layerOff")}</option>
-            <option value="humedad">{t("mapAdv.layerHum")}</option>
-            <option value="ph">{t("mapAdv.layerPh")}</option>
-            <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
-          </select>
+        <MapControlsOverlay
+          selectedMetric={selectedMetric}
+          setSelectedMetric={setSelectedMetric}
+          safeZone={safeZone}
+          showZoneSummary={showZoneSummary}
+          setShowZoneSummary={setShowZoneSummary}
+          handleClearZone={handleClearZone}
+          isDrawingZone={isDrawingZone}
+          toggleDrawing={toggleDrawing}
+        />
 
-          {safeZone ? (
-            <div className="zone-active-controls">
-              <button
-                type="button"
-                className="map-btn info"
-                onClick={() => setShowZoneSummary(!showZoneSummary)}
-                title={t("mapAdv.viewData")}
-              >
-                {showZoneSummary ? t("mapAdv.hideData") : t("mapAdv.viewData")}
-              </button>
-              <button
-                type="button"
-                className="map-btn danger"
-                onClick={handleClearZone}
-                title={t("mapAdv.clearLimit")}
-              >
-                <span style={{ fontSize: "1.2em" }}>🗑️</span>
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className={`map-btn ${isDrawingZone ? "active danger" : ""}`}
-              onClick={toggleDrawing}
-              title={t("mapAdv.drawArea")}
-            >
-              {isDrawingZone
-                ? `❌ ${t("users.cancel")}`
-                : `✏️ ${t("mapAdv.drawArea")}`}
-            </button>
-          )}
-        </div>
-
-        {/* RESUMEN DE ZONA RECUPERADO */}
         {showZoneSummary && zoneStats && (
-          <div className="zone-summary-panel">
-            <div className="summary-header">
-              <h4>{t("mapAdv.areaSummary")}</h4>
-              <button type="button" onClick={() => setShowZoneSummary(false)}>
-                &times;
-              </button>
-            </div>
-            <div className="summary-metric main">
-              <span className="label">{t("mapAdv.avgPh")}</span>
-              <span
-                className="value"
-                style={{ color: getColorByPH(zoneStats.avgPh) }}
-              >
-                {zoneStats.avgPh}
-              </span>
-            </div>
-            <div className="summary-grid">
-              <div className="metric-box">
-                <span>{t("mapAdv.humidity")}</span>
-                <strong>{zoneStats.avgHum}%</strong>
-              </div>
-              <div className="metric-box">
-                <span>{t("mapAdv.temp")}</span>
-                <strong>{zoneStats.avgTemp}°C</strong>
-              </div>
-              <div className="metric-box full">
-                <span>{t("mapAdv.avgNutrients")}</span>
-                <div className="mini-npk">
-                  <span className="n">N: {zoneStats.avgN}</span>
-                  <span className="p">P: {zoneStats.avgP}</span>
-                  <span className="k">K: {zoneStats.avgK}</span>
-                </div>
-              </div>
-            </div>
-            <div className="summary-footer">
-              {zoneStats.count} {t("mapAdv.samplesAnalyzed")}
-            </div>
-          </div>
+          <ZoneSummaryPanel
+            zoneStats={zoneStats}
+            onClose={() => setShowZoneSummary(false)}
+          />
         )}
       </MapContainer>
 
-      {/* MODAL EXTERNO INTACTO */}
-      <Modal
+      <SampleModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title={
-          selectedSample
-            ? `${t("mapAdv.sample")} #${selectedSample.id || "N/A"}`
-            : t("mapAdv.detail")
-        }
-      >
-        {selectedSample && (
-          <div className="sample-popup-content">
-            <div className="popup-header">
-              <div className="popup-kpi">
-                <span className="label">pH</span>
-                <span
-                  className="value"
-                  style={{ color: getColorByPH(selectedSample.ph) }}
-                >
-                  {selectedSample.ph}
-                </span>
-              </div>
-              <div className="popup-date">
-                {selectedSample.timestamp
-                  ? new Date(selectedSample.timestamp).toLocaleString()
-                  : "-"}
-              </div>
-            </div>
-
-            <div className="popup-grid">
-              <div className="popup-row">
-                <span>🌡️ {t("mapAdv.soil")}:</span>{" "}
-                <strong>{selectedSample.temperatura_suelo}°C</strong>
-              </div>
-              <div className="popup-row">
-                <span>💧 {t("mapAdv.humidity")}:</span>{" "}
-                <strong>{selectedSample.humedad}%</strong>
-              </div>
-              <div className="popup-row">
-                <span>☀️ {t("mapAdv.rad")}:</span>{" "}
-                <strong>{selectedSample.radiacion_solar} W</strong>
-              </div>
-
-              <hr className="popup-divider" />
-
-              <div className="popup-nutrients">
-                <div className="nutrient-item">
-                  <span className="nutrient-label n">N</span>
-                  <span className="nutrient-val">
-                    {selectedSample.nitrogeno}
-                  </span>
-                </div>
-                <div className="nutrient-item">
-                  <span className="nutrient-label p">P</span>
-                  <span className="nutrient-val">{selectedSample.fosforo}</span>
-                </div>
-                <div className="nutrient-item">
-                  <span className="nutrient-label k">K</span>
-                  <span className="nutrient-val">{selectedSample.potasio}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
+        sample={selectedSample}
+      />
     </>
   );
 }
