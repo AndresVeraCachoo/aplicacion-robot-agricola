@@ -34,6 +34,7 @@
   text-align: center;
   margin: auto;
   animation: modalEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative; 
 }
 
 @keyframes modalEnter {
@@ -53,55 +54,6 @@
   font-size: 1.8em;
   font-weight: 800;
   letter-spacing: -0.5px;
-}
-
-/* === BOTONES DE ROL (Por si los vuelves a usar) === */
-.role-button-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.role-button {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 1.05em;
-  font-weight: 600;
-  font-family: var(--font-family);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.role-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-.role-button:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.role-button.admin {
-  background-color: var(--primary-dark);
-}
-.role-button.admin:hover {
-  background-color: #15803d;
-}
-.role-button.operator {
-  background-color: var(--accent-green);
-}
-.role-button.operator:hover {
-  background-color: var(--accent-green-hover);
-}
-.role-button.user {
-  background-color: #0d9488;
-}
-.role-button.user:hover {
-  background-color: #0f766e;
 }
 
 /* === FORMULARIO E INPUTS === */
@@ -175,29 +127,68 @@
   border-radius: 8px;
 }
 
-/* === BOTÓN DE IDIOMA === */
-.login-lang-btn {
+/* === SELECTOR DE IDIOMA (DROPDOWN SÓLIDO) === */
+.login-lang-container {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  top: 15px;
+  right: 15px;
+  z-index: 10000;
+}
+
+.login-lang-btn {
+  background-color: var(--background-widget, #ffffff);
+  border: 1px solid var(--border-light, #d1d5db);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   color: var(--primary-darkest);
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-weight: 700;
   cursor: pointer;
   padding: 8px 16px;
   border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   transition: all 0.2s;
-  backdrop-filter: blur(5px);
-  z-index: 10000;
 }
+
 .login-lang-btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
+}
+
+.login-lang-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 70px;
+}
+
+.login-lang-option {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  font-size: 0.9em;
+  font-weight: 700;
+  transition: background-color 0.2s;
+}
+
+.login-lang-option:hover,
+.login-lang-option:focus {
+  background-color: #f0f0f0;
+  outline: none;
 }
 
 /* === MODO OSCURO === */
@@ -218,13 +209,27 @@ body.dark-mode .login-error {
   background-color: rgba(54, 14, 14, 0.1);
   color: #f87171;
 }
+
+/* Modo Oscuro - Selector de Idioma */
 body.dark-mode .login-lang-btn {
-  background-color: rgba(29, 28, 28, 0.1);
+  background-color: var(--bg-card, #1e1e1e);
   border-color: rgba(255, 255, 255, 0.2);
   color: white;
 }
 body.dark-mode .login-lang-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+body.dark-mode .login-lang-dropdown {
+  background-color: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+body.dark-mode .login-lang-option {
+  color: var(--text-main);
+}
+body.dark-mode .login-lang-option:hover,
+body.dark-mode .login-lang-option:focus {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* =========================================
@@ -239,7 +244,7 @@ body.dark-mode .login-lang-btn:hover {
     border-radius: 20px;
   }
   .login-box input,
-  .login-box button {
+  .login-box button.login-submit-button {
     font-size: 16px !important;
     min-height: 50px;
   }
@@ -257,9 +262,9 @@ body.dark-mode .login-lang-btn:hover {
   .login-box {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centra todo su contenido horizontalmente */
-    max-width: 300px !important; /* Ancho estrecho proporcional al PC */
-    padding: 15px 30px !important; /* Reducimos paddings verticales para que quepa en la pantalla */
+    align-items: center; 
+    max-width: 300px !important; 
+    padding: 15px 30px !important; 
   }
 
   .login-box h2 {
@@ -269,11 +274,11 @@ body.dark-mode .login-lang-btn:hover {
 
   .login-form {
     margin-top: 0;
-    gap: 12px; /* Reducimos el espacio entre input y contraseña */
-    width: 100%; /* Ocupa el 100% de los 380px del modal */
+    gap: 12px; 
+    width: 100%; 
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centra los elementos internos */
+    align-items: center; 
   }
 
   .form-group {
@@ -287,20 +292,23 @@ body.dark-mode .login-lang-btn:hover {
 
   .form-group input {
     padding: 6px 10px;
-    min-height: 38px !important; /* Ligeramente más bajo para ahorrar espacio vertical */ /* 🛡️ FIX: Texto que escribe el usuario centrado */
+    min-height: 38px !important; 
   }
 
   .login-submit-button {
-    width: 100%; /* El botón ocupará exactamente el mismo ancho que los inputs */
+    width: 100%; 
     padding: 10px;
     min-height: 42px !important;
     margin-top: 5px;
   }
 
-  .login-lang-btn {
+  .login-lang-container {
     top: 10px;
     right: 15px;
-    padding: 4px 12px;
+  }
+
+  .login-lang-btn {
+    padding: 4px 10px;
     font-size: 0.75em;
   }
 }

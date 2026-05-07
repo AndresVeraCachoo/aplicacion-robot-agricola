@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
     verifyAuthStatus();
   }, [token, logout]);
 
-  // Función de Login con Persistencia de Avatar
+  // 3. Función de Login con Persistencia de Avatar y Validación
   const login = useCallback(
     async (name, password) => {
       try {
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
         if (response.data.token) {
           const { token: newToken, user } = response.data;
 
-          // Validación Sonar S8475
+          // Validación Sonar S8475 (Formato del Token)
           const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
           if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
             throw new Error("Token con formato inválido");
@@ -77,12 +77,22 @@ export function AuthProvider({ children }) {
           if (user?.role === "admin") safeRole = "admin";
           else if (user?.role === "operador") safeRole = "operador";
 
+          // ✅ NUEVO: Sanitización de datos para SonarQube (Evitar Tainted Data)
+          const sanitizeHTML = (str) => {
+            if (typeof str !== "string") return "";
+            return str.replaceAll(/[<>"'&]/g, ""); // Elimina caracteres de inyección HTML/XSS
+          };
+
+          const safeName = sanitizeHTML(user?.name);
+          const safeAvatar = sanitizeHTML(user?.avatar) || "/avatars/robot-fondo-verde.png";
+
+          // Guardamos de forma segura
           localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
-          localStorage.setItem("userName", user.name || "");
-          localStorage.setItem("userAvatar", user.avatar || "/avatars/robot-fondo-verde.png");
+          localStorage.setItem("userName", safeName);
+          localStorage.setItem("userAvatar", safeAvatar);
 
-          // Avisamos a la Sidebar de que los datos han cambiado
+          // Avisamos a la Sidebar
           globalThis.dispatchEvent(new Event("avatarUpdated"));
 
           axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;

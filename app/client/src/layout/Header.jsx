@@ -9,23 +9,29 @@ import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
+const LANGUAGES = [
+  { code: "es", label: "ES" },
+  { code: "en", label: "EN" },
+  { code: "pt", label: "PT" },
+];
+
 function Header({ onMenuClick }) {
   const { t, i18n } = useTranslation();
   const battery = useRobotStore((state) => state.battery);
   const isConnected = useRobotStore((state) => state.isConnected);
   const { addToast } = useToast();
 
-  // THE ENTERPRISE WAY: Extraemos porcentaje, el estado del enchufe, y el balance neto (netPower)
   const { percentage, status, netPower = 0 } = battery;
   const { isDarkMode, toggleTheme } = useTheme();
+  
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
   const closeBatteryModal = () => setIsBatteryModalOpen(false);
 
-  // Lógica derivada pura (Separación de conceptos)
   const isPluggedIn = status === "CHARGING";
-  const isSolarGaining = !isPluggedIn && netPower > 0 && percentage < 100; // Si no está en la base y gana energía, es el Sol.
+  const isSolarGaining = !isPluggedIn && netPower > 0 && percentage < 100;
 
   const getBatteryClass = () => {
     if (isPluggedIn) return "charging";
@@ -35,16 +41,12 @@ function Header({ onMenuClick }) {
     return "good";
   };
 
-  // Función para alternar idioma con un solo clic
-  const toggleLanguage = () => {
-    const currentLang = i18n.language || "es";
-    const nextLang = currentLang.startsWith("es") ? "en" : "es";
+  const currentLang = LANGUAGES.find(l => (i18n.resolvedLanguage || i18n.language || "es").startsWith(l.code)) || LANGUAGES[0];
 
-    i18n.changeLanguage(nextLang).then(() => {
-      addToast(
-        i18n.getFixedT(nextLang)("notifications.languageChanged"),
-        "info",
-      );
+  const changeLanguage = (langCode) => {
+    i18n.changeLanguage(langCode).then(() => {
+      addToast(i18n.getFixedT(langCode)("notifications.languageChanged"), "info");
+      setIsLangMenuOpen(false);
     });
   };
 
@@ -52,84 +54,65 @@ function Header({ onMenuClick }) {
     <>
       <header className="header">
         <div className="header-left">
-          <button
-            onClick={onMenuClick}
-            className="menu-button"
-            aria-label={t("sidebar.menu")}
-          >
+          <button onClick={onMenuClick} className="menu-button" aria-label={t("sidebar.menu")}>
             ☰
           </button>
-
-          <div
-            className={`system-status-pill ${
-              isConnected ? "online" : "offline"
-            }`}
-            title={
-              isConnected ? t("header.connected") : t("header.disconnected")
-            }
-          >
+          <div className={`system-status-pill ${isConnected ? "online" : "offline"}`} title={isConnected ? t("header.connected") : t("header.disconnected")}>
             <span className="status-dot"></span>
-            <span className="status-text">
-              {isConnected ? t("header.online") : t("header.offline")}
-            </span>
+            <span className="status-text">{isConnected ? t("header.online") : t("header.offline")}</span>
           </div>
         </div>
 
         <div className="header-right-controls">
-          <button
-            className="lang-toggle-btn"
-            onClick={toggleLanguage}
-            title={
-              i18n.language.startsWith("es")
-                ? "Switch to English"
-                : "Cambiar a Español"
-            }
-          >
-            <span className="lang-icon">🌍</span>
-            <span>{i18n.language.startsWith("es") ? "ES" : "EN"}</span>
-          </button>
+          
+          {/* Selector de Idioma Compacto */}
+          <div className="header-lang-container">
+            <button 
+              className={`header-lang-btn ${isLangMenuOpen ? "active" : ""}`} 
+              onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+            >
+              <span>{currentLang.label}</span>
+              <span className={`lang-arrow ${isLangMenuOpen ? "up" : ""}`}>▾</span>
+            </button>
+            
+            {isLangMenuOpen && (
+              <div className="header-lang-dropdown">
+                {LANGUAGES.filter(l => l.code !== currentLang.code).map(lang => (
+                  <button 
+                    key={lang.code}
+                    className="header-lang-option"
+                    onClick={() => changeLanguage(lang.code)}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <button
-            className="theme-toggle-btn"
-            onClick={toggleTheme}
-            title={isDarkMode ? t("header.lightMode") : t("header.darkMode")}
-          >
+          <button className="theme-toggle-btn" onClick={toggleTheme} title={isDarkMode ? t("header.lightMode") : t("header.darkMode")}>
             {isDarkMode ? "🌙" : "☀️"}
           </button>
 
-          <button
-            className={`battery-widget clickable ${getBatteryClass()}`}
-            onClick={openBatteryModal}
-            title={`${t("header.battery")}: ${percentage}%`}
-          >
+          <button className={`battery-widget clickable ${getBatteryClass()}`} onClick={openBatteryModal} title={`${t("header.battery")}: ${percentage}%`}>
             <span className="battery-text">
               {isPluggedIn && <span className="charging-bolt">⚡</span>}
               {isSolarGaining && <span className="solar-icon">🌤️</span>}
               {percentage}%
             </span>
             <div className="battery-icon">
-              <div
-                className="battery-fill"
-                style={{ width: `${percentage}%` }}
-              ></div>
+              <div className="battery-fill" style={{ width: `${percentage}%` }}></div>
             </div>
           </button>
         </div>
       </header>
 
-      <Modal
-        isOpen={isBatteryModalOpen}
-        onClose={closeBatteryModal}
-        title={t("header.energyDetail")}
-      >
+      <Modal isOpen={isBatteryModalOpen} onClose={closeBatteryModal} title={t("header.energyDetail")}>
         <BatteryModal onClose={closeBatteryModal} />
       </Modal>
     </>
   );
 }
 
-Header.propTypes = {
-  onMenuClick: PropTypes.func.isRequired,
-};
-
+Header.propTypes = { onMenuClick: PropTypes.func.isRequired };
 export default Header;
