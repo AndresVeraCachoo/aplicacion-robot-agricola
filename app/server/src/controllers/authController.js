@@ -4,9 +4,9 @@ import jwt from "jsonwebtoken";
 import { pool } from "../config/db.js";
 import "dotenv/config";
 
-// Envoltorio mágico para atrapar errores y enviarlos al ErrorHandler
+// Envoltorio para atrapar errores y enviarlos al ErrorHandler
 const catchAsync = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
+  return Promise.resolve(fn(req, res, next)).catch(next);
 };
 
 export const login = catchAsync(async (req, res, next) => {

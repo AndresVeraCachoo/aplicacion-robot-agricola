@@ -1,12 +1,15 @@
 import bcrypt from "bcrypt";
 import { pool } from "../config/db.js";
 
-const catchAsync = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
+const catchAsync = (fn) => async (req, res, next) => {
+  try {
+    await fn(req, res, next);
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getProfile = catchAsync(async (req, res, next) => {
-
   const result = await pool.query(
     "SELECT id, name, role, avatar FROM usuarios WHERE id = $1",
     [req.user.id]
@@ -74,19 +77,25 @@ export const createUser = catchAsync(async (req, res, next) => {
 export const updateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { name, role, password } = req.body;
+  let result;
 
   if (password) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
+    result = await pool.query(
       "UPDATE usuarios SET name = $1, role = $2, password = $3 WHERE id = $4",
       [name, role, hashedPassword, id]
     );
   } else {
-    await pool.query(
+    result = await pool.query(
       "UPDATE usuarios SET name = $1, role = $2 WHERE id = $3",
       [name, role, id]
     );
   }
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
+
   res.json({ message: "Usuario actualizado" });
 });
 
@@ -117,7 +126,6 @@ export const deleteUser = catchAsync(async (req, res, next) => {
   res.json({ message: "Usuario eliminado correctamente" });
 });
 
-
 export const updateAvatar = catchAsync(async (req, res, next) => {
   const { avatarUrl } = req.body;
   const userId = req.user.id;
@@ -130,6 +138,10 @@ export const updateAvatar = catchAsync(async (req, res, next) => {
     "UPDATE usuarios SET avatar = $1 WHERE id = $2 RETURNING id, name, role, avatar",
     [avatarUrl, userId]
   );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
 
   res.json({ message: "Avatar actualizado", user: result.rows[0] });
 });

@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node --env-file=../../.env src/index.js",
-    "dev": "node --watch --env-file=../../.env src/index.js"
+    "dev": "node --watch --env-file=../../.env src/index.js",
+    "test:unit": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "dependencies": {
     "@turf/turf": "^7.3.4",
@@ -19,5 +21,10 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.5",
     "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }

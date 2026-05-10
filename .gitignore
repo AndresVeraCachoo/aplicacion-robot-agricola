@@ -38,3 +38,8 @@ docker-volumes/
 *.njsproj
 *.sln
 *.sw?
+
+# Testing y Coverage
+coverage/
+.nyc_output/
+*.lcov

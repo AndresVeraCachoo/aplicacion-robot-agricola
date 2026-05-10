@@ -1,0 +1,43 @@
+name: CI And SonarCloud Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-test-analyze:
+    name: Build, Test & Sonar Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Descargar el código
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Obligatorio
+
+      # Preparar el entorno Node.js
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: 'npm'
+          cache-dependency-path: './app/server/package-lock.json'
+
+      # Instalar y Testear BACKEND
+      - name: Install Backend Dependencies
+        working-directory: ./app/server
+        run: npm ci
+
+      - name: Run Backend Tests & Coverage
+        working-directory: ./app/server
+        run: npm run test:coverage
+
+      # Enviar TODO a SonarCloud 
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

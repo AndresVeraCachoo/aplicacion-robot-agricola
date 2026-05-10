@@ -77,14 +77,18 @@ export function AuthProvider({ children }) {
           if (user?.role === "admin") safeRole = "admin";
           else if (user?.role === "operador") safeRole = "operador";
 
-          // ✅ NUEVO: Sanitización de datos para SonarQube (Evitar Tainted Data)
-          const sanitizeHTML = (str) => {
-            if (typeof str !== "string") return "";
-            return str.replaceAll(/[<>"'&]/g, ""); // Elimina caracteres de inyección HTML/XSS
-          };
+          // ✅ NUEVO: Validación estricta que SonarQube aprueba (equivalente al includes)
+          let safeName = "Usuario";
+          // Solo aceptamos letras, números, espacios y guiones
+          if (typeof user?.name === "string" && /^[a-zA-Z0-9\s\-_áéíóúÁÉÍÓÚñÑ]+$/.test(user.name)) {
+            safeName = user.name;
+          }
 
-          const safeName = sanitizeHTML(user?.name);
-          const safeAvatar = sanitizeHTML(user?.avatar) || "/avatars/robot-fondo-verde.png";
+          let safeAvatar = "/avatars/robot-fondo-verde.png";
+          // Solo aceptamos URLs seguras o rutas locales de avatares
+          if (typeof user?.avatar === "string" && /^(https?:\/\/[^\s]+|\/avatars\/[^\s]+)$/.test(user.avatar)) {
+            safeAvatar = user.avatar;
+          }
 
           // Guardamos de forma segura
           localStorage.setItem("token", newToken);
