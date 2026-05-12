@@ -92,17 +92,26 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => console.log("🔴 Cliente desconectado:", socket.id));
 });
 
-startRobotSimulation(io);
+// Evitamos que el simulador arranque en bucle infinito durante los tests E2E
+if (process.env.NODE_ENV !== "test") {
+  startRobotSimulation(io);
+}
 
 const PORT = process.env.PORT || 3001;
 
-try {
-  await runSeed();
-  
-  server.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  });
-} catch (err) {
-  console.error("❌ Arranque abortado:", err.message);
-  process.exit(1);
+// Evitamos levantar el servidor en el puerto real y la semilla si estamos en modo TEST
+if (process.env.NODE_ENV !== "test") {
+  try {
+    await runSeed();
+    
+    server.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Arranque abortado:", err.message);
+    process.exit(1);
+  }
 }
+
+// Exportamos la app pura para que Supertest la pueda usar
+export { app };

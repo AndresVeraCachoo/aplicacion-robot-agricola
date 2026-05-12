@@ -210,7 +210,7 @@ describe('User Controller', () => {
     });
 
     it('updateAvatar devuelve 404 si el usuario no existe', async () => {
-      req.body = { avatarUrl: 'http://foto.png' };
+      req.body = { avatarUrl: 'https://foto.png' };
       req.user = { id: 99 };
       mockQuery.mockResolvedValueOnce({ rows: [] }); // UPDATE no devolvió nada
 
@@ -221,9 +221,9 @@ describe('User Controller', () => {
     });
 
     it('updateAvatar actualiza el avatar con éxito', async () => {
-      req.body = { avatarUrl: 'http://foto.png' };
+      req.body = { avatarUrl: 'https://foto.png' };
       req.user = { id: 1 };
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, avatar: 'http://foto.png' }] });
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, avatar: 'https://foto.png' }] });
 
       const { updateAvatar } = await import('../userController.js');
       await updateAvatar(req, res, next);

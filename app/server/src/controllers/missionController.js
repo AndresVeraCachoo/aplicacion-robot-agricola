@@ -17,7 +17,20 @@ export const createMision = catchAsync(async (req, res, next) => {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
     RETURNING *;
   `;
-  const values = [nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, area_trabajo, puntos_interes, punto_retorno, fecha_programada];
+ 
+  // Aseguramos que los campos JSON se guarden correctamente en Postgres
+  const values = [
+    nombre, 
+    tipo_tarea, 
+    ancho_trabajo, 
+    angulo_pasada, 
+    bateria_minima, 
+    typeof area_trabajo === 'object' ? JSON.stringify(area_trabajo) : area_trabajo, 
+    typeof puntos_interes === 'object' ? JSON.stringify(puntos_interes) : puntos_interes, 
+    typeof punto_retorno === 'object' ? JSON.stringify(punto_retorno) : punto_retorno, 
+    fecha_programada
+  ];
+  
   const result = await pool.query(query, values);
   res.status(201).json(result.rows[0]);
 });
