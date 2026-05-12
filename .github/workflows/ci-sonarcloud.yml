@@ -34,7 +34,9 @@ jobs:
       # Ejecutar tests SOLO en el backend
       - name: Run Backend Tests & Coverage
         working-directory: ./app/server
-        run: npm run test:coverage
+        run: |
+          npm run test:unit:cov
+          npm run test:e2e:cov
 
       # Enviar a SonarCloud usando el Hash seguro
       - name: SonarCloud Scan

@@ -46,15 +46,18 @@ export function AuthProvider({ children }) {
           await axios.get(`${API_URL}/auth/verify`);
           setIsLoggedIn(true);
         } catch (error) {
-          console.warn("Sesión caducada:", error.message);
+          console.warn("Sesión caducada. Detalle:", error.message);
           logout();
         }
+      } else {
+        delete axios.defaults.headers.common["Authorization"];
+        setIsLoggedIn(false);
       }
     };
     verifyAuthStatus();
   }, [token, logout]);
 
-  // 3. Función de Login con Persistencia de Avatar y Validación
+  // 1. Función de Login
   const login = useCallback(
     async (name, password) => {
       try {
@@ -66,31 +69,36 @@ export function AuthProvider({ children }) {
         if (response.data.token) {
           const { token: newToken, user } = response.data;
 
-          // Validación Sonar S8475 (Formato del Token)
+          // Validación estricta del Token mediante Regex (Fix para Sonar)
           const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
           if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
-            throw new Error("Token con formato inválido");
+            throw new Error("El servidor devolvió un token con formato inválido");
           }
 
-          // Sanitización de Rol
+          // Descontaminación del Rol
           let safeRole = "usuario";
-          if (user?.role === "admin") safeRole = "admin";
-          else if (user?.role === "operador") safeRole = "operador";
+          if (user?.role === "admin") {
+            safeRole = "admin";
+          } else if (user?.role === "operador") {
+            safeRole = "operador";
+          }
 
-          // ✅ NUEVO: Validación estricta que SonarQube aprueba (equivalente al includes)
+          // --- LÓGICA DE SANITIZACIÓN ---
+          
+          // Sanitización del Nombre (Evita inyección de scripts eliminando caracteres especiales)
           let safeName = "Usuario";
-          // Solo aceptamos letras, números, espacios y guiones
-          if (typeof user?.name === "string" && /^[a-zA-Z0-9\s\-_áéíóúÁÉÍÓÚñÑ]+$/.test(user.name)) {
-            safeName = user.name;
+          if (typeof response.data.user.name === "string") {
+            safeName = response.data.user.name.replaceAll(/[^a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]/g, "");
           }
 
+          // Sanitización del Avatar (Comprueba protocolo o ruta local)
           let safeAvatar = "/avatars/robot-fondo-verde.png";
-          // Solo aceptamos URLs seguras o rutas locales de avatares
-          if (typeof user?.avatar === "string" && /^(https?:\/\/[^\s]+|\/avatars\/[^\s]+)$/.test(user.avatar)) {
-            safeAvatar = user.avatar;
+          const rawAvatar = response.data.user.avatar;
+          if (typeof rawAvatar === "string" && (rawAvatar.startsWith("http") || rawAvatar.startsWith("/"))) {
+            safeAvatar = rawAvatar;
           }
 
-          // Guardamos de forma segura
+          // Guardamos los datos LIMPIOS en el navegador
           localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
           localStorage.setItem("userName", safeName);

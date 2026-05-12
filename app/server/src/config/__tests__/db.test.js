@@ -36,9 +36,7 @@ describe('Configuración de Base de Datos (config/db.js)', () => {
     }));
 
     // 2. ACT (Actuar)
-    // Importamos dinámicamente tu archivo. 
-    // TRUCO ENTERPRISE: Añadimos '?default' al final para obligar a Node.js (ESM) 
-    // a re-evaluar el archivo y no usar la versión en caché de otros tests.
+    // Importamos dinámicamente EL archivo. 
     const { pool } = await import(`../db.js?default`);
 
     // 3. ASSERT (Comprobar)
@@ -58,7 +56,7 @@ describe('Configuración de Base de Datos (config/db.js)', () => {
     // 1. ARRANGE (Preparar)
     // Simulamos que el archivo .env ha inyectado estas variables
     process.env.DB_USER = 'admin_robot';
-    process.env.DB_HOST = '192.168.1.100';
+    process.env.DB_HOST = 'db-custom.local';
     process.env.DB_NAME = 'production_db';
     process.env.DB_PASSWORD = 'super_secret_password';
     process.env.DB_PORT = '5433';
@@ -78,7 +76,7 @@ describe('Configuración de Base de Datos (config/db.js)', () => {
     expect(mockPg.Pool).toHaveBeenCalledTimes(1);
     expect(mockPg.Pool).toHaveBeenCalledWith({
       user: 'admin_robot',
-      host: '192.168.1.100',
+      host: 'db-custom.local',
       database: 'production_db',
       password: 'super_secret_password',
       port: '5433', // Tu código lo pasará como string porque viene de process.env, es correcto.
