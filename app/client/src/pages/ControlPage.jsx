@@ -28,7 +28,7 @@ const ControlPage = () => {
     setMainView((prev) => (prev === "camera" ? "map" : "camera"));
   };
 
-  // 🛡️ FIX SonarQube S1082: Permite activar el PiP con teclado (Enter o Espacio)
+  // Permite activar el PiP con teclado (Enter o Espacio)
   const handleKeyDownToggle = (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -112,9 +112,9 @@ const ControlPage = () => {
         {/* === CONTENEDOR CÁMARA === */}
         <div
           className={`camera-container ${mainView === "camera" ? "is-main" : "is-pip"}`}
-          /* 🛡️ FIX SonarQube S7735: Cambiado !== "camera" por === "map" */
+
           onClick={mainView === "map" ? toggleView : undefined}
-          /* 🛡️ FIX SonarQube S6848 y S1082: Atributos de accesibilidad */
+          /* Atributos de accesibilidad */
           onKeyDown={mainView === "map" ? handleKeyDownToggle : undefined}
           role={mainView === "map" ? "button" : undefined}
           tabIndex={mainView === "map" ? 0 : undefined}
@@ -122,7 +122,6 @@ const ControlPage = () => {
         >
           <CameraFeed />
 
-          {/* 🛡️ FIX SonarQube S7735: Cambiado !== "camera" por === "map" */}
           {mainView === "map" && <div className="pip-expand-icon">⤢</div>}
 
           {/* OVERLAY DE JOYSTICK EN PANTALLA */}
@@ -177,18 +176,15 @@ const ControlPage = () => {
         {/* === CONTENEDOR MAPA === */}
         <div
           className={`map-container ${mainView === "map" ? "is-main" : "is-pip"}`}
-          /* 🛡️ FIX SonarQube S7735: Cambiado !== "map" por === "camera" */
           onClick={mainView === "camera" ? toggleView : undefined}
-          /* 🛡️ FIX SonarQube S6848 y S1082: Atributos de accesibilidad */
+          /* Atributos de accesibilidad */
           onKeyDown={mainView === "camera" ? handleKeyDownToggle : undefined}
           role={mainView === "camera" ? "button" : undefined}
           tabIndex={mainView === "camera" ? 0 : undefined}
           title={mainView === "camera" ? "Toca para ampliar mapa" : ""}
         >
-          {/* 🛡️ FIX SonarQube S7735 */}
           <ControlMap isPip={mainView === "camera"} />
 
-          {/* 🛡️ FIX SonarQube S7735 */}
           {mainView === "camera" && <div className="pip-expand-icon">⤢</div>}
         </div>
       </div>

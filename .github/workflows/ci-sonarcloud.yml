@@ -31,14 +31,26 @@ jobs:
       - name: Install Monorepo Dependencies
         run: npm ci
 
-      # Ejecutar tests SOLO en el backend
+      # Ejecutar tests y cobertura del Frontend (React/Vitest)
+      - name: Run Frontend Tests & Coverage
+        working-directory: ./app/client
+        run: npm run test:cov
+
+      # Ejecutar tests y cobertura del Backend (NestJS/Jest)
       - name: Run Backend Tests & Coverage
         working-directory: ./app/server
         run: |
           npm run test:unit:cov
           npm run test:e2e:cov
 
-      # Enviar a SonarCloud usando el Hash seguro
+      # Convertir rutas absolutas a relativas para que SonarCloud las entienda
+      - name: Fix LCOV file paths
+        run: |
+          sed -i "s|$(pwd)/||g" app/client/coverage/lcov.info || true
+          sed -i "s|$(pwd)/||g" app/server/coverage/unit/lcov.info || true
+          sed -i "s|$(pwd)/||g" app/server/coverage/e2e/lcov.info || true
+
+      # Enviar a SonarCloud usando el Hash seguro 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@30dbe5c9eeccb106afb2590dcb61f7a05ffbee14
         env:

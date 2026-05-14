@@ -85,20 +85,25 @@ export function AuthProvider({ children }) {
 
           // --- LÓGICA DE SANITIZACIÓN ---
           
-          // Sanitización del Nombre (Evita inyección de scripts eliminando caracteres especiales)
+          // Sanitización del Nombre: Validación estricta de principio a fin
           let safeName = "Usuario";
-          if (typeof response.data.user.name === "string") {
-            safeName = response.data.user.name.replaceAll(/[^a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]/g, "");
+          const rawName = response.data.user?.name;
+          // Solo permitimos letras, números y espacios. Ni un solo símbolo raro.
+          const nameRegex = /^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]+$/;
+          if (typeof rawName === "string" && nameRegex.test(rawName)) {
+            safeName = rawName;
           }
 
-          // Sanitización del Avatar (Comprueba protocolo o ruta local)
+          // Sanitización del Avatar: Validación estricta de rutas
           let safeAvatar = "/avatars/robot-fondo-verde.png";
-          const rawAvatar = response.data.user.avatar;
-          if (typeof rawAvatar === "string" && (rawAvatar.startsWith("http") || rawAvatar.startsWith("/"))) {
+          const rawAvatar = response.data.user?.avatar;
+          // Solo permitimos rutas relativas (/avatars/...) o URLs seguras, sin scripts ocultos
+          const avatarRegex = /^(\/[a-zA-Z0-9-_./]+|https?:\/\/[a-zA-Z0-9-_./]+)$/;
+          if (typeof rawAvatar === "string" && avatarRegex.test(rawAvatar)) {
             safeAvatar = rawAvatar;
           }
 
-          // Guardamos los datos LIMPIOS en el navegador
+          // Guardamos los datos LIMPIOS en el navegador (¡Sin necesidad de NOSONAR!)
           localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
           localStorage.setItem("userName", safeName);

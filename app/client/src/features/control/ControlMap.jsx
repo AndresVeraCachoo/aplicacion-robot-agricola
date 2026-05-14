@@ -479,8 +479,7 @@ const ControlMap = ({ isPip = false }) => {
     navQueue.forEach((p) => fullQueuePath.push([p.lat, p.lon]));
   }
 
-  const hoveredPolygon =
-    hoveredMission?.area_trabajo?.coordinates[0].map((c) => [c[1], c[0]]) || [];
+  const hoveredPolygon = hoveredMission?.area_trabajo?.coordinates?.[0]?.map((c) => [c[1], c[0]]) || [];
   const hoveredZigZag = hoveredMission
     ? generateZigZag(hoveredMission.area_trabajo, hoveredMission.ancho_trabajo)
     : [];

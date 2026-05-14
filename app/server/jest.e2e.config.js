@@ -7,7 +7,10 @@ export default {
   setupFilesAfterEnv: ['./tests/config/setup.js'],
   globalTeardown: './tests/config/globalTeardown.js',
 
-  // Ignoramos lo que no es API para el coverage
+  // Asegurar que se genera el archivo lcov para SonarCloud
+  coverageReporters: ['lcov', 'text', 'text-summary'],
+
+  // Ignoramos lo que no es API para el coverage E2E
   coveragePathIgnorePatterns: [
     "/node_modules/",
     "/src/scripts/",

@@ -3,9 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-
   envDir: '../../',
-  
   plugins: [
     react(),
     VitePWA({
@@ -44,5 +42,26 @@ export default defineConfig({
   server: {
     host: true, 
     port: 5173
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+    coverage: {
+      provider: 'v8',
+      reporter: ['lcov', 'text', 'text-summary'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'public/',
+        'eslint.config.js',
+        'sonar-scanner.js',
+        'vite.config.js',
+        'src/main.jsx',
+        'src/i18n/**',
+        '**/*.test.{js,jsx}'
+      ]
+    }
   }
 })
