@@ -1,4 +1,6 @@
-// CLASE BASE DE ERRORES 
+// src/middlewares/errorHandler.js
+
+// CLASE BASE DE ERRORES
 export class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
@@ -8,37 +10,37 @@ export class AppError extends Error {
   }
 }
 
-// Sustituye los try/catch repetitivos
+// ENVOLTORIO ASÍNCRONO
 export const catchAsync = (fn) => (req, res, next) => {
   return Promise.resolve(fn(req, res, next)).catch(next);
 };
 
 // MIDDLEWARE INTERCEPTOR GLOBAL
 export const errorHandler = (err, req, res, next) => {
-  let error = { ...err, message: err.message };
+  let error = { ...err, message: err.message, name: err.name };
 
-  // Interceptores de Base de Datos
-  if (err.code === "23505") {
-    error = new AppError("Registro duplicado en la base de datos.", 400);
-  }
-  if (err.code === "22P02") {
-    error = new AppError("Formato de dato inválido enviado al servidor.", 400);
-  }
+  // --- Errores de Base de Datos (PostgreSQL) ---
+  if (err.code === "23505") error = new AppError("Registro duplicado en la base de datos.", 400);
+  if (err.code === "23503") error = new AppError("Violación de restricción relacional.", 400);
+  if (err.code === "23502") error = new AppError("Faltan datos obligatorios para la base de datos.", 400);
+  if (err.code === "22P02") error = new AppError("Formato de dato inválido enviado a la base de datos.", 400);
 
-  // Interceptores de JWT
-  if (err.name === "JsonWebTokenError") {
-    error = new AppError("Firma de seguridad inválida.", 401);
-  }
-  if (err.name === "TokenExpiredError") {
-    error = new AppError("La sesión ha caducado.", 401);
+  // --- Errores de Validación (Zod) ---
+  if (err.name === "ZodError") {
+    const missingFields = err.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(' | ');
+    error = new AppError(`Error de validación -> ${missingFields}`, 400);
   }
 
-  // Logging controlado para que no ensucie los tests E2E
+  // --- Errores de Seguridad (JWT) ---
+  if (err.name === "JsonWebTokenError") error = new AppError("Firma de seguridad inválida.", 401);
+  if (err.name === "TokenExpiredError") error = new AppError("La sesión ha caducado.", 401);
+
+  // LOGGING SILENCIOSO EN TESTS
   if (process.env.NODE_ENV !== "test") {
     if (error.isOperational) {
-      console.error(`⚠️ [ERROR OPERATIVO] ${error.statusCode || 500}:`, error.message);
+      console.error(`[ERROR OPERATIVO] ${error.statusCode || 500}:`, error.message);
     } else {
-      console.error("💥 [ERROR CRÍTICO NO CONTROLADO]:", err);
+      console.error("[ERROR CRÍTICO NO CONTROLADO]:", err);
     }
   }
 

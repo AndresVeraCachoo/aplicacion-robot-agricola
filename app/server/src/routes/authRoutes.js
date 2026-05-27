@@ -1,6 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.js";
+import { validate } from "../middlewares/validateRequest.js";
+import { loginSchema } from "../schemas/authSchema.js";
 import { login, verify } from "../controllers/authController.js";
 
 const router = Router();
@@ -13,7 +15,8 @@ const loginLimiter = rateLimit({
   legacyHeaders: false
 });
 
-router.post("/login", loginLimiter, login);
+// Zod hace de portero antes de llamar a loginLimiter y a login
+router.post("/login", validate(loginSchema), loginLimiter, login);
 router.get("/verify", authenticateToken, verify);
 
 export default router;

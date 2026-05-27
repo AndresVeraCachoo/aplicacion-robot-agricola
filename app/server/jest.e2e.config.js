@@ -10,6 +10,18 @@ export default {
   // Asegurar que se genera el archivo lcov para SonarCloud
   coverageReporters: ['lcov', 'text', 'text-summary'],
 
+  // INDICAR EXPRESAMENTE A JEST QUÉ ARCHIVOS EVALUAR
+  collectCoverageFrom: [
+    'src/controllers/**/*.js',
+    'src/routes/**/*.js',
+    'src/middlewares/**/*.js',
+    'src/schemas/**/*.js',
+    '!**/node_modules/**',
+    '!src/scripts/**',
+    '!src/simulator.js',
+    '!src/index.js'
+  ],
+
   // Ignoramos lo que no es API para el coverage E2E
   coveragePathIgnorePatterns: [
     "/node_modules/",
