@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const roleEnum = z.enum(["admin", "operador", "usuario"], {
-  errorMap: () => ({ message: "Rol inválido. Solo se permite: admin, operador, usuario" })
+  invalid_type_error: "Rol inválido. Solo se permite: admin, operador, usuario" 
 });
 
 export const createUserSchema = z.object({

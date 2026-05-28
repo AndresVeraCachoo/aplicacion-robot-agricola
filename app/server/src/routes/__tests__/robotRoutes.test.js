@@ -3,28 +3,29 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe('Robot Routes', () => {
-  let app;
-  let mockAuthenticateToken, mockGetEstadoRobot;
-  let originalConsoleError;
+describe("🌐 Rutas del Robot (RobotRoutes)", () => {
+  let app, mockRobotController, mockAuthenticateToken, mockValidate;
 
   beforeEach(async () => {
     jest.resetModules();
-    
-    originalConsoleError = console.error;
-    console.error = jest.fn(); // Ocultamos el log rojo esperado en el test del error 500
+
+    mockRobotController = {
+      getEstadoRobot: jest.fn((req, res) => res.status(200).send()),
+      getDatosAgronomicos: jest.fn((req, res) => res.status(200).send()),
+      getHistorialEnergia: jest.fn((req, res) => res.status(200).send()),
+    };
 
     mockAuthenticateToken = jest.fn((req, res, next) => next());
-    mockGetEstadoRobot = jest.fn(); // Lo configuraremos en cada test
-
-    jest.unstable_mockModule('../../middlewares/auth.js', () => ({
-      authenticateToken: mockAuthenticateToken,
-    }));
+    mockValidate = jest.fn(() => (req, res, next) => next());
 
     jest.unstable_mockModule('../../controllers/robotController.js', () => ({
-      getEstadoRobot: mockGetEstadoRobot,
-      getDatosAgronomicos: jest.fn(),
-      getHistorialEnergia: jest.fn(),
+      RobotController: jest.fn(() => mockRobotController)
+    }));
+    jest.unstable_mockModule('../../middlewares/auth.js', () => ({
+      authenticateToken: mockAuthenticateToken
+    }));
+    jest.unstable_mockModule('../../middlewares/validateRequest.js', () => ({
+      validate: mockValidate
     }));
 
     const { default: robotRoutes } = await import('../robotRoutes.js');
@@ -33,31 +34,19 @@ describe('Robot Routes', () => {
     app.use('/robot', robotRoutes);
   });
 
-  afterEach(() => {
-    console.error = originalConsoleError;
-  });
-
-  it('Debe llamar al controlador y devolver 200 si todo va bien', async () => {
-    mockGetEstadoRobot.mockImplementation((req, res) => res.status(200).json({ status: 'ok' }));
-
-    const res = await request(app).get('/robot/estado');
-
+  it("✅ GET /robot/estado: Se autentica y llega al controlador", async () => {
+    await request(app).get('/robot/estado');
     expect(mockAuthenticateToken).toHaveBeenCalled();
-    expect(res.status).toBe(200);
-    expect(res.body.status).toBe('ok');
+    expect(mockRobotController.getEstadoRobot).toHaveBeenCalled();
   });
 
-  it('Debe devolver 500 si el controlador lanza un error (Testeando handleAsync local)', async () => {
-    // Simulamos que el controlador explota (ej: la BD se cayó)
-    mockGetEstadoRobot.mockImplementation(() => {
-      throw new Error('Explosión en la base de datos');
-    });
+  it("✅ Rutas de datos: Valida Zod y llega al controlador", async () => {
+    await request(app).get('/robot/datos');
+    expect(mockValidate).toHaveBeenCalled();
+    expect(mockRobotController.getDatosAgronomicos).toHaveBeenCalled();
 
-    const res = await request(app).get('/robot/estado');
-
-    // Comprobamos que el "handleAsync" atrapó la explosión y devolvió 500
-    expect(console.error).toHaveBeenCalled();
-    expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Error en el servidor');
+    await request(app).get('/robot/energia/historial');
+    expect(mockValidate).toHaveBeenCalled();
+    expect(mockRobotController.getHistorialEnergia).toHaveBeenCalled();
   });
 });

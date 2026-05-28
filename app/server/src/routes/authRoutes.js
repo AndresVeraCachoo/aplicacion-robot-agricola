@@ -1,9 +1,18 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
+import { pool } from "../config/db.js";
+import { env } from "../config/env.js"; // Usamos el Fail-Fast de la Fase 2
 import { authenticateToken } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validateRequest.js";
 import { loginSchema } from "../schemas/authSchema.js";
-import { login, verify } from "../controllers/authController.js";
+
+// Importamos Clases
+import { AuthService } from "../services/authService.js";
+import { AuthController } from "../controllers/authController.js";
+
+// Inyección de Dependencias (Wiring)
+const authService = new AuthService(pool, env.JWT_SECRET);
+const authController = new AuthController(authService);
 
 const router = Router();
 
@@ -15,8 +24,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Zod hace de portero antes de llamar a loginLimiter y a login
-router.post("/login", validate(loginSchema), loginLimiter, login);
-router.get("/verify", authenticateToken, verify);
+router.post("/login", validate(loginSchema), loginLimiter, authController.login);
+router.get("/verify", authenticateToken, authController.verify);
 
 export default router;

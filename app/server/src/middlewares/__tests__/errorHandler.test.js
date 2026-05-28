@@ -1,73 +1,122 @@
-// server/src/middlewares/__tests__/errorHandler.test.js
 import { jest } from '@jest/globals';
 
-describe('Error Handler Middleware', () => {
-  let err, req, res, next, originalConsoleError;
+describe("Middleware Global de Errores (errorHandler)", () => {
+  let errorHandler, AppError, catchAsync, req, res, next;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules();
-    
-    // ARRANGE
+    const module = await import('../errorHandler.js');
+    errorHandler = module.errorHandler;
+    AppError = module.AppError;
+    catchAsync = module.catchAsync;
+
     req = {};
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     next = jest.fn();
-
-    // Truco Enterprise: El errorHandler hace un console.error real en tu código. 
-    // Para que nuestra terminal no se llene de letras rojas al pasar los tests, lo mockeamos temporalmente.
-    originalConsoleError = console.error;
-    console.error = jest.fn();
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => {
-    // Restauramos el console.error original para no afectar a otros archivos
-    console.error = originalConsoleError;
+  afterEach(() => { jest.restoreAllMocks(); });
+
+  describe("Errores Dinámicos y Nativos", () => {
+    it("✅ Debería manejar errores de validación de Zod y enviar detalles (400)", async () => {
+      const { ZodError } = await import('zod');
+      const err = new ZodError([{ message: "Requerido", path: ["nombre"] }]);
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ 
+        errorCode: "VALIDATION_ERROR",
+        details: expect.any(Array) 
+      }));
+    });
+
+    it("✅ Debería manejar AppError personalizado", () => {
+      const err = new AppError("Sin permisos", 403, "FORBIDDEN_ACTION");
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({ error: "Sin permisos", errorCode: "FORBIDDEN_ACTION" });
+    });
+
+    it("❌ Debería manejar SyntaxError de Express (JSON mal formado)", () => {
+      const err = new SyntaxError("Unexpected string in JSON");
+      err.status = 400;
+      err.body = "{ bad: json }";
+      
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "BAD_JSON_FORMAT" }));
+    });
+
+    it("❌ Debería manejar Payload Too Large de Express", () => {
+      const err = new Error("Too large");
+      err.type = "entity.too.large";
+      
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(413);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "PAYLOAD_TOO_LARGE" }));
+    });
+
+    it("❌ Debería hacer fallback a 500 para errores desconocidos", () => {
+      const err = new Error("Se cayó la base de datos");
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: "Se cayó la base de datos", errorCode: "UNKNOWN_ERROR" });
+    });
   });
 
-  it('Debe formatear y devolver un error personalizado con su código de estado', async () => {
-    // 1. ARRANGE
-    err = new Error('No tienes permisos');
-    err.statusCode = 403; // Error personalizado (ej. creado por tu auth.js)
+  describe("Errores de Base de Datos (PostgreSQL)", () => {
+    const dbErrors = [
+      ["23505", "Registro duplicado", 400, "DB_DUPLICATE_RECORD"],
+      ["23503", "restricción relacional", 400, "DB_FOREIGN_KEY_VIOLATION"],
+      ["23502", "Faltan datos obligatorios", 400, "DB_MISSING_DATA"],
+      ["22P02", "Formato de dato", 400, "DB_INVALID_FORMAT"]
+    ];
 
-    const { errorHandler } = await import('../errorHandler.js');
-
-    // 2. ACT
-    errorHandler(err, req, res, next);
-
-    // 3. ASSERT
-    expect(console.error).toHaveBeenCalled(); // Verificamos que se logueó el error
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ error: 'No tienes permisos' });
+    it.each(dbErrors)("✅ Debería manejar el error código %s", (code, expectedMsg, expectedStatus, expectedCode) => {
+      const err = new Error("DB Error");
+      err.code = code;
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(expectedStatus);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: expectedCode }));
+    });
   });
 
-  it('Debe hacer fallback a 500 y un mensaje genérico si el error es desconocido', async () => {
-    // 1. ARRANGE
-    err = new Error('Fallo genérico del sistema de prueba'); // Un error del sistema sin statusCode ni mensaje definido
-    
-    const { errorHandler } = await import('../errorHandler.js');
+  describe("Errores de Seguridad (JWT)", () => {
+    const jwtErrors = [
+      ["JsonWebTokenError", "Firma de seguridad", 401, "AUTH_INVALID_TOKEN"],
+      ["TokenExpiredError", "La sesión ha caducado", 401, "AUTH_TOKEN_EXPIRED"]
+    ];
 
-    // 2. ACT
-    errorHandler(err, req, res, next);
-
-    // 3. ASSERT
-    expect(console.error).toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(500); // Comprobamos el fallback a 500
-    expect(res.json).toHaveBeenCalledWith({ error: 'Fallo genérico del sistema de prueba' }); // Comprobamos el fallback del mensaje
+    it.each(jwtErrors)("✅ Debería manejar el error %s", (name, expectedMsg, expectedStatus, expectedCode) => {
+      const err = new Error("JWT Error");
+      err.name = name;
+      errorHandler(err, req, res, next);
+      expect(res.status).toHaveBeenCalledWith(expectedStatus);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: expectedCode }));
+    });
   });
 
-  it('Debe usar los fallbacks si el error está mal formado (sin stack ni mensaje)', async () => {
-    // 1. ARRANGE
-    const errVacio = { }; // No es de clase Error, no tiene .message, ni .statusCode, ni .stack
-    const { errorHandler } = await import('../errorHandler.js');
+  describe("⚡ Utils y Logging", () => {
+    it("✅ catchAsync debería capturar errores y derivarlos a next()", async () => {
+      const errorSimulado = new Error("Falló");
+      const fnFalla = async (req, res, next) => { throw errorSimulado; };
+      await catchAsync(fnFalla)({}, {}, next);
+      expect(next).toHaveBeenCalledWith(errorSimulado);
+    });
 
-    // 2. ACT
-    errorHandler(errVacio, req, res, next);
-
-    // 3. ASSERT
-    expect(console.error).toHaveBeenCalledWith("🔥 [ERROR GLOBAL]:", errVacio); // Fallback: al no haber err.stack, imprime el objeto entero
-    expect(res.status).toHaveBeenCalledWith(500); // Fallback: al no haber err.statusCode, usa 500
-    expect(res.json).toHaveBeenCalledWith({ error: 'Error interno del servidor' }); // Fallback del mensaje
+    it("✅ Debería loguear errores en consola si no es entorno de test", () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+      
+      const err = new AppError("Fallo", 400);
+      errorHandler(err, req, res, next);
+      expect(console.error).toHaveBeenCalled();
+      
+      const critErr = new Error("Fallo grave");
+      errorHandler(critErr, req, res, next);
+      expect(console.error).toHaveBeenCalled();
+      
+      process.env.NODE_ENV = originalEnv;
+    });
   });
 });

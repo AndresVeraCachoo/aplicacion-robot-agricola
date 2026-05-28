@@ -1,83 +1,56 @@
-// server/src/controllers/__tests__/robotController.test.js
 import { jest } from '@jest/globals';
+import { RobotController } from '../robotController.js';
 
-describe('Robot Controller', () => {
-  let mockQuery;
-  let req, res, next;
-  let controller; 
+describe("🤖 Controlador del Robot (RobotController)", () => {
+  let mockRobotService, robotController, req, res, next;
 
-  beforeEach(async () => { 
-    jest.resetModules();
-    mockQuery = jest.fn();
-    req = { query: {}, params: {} };
-    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  beforeEach(() => {
+    mockRobotService = {
+      getRobotState: jest.fn(),
+      getAgronomicData: jest.fn(),
+      getEnergyHistory: jest.fn(),
+    };
+    robotController = new RobotController(mockRobotService);
+    req = { query: {} };
+    res = { json: jest.fn() };
     next = jest.fn();
-
-    jest.unstable_mockModule('../../config/db.js', () => ({
-      pool: { query: mockQuery },
-    }));
-
-    controller = await import('../robotController.js'); 
   });
 
-  // 👇 HELPER MAGICO: Elimina el 0.2% de código duplicado
-  const runControllerAndGetQuery = async (controllerFn, queryParams = {}) => {
-    req.query = queryParams;
-    mockQuery.mockResolvedValueOnce({ rows: [] });
-    await controllerFn(req, res, next);
-    return mockQuery.mock.calls[0][0]; // Devuelve la query SQL que se iba a ejecutar
-  };
-
-  describe('getEstadoRobot', () => {
-    it('Debe devolver 404 si el estado del robot no existe', async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
-      await controller.getEstadoRobot(req, res, next);
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
-    it('Debe devolver el estado si existe', async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ bateria: 100 }] });
-      await controller.getEstadoRobot(req, res, next);
-      expect(res.json).toHaveBeenCalledWith({ bateria: 100 });
-    });
+  it("✅ getEstadoRobot: Debería devolver el estado", async () => {
+    mockRobotService.getRobotState.mockResolvedValueOnce({ status: "IDLE" });
+    await robotController.getEstadoRobot(req, res, next);
+    expect(res.json).toHaveBeenCalledWith({ status: "IDLE" });
   });
 
-  describe('getDatosAgronomicos', () => {
-    it('Debe construir la query SQL sin filtros', async () => {
-      const sql = await runControllerAndGetQuery(controller.getDatosAgronomicos);
-      expect(sql).not.toContain("WHERE");
-    });
-
-    it('Debe filtrar por fechas (start y end)', async () => {
-      const sql = await runControllerAndGetQuery(controller.getDatosAgronomicos, { start: '2026-01-01', end: '2026-01-31' });
-      expect(sql).toContain('d."timestamp" >= $1 AND d."timestamp" <= $2');
-    });
-
-    it('Debe filtrar por misionId', async () => {
-      const sql = await runControllerAndGetQuery(controller.getDatosAgronomicos, { misionId: '2' });
-      expect(sql).toContain("m.id = $1");
-    });
-
-    it('No debe aplicar el filtro misionId si es "null" o vacío', async () => {
-      const sql = await runControllerAndGetQuery(controller.getDatosAgronomicos, { misionId: 'null' });
-      expect(sql).not.toContain('m.id ='); 
-    });
+  it("✅ getDatosAgronomicos: Debería empaquetar req.query", async () => {
+    req.query = { start: "fecha1", end: "fecha2", misionId: "3" };
+    mockRobotService.getAgronomicData.mockResolvedValueOnce([]);
+    await robotController.getDatosAgronomicos(req, res, next);
+    expect(mockRobotService.getAgronomicData).toHaveBeenCalledWith({ start: "fecha1", end: "fecha2", misionId: "3" });
+    expect(res.json).toHaveBeenCalledWith([]);
   });
 
-  describe('getHistorialEnergia', () => {
-    it('Debe construir la query SQL sin filtros', async () => {
-      const sql = await runControllerAndGetQuery(controller.getHistorialEnergia);
-      expect(sql).not.toContain("WHERE");
-    });
+  it("✅ getHistorialEnergia: Debería devolver el historial si tiene éxito", async () => {
+    req.query = { start: "2026", end: "2027" };
+    mockRobotService.getEnergyHistory.mockResolvedValueOnce([{ bateria: 100 }]);
+    await robotController.getHistorialEnergia(req, res, next);
+    expect(res.json).toHaveBeenCalledWith([{ bateria: 100 }]);
+  });
 
-    it('Debe filtrar por fechas (start y end)', async () => {
-      const sql = await runControllerAndGetQuery(controller.getHistorialEnergia, { start: '2026-01-01', end: '2026-01-31' });
-      expect(sql).toContain('"timestamp" >= $1 AND "timestamp" <= $2');
-    });
+  describe("❌ Manejo de Errores Global", () => {
+    const endpoints = [
+      { method: "getEstadoRobot", serviceMethod: "getRobotState" },
+      { method: "getDatosAgronomicos", serviceMethod: "getAgronomicData" },
+      { method: "getHistorialEnergia", serviceMethod: "getEnergyHistory" },
+    ];
 
-    it('Debe filtrar por misionId usando la subconsulta', async () => {
-      const sql = await runControllerAndGetQuery(controller.getHistorialEnergia, { misionId: '2' });
-      expect(sql).toContain("SELECT fecha_inicio FROM ejecuciones_mision");
+    it.each(endpoints)("Debería derivar errores de $method a next()", async ({ method, serviceMethod }) => {
+      const errorMock = new Error("Fallo simulado");
+      mockRobotService[serviceMethod].mockRejectedValueOnce(errorMock);
+      
+      await robotController[method](req, res, next);
+      
+      expect(next).toHaveBeenCalledWith(errorMock);
     });
   });
 });

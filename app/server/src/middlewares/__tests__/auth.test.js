@@ -1,109 +1,96 @@
 // server/src/middlewares/__tests__/auth.test.js
 import { jest } from '@jest/globals';
 
-describe('Auth Middleware', () => {
-  let req, res, next, mockJwtVerify;
+describe("🔐 Middlewares de Autenticación", () => {
+  let mockJwtVerify, authenticateToken, requireAdmin;
 
-  beforeEach(() => {
-    jest.resetModules(); // Limpia la caché
-    
-    // ARRANGE genérico
-    req = { headers: {}, user: {} };
-    res = {}; // El auth middleware no usa 'res', usa 'next'
-    next = jest.fn();
+  beforeEach(async () => {
+    jest.resetModules();
     mockJwtVerify = jest.fn();
 
-    // Levantamos el escudo para jsonwebtoken
     jest.unstable_mockModule('jsonwebtoken', () => ({
       default: { verify: mockJwtVerify }
     }));
+    jest.unstable_mockModule('../../config/env.js', () => ({
+      env: { JWT_SECRET: 'super-secret' }
+    }));
+
+    const authModule = await import('../auth.js');
+    authenticateToken = authModule.authenticateToken;
+    requireAdmin = authModule.requireAdmin;
   });
 
-  describe('authenticateToken', () => {
-    it('Debe bloquear (401) si no se proporciona el encabezado de autorización', async () => {
-      // 1. ARRANGE
-      req.headers['authorization'] = undefined;
-      const { authenticateToken } = await import('../auth.js');
+  const getMockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnValue(res);
+    res.json = jest.fn().mockReturnValue(res);
+    return res;
+  };
 
-      // 2. ACT
+  describe("authenticateToken", () => {
+    it("❌ Debería rechazar (401) si no se envía ningún Token", () => {
+      const req = { headers: {} }; 
+      const res = getMockRes();
+      const next = jest.fn();
+
       authenticateToken(req, res, next);
-
-      // 3. ASSERT
-      expect(next).toHaveBeenCalledTimes(1);
-      const errorArg = next.mock.calls[0][0]; // Capturamos el error que se le pasó a next()
-      expect(errorArg).toBeInstanceOf(Error);
-      expect(errorArg.statusCode).toBe(401);
-      expect(errorArg.message).toContain("Token no proporcionado");
+      
+      // FIX: Tu código llama a next() pasándole un Error con statusCode
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
     });
 
-    it('Debe bloquear (403) si el token es inválido o ha expirado', async () => {
-      // 1. ARRANGE
-      req.headers['authorization'] = 'Bearer token-falso';
-      
-      // Simulamos que jwt.verify lanza un error a través de su callback
+    it("❌ Debería rechazar (403) si el Token es inválido o caducado", () => {
+      const req = { headers: { authorization: "Bearer mal-token" } };
+      const res = getMockRes();
+      const next = jest.fn();
+
+      // FIX: jwt.verify usa un callback (err, user), no devuelve de forma síncrona
       mockJwtVerify.mockImplementation((token, secret, callback) => {
-        callback(new Error('Token expirado'), null);
+        callback(new Error("JWT Error"), null); // Simulamos el error en el callback
       });
-
-      const { authenticateToken } = await import('../auth.js');
-
-      // 2. ACT
+      
       authenticateToken(req, res, next);
-
-      // 3. ASSERT
-      expect(next).toHaveBeenCalledTimes(1);
-      const errorArg = next.mock.calls[0][0];
-      expect(errorArg.statusCode).toBe(403);
-      expect(errorArg.message).toContain("Token inválido o expirado");
+      
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
     });
 
-    it('Debe permitir el paso e inyectar el usuario en req si el token es válido', async () => {
-      // 1. ARRANGE
-      const usuarioSimulado = { id: 1, role: 'admin' };
-      req.headers['authorization'] = 'Bearer token-bueno';
-      
-      // Simulamos que jwt.verify tiene éxito y devuelve el usuario
+    it("✅ Debería inyectar el usuario en 'req' y permitir paso si el Token es válido", () => {
+      const req = { headers: { authorization: "Bearer buen-token" } };
+      const res = getMockRes();
+      const next = jest.fn();
+
+      // FIX: Llamamos al callback con null (sin error) y el objeto del usuario
       mockJwtVerify.mockImplementation((token, secret, callback) => {
-        callback(null, usuarioSimulado);
+        callback(null, { id: 1, role: 'admin' }); 
       });
-
-      const { authenticateToken } = await import('../auth.js');
-
-      // 2. ACT
+      
       authenticateToken(req, res, next);
-
-      // 3. ASSERT
-      expect(req.user).toEqual(usuarioSimulado); // El usuario debe estar en req
-      expect(next).toHaveBeenCalledWith(); // next debe ser llamado sin argumentos (éxito)
+      
+      expect(req.user).toEqual({ id: 1, role: 'admin' });
+      expect(next).toHaveBeenCalledWith(); // Llamada vacía significa que continuó el flujo
     });
   });
 
-  describe('requireAdmin', () => {
-    it('Debe bloquear (403) si el usuario no es administrador', async () => {
-      // 1. ARRANGE
-      req.user = { role: 'operador' }; // Rol inferior
-      const { requireAdmin } = await import('../auth.js');
+  describe("requireAdmin", () => {
+    it("❌ Debería rechazar (403) si el rol no es admin", () => {
+      const req = { user: { role: 'operador' } };
+      const res = getMockRes();
+      const next = jest.fn();
 
-      // 2. ACT
       requireAdmin(req, res, next);
-
-      // 3. ASSERT
-      expect(next).toHaveBeenCalledTimes(1);
-      const errorArg = next.mock.calls[0][0];
-      expect(errorArg.statusCode).toBe(403);
-      expect(errorArg.message).toContain("Se requiere rol de administrador");
+      
+      // FIX: Tu código lanza un custom error al next()
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
     });
 
-    it('Debe permitir el paso si el usuario es administrador', async () => {
-      // 1. ARRANGE
-      req.user = { role: 'admin' }; // Rol correcto
-      const { requireAdmin } = await import('../auth.js');
+    it("✅ Debería permitir el paso si el rol es admin", () => {
+      const req = { user: { role: 'admin' } };
+      const res = getMockRes();
+      const next = jest.fn();
 
-      // 2. ACT
       requireAdmin(req, res, next);
-
-      // 3. ASSERT
-      expect(next).toHaveBeenCalledWith(); // next llamado sin errores
+      
+      expect(next).toHaveBeenCalledWith(); // Éxito
     });
   });
 });

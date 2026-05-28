@@ -1,52 +1,23 @@
-// src/controllers/authController.js
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { pool } from "../config/db.js";
-import "dotenv/config";
-
-// Envoltorio para atrapar errores y enviarlos al ErrorHandler
-const catchAsync = (fn) => (req, res, next) => {
-  return Promise.resolve(fn(req, res, next)).catch(next);
-};
-
-export const login = catchAsync(async (req, res, next) => {
-  const { name, username, password } = req.body;
-  const userIdentifier = name || username;
-
-  if (!userIdentifier || !password) {
-    return res.status(400).json({ error: "Nombre de usuario y contraseña requeridos" });
+// Usamos Arrow Functions (= async) para evitar perder el 'this' en Express
+export class AuthController {
+  constructor(authService) {
+    this.authService = authService;
   }
 
-  const result = await pool.query("SELECT * FROM usuarios WHERE name = $1", [userIdentifier]);
+  login = async (req, res, next) => {
+    try {
+      // Zod ya nos garantiza que 'name' y 'password' existen y son válidos
+      const { name, password } = req.body; 
+      
+      const authData = await this.authService.loginUser(name, password);
+      
+      res.json(authData);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-  if (result.rows.length === 0) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
-  }
-
-  const user = result.rows[0];
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
-  }
-
-  const token = jwt.sign(
-    { id: user.id, name: user.name, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  res.json({
-    token,
-    user: { 
-      id: user.id, 
-      name: user.name, 
-      role: user.role, 
-      avatar: user.avatar 
-    },
-  });
-});
-
-export const verify = (req, res) => {
-  res.json({ valid: true, user: req.user });
-};
+  verify = (req, res) => {
+    res.json({ valid: true, user: req.user });
+  };
+}

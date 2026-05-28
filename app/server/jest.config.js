@@ -1,30 +1,34 @@
 // app/server/jest.config.js
 export default {
-  // Entorno Node.js para backend
   testEnvironment: 'node',
-
-  // Limpiar los mocks automáticamente entre pruebas
   clearMocks: true,
-
-  // Archivo que se ejecuta ANTES de los tests
   setupFilesAfterEnv: ['./jest.setup.js'],
-
-  // Dónde están los tests unitarios
   testMatch: ['**/__tests__/**/*.js'],
-
-  // CONFIGURACIÓN DE COVERAGE
-  collectCoverage: false, // Se activa vía package.json script con --coverage
+  collectCoverage: false, 
   coverageDirectory: 'coverage/unit', 
   coverageReporters: ['lcov', 'text', 'text-summary'],
   
-  // Archivos a analizar para la cobertura
+  // Archivos a analizar para la cobertura 
   collectCoverageFrom: [
     'src/controllers/**/*.js',
+    'src/services/**/*.js',
     'src/routes/**/*.js',
     'src/middlewares/**/*.js',
+    'src/schemas/**/*.js',
+    'src/websockets/**/*.js', 
     '!**/node_modules/**',
     '!src/scripts/**',
     '!src/simulator.js',
-    '!src/index.js'
+    '!src/index.js',
+    '!src/config/**' 
   ],
+
+  // Exclusión absoluta para que no aparezcan en la tabla final con 0%
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/src/config/",
+    "/src/index.js",
+    "/src/simulator.js",
+    "/src/scripts/"
+  ]
 };

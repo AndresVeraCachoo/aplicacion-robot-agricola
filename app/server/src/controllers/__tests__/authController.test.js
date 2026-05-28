@@ -1,83 +1,59 @@
 // server/src/controllers/__tests__/authController.test.js
 import { jest } from '@jest/globals';
+import { AuthController } from '../authController.js';
 
-describe('Auth Controller', () => {
-  let mockQuery, mockBcryptCompare, mockJwtSign;
+describe("🔌 Controlador de Autenticación (AuthController)", () => {
+  let mockAuthService;
+  let authController;
   let req, res, next;
 
   beforeEach(() => {
-    jest.resetModules();
-
-    mockQuery = jest.fn();
-    mockBcryptCompare = jest.fn();
-    mockJwtSign = jest.fn();
-
-    req = { body: {} };
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+    // 1. Creamos un Servicio Falso (Mock)
+    mockAuthService = {
+      loginUser: jest.fn(),
     };
+
+    // 2. Instanciamos el controlador inyectándole el servicio falso
+    authController = new AuthController(mockAuthService);
+
+    // 3. Preparamos los objetos de Express
+    req = { body: {}, user: {} };
+    res = { json: jest.fn() };
     next = jest.fn();
-
-    jest.unstable_mockModule('../../config/db.js', () => ({
-      pool: { query: mockQuery },
-    }));
-    jest.unstable_mockModule('bcrypt', () => ({
-      default: { compare: mockBcryptCompare },
-    }));
-    jest.unstable_mockModule('jsonwebtoken', () => ({
-      default: { sign: mockJwtSign },
-    }));
   });
 
-  it('Debe devolver 400 si faltan credenciales', async () => {
-    // Escenario de Error
-    req.body = { name: '' };
+  describe("login", () => {
+    it("✅ Debería devolver el token y los datos si el servicio tiene éxito", async () => {
+      req.body = { name: "admin", password: "123" };
+      const authDataSimulada = { token: "token-falso", user: { id: 1, name: "admin" } };
+      
+      mockAuthService.loginUser.mockResolvedValueOnce(authDataSimulada);
 
-    const { login } = await import('../authController.js');
-    await login(req, res, next);
+      await authController.login(req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Nombre de usuario y contraseña requeridos" });
-  });
-
-  it('Debe devolver 401 si el usuario no existe', async () => {
-    // Escenario de Error
-    req.body = { name: 'falso', password: '123' };
-    mockQuery.mockResolvedValueOnce({ rows: [] });
-
-    const { login } = await import('../authController.js');
-    await login(req, res, next);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: "Credenciales inválidas" });
-  });
-
-  it('Debe devolver el token y el usuario si el login es exitoso', async () => {
-    // Escenario de Éxito
-    req.body = { name: 'admin', password: 'correcta' };
-    mockQuery.mockResolvedValueOnce({ 
-      rows: [{ id: 1, name: 'admin', role: 'admin', password: 'hashed', avatar: 'url' }] 
+      expect(mockAuthService.loginUser).toHaveBeenCalledWith("admin", "123");
+      expect(res.json).toHaveBeenCalledWith(authDataSimulada);
+      expect(next).not.toHaveBeenCalled();
     });
-    mockBcryptCompare.mockResolvedValueOnce(true);
-    mockJwtSign.mockReturnValueOnce('fake-jwt-token');
 
-    const { login } = await import('../authController.js');
-    await login(req, res, next);
+    it("❌ Debería derivar al errorHandler (next) si el servicio lanza un error", async () => {
+      req.body = { name: "admin", password: "mala" };
+      const errorSimulado = new Error("Credenciales inválidas");
+      
+      mockAuthService.loginUser.mockRejectedValueOnce(errorSimulado);
 
-    expect(res.json).toHaveBeenCalledWith({
-      token: 'fake-jwt-token',
-      user: { id: 1, name: 'admin', role: 'admin', avatar: 'url' }
+      await authController.login(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(errorSimulado);
+      expect(res.json).not.toHaveBeenCalled();
     });
   });
 
-  it('Debe verificar al usuario correctamente', async () => {
-    req.user = { id: 1, name: 'admin' };
-
-    const { verify } = await import('../authController.js');
-    // Verify no usa await porque en tu código no interactúa con promesas/BD
-    verify(req, res);
-
-    expect(res.json).toHaveBeenCalledWith({ valid: true, user: req.user });
+  describe("verify", () => {
+    it("✅ Debería devolver valid: true y el usuario inyectado", () => {
+      req.user = { id: 1, role: "admin" };
+      authController.verify(req, res);
+      expect(res.json).toHaveBeenCalledWith({ valid: true, user: req.user });
+    });
   });
 });

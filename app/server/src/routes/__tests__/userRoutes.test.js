@@ -3,35 +3,34 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe('User Routes', () => {
-  let app;
-  let mockAuthenticateToken, mockRequireAdmin;
-  let mockGetProfile, mockGetUsers;
+describe("🌐 Rutas de Usuarios (UserRoutes)", () => {
+  let app, mockUserController, mockAuthenticateToken, mockRequireAdmin, mockValidate;
 
   beforeEach(async () => {
     jest.resetModules();
 
-    // Mocks de middlewares (Simulamos que los guardias dejan pasar)
+    mockUserController = {
+      getProfile: jest.fn((req, res) => res.status(200).send()),
+      updatePassword: jest.fn((req, res) => res.status(200).send()),
+      updateAvatar: jest.fn((req, res) => res.status(200).send()),
+      getUsers: jest.fn((req, res) => res.status(200).send()),
+      createUser: jest.fn((req, res) => res.status(201).send()),
+      updateUser: jest.fn((req, res) => res.status(200).send()),
+      deleteUser: jest.fn((req, res) => res.status(200).send()),
+    };
+
     mockAuthenticateToken = jest.fn((req, res, next) => next());
     mockRequireAdmin = jest.fn((req, res, next) => next());
-
-    // Mocks de controladores (Solo necesitamos que respondan algo para saber que llegaron ahí)
-    mockGetProfile = jest.fn((req, res) => res.status(200).json({ ok: true }));
-    mockGetUsers = jest.fn((req, res) => res.status(200).json({ ok: true }));
-
-    jest.unstable_mockModule('../../middlewares/auth.js', () => ({
-      authenticateToken: mockAuthenticateToken,
-      requireAdmin: mockRequireAdmin,
-    }));
+    mockValidate = jest.fn(() => (req, res, next) => next());
 
     jest.unstable_mockModule('../../controllers/userController.js', () => ({
-      getProfile: mockGetProfile,
-      updatePassword: jest.fn(),
-      updateAvatar: jest.fn(),
-      getUsers: mockGetUsers,
-      createUser: jest.fn(),
-      updateUser: jest.fn(),
-      deleteUser: jest.fn(),
+      UserController: jest.fn(() => mockUserController)
+    }));
+    jest.unstable_mockModule('../../middlewares/auth.js', () => ({
+      authenticateToken: mockAuthenticateToken, requireAdmin: mockRequireAdmin
+    }));
+    jest.unstable_mockModule('../../middlewares/validateRequest.js', () => ({
+      validate: mockValidate
     }));
 
     const { default: userRoutes } = await import('../userRoutes.js');
@@ -40,20 +39,27 @@ describe('User Routes', () => {
     app.use('/users', userRoutes);
   });
 
-  it('Debe proteger TODAS las rutas inyectando authenticateToken globalmente (GET /profile)', async () => {
+  it("🛡️ Protege todas las rutas con authenticateToken", async () => {
     await request(app).get('/users/profile');
-    
-    // Verificamos que el router.use(authenticateToken) está funcionando
-    expect(mockAuthenticateToken).toHaveBeenCalledTimes(1);
-    expect(mockGetProfile).toHaveBeenCalledTimes(1);
+    expect(mockAuthenticateToken).toHaveBeenCalled();
+    expect(mockUserController.getProfile).toHaveBeenCalled();
   });
 
-  it('Debe inyectar requireAdmin en las rutas de administración (GET /)', async () => {
-    await request(app).get('/users/');
+  it("🛡️ Aplica requireAdmin y validate al crear un usuario", async () => {
+    await request(app).post('/users/').send({});
+    expect(mockRequireAdmin).toHaveBeenCalled();
+    expect(mockValidate).toHaveBeenCalled();
+    expect(mockUserController.createUser).toHaveBeenCalled();
+  });
 
-    // Verificamos la cadena de montaje: Primero se autentica, luego se pide admin, luego controlador
-    expect(mockAuthenticateToken).toHaveBeenCalledTimes(1);
-    expect(mockRequireAdmin).toHaveBeenCalledTimes(1);
-    expect(mockGetUsers).toHaveBeenCalledTimes(1);
+  it("✅ Enruta las acciones CRUD a sus métodos correspondientes", async () => {
+    await request(app).get('/users/');
+    expect(mockUserController.getUsers).toHaveBeenCalled();
+    
+    await request(app).put('/users/1');
+    expect(mockUserController.updateUser).toHaveBeenCalled();
+    
+    await request(app).delete('/users/1');
+    expect(mockUserController.deleteUser).toHaveBeenCalled();
   });
 });
