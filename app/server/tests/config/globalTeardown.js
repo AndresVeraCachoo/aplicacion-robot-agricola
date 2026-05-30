@@ -1,11 +1,13 @@
-// app/server/tests/e2e/globalTeardown.js
+/**
+ * Detiene y elimina el contenedor de base de datos utilizado durante las pruebas.
+ */
 const globalTeardown = async () => {
-  console.log("\n[Global Teardown] Apagando y destruyendo el contenedor Docker maestro...");
   const container = globalThis.__POSTGRES_CONTAINER__;
   
   if (container) {
     await container.stop();
-    console.log("[Global Teardown] Todo limpio.");
+    console.log("\n[E2E Teardown] Contenedor de base de datos detenido correctamente.");
   }
 };
+
 export default globalTeardown;

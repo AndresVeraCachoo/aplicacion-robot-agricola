@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { UserController } from '../userController.js';
 
-describe("👥 Controlador de Usuarios (UserController)", () => {
+describe("Controlador de Usuarios (UserController)", () => {
   let mockUserService, userController, req, res, next;
 
   beforeEach(() => {
@@ -15,54 +15,54 @@ describe("👥 Controlador de Usuarios (UserController)", () => {
     next = jest.fn();
   });
 
-  it("✅ getProfile: Debería devolver el perfil", async () => {
+  it("Debería devolver el perfil del usuario autenticado", async () => {
     mockUserService.getUserProfile.mockResolvedValueOnce({ id: 1 });
     await userController.getProfile(req, res, next);
     expect(res.json).toHaveBeenCalledWith({ id: 1 });
   });
 
-  it("✅ updatePassword: Debería actualizar la contraseña", async () => {
+  it("Debería actualizar la contraseña del usuario", async () => {
     req.body = { currentPassword: "123", newPassword: "321" };
     mockUserService.updateUserPassword.mockResolvedValueOnce({ message: "OK" });
     await userController.updatePassword(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ getUsers: Debería listar usuarios", async () => {
+  it("Debería listar todos los usuarios registrados", async () => {
     mockUserService.getAllUsers.mockResolvedValueOnce([]);
     await userController.getUsers(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ createUser: Debería devolver 201", async () => {
+  it("Debería devolver estado 201 al crear un nuevo usuario", async () => {
     req.body = { name: "Pepe", role: "admin", password: "1" };
     mockUserService.createNewUser.mockResolvedValueOnce({ id: 2 });
     await userController.createUser(req, res, next);
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
-  it("✅ updateUser: Debería actualizar usuario", async () => {
+  it("Debería actualizar los datos de un usuario existente", async () => {
     req.params.id = "1";
     mockUserService.updateExistingUser.mockResolvedValueOnce({ message: "OK" });
     await userController.updateUser(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ deleteUser: Debería borrar usuario", async () => {
+  it("Debería eliminar un usuario del sistema", async () => {
     req.params.id = "1";
     mockUserService.deleteExistingUser.mockResolvedValueOnce({ message: "OK" });
     await userController.deleteUser(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ updateAvatar: Debería actualizar avatar", async () => {
+  it("Debería actualizar la URL del avatar del usuario", async () => {
     req.body = { avatarUrl: "http://" };
     mockUserService.updateUserAvatar.mockResolvedValueOnce({ message: "OK" });
     await userController.updateAvatar(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  describe("❌ Manejo de Errores Global", () => {
+  describe("Manejo Global de Excepciones", () => {
     const endpoints = [
       { method: "getProfile", serviceMethod: "getUserProfile" },
       { method: "updatePassword", serviceMethod: "updateUserPassword" },
@@ -73,7 +73,7 @@ describe("👥 Controlador de Usuarios (UserController)", () => {
       { method: "updateAvatar", serviceMethod: "updateUserAvatar" },
     ];
 
-    it.each(endpoints)("Debería derivar errores de $method a next()", async ({ method, serviceMethod }) => {
+    it.each(endpoints)("Debería derivar errores de $method al middleware next()", async ({ method, serviceMethod }) => {
       const errorMock = new Error("Fallo de conexión");
       mockUserService[serviceMethod].mockRejectedValueOnce(errorMock);
       

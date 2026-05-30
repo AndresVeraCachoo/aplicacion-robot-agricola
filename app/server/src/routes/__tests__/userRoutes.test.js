@@ -1,9 +1,8 @@
-// server/src/routes/__tests__/userRoutes.test.js
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("🌐 Rutas de Usuarios (UserRoutes)", () => {
+describe("Rutas de Usuarios (UserRoutes)", () => {
   let app, mockUserController, mockAuthenticateToken, mockRequireAdmin, mockValidate;
 
   beforeEach(async () => {
@@ -39,20 +38,20 @@ describe("🌐 Rutas de Usuarios (UserRoutes)", () => {
     app.use('/users', userRoutes);
   });
 
-  it("🛡️ Protege todas las rutas con authenticateToken", async () => {
+  it("Debería interceptar las peticiones del perfil mediante el middleware de seguridad", async () => {
     await request(app).get('/users/profile');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockUserController.getProfile).toHaveBeenCalled();
   });
 
-  it("🛡️ Aplica requireAdmin y validate al crear un usuario", async () => {
+  it("Debería requerir privilegios de administrador y validación de esquema al registrar usuarios", async () => {
     await request(app).post('/users/').send({});
     expect(mockRequireAdmin).toHaveBeenCalled();
     expect(mockValidate).toHaveBeenCalled();
     expect(mockUserController.createUser).toHaveBeenCalled();
   });
 
-  it("✅ Enruta las acciones CRUD a sus métodos correspondientes", async () => {
+  it("Debería enrutar correctamente las acciones del CRUD a los controladores correspondientes", async () => {
     await request(app).get('/users/');
     expect(mockUserController.getUsers).toHaveBeenCalled();
     

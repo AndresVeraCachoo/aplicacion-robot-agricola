@@ -1,4 +1,3 @@
-// app/server/tests/e2e/globalSetup.js
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import fs from "node:fs";
 import path from "node:path";
@@ -7,16 +6,19 @@ import pg from "pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Inicializa un contenedor Docker de PostgreSQL y carga el esquema inicial 
+ * antes de ejecutar la suite de pruebas E2E.
+ */
 const globalSetup = async () => {
-  console.log("\n[Global Setup] Levantando contenedor MAESTRO de PostgreSQL...");
+  console.log("\n[E2E Setup] Inicializando base de datos de pruebas...");
   
-  // Levantamos un único contenedor
   const container = await new PostgreSqlContainer("postgres:15-alpine").start();
 
-  // Guardamos la referencia oculta para poder destruirlo luego
+  // Guarda la referencia del contenedor para poder detenerlo al finalizar los tests
   globalThis.__POSTGRES_CONTAINER__ = container;
 
-  // Inyectamos las variables al sistema operativo ANTES de que Express despierte
+  // Configura las variables de entorno para que la aplicación apunte a la base de datos temporal
   process.env.DB_HOST = String(container.getHost());
   process.env.DB_PORT = String(container.getPort());
   process.env.DB_NAME = String(container.getDatabase());
@@ -24,10 +26,8 @@ const globalSetup = async () => {
   process.env.DB_PASSWORD = String(container.getPassword());
   process.env.JWT_SECRET = "super-secreto-para-tests-e2e";
   process.env.TEST_PASSWORD = "PasswordSegura123"; // NOSONAR
-
-  console.log("[Global Setup] Creando esquema de tablas...");
   
-  // Nos conectamos temporalmente solo para inyectar el SQL
+  // Conexión temporal para ejecutar el script de creación de tablas
   const { Pool } = pg;
   const tempPool = new Pool({
     host: process.env.DB_HOST,
@@ -41,6 +41,7 @@ const globalSetup = async () => {
   await tempPool.query(initSql);
   await tempPool.end();
 
-  console.log("[Global Setup] Entorno listo. Comenzando la ejecución masiva...\n");
+  console.log("[E2E Setup] Entorno preparado. Iniciando pruebas...\n");
 };
+
 export default globalSetup;

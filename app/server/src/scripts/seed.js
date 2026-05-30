@@ -1,16 +1,21 @@
-// server/scripts/seed.js
 import bcrypt from "bcrypt";
 import crypto from "node:crypto"; 
 import { pool } from "../config/db.js";
 import { generateCoveragePath, calculateSolarRadiation } from "../simulator.js"; 
 
-// --- UTILIDADES ---
+/**
+ * Genera un número pseudoaleatorio criptográficamente seguro entre 0 y 1.
+ * Se utiliza en lugar de Math.random() para evitar patrones predecibles en la simulación de sensores agronómicos.
+ * @returns {number} Valor decimal aleatorio.
+ */
 const getSecureRandom = () => {
   return crypto.randomBytes(4).readUInt32LE(0) / (0xffffffff + 1);
 };
 
-// --- MÓDULOS DE INYECCIÓN ---
-
+/**
+ * Inyecta los usuarios predeterminados del sistema con contraseñas hasheadas.
+ * @returns {Promise<void>}
+ */
 async function seedUsers() {
   const adminHash = await bcrypt.hash("admin123", 10);
   const operadorHash = await bcrypt.hash("operador123", 10);
@@ -24,6 +29,10 @@ async function seedUsers() {
   `, [adminHash, operadorHash, usuarioHash]);
 }
 
+/**
+ * Inicializa la tabla de telemetría con un estado de robot en reposo y batería al 85%.
+ * @returns {Promise<void>}
+ */
 async function seedRobotState() {
   await pool.query(`
     INSERT INTO robot_estado (battery_percentage, battery_status, battery_voltage, battery_temperature, battery_time_remaining, system_status, system_speed, system_heading, current_lat, current_lon)
@@ -31,8 +40,13 @@ async function seedRobotState() {
   `);
 }
 
+/**
+ * Genera un historial de misiones y poblado masivo de datos agronómicos sintéticos.
+ * Desplaza las fechas hacia atrás en el tiempo para simular un uso real a lo largo de varios días.
+ * @param {Date} now - Fecha y hora actual que sirve como pivote de referencia.
+ * @returns {Promise<void>}
+ */
 async function seedMissionsAndData(now) {
-  // Ajustado: Misiones desplazadas a 4, 3, 2 y 1 días en el pasado.
   const misionesDef = [
     { nombre: 'Misión Norte', tipo: 'Humedad, Temperatura, pH, N-P-K, Rad', diasAtras: 4, coords: [[42.3647, -3.699], [42.3647, -3.698], [42.3652, -3.6985], [42.3647, -3.699]] },
     { nombre: 'Misión Sur', tipo: 'Humedad, Temperatura, pH, N-P-K, Rad', diasAtras: 3, coords: [[42.3612, -3.699], [42.3612, -3.698], [42.3617, -3.698], [42.3617, -3.699], [42.3612, -3.699]] },
@@ -43,15 +57,16 @@ async function seedMissionsAndData(now) {
   let valoresInsert = [];
 
   for (const mision of misionesDef) {
-    // Se establece estrictamente el día hacia atrás y la hora base a las 10:30 AM
     let fechaInicio = new Date(now.getTime() - (mision.diasAtras * 24 * 60 * 60 * 1000));
     fechaInicio.setHours(10, 30, 0, 0);
 
+    // Conversión estructural requerida por PostGIS para leer coordenadas correctamente
     const coordsParaGeoJSON = mision.coords.map(c => [c[1], c[0]]);
     const areaGeoJSON = JSON.stringify({ type: "Polygon", coordinates: [coordsParaGeoJSON] });
 
     const rutaPuntos = generateCoveragePath(mision.coords);
     
+    // Se asume un lapso temporal de 5 minutos (300,000 ms) entre lecturas de sensores
     const duracionMilisegundos = rutaPuntos.length * 300000; 
     const fechaFin = new Date(fechaInicio.getTime() + duracionMilisegundos);
     const bateriaGastada = Math.min(100, Math.ceil(rutaPuntos.length * 2));
@@ -81,6 +96,7 @@ async function seedMissionsAndData(now) {
       let puntoDateObj = new Date(fechaInicio.getTime() + index * 300000);
       let radiacion = calculateSolarRadiation(puntoDateObj).toFixed(2);
 
+      // Agrupamos las filas en crudo para realizar un bulk insert y no saturar el pool de conexiones
       valoresInsert.push(`(${lat}, ${lon}, '${puntoDateObj.toISOString()}', ${humedad}, ${temp}, ${ph}, ${nitrogeno}, ${fosforo}, ${potasio}, ${radiacion}, ${ejecucionId})`);
     });
   }
@@ -94,12 +110,18 @@ async function seedMissionsAndData(now) {
   }
 }
 
+/**
+ * Genera el histórico de telemetría de energía.
+ * Cruza los ciclos día/noche con las franjas de ejecución de misiones para simular consumo real vs carga solar.
+ * @param {Date} now - Fecha y hora actual que sirve como pivote de referencia.
+ * @returns {Promise<void>}
+ */
 async function seedEnergyHistory(now) {
-  console.log("🌱 [Seed] Generando historial de energía con simulación solar y consumo (5 Días)...");
+  console.log("[Seed] Generando historial de energía con simulación solar y consumo (5 Días)...");
   let energiaInsert = [];
   
   let simBattery = 40; 
-  // Ampliado a 5 días completos (5 * 24 * 12 = 1440 ticks de 5 min) para englobar todas las misiones
+  // 1440 ciclos representan 5 días divididos en fracciones de 5 minutos
   const historyPoints = 1440; 
   
   const ejecuciones = await pool.query("SELECT fecha_inicio, fecha_fin FROM ejecuciones_mision");
@@ -133,8 +155,13 @@ async function seedEnergyHistory(now) {
   `);
 }
 
-// --- FUNCIÓN PRINCIPAL ---
-
+/**
+ * Punto de entrada del script de inicialización de la base de datos (Seed).
+ * Implementa idempotencia (solo se ejecuta si la DB está vacía) y sistema de reintentos para entornos Docker.
+ * @param {number} [maxRetries=5] - Número de intentos antes de fallar (útil si Postgres tarda en arrancar).
+ * @param {number} [delayMs=3000] - Tiempo de espera entre reintentos en milisegundos.
+ * @returns {Promise<void>}
+ */
 export async function runSeed(maxRetries = 5, delayMs = 3000) {
   let retries = maxRetries;
   
@@ -144,11 +171,11 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
       const userCount = Number.parseInt(result.rows[0].count, 10);
 
       if (userCount > 0) {
-        console.log("🌱 [Seed] Datos detectados en BD. Ignorando semilla...");
+        console.log("[Seed] Datos detectados en BD. Ignorando semilla...");
         return; 
       }
 
-      console.log("🌱 [Seed] BD vacía detectada. Iniciando simulación de misiones 100% orgánicas...");
+      console.log("[Seed] BD vacía detectada. Iniciando simulación de misiones orgánicas...");
       const now = new Date();
 
       await seedUsers();
@@ -156,19 +183,20 @@ export async function runSeed(maxRetries = 5, delayMs = 3000) {
       await seedMissionsAndData(now);
       await seedEnergyHistory(now);
 
-      console.log("✅ [Seed] BD sembrada con éxito con física de baterías y panel solar.");
+      console.log("[Seed] BD sembrada con éxito con física de baterías y panel solar.");
       return; 
 
     } catch (err) {
+      // Capturamos específicamente errores de rechazo de conexión o base de datos en fase de arranque (Docker)
       if (err.code === 'ECONNREFUSED' || err.code === '57P03' || err.message.includes('termin')) {
         retries--;
         if (retries === 0) {
-          console.error("❌ [Seed] Error crítico de conexión tras múltiples intentos:", err.message);
+          console.error("[Seed] Error crítico de conexión tras múltiples intentos:", err.message);
           throw err;
         }
         await new Promise(res => setTimeout(res, delayMs)); 
       } else {
-        console.error("❌ [Seed] Error interno al inyectar datos:", err.message);
+        console.error("[Seed] Error interno al inyectar datos:", err.message);
         throw err; 
       }
     }

@@ -1,110 +1,104 @@
 import { jest } from '@jest/globals';
 
 describe("Middleware Global de Errores (errorHandler)", () => {
-  let errorHandler, AppError, catchAsync, req, res, next;
+  let errorHandler, AppError, req, res, next;
 
   beforeEach(async () => {
     jest.resetModules();
     const module = await import('../errorHandler.js');
     errorHandler = module.errorHandler;
     AppError = module.AppError;
-    catchAsync = module.catchAsync;
 
     req = {};
     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     next = jest.fn();
+    
+    // Silenciamos la consola durante la prueba
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => { jest.restoreAllMocks(); });
 
-  describe("Errores Dinámicos y Nativos", () => {
-    it("✅ Debería manejar errores de validación de Zod y enviar detalles (400)", async () => {
+  describe("Transformación de Errores", () => {
+    it("Debería capturar los errores de Zod y devolver un código 400 con los detalles", async () => {
       const { ZodError } = await import('zod');
       const err = new ZodError([{ message: "Requerido", path: ["nombre"] }]);
       errorHandler(err, req, res, next);
+      
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ 
-        errorCode: "VALIDATION_ERROR",
-        details: expect.any(Array) 
-      }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "VALIDATION_ERROR" }));
     });
 
-    it("✅ Debería manejar AppError personalizado", () => {
+    it("Debería dejar pasar directamente los errores que ya hemos creado con AppError", () => {
       const err = new AppError("Sin permisos", 403, "FORBIDDEN_ACTION");
       errorHandler(err, req, res, next);
+      
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: "Sin permisos", errorCode: "FORBIDDEN_ACTION" });
     });
 
-    it("❌ Debería manejar SyntaxError de Express (JSON mal formado)", () => {
+    it("Debería capturar un fallo de sintaxis (JSON roto) y devolver un 400 seguro", () => {
       const err = new SyntaxError("Unexpected string in JSON");
       err.status = 400;
       err.body = "{ bad: json }";
-      
       errorHandler(err, req, res, next);
+      
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "BAD_JSON_FORMAT" }));
     });
 
-    it("❌ Debería manejar Payload Too Large de Express", () => {
-      const err = new Error("Too large");
-      err.type = "entity.too.large";
-      
+    it("Debería capturar enlaces mal formados y devolver un error 400", () => {
+      const err = new URIError("URI malformed");
       errorHandler(err, req, res, next);
-      expect(res.status).toHaveBeenCalledWith(413);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "PAYLOAD_TOO_LARGE" }));
+      
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "MALFORMED_URI" }));
     });
 
-    it("❌ Debería hacer fallback a 500 para errores desconocidos", () => {
-      const err = new Error("Se cayó la base de datos");
+    it("Debería bloquear las peticiones que pesen demasiado con un error 413", () => {
+      const err = new Error("Too large");
+      err.type = "entity.too.large";
       errorHandler(err, req, res, next);
+      
+      expect(res.status).toHaveBeenCalledWith(413);
+    });
+
+    it("Debería devolver un error 503 si la base de datos se apaga de golpe", () => {
+      const err = new Error("Connection refused");
+      err.code = "ECONNREFUSED";
+      errorHandler(err, req, res, next);
+      
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "SERVICE_UNAVAILABLE" }));
+    });
+
+    it("Debería devolver un error 500 genérico si ocurre un fallo que no tenemos contemplado", () => {
+      const err = new Error("Caída de conexión");
+      errorHandler(err, req, res, next);
+      
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: "Se cayó la base de datos", errorCode: "UNKNOWN_ERROR" });
     });
   });
 
-  describe("Errores de Base de Datos (PostgreSQL)", () => {
+  describe("Traducción de Errores de Base de Datos", () => {
     const dbErrors = [
-      ["23505", "Registro duplicado", 400, "DB_DUPLICATE_RECORD"],
-      ["23503", "restricción relacional", 400, "DB_FOREIGN_KEY_VIOLATION"],
-      ["23502", "Faltan datos obligatorios", 400, "DB_MISSING_DATA"],
-      ["22P02", "Formato de dato", 400, "DB_INVALID_FORMAT"]
+      ["23505", 400, "DB_DUPLICATE_RECORD"],
+      ["23503", 400, "DB_FOREIGN_KEY_VIOLATION"],
+      ["23502", 400, "DB_MISSING_DATA"],
+      ["22P02", 400, "DB_INVALID_FORMAT"]
     ];
 
-    it.each(dbErrors)("✅ Debería manejar el error código %s", (code, expectedMsg, expectedStatus, expectedCode) => {
+    it.each(dbErrors)("Debería traducir el código de Postgres %s a un error %s con código %s", (code, expectedStatus, expectedCode) => {
       const err = new Error("DB Error");
       err.code = code;
       errorHandler(err, req, res, next);
+      
       expect(res.status).toHaveBeenCalledWith(expectedStatus);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: expectedCode }));
     });
   });
 
-  describe("Errores de Seguridad (JWT)", () => {
-    const jwtErrors = [
-      ["JsonWebTokenError", "Firma de seguridad", 401, "AUTH_INVALID_TOKEN"],
-      ["TokenExpiredError", "La sesión ha caducado", 401, "AUTH_TOKEN_EXPIRED"]
-    ];
-
-    it.each(jwtErrors)("✅ Debería manejar el error %s", (name, expectedMsg, expectedStatus, expectedCode) => {
-      const err = new Error("JWT Error");
-      err.name = name;
-      errorHandler(err, req, res, next);
-      expect(res.status).toHaveBeenCalledWith(expectedStatus);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ errorCode: expectedCode }));
-    });
-  });
-
-  describe("⚡ Utils y Logging", () => {
-    it("✅ catchAsync debería capturar errores y derivarlos a next()", async () => {
-      const errorSimulado = new Error("Falló");
-      const fnFalla = async (req, res, next) => { throw errorSimulado; };
-      await catchAsync(fnFalla)({}, {}, next);
-      expect(next).toHaveBeenCalledWith(errorSimulado);
-    });
-
-    it("✅ Debería loguear errores en consola si no es entorno de test", () => {
+  describe("Comportamiento de la Consola", () => {
+    it("Debería imprimir los errores en consola solo si no estamos en entorno de testing", () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = "production";
       

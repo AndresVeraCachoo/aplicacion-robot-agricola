@@ -9,7 +9,9 @@ const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
 const PRESET_AVATARS = [
   "/avatars/robot-fondo-verde.png",
   "/avatars/robot-fondo-rojo.png",
-  "/avatars/robot-fondo-azul.png"
+  "/avatars/robot-fondo-azul.png",
+  "/avatars/robot-fondo-morado.png",
+  "/avatars/robot-fondo-amarillo.png",
 ];
 
 function ProfilePage() {

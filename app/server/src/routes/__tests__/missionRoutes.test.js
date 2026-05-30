@@ -1,9 +1,8 @@
-// server/src/routes/__tests__/missionRoutes.test.js
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("🌐 Rutas de Misiones (MissionRoutes)", () => {
+describe("Rutas de Misiones (MissionRoutes)", () => {
   let app, mockMissionController, mockValidate;
 
   beforeEach(async () => {
@@ -34,7 +33,7 @@ describe("🌐 Rutas de Misiones (MissionRoutes)", () => {
     app.use('/missions', missionRoutes);
   });
 
-  it("✅ Enruta el CRUD de misiones (Validando con Zod en POST/PUT)", async () => {
+  it("Debería enrutar el flujo CRUD de misiones aplicando validación de datos en escritura", async () => {
     await request(app).get('/missions/');
     expect(mockMissionController.getMisiones).toHaveBeenCalled();
 
@@ -50,7 +49,7 @@ describe("🌐 Rutas de Misiones (MissionRoutes)", () => {
     expect(mockMissionController.deleteMision).toHaveBeenCalled();
   });
 
-  it("✅ Enruta los endpoints de ejecuciones", async () => {
+  it("Debería enrutar correctamente las peticiones de los sub-recursos de ejecución", async () => {
     await request(app).get('/missions/1/runs');
     expect(mockMissionController.getEjecuciones).toHaveBeenCalled();
 

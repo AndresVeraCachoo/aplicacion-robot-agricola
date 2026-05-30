@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/**
+ * Esquema de validación para el inicio de sesión.
+ */
 export const loginSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "El nombre de usuario es obligatorio"),

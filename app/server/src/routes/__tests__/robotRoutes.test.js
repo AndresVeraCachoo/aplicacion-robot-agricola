@@ -1,9 +1,8 @@
-// server/src/routes/__tests__/robotRoutes.test.js
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("🌐 Rutas del Robot (RobotRoutes)", () => {
+describe("Rutas del Robot (RobotRoutes)", () => {
   let app, mockRobotController, mockAuthenticateToken, mockValidate;
 
   beforeEach(async () => {
@@ -34,13 +33,13 @@ describe("🌐 Rutas del Robot (RobotRoutes)", () => {
     app.use('/robot', robotRoutes);
   });
 
-  it("✅ GET /robot/estado: Se autentica y llega al controlador", async () => {
+  it("Debería autenticar la petición y alcanzar el controlador de estado del robot", async () => {
     await request(app).get('/robot/estado');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockRobotController.getEstadoRobot).toHaveBeenCalled();
   });
 
-  it("✅ Rutas de datos: Valida Zod y llega al controlador", async () => {
+  it("Debería validar la query a través de Zod y derivar a los controladores de datos históricos", async () => {
     await request(app).get('/robot/datos');
     expect(mockValidate).toHaveBeenCalled();
     expect(mockRobotController.getDatosAgronomicos).toHaveBeenCalled();

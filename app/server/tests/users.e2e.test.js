@@ -1,11 +1,10 @@
-// app/server/tests/users.e2e.test.js
 import request from "supertest";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { app } from "../src/index.js";
 import { pool } from "../src/config/db.js";
 
-describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
+describe("E2E - Usuarios y Control de Acceso (Users)", () => {
   let adminToken, operatorToken;
   let adminId, operatorId;
 
@@ -40,11 +39,8 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
     operatorToken = jwt.sign({ id: operatorId, name: operatorUser.name, role: operatorUser.role }, process.env.JWT_SECRET);
   });
 
-  // =========================================================================
-  // SECCIÓN 1: RUTAS DE PERFIL
-  // =========================================================================
-  describe("Endpoints: /api/users/profile", () => {
-    it("✅ Debería devolver los datos del usuario logueado (200)", async () => {
+  describe("Endpoints de Perfil Privado (/api/users/profile)", () => {
+    it("Debería devolver los datos del perfil del usuario autenticado omitiendo la contraseña", async () => {
       const response = await request(app)
         .get("/api/users/profile")
         .set("Authorization", `Bearer ${operatorToken}`);
@@ -54,7 +50,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.body).not.toHaveProperty("password");
     });
 
-    it("✅ Debería cambiar la contraseña si la actual es correcta (200)", async () => {
+    it("Debería actualizar la contraseña si la credencial actual proporcionada es correcta", async () => {
       const response = await request(app)
         .put("/api/users/profile/password")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -69,7 +65,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(isMatch).toBe(true);
     });
 
-    it("❌ Debería fallar (400) si la contraseña actual es incorrecta", async () => {
+    it("Debería devolver error 400 si la contraseña actual proporcionada es incorrecta", async () => {
       const response = await request(app)
         .put("/api/users/profile/password")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -82,7 +78,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.body.error).toMatch(/incorrecta/i);
     });
 
-    it("✅ Debería actualizar el avatar (200)", async () => {
+    it("Debería actualizar la URL de la imagen de perfil del usuario", async () => {
       const response = await request(app)
         .put("/api/users/profile/avatar")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -91,7 +87,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("❌ ZOD: Debería bloquear (400) si el avatar no es una URL real", async () => {
+    it("Debería devolver error 400 si la URL de la imagen no tiene un formato válido", async () => {
       const response = await request(app)
         .put("/api/users/profile/avatar")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -102,11 +98,8 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
     });
   });
 
-  // =========================================================================
-  // SECCIÓN 2: RUTAS DE ADMINISTRACIÓN
-  // =========================================================================
-  describe("Endpoints: /api/users", () => {
-    it("🛡️ SEGURIDAD: Debería bloquear el acceso a un Operador (403)", async () => {
+  describe("Endpoints de Administración (/api/users)", () => {
+    it("Debería denegar el acceso a la gestión de usuarios si se accede con rol de operador (403)", async () => {
       const response = await request(app)
         .get("/api/users")
         .set("Authorization", `Bearer ${operatorToken}`);
@@ -114,7 +107,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(403);
     });
 
-    it("✅ Debería listar todos los usuarios al ser Admin (200)", async () => {
+    it("Debería devolver la lista completa de usuarios registrados al acceder con rol de administrador", async () => {
       const response = await request(app)
         .get("/api/users")
         .set("Authorization", `Bearer ${adminToken}`);
@@ -124,7 +117,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.body.length).toBeGreaterThanOrEqual(5);
     });
 
-    it("✅ Debería crear un usuario nuevo (201)", async () => {
+    it("Debería crear un nuevo usuario correctamente", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -138,7 +131,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.body.name).toBe("NuevoUsuario");
     });
 
-    it("❌ ZOD: Debería bloquear (400) si se intenta crear un usuario con un rol inventado", async () => {
+    it("Debería devolver error 400 si el rol proporcionado no pertenece a las opciones permitidas", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -152,7 +145,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.body.error).toMatch(/Invalid option/i);
     });
 
-    it("❌ Debería fallar (409) si el nombre de usuario ya existe", async () => {
+    it("Debería devolver error 409 si se intenta registrar un nombre de usuario que ya existe", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -165,7 +158,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(409);
     });
 
-    it("✅ Debería actualizar los datos de otro usuario (200)", async () => {
+    it("Debería actualizar los datos (nombre o rol) de otro usuario", async () => {
       const response = await request(app)
         .put(`/api/users/${operatorId}`)
         .set("Authorization", `Bearer ${adminToken}`)
@@ -177,7 +170,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("✅ Debería borrar un usuario normal (200)", async () => {
+    it("Debería eliminar a un usuario estándar del sistema", async () => {
       const response = await request(app)
         .delete(`/api/users/${operatorId}`)
         .set("Authorization", `Bearer ${adminToken}`);
@@ -185,7 +178,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("❌ Debería impedir borrar a los usuarios del sistema 1, 2 o 3 (409)", async () => {
+    it("Debería impedir la eliminación de los usuarios predeterminados del sistema", async () => {
       const response = await request(app)
         .delete(`/api/users/1`)
         .set("Authorization", `Bearer ${adminToken}`);
@@ -193,7 +186,7 @@ describe("👥 E2E - CRUD de Usuarios y Perfiles (Users)", () => {
       expect(response.status).toBe(409);
     });
 
-    it("❌ Debería impedir borrar al ÚLTIMO administrador (409)", async () => {
+    it("Debería impedir la eliminación del último administrador existente", async () => {
       const response = await request(app)
         .delete(`/api/users/${adminId}`)
         .set("Authorization", `Bearer ${adminToken}`);

@@ -1,7 +1,6 @@
-// server/src/services/__tests__/authService.test.js
 import { jest } from '@jest/globals';
 
-describe("🛡️ Servicio de Autenticación (AuthService)", () => {
+describe("Servicio de Autenticación (AuthService)", () => {
   let mockQuery, mockBcryptCompare, mockJwtSign;
   let AuthService;
   let authServiceInstance;
@@ -13,7 +12,6 @@ describe("🛡️ Servicio de Autenticación (AuthService)", () => {
     mockBcryptCompare = jest.fn();
     mockJwtSign = jest.fn();
 
-    // Mockeamos las dependencias externas
     jest.unstable_mockModule('bcrypt', () => ({
       default: { compare: mockBcryptCompare },
     }));
@@ -21,31 +19,29 @@ describe("🛡️ Servicio de Autenticación (AuthService)", () => {
       default: { sign: mockJwtSign },
     }));
 
-    // Importamos dinámicamente el servicio DESPUÉS de mockear
     const module = await import('../authService.js');
     AuthService = module.AuthService;
     
-    // Instanciamos inyectando un pool falso y un secreto falso
     const fakePool = { query: mockQuery };
     authServiceInstance = new AuthService(fakePool, 'test-secret');
   });
 
   describe("loginUser", () => {
-    it("❌ Debería fallar (401) si el usuario no existe en la BD", async () => {
+    it("Debería lanzar error 401 si el usuario no existe en la base de datos", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
 
       await expect(authServiceInstance.loginUser('fantasma', '123')).rejects.toThrow("Credenciales inválidas");
       expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("SELECT * FROM usuarios"), ['fantasma']);
     });
 
-    it("❌ Debería fallar (401) si la contraseña es incorrecta", async () => {
+    it("Debería lanzar error 401 si la contraseña proporcionada es incorrecta", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, name: 'admin', password: 'hashed' }] });
-      mockBcryptCompare.mockResolvedValueOnce(false); // Bcrypt dice que no coinciden
+      mockBcryptCompare.mockResolvedValueOnce(false); 
 
       await expect(authServiceInstance.loginUser('admin', 'mala')).rejects.toThrow("Credenciales inválidas");
     });
 
-    it("✅ Debería devolver un token y los datos del usuario si todo es correcto", async () => {
+    it("Debería emitir un JWT válido y los datos del usuario si las credenciales coinciden", async () => {
       mockQuery.mockResolvedValueOnce({ 
         rows: [{ id: 1, name: 'admin', role: 'admin', password: 'hashed', avatar: 'url.png' }] 
       });

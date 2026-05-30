@@ -1,15 +1,31 @@
 import { AppError } from "../middlewares/errorHandler.js";
 
+/**
+ * Servicio encargado de la gestión y el ciclo de vida de las misiones agrícolas.
+ */
 export class MissionService {
+  /**
+   * @param {import('pg').Pool} dbPool - Pool de conexiones a PostgreSQL.
+   */
   constructor(dbPool) {
     this.pool = dbPool;
   }
 
+  /**
+   * Recupera todas las misiones ordenadas por fecha de creación.
+   * @returns {Promise<Array>}
+   */
   async getAllMissions() {
-    const result = await this.pool.query("SELECT * FROM misiones ORDER BY fecha_creacion DESC");
+    // Límite de seguridad por si el histórico de misiones crece demasiado
+    const result = await this.pool.query("SELECT * FROM misiones ORDER BY fecha_creacion DESC LIMIT 1000");
     return result.rows;
   }
 
+  /**
+   * Registra una nueva misión procesando los datos geoespaciales.
+   * @param {Object} missionData - Parámetros de configuración de la misión.
+   * @returns {Promise<Object>} Misión insertada.
+   */
   async createMission(missionData) {
     const { 
       nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, 
@@ -23,7 +39,7 @@ export class MissionService {
       RETURNING *;
     `;
    
-    // Mantenemos tu lógica de conversión de JSON intacta para asegurar compatibilidad con Postgres
+    // El cliente de node-postgres (pg) requiere que los tipos complejos JSONB se pasen pre-serializados desde Node para evitar fallos.
     const values = [
       nombre, 
       tipo_tarea, 
@@ -40,6 +56,12 @@ export class MissionService {
     return result.rows[0];
   }
 
+  /**
+   * Modifica parámetros de una misión preexistente (actualización parcial).
+   * @param {number|string} id - ID de la misión.
+   * @param {Object} updateData - Campos a actualizar.
+   * @returns {Promise<Object>}
+   */
   async updateMission(id, updateData) {
     const { nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, area_trabajo } = updateData;
 
@@ -64,6 +86,11 @@ export class MissionService {
     return result.rows[0];
   }
 
+  /**
+   * Elimina una misión y sus registros asociados usando una transacción segura.
+   * @param {number|string} id - ID de la misión.
+   * @returns {Promise<Object>} Confirmación de borrado.
+   */
   async deleteMission(id) {
     const client = await this.pool.connect(); 
     
@@ -75,6 +102,7 @@ export class MissionService {
         throw new AppError("Misión no encontrada", 404);
       }
 
+      // Borrado en cascada manual para garantizar integridad antes de borrar la entidad padre
       await client.query("DELETE FROM ejecuciones_mision WHERE mision_id = $1", [id]);
       await client.query("DELETE FROM misiones WHERE id = $1", [id]);
 
@@ -88,20 +116,36 @@ export class MissionService {
     }
   }
 
+  /**
+   * Consulta el historial de activaciones (ejecuciones) de una misión.
+   * @param {number|string} missionId - ID de la misión padre.
+   * @returns {Promise<Array>}
+   */
   async getMissionRuns(missionId) {
     const result = await this.pool.query(
-      "SELECT * FROM ejecuciones_mision WHERE mision_id = $1 ORDER BY fecha_inicio DESC", 
+      "SELECT * FROM ejecuciones_mision WHERE mision_id = $1 ORDER BY fecha_inicio DESC LIMIT 1000", 
       [missionId]
     );
     return result.rows;
   }
 
+  /**
+   * Crea un nuevo registro de ejecución con estado inicial 'en_curso'.
+   * @param {number|string} missionId - ID de la misión a arrancar.
+   * @returns {Promise<Object>}
+   */
   async startMissionRun(missionId) {
     const query = `INSERT INTO ejecuciones_mision (mision_id, estado) VALUES ($1, 'en_curso') RETURNING *;`;
     const result = await this.pool.query(query, [missionId]);
     return result.rows[0];
   }
 
+  /**
+   * Actualiza el progreso y los datos telemétricos de una ejecución activa.
+   * @param {number|string} runId - ID de la ejecución.
+   * @param {Object} runData - Datos reportados por el robot (batería, progreso, estado).
+   * @returns {Promise<Object>}
+   */
   async updateMissionRun(runId, runData) {
     const { estado, fecha_fin, bateria_usada, distancia_recorrida, tiempo_transcurrido, progreso } = runData;
     

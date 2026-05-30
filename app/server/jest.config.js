@@ -1,4 +1,3 @@
-// app/server/jest.config.js
 export default {
   testEnvironment: 'node',
   clearMocks: true,
@@ -8,7 +7,7 @@ export default {
   coverageDirectory: 'coverage/unit', 
   coverageReporters: ['lcov', 'text', 'text-summary'],
   
-  // Archivos a analizar para la cobertura 
+  // Inclusión explícita para el análisis de cobertura de código
   collectCoverageFrom: [
     'src/controllers/**/*.js',
     'src/services/**/*.js',
@@ -16,6 +15,7 @@ export default {
     'src/middlewares/**/*.js',
     'src/schemas/**/*.js',
     'src/websockets/**/*.js', 
+    '!src/**/__tests__/**', 
     '!**/node_modules/**',
     '!src/scripts/**',
     '!src/simulator.js',
@@ -23,7 +23,7 @@ export default {
     '!src/config/**' 
   ],
 
-  // Exclusión absoluta para que no aparezcan en la tabla final con 0%
+  // Exclusión de directorios de infraestructura y entrada para evitar falsos negativos en las métricas
   coveragePathIgnorePatterns: [
     "/node_modules/",
     "/src/config/",

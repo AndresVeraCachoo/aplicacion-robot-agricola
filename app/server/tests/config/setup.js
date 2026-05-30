@@ -1,7 +1,9 @@
-// app/server/tests/e2e/setup.js
 import { pool } from "../../src/config/db.js";
 
-// DESPUÉS DE CADA TEST: Vaciamos las tablas para el siguiente test
+/**
+ * Limpia los datos de todas las tablas después de cada prueba 
+ * para garantizar un estado inicial predecible en el siguiente test.
+ */
 afterEach(async () => {
   try {
     await pool.query(`
@@ -11,11 +13,10 @@ afterEach(async () => {
       RESTART IDENTITY CASCADE;
     `);
   } catch (error) {
-    console.error("Error limpiando tablas E2E:", error);
+    console.error("[E2E Error] Fallo al limpiar las tablas de la base de datos:", error);
   }
 });
 
-// DESPUÉS DE TODOS LOS TESTS DE UN ARCHIVO: Cerramos el cable de conexión local
 afterAll(async () => {
   await pool.end();
 });

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { MissionController } from '../missionController.js';
 
-describe("🚜 Controlador de Misiones (MissionController)", () => {
+describe("Controlador de Misiones (MissionController)", () => {
   let mockMissionService, missionController, req, res, next;
 
   beforeEach(() => {
@@ -15,54 +15,54 @@ describe("🚜 Controlador de Misiones (MissionController)", () => {
     next = jest.fn();
   });
 
-  it("✅ getMisiones: Debería devolver misiones", async () => {
+  it("Debería devolver el listado completo de misiones", async () => {
     mockMissionService.getAllMissions.mockResolvedValueOnce([]);
     await missionController.getMisiones(req, res, next);
     expect(res.json).toHaveBeenCalledWith([]);
   });
 
-  it("✅ createMision: Debería devolver 201", async () => {
+  it("Debería devolver código de estado 201 al registrar una misión", async () => {
     mockMissionService.createMission.mockResolvedValueOnce({ id: 1 });
     await missionController.createMision(req, res, next);
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
-  it("✅ updateMision: Debería actualizar", async () => {
+  it("Debería actualizar los parámetros de una misión preexistente", async () => {
     req.params.id = "1"; req.body = { nombre: "A" };
     mockMissionService.updateMission.mockResolvedValueOnce({ id: 1 });
     await missionController.updateMision(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ deleteMision: Debería borrar", async () => {
+  it("Debería eliminar una misión por su ID", async () => {
     req.params.id = "1";
     mockMissionService.deleteMission.mockResolvedValueOnce({ message: "OK" });
     await missionController.deleteMision(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ getEjecuciones: Debería listar ejecuciones", async () => {
+  it("Debería listar el historial de ejecuciones de una misión específica", async () => {
     req.params.id = "1";
     mockMissionService.getMissionRuns.mockResolvedValueOnce([]);
     await missionController.getEjecuciones(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("✅ iniciarEjecucion: Debería devolver 201", async () => {
+  it("Debería devolver estado 201 al arrancar una nueva ejecución", async () => {
     req.params.id = "1";
     mockMissionService.startMissionRun.mockResolvedValueOnce({ id: 1 });
     await missionController.iniciarEjecucion(req, res, next);
     expect(res.status).toHaveBeenCalledWith(201);
   });
 
-  it("✅ updateEjecucion: Debería actualizar", async () => {
+  it("Debería procesar las métricas de actualización de una ejecución en curso", async () => {
     req.params.run_id = "1";
     mockMissionService.updateMissionRun.mockResolvedValueOnce({ id: 1 });
     await missionController.updateEjecucion(req, res, next);
     expect(res.json).toHaveBeenCalled();
   });
 
-  describe("❌ Manejo de Errores Global", () => {
+  describe("Manejo Global de Excepciones", () => {
     const endpoints = [
       { method: "getMisiones", serviceMethod: "getAllMissions" },
       { method: "createMision", serviceMethod: "createMission" },
@@ -73,8 +73,8 @@ describe("🚜 Controlador de Misiones (MissionController)", () => {
       { method: "updateEjecucion", serviceMethod: "updateMissionRun" },
     ];
 
-    it.each(endpoints)("Debería derivar errores de $method a next()", async ({ method, serviceMethod }) => {
-      const errorMock = new Error("Fallo simulado en la BD");
+    it.each(endpoints)("Debería derivar errores de $method al middleware next()", async ({ method, serviceMethod }) => {
+      const errorMock = new Error("Fallo de base de datos simulado");
       mockMissionService[serviceMethod].mockRejectedValueOnce(errorMock);
       
       await missionController[method](req, res, next);

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { RobotController } from '../robotController.js';
 
-describe("🤖 Controlador del Robot (RobotController)", () => {
+describe("Controlador de Telemetría (RobotController)", () => {
   let mockRobotService, robotController, req, res, next;
 
   beforeEach(() => {
@@ -16,13 +16,13 @@ describe("🤖 Controlador del Robot (RobotController)", () => {
     next = jest.fn();
   });
 
-  it("✅ getEstadoRobot: Debería devolver el estado", async () => {
+  it("Debería devolver el estado actual del robot", async () => {
     mockRobotService.getRobotState.mockResolvedValueOnce({ status: "IDLE" });
     await robotController.getEstadoRobot(req, res, next);
     expect(res.json).toHaveBeenCalledWith({ status: "IDLE" });
   });
 
-  it("✅ getDatosAgronomicos: Debería empaquetar req.query", async () => {
+  it("Debería extraer los parámetros de query y solicitar datos agronómicos", async () => {
     req.query = { start: "fecha1", end: "fecha2", misionId: "3" };
     mockRobotService.getAgronomicData.mockResolvedValueOnce([]);
     await robotController.getDatosAgronomicos(req, res, next);
@@ -30,21 +30,21 @@ describe("🤖 Controlador del Robot (RobotController)", () => {
     expect(res.json).toHaveBeenCalledWith([]);
   });
 
-  it("✅ getHistorialEnergia: Debería devolver el historial si tiene éxito", async () => {
+  it("Debería devolver el historial de energía exitosamente", async () => {
     req.query = { start: "2026", end: "2027" };
     mockRobotService.getEnergyHistory.mockResolvedValueOnce([{ bateria: 100 }]);
     await robotController.getHistorialEnergia(req, res, next);
     expect(res.json).toHaveBeenCalledWith([{ bateria: 100 }]);
   });
 
-  describe("❌ Manejo de Errores Global", () => {
+  describe("Manejo Global de Excepciones", () => {
     const endpoints = [
       { method: "getEstadoRobot", serviceMethod: "getRobotState" },
       { method: "getDatosAgronomicos", serviceMethod: "getAgronomicData" },
       { method: "getHistorialEnergia", serviceMethod: "getEnergyHistory" },
     ];
 
-    it.each(endpoints)("Debería derivar errores de $method a next()", async ({ method, serviceMethod }) => {
+    it.each(endpoints)("Debería derivar errores de $method al middleware next()", async ({ method, serviceMethod }) => {
       const errorMock = new Error("Fallo simulado");
       mockRobotService[serviceMethod].mockRejectedValueOnce(errorMock);
       

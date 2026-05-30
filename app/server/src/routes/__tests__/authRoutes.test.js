@@ -1,15 +1,13 @@
-// server/src/routes/__tests__/authRoutes.test.js
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("🌐 Rutas de Autenticación (AuthRoutes)", () => {
+describe("Rutas de Autenticación (AuthRoutes)", () => {
   let app, mockAuthController, mockAuthenticateToken, mockValidate;
 
   beforeEach(async () => {
     jest.resetModules();
 
-    // 1. MOCK CRÍTICO: Engañamos al sistema Fail-Fast para que no aborte el test
     jest.unstable_mockModule('../../config/env.js', () => ({
       env: { JWT_SECRET: 'test-secret' }
     }));
@@ -40,13 +38,13 @@ describe("🌐 Rutas de Autenticación (AuthRoutes)", () => {
     app.use('/auth', authRoutes);
   });
 
-  it("✅ POST /auth/login: Pasa por validación y llega al controlador", async () => {
+  it("Debería validar el cuerpo de la petición y alcanzar el controlador en el endpoint de login", async () => {
     await request(app).post('/auth/login').send({});
     expect(mockValidate).toHaveBeenCalled();
     expect(mockAuthController.login).toHaveBeenCalled();
   });
 
-  it("✅ GET /auth/verify: Pasa por authenticateToken y llega al controlador", async () => {
+  it("Debería autenticar el token de acceso y alcanzar el controlador de verificación", async () => {
     await request(app).get('/auth/verify');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockAuthController.verify).toHaveBeenCalled();

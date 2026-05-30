@@ -1,12 +1,11 @@
 import { jest } from '@jest/globals';
 
-describe("🔌 WebSockets (socketHandler)", () => {
+describe("Capa de Transporte de WebSockets (socketHandler)", () => {
   let setupSockets, mockSimulator;
   
   beforeEach(async () => {
     jest.resetModules();
     
-    // Mockeamos TODAS las funciones que tu socket importa del simulador
     mockSimulator = {
       setSimulationZone: jest.fn(), clearSimulationZone: jest.fn(),
       setRobotMode: jest.fn(), setManualVelocity: jest.fn(),
@@ -20,11 +19,10 @@ describe("🔌 WebSockets (socketHandler)", () => {
     setupSockets = module.setupSockets;
   });
 
-  it("✅ Debería registrar y ejecutar todos los eventos del cliente", () => {
+  it("Debería registrar correctamente todos los listeners y propagar los payloads al simulador", () => {
     const socketEvents = {};
     const mockSocket = {
       id: "mock-123",
-      // Interceptamos la función 'on' para guardar los callbacks que registraste
       on: jest.fn((event, callback) => { socketEvents[event] = callback; })
     };
     
@@ -34,9 +32,8 @@ describe("🔌 WebSockets (socketHandler)", () => {
       })
     };
 
-    setupSockets(mockIo); // Ejecutamos la configuración
+    setupSockets(mockIo); 
 
-    // DISPARAMOS LOS EVENTOS MANUALMENTE PARA CUBRIR EL 100% DEL CÓDIGO
     socketEvents["client:update_zone"]({ points: [] });
     expect(mockSimulator.setSimulationZone).toHaveBeenCalledWith({ points: [] });
 
@@ -67,7 +64,6 @@ describe("🔌 WebSockets (socketHandler)", () => {
     socketEvents["client:cancel_mission"]();
     expect(mockSimulator.cancelSimulation).toHaveBeenCalled();
 
-    // Comprobamos el console.log de desconexión
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     socketEvents["disconnect"]();
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("desconectado"));

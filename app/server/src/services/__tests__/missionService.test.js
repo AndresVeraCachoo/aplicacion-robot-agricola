@@ -1,4 +1,3 @@
-// server/src/services/__tests__/missionService.test.js
 import { jest } from '@jest/globals';
 
 describe("Servicio de Misiones (MissionService)", () => {
@@ -22,11 +21,11 @@ describe("Servicio de Misiones (MissionService)", () => {
   });
 
   describe("createMission & updateMission", () => {
-    it("✅ Debería crear una misión parseando los objetos a JSON string", async () => {
+    it("Debería crear una misión serializando objetos complejos a string JSON", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, nombre: 'Nueva' }] });
 
       const payload = {
-        nombre: 'Nueva', area_trabajo: { type: 'Polygon' } // Objeto
+        nombre: 'Nueva', area_trabajo: { type: 'Polygon' } 
       };
 
       await missionServiceInstance.createMission(payload);
@@ -35,7 +34,7 @@ describe("Servicio de Misiones (MissionService)", () => {
       expect(calledArgs[5]).toBe(JSON.stringify({ type: 'Polygon' }));
     });
 
-    it("✅ Debería crear una misión dejando intactos los campos si ya son Strings (Branch testing)", async () => {
+    it("Debería omitir la serialización si los campos estructurales ya son strings", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 2 }] });
 
       const payload = {
@@ -47,33 +46,31 @@ describe("Servicio de Misiones (MissionService)", () => {
 
       await missionServiceInstance.createMission(payload);
       
-      // Comprobamos que el operador ternario detectó que no eran objetos y los dejó igual
       const calledArgs = mockQuery.mock.calls[0][1];
       expect(calledArgs[5]).toBe('POLYGON()');
       expect(calledArgs[6]).toBe('POINT()');
     });
 
-    it("✅ Debería actualizar una misión correctamente devolviendo sus datos", async () => {
+    it("Debería realizar una actualización parcial y devolver la entidad mutada", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, nombre: 'Actualizada' }] });
       
-      // Esto cubre la famosa línea 64 que estaba sin testear
       const result = await missionServiceInstance.updateMission(1, { nombre: 'Actualizada' });
       
       expect(result.nombre).toBe('Actualizada');
       expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("UPDATE misiones"), expect.any(Array));
     });
 
-    it("❌ Debería fallar (404) si intenta actualizar una misión que no existe", async () => {
+    it("Debería lanzar error 404 al intentar actualizar un registro inexistente", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       await expect(missionServiceInstance.updateMission(99, {})).rejects.toThrow("Misión no encontrada");
     });
   });
 
   describe("Transacción: deleteMission", () => {
-    it("❌ Transacción: Debería hacer ROLLBACK si la misión no existe", async () => {
+    it("Debería abortar la transacción (ROLLBACK) si la misión requerida no existe", async () => {
       mockClientQuery
-        .mockResolvedValueOnce(undefined) // BEGIN
-        .mockResolvedValueOnce({ rows: [] }); // Misión no encontrada
+        .mockResolvedValueOnce(undefined) 
+        .mockResolvedValueOnce({ rows: [] }); 
 
       await expect(missionServiceInstance.deleteMission(99)).rejects.toThrow("Misión no encontrada");
       
@@ -81,12 +78,12 @@ describe("Servicio de Misiones (MissionService)", () => {
       expect(mockClientRelease).toHaveBeenCalled();
     });
 
-    it("✅ Transacción: Debería borrar en cascada y hacer COMMIT", async () => {
+    it("Debería eliminar entidades hijas en cascada y aplicar COMMIT exitoso", async () => {
       mockClientQuery
-        .mockResolvedValueOnce(undefined) // BEGIN
-        .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // check
-        .mockResolvedValueOnce(undefined) // delete ejecuciones
-        .mockResolvedValueOnce(undefined); // delete mision
+        .mockResolvedValueOnce(undefined) 
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] }) 
+        .mockResolvedValueOnce(undefined) 
+        .mockResolvedValueOnce(undefined); 
 
       await missionServiceInstance.deleteMission(1);
 
@@ -97,7 +94,7 @@ describe("Servicio de Misiones (MissionService)", () => {
   });
 
   describe("Gestión de Ejecuciones (Runs)", () => {
-    it("✅ Debería iniciar una ejecución en estado 'en_curso'", async () => {
+    it("Debería inicializar un nuevo registro de ejecución en estado 'en_curso'", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 11, estado: 'en_curso' }] });
       const result = await missionServiceInstance.startMissionRun(1);
       
@@ -106,26 +103,26 @@ describe("Servicio de Misiones (MissionService)", () => {
     });
   });
 
-  describe("🔄 Consultas y Actualizaciones Secundarias (Missions)", () => {
-    it("✅ Debería devolver todas las misiones", async () => {
+  describe("Consultas Secundarias", () => {
+    it("Debería resolver una lista de misiones existentes", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 1 }] });
       const result = await missionServiceInstance.getAllMissions();
       expect(result.length).toBe(1);
     });
 
-    it("✅ Debería devolver las ejecuciones de una misión", async () => {
+    it("Debería resolver el historial de ejecuciones de una misión dada", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 11 }] });
       const result = await missionServiceInstance.getMissionRuns(1);
       expect(result.length).toBe(1);
     });
 
-    it("✅ Debería actualizar una ejecución existente", async () => {
+    it("Debería reflejar cambios parciales en una ejecución activa", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 11, estado: "completado" }] });
       const result = await missionServiceInstance.updateMissionRun(11, { estado: "completado" });
       expect(result.estado).toBe("completado");
     });
 
-    it("❌ Debería fallar (404) al actualizar una ejecución inexistente", async () => {
+    it("Debería lanzar error 404 al enviar actualizaciones a una ejecución inexistente", async () => {
       mockQuery.mockResolvedValueOnce({ rows: [] });
       await expect(missionServiceInstance.updateMissionRun(99, {})).rejects.toThrow("Ejecución no encontrada");
     });

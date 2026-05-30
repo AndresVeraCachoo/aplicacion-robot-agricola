@@ -1,9 +1,8 @@
-// app/server/tests/missions.e2e.test.js
 import request from "supertest";
 import { app } from "../src/index.js";
 import { pool } from "../src/config/db.js";
 
-describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
+describe("E2E - Misiones y Ejecuciones (Missions)", () => {
   let seedMissionId;
   let seedRunId;
 
@@ -35,7 +34,7 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("POST /api/missions", () => {
-    it("✅ Debería crear una nueva misión y devolver 201", async () => {
+    it("Debería crear una nueva misión y devolver estado 201", async () => {
       const response = await request(app)
         .post("/api/missions")
         .send(newMissionPayload);
@@ -45,7 +44,7 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
       expect(response.body.nombre).toBe(newMissionPayload.nombre);
     });
 
-    it("❌ ZOD: Debería bloquear (400) si faltan campos obligatorios", async () => {
+    it("Debería devolver error 400 si faltan campos obligatorios en el payload", async () => {
       const response = await request(app)
         .post("/api/missions")
         .send({ nombre: "Misión Incompleta" });
@@ -54,7 +53,7 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
       expect(response.body.error).toMatch(/Error de validación/i);
     });
 
-    it("❌ ZOD: Debería bloquear (400) si la batería mínima es superior a 100", async () => {
+    it("Debería devolver error 400 si el parámetro de batería mínima excede el valor permitido", async () => {
       const response = await request(app)
         .post("/api/missions")
         .send({ ...newMissionPayload, bateria_minima: 150 }); 
@@ -65,7 +64,7 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("GET /api/missions", () => {
-    it("✅ Debería devolver un array con todas las misiones (200)", async () => {
+    it("Debería devolver la lista de todas las misiones registradas", async () => {
       const response = await request(app).get("/api/missions");
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -73,7 +72,7 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("PUT /api/missions/:id", () => {
-    it("✅ Debería actualizar una misión existente (200)", async () => {
+    it("Debería actualizar los parámetros especificados de una misión existente", async () => {
       const response = await request(app)
         .put(`/api/missions/${seedMissionId}`)
         .send({ nombre: "Misión Semilla Editada", ancho_trabajo: 5 });
@@ -85,28 +84,28 @@ describe("🚜 E2E - CRUD de Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("DELETE /api/missions/:id", () => {
-    it("✅ Debería eliminar la misión y sus ejecuciones en cascada (200)", async () => {
+    it("Debería eliminar la misión y sus ejecuciones asociadas", async () => {
       const response = await request(app).delete(`/api/missions/${seedMissionId}`);
       expect(response.status).toBe(200);
     });
   });
 
   describe("POST /api/missions/:id/runs", () => {
-    it("✅ Debería iniciar una nueva ejecución para la misión (201)", async () => {
+    it("Debería registrar el inicio de una nueva ejecución para la misión", async () => {
       const response = await request(app).post(`/api/missions/${seedMissionId}/runs`);
       expect(response.status).toBe(201);
     });
   });
 
   describe("GET /api/missions/:id/runs", () => {
-    it("✅ Debería devolver la lista de ejecuciones de una misión (200)", async () => {
+    it("Debería devolver el historial de ejecuciones correspondiente a una misión", async () => {
       const response = await request(app).get(`/api/missions/${seedMissionId}/runs`);
       expect(response.status).toBe(200);
     });
   });
 
   describe("PUT /api/missions/runs/:run_id", () => {
-    it("✅ Debería actualizar el progreso de una ejecución (200)", async () => {
+    it("Debería actualizar el progreso y los datos telemétricos de una ejecución", async () => {
       const updateData = {
         estado: "completado",
         bateria_usada: 45,

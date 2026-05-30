@@ -1,10 +1,20 @@
 import { AppError } from "../middlewares/errorHandler.js";
 
+/**
+ * Servicio para consultar telemetría e histórico de energía del hardware.
+ */
 export class RobotService {
+  /**
+   * @param {import('pg').Pool} dbPool - Pool de conexiones de base de datos.
+   */
   constructor(dbPool) {
     this.pool = dbPool;
   }
 
+  /**
+   * Devuelve el último estado de la tabla maestro (ID = 1).
+   * @returns {Promise<Object>}
+   */
   async getRobotState() {
     const result = await this.pool.query("SELECT * FROM robot_estado WHERE id = 1");
     
@@ -15,6 +25,11 @@ export class RobotService {
     return result.rows[0];
   }
 
+  /**
+   * Construye una consulta SQL dinámica para extraer registros agronómicos según filtros.
+   * @param {Object} params - Diccionario con filtros (start, end, misionId).
+   * @returns {Promise<Array>}
+   */
   async getAgronomicData({ start, end, misionId }) {
     let query = `
       SELECT 
@@ -35,6 +50,7 @@ export class RobotService {
       values.push(start, end);
     }
 
+    // Filtramos la cadena 'null' explícitamente ya que clientes HTTP como Axios serializan valores nulos de esta forma
     if (misionId && misionId !== 'null' && misionId !== '') {
       whereClauses.push(`m.id = $${values.length + 1}`);
       values.push(Number.parseInt(misionId, 10));
@@ -44,12 +60,19 @@ export class RobotService {
       query += " WHERE " + whereClauses.join(" AND ");
     }
 
-    query += ` ORDER BY d."timestamp" DESC`;
+    // Límite de seguridad para evitar colapsos de RAM en el servidor si hay demasiados datos
+    query += ` ORDER BY d."timestamp" DESC LIMIT 2000`;
 
     const result = await this.pool.query(query, values);
     return result.rows;
   }
 
+  /**
+   * Construye una consulta SQL dinámica para extraer el histórico de batería.
+   * Utiliza subconsultas para acotar el marco temporal si se solicita el id de una misión en concreto.
+   * @param {Object} params - Diccionario con filtros.
+   * @returns {Promise<Array>}
+   */
   async getEnergyHistory({ start, end, misionId }) {
     let query = `SELECT "timestamp", bateria_porcentaje, radiacion_solar, estado FROM historial_energia`;
     const values = [];
@@ -73,7 +96,8 @@ export class RobotService {
       query += " WHERE " + whereClauses.join(" AND ");
     }
 
-    query += ` ORDER BY "timestamp" ASC`;
+    // Límite de seguridad para historiales muy largos
+    query += ` ORDER BY "timestamp" ASC LIMIT 2000`;
     
     const result = await this.pool.query(query, values);
     return result.rows;

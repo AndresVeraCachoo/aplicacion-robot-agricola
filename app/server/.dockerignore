@@ -1,4 +1,4 @@
-# server/.dockerignore
+# Exclusiones del contexto de construcción de la imagen Docker para optimizar el peso y prevenir fugas de credenciales
 .git
 .gitignore
 .github

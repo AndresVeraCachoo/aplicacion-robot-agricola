@@ -1,10 +1,8 @@
-// server/jest.setup.js
-
-// Ocultamos los console.error y console.log esperados durante la ejecución de los tests 
-// para mantener la terminal limpia y legible.
+// Intercepción de los flujos estándar de salida para evitar el ruido en la consola del CI/CD 
+// provocado por los logs y errores controlados generados intrínsecamente durante los tests.
 globalThis.console = {
   ...console,
-  // Descomenta estas líneas cuando quieras que los tests no impriman nada
+  // Descomentar en caso de requerir un volcado de consola para depuración local
   // log: () => {}, 
   // error: () => {},
   // warn: () => {},

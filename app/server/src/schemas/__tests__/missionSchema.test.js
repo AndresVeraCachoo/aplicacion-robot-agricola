@@ -1,7 +1,7 @@
 import { createMisionSchema, updateEjecucionSchema } from '../missionSchema.js';
 
-describe("🚜 Esquema de Misiones (missionSchema)", () => {
-  it("✅ Debería validar una misión con datos correctos", () => {
+describe("Esquema de Misiones (missionSchema)", () => {
+  it("Debería validar una configuración de misión con datos estructurales completos", () => {
     const data = { 
       body: { 
         nombre: "Misión Alfa", tipo_tarea: "Cosecha", ancho_trabajo: 10, 
@@ -11,7 +11,7 @@ describe("🚜 Esquema de Misiones (missionSchema)", () => {
     expect(() => createMisionSchema.parse(data)).not.toThrow();
   });
 
-  it("✅ Debería validar una fecha ISO 8601 correcta en fecha_programada", () => {
+  it("Debería aceptar fechas programadas que cumplan estrictamente con el estándar", () => {
     const data = { 
       body: { 
         nombre: "A", tipo_tarea: "B", ancho_trabajo: 10, angulo_pasada: 90, 
@@ -22,7 +22,7 @@ describe("🚜 Esquema de Misiones (missionSchema)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("❌ Debería rechazar una fecha inválida (Validador ISO 8601 personalizado)", () => {
+  it("Debería rechazar formatos de fecha inválidos a través del validador personalizado", () => {
     const data = { body: { fecha_fin: "fecha-inventada" } };
     const result = updateEjecucionSchema.safeParse(data);
     
