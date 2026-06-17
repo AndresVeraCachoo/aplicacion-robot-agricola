@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useMissionStore } from '../missionStore';
+import axios from 'axios';
 
-describe('missionStore', () => {
+vi.mock('axios');
+
+describe('Tienda Global de Misiones (missionStore)', () => {
   let consoleSpy;
 
   beforeEach(() => {
     useMissionStore.setState({ misiones: [], isLoading: false, error: null });
-    globalThis.fetch = vi.fn();
     vi.clearAllMocks();
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    globalThis.localStorage.clear();
   });
 
   afterEach(() => {
@@ -17,10 +20,10 @@ describe('missionStore', () => {
 
   const getStore = () => useMissionStore.getState();
 
-  describe('fetchMisiones', () => {
-    it('obtiene las misiones y actualiza el estado', async () => {
+  describe('Sincronización (fetchMisiones)', () => {
+    it('Debería cargar la colección de misiones e inyectarlas en el estado', async () => {
       const mockData = [{ id: 1, nombre: 'Misión 1' }];
-      globalThis.fetch.mockResolvedValueOnce({ ok: true, json: async () => mockData });
+      axios.get.mockResolvedValueOnce({ data: mockData });
 
       await getStore().fetchMisiones();
 
@@ -29,17 +32,17 @@ describe('missionStore', () => {
       expect(getStore().error).toBeNull();
     });
 
-    it('rama !response.ok: maneja el error si falla la petición', async () => {
-      globalThis.fetch.mockResolvedValueOnce({ ok: false });
+    it('Debería extraer el mensaje de error normalizado del servidor si la petición falla', async () => {
+      axios.get.mockRejectedValueOnce({ response: { data: { error: "Fallo interno" } } });
       await getStore().fetchMisiones();
-      expect(getStore().error).toBe('Error al obtener las misiones');
+      expect(getStore().error).toBe("Fallo interno");
     });
   });
 
-  describe('createMision', () => {
-    it('crea una misión y la añade al array', async () => {
+  describe('Creación (createMision)', () => {
+    it('Debería instanciar una misión y añadirla al principio de la colección local', async () => {
       useMissionStore.setState({ misiones: [{ id: 2, nombre: 'Vieja' }] });
-      globalThis.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ id: 1, nombre: 'Nueva' }) });
+      axios.post.mockResolvedValueOnce({ data: { id: 1, nombre: 'Nueva' } });
 
       const result = await getStore().createMision({ nombre: 'Nueva' });
 
@@ -48,36 +51,38 @@ describe('missionStore', () => {
       expect(getStore().misiones[0].id).toBe(1);
     });
 
-    it('rama !response.ok: devuelve false y captura el error si la creación falla', async () => {
-      globalThis.fetch.mockResolvedValueOnce({ ok: false });
+    it('Debería devolver false y registrar en consola si la persistencia falla', async () => {
+      axios.post.mockRejectedValueOnce(new Error("Network Error"));
       const result = await getStore().createMision({});
       expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalled();
     });
   });
 
-  describe('updateMision', () => {
-    it('actualiza una misión existente (cubre m.id === id y m.id !== id)', async () => {
+  describe('Modificación (updateMision)', () => {
+    it('Debería mapear y sustituir únicamente la misión editada dentro de la colección', async () => {
       useMissionStore.setState({ misiones: [{ id: 1, nombre: 'A' }, { id: 2, nombre: 'B' }] });
-      globalThis.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ id: 1, nombre: 'Modificada' }) });
+      axios.put.mockResolvedValueOnce({ data: { id: 1, nombre: 'Modificada' } });
 
       const result = await getStore().updateMision(1, {});
 
       expect(result).toBe(true);
       expect(getStore().misiones[0].nombre).toBe('Modificada');
-      expect(getStore().misiones[1].nombre).toBe('B'); // Rama m.id !== id
+      expect(getStore().misiones[1].nombre).toBe('B'); 
     });
 
-    it('rama !response.ok: devuelve false y muestra error', async () => {
-      globalThis.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
+    it('Debería bloquear la actualización de estado local si el servidor rechaza la edición', async () => {
+      axios.put.mockRejectedValueOnce({ response: { data: { error: "Sin permisos" } } });
       const result = await getStore().updateMision(1, {});
       expect(result).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.anything(), "Sin permisos");
     });
   });
 
-  describe('deleteMision', () => {
-    it('elimina la misión (cubre m.id !== id y m.id === id)', async () => {
+  describe('Eliminación (deleteMision)', () => {
+    it('Debería extraer la misión eliminada del array local para actualizar la vista', async () => {
       useMissionStore.setState({ misiones: [{ id: 1 }, { id: 2 }] });
-      globalThis.fetch.mockResolvedValueOnce({ ok: true });
+      axios.delete.mockResolvedValueOnce({ data: { message: "Ok" } });
 
       await getStore().deleteMision(1);
 
@@ -85,26 +90,20 @@ describe('missionStore', () => {
       expect(getStore().misiones[0].id).toBe(2);
     });
 
-    it('rama !response.ok: captura el error si falla la eliminación', async () => {
+    it('Debería abortar la eliminación en vista si el servidor retorna error de integridad', async () => {
       useMissionStore.setState({ misiones: [{ id: 1 }] });
-      globalThis.fetch.mockResolvedValueOnce({ ok: false });
+      axios.delete.mockRejectedValueOnce(new Error("Integrity Error"));
 
       await getStore().deleteMision(1);
       expect(getStore().misiones.length).toBe(1); 
     });
   });
 
-  describe('startMissionRun', () => {
-    it('inicia la ejecución y devuelve el JSON', async () => {
-      globalThis.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'started' }) });
+  describe('Ejecuciones (startMissionRun)', () => {
+    it('Debería enviar la orden de arranque y retornar los metadatos de la ejecución', async () => {
+      axios.post.mockResolvedValueOnce({ data: { status: 'started' } });
       const result = await getStore().startMissionRun(1);
       expect(result).toEqual({ status: 'started' });
-    });
-
-    it('rama !response.ok: devuelve null', async () => {
-      globalThis.fetch.mockResolvedValueOnce({ ok: false });
-      const result = await getStore().startMissionRun(1);
-      expect(result).toBeNull();
     });
   });
 });

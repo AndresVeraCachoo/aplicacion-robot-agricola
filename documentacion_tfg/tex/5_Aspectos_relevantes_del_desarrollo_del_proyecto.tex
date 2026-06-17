@@ -1,0 +1,91 @@
+\capitulo{5}{Aspectos relevantes del desarrollo del proyecto}
+
+En este capítulo se describe el ciclo de vida completo del proyecto AgroSkopos, abordando desde su concepción inicial y planificación metodológica, hasta las fases de implementación técnica y validación. 
+
+\section{Motivación del proyecto}
+
+El origen de este Trabajo de Fin de Grado surge del interés por aplicar y consolidar los conocimientos adquiridos en la titulación en un entorno práctico multidisciplinar. La motivación principal fue el diseño de una plataforma de telemetría y control agrícola capaz de integrarse de forma colaborativa con otro Trabajo de Fin de Grado perteneciente a la rama de Ingeniería Electrónica. Mientras que dicho proyecto abordaba el diseño, ensamblaje y la programación a bajo nivel del chasis físico de un robot agrícola, el presente trabajo asumió el reto de desarrollar de forma íntegra toda la capa de \textit{software} de alto nivel. 
+
+Esto incluía la creación de la infraestructura de comunicaciones, la persistencia de datos y la interfaz de usuario que permitiría gobernar dicho vehículo de forma remota. Esta propuesta representó un desafío técnico sumamente enriquecedor, al permitir la convergencia metodológica entre el desarrollo de aplicaciones web modernas orientadas a la baja latencia y la interacción directa con el \textit{hardware} en el ámbito del Internet de las Cosas (IoT).
+
+\section{Inicio del proyecto y evolución del alcance}
+
+En la fase inicial de toma de requisitos, planteada a principio de septiembre, el alcance del proyecto era considerablemente más reducido y lineal. El objetivo original consistía en desarrollar una aplicación funcional que cubriera la gestión básica de usuarios y permitiría visualizar la telemetría del robot en tiempo real. En cuanto al control, únicamente se contemplaba una navegación rudimentaria mediante el envío de coordenadas individuales basadas en los clics del operador sobre un mapa, complementado con tablas y gráficas estáticas para el análisis de los datos.
+
+Sin embargo, durante el transcurso del curso académico, el proyecto experimentó una reestructuración forzosa. Diversos problemas técnicos, logísticos y de suministro impidieron que el proyecto de Ingeniería Electrónica pudiera finalizar la construcción del robot físico a tiempo. Esta eventualidad imposibilitó la fase de integración de \textit{hardware} que estaba prevista inicialmente.
+
+Lejos de suponer un bloqueo, este contratiempo impulsó una ambiciosa evolución orgánica del \textit{software}. Para poder validar la arquitectura orientada a eventos y la recepción de telemetría, el motor de simulación interno (que inicialmente se había concebido como un simple \textit{script} de pruebas temporales) se reescribió por completo y se dotó de algoritmos cinemáticos avanzados. Al no requerir la inversión de tiempo en la integración física, el esfuerzo de desarrollo se redirigió hacia la ampliación masiva de las funcionalidades de la plataforma, convirtiendo lo que iba a ser un simple visor de datos en un producto tecnológico integral mucho más completo.
+
+De este modo, se incorporó un complejo sistema de misiones autónomas y planificación de rutas, delimitación virtual del terreno (geocercas), soporte multilenguaje (i18n), personalización de la interfaz (modo oscuro) y la migración arquitectónica hacia una Aplicación Web Progresiva (PWA).
+
+\section{Planificación}
+
+La planificación del proyecto se estructuró asumiendo la alta incertidumbre derivada de un desarrollo dependiente, en sus inicios, de factores externos (el \textit{hardware}). Como se documentó en el capítulo metodológico, se empleó Scrum \cite{scrum} junto a la herramienta Zube para orquestar el trabajo en iteraciones de dos semanas, lo que permitió una gran capacidad de adaptación ante los cambios de alcance.
+
+El ciclo de desarrollo se dividió en las siguientes grandes fases planificadas:
+\begin{enumerate}
+    \item \textbf{Fase de Análisis y Diseño:} Toma de requisitos iniciales, diseño de la base de datos relacional y elaboración de los prototipos de la interfaz gráfica de usuario.
+    \item \textbf{Fase de Desarrollo \textit{Frontend}:} Construcción de la \textit{Single Page Application} (SPA) con React \cite{react}, integración del mapa interactivo con Leaflet \cite{leaflet} y conexión con los servicios del \textit{backend}.
+    \item \textbf{Fase de Desarrollo \textit{Backend}:} Implementación del servidor Node.js \cite{nodejs}, despliegue del contenedor PostgreSQL \cite{postgresql}, configuración de la API REST y establecimiento del servidor de WebSockets para la comunicación bidireccional.
+    \item \textbf{Fase de Refactorización y Simulación Avanzada:} Hito introducido tras la cancelación de las pruebas físicas. Consistió en el desarrollo del motor de simulación cinemática y la generación dinámica de datos agronómicos (\texttt{simulator.js}) para replicar el comportamiento de un entorno real.
+    \item \textbf{Fase de Expansión de Funcionalidades:} Implementación de las misiones, algoritmos de navegación (rutas de cobertura y \textit{zigzag}), internacionalización y configuración de la PWA.
+    \item \textbf{Fase de Pruebas (\textit{Testing}) y Despliegue:} Consolidación de las pruebas unitarias y E2E, análisis estático con SonarCloud \cite{sonarqube} y contenedorización final mediante Docker \cite{docker} Compose \cite{docker}.
+\end{enumerate}
+
+Esta fragmentación en fases permitió aislar la complejidad, garantizando que el núcleo de la aplicación estuviera consolidado y probado antes de implementar las capas superiores de lógica de negocio y visualización.
+
+\section{Adquisición de conceptos técnicos}
+
+El desarrollo de una aplicación con requerimientos de telemetría, simulación cinemática y mapas interactivos en tiempo real supuso un desafío técnico significativo, exigiendo un periodo intensivo de capacitación tecnológica previo a la fase de codificación. Puesto que el \textit{stack} tecnológico empleado (PERN: PostgreSQL \cite{postgresql}, Express \cite{express}, React \cite{react} y Node.js \cite{nodejs}) difería notablemente de las tecnologías abordadas con profundidad a lo largo del plan de estudios del grado, el proyecto requirió un firme proceso de investigación y autoaprendizaje.
+
+Esta adquisición de competencias se llevó a cabo en dos etapas diferenciadas:
+
+\begin{itemize}
+    \item \textbf{Etapa Inicial (Verano 2025):} El proceso de formación comenzó durante el periodo estival, coincidiendo con las prácticas extracurriculares en empresa. En esta fase se llevó a cabo un estudio autodidacta centrado en los fundamentos del desarrollo web moderno, asimilando la sintaxis y capacidades de JavaScript (ES6+), así como la estructuración y diseño con HTML5 y CSS3. Esta etapa sentó las bases necesarias para abordar la programación orientada a la web con la agilidad requerida.
+    \item \textbf{Etapa de Pre-desarrollo (Septiembre - Octubre 2025):} Tras la formalización de los requisitos del proyecto, se estableció un bloque de un mes dedicado de forma exclusiva a la investigación teórica, antes de realizar la primera confirmación de código (\textit{commit}). Durante este tiempo se consolidó el dominio del ecosistema de React \cite{react} y de las tecnologías fundamentales para AgroSkopos:
+    \begin{itemize}
+        \item \textbf{Paradigma de React \cite{react} y Estado Global:} Se profundizó en el modelo declarativo, el ciclo de vida de los componentes y la gestión avanzada de estados globales mediante \textit{hooks} optimizados como Zustand \cite{zustand}, previendo el alto volumen de datos de telemetría que la aplicación debía manejar.
+        \item \textbf{Librerías Geoespaciales (Leaflet \cite{leaflet}):} Sabiendo que el núcleo visual del proyecto iba a ser un visor interactivo de precisión, se realizó un estudio pormenorizado de la API de Leaflet \cite{leaflet}. Se analizaron conceptos cartográficos como las capas de teselas (\textit{tile layers}), las proyecciones de coordenadas y la renderización reactiva de polígonos y marcadores.
+    \end{itemize}
+\end{itemize}
+
+Esta fase preparatoria resultó crítica para mitigar los riesgos técnicos del proyecto. El tiempo invertido garantizó que, una vez iniciado el desarrollo \textit{frontend}, se ejecutara bajo decisiones de diseño de \textit{software} maduras, limpias y escalables, evitando la deuda técnica temprana.
+
+\section{Desarrollo del proyecto}
+
+La implementación técnica del sistema AgroSkopos se llevó a cabo de manera incremental, siguiendo la metodología ágil descrita. El esfuerzo se estructuró a lo largo de seis fases lógicas, divididas operativamente entre el \textit{frontend} y el \textit{backend}:
+
+\subsection{Evolución del \textit{Frontend} y la Interfaz}
+\textbf{Fase 1: Cimentación Arquitectónica y Prototipado Visual (Octubre 2025)}
+El desarrollo dio comienzo con la configuración del entorno \textit{frontend} (React \cite{react} y Vite \cite{vite}) y el diseño de las interfaces base. Durante los primeros \textit{sprints}, el trabajo se centró en construir la estructura esquelética de la \textit{Single Page Application} (SPA), implementando el enrutamiento (React \cite{react} Router), la pantalla de autenticación y el panel principal (\textit{Dashboard}). En esta etapa temprana, se integró por primera vez el visor cartográfico mediante Leaflet \cite{leaflet} y se estableció el sistema de gestión de estado global utilizando Zustand \cite{zustand}. Las primeras iteraciones finalizaron operando en este punto con datos estáticos simulados (\textit{Mocks}).
+
+\subsection{Evolución del \textit{Backend} y Lógica de Servidor}
+\textbf{Fase 2: Arquitectura \textit{Backend}, Seguridad y Modelado de Datos (Noviembre 2025)}
+Una vez estabilizada la interfaz, el enfoque se trasladó al servidor Node.js \cite{nodejs}. Se abandonaron los datos estáticos migrando el núcleo de almacenamiento a PostgreSQL \cite{postgresql}. En esta fase se implementaron los pilares de seguridad del sistema: cifrado de contraseñas mediante Bcrypt, protección de rutas de la API, y un robusto sistema de autenticación basado en \textit{JSON Web Tokens} (JWT). Asimismo, se desarrolló la lógica de control de acceso basado en roles (RBAC).
+
+\subsection{Integración de Sistemas y Simulación}
+\textbf{Fase 3: El Punto de Inflexión - Simulación y Telemetría en Tiempo Real (Finales de Noviembre 2025)}
+Ante la imposibilidad de integrar el chasis del robot físico, el desarrollo pivotó estratégicamente hacia la creación de un simulador telemétrico propio en el \textit{backend}. Se sustituyeron las peticiones HTTP convencionales por una arquitectura orientada a eventos mediante WebSockets, logrando comunicación bidireccional en tiempo real y habilitando notificaciones visuales en el \textit{frontend}.
+
+\textbf{Fase 4: Control Cinemático y Analítica Espacial (Diciembre 2025 - Febrero 2026)}
+Se desarrollaron las interfaces y la lógica del servidor para permitir el control manual del vehículo y se programaron los primeros algoritmos de navegación automatizada (rutas de cobertura y \textit{zigzag}). A nivel espacial, se introdujo el concepto de \textit{Geofencing} (delimitación poligonal de zonas seguras) y se implementaron mapas de calor (\textit{Heatmaps}) para visualizar la densidad de nutrientes sobre el terreno.
+
+\textbf{Fase 5: Misiones Autónomas e Internacionalización (Marzo - Abril 2026)}
+Se diseñó el esquema de la base de datos y la API para dar soporte a un sistema completo de Misiones. Se implementó una interfaz de creación, gestión y ejecución de misiones en vivo, apoyada por una máquina de estados en el \textit{backend}. Además, se integró el \textit{framework} i18next \cite{i18next} para soportar la internacionalización (multi-idioma).
+
+\textbf{Fase 6: Despliegue, PWA y Aseguramiento de la Calidad (\textit{Testing}) (Abril - Mayo 2026)}
+El repositorio se restructuró bajo un modelo Monorepo estricto y se configuraron los contenedores Docker \cite{docker} (\texttt{docker-compose}). A nivel de cliente, la aplicación se transformó en una Aplicación Web Progresiva (PWA). Finalmente, se diseñó e implementó la cobertura de pruebas (\textit{Testing}), abarcando pruebas unitarias de controladores e integración \textit{End-to-End} (E2E).
+
+\section{Testing y Calidad de Código}
+
+Para garantizar la estabilidad, robustez y correcta funcionalidad del sistema AgroSkopos, se diseñó e implementó una estrategia integral de pruebas automáticas que abarca tanto el cliente web como el servidor. 
+
+\begin{enumerate}
+    \item \textbf{Pruebas Unitarias y de Componentes en el \textit{Frontend}:} Para la interfaz de usuario se empleó Vitest \cite{vitest} en combinación con \textit{React \cite{react} Testing Library}. Se aislaron los componentes complejos mediante el uso intensivo de \textit{Mocks} (simulaciones) para dependencias externas pesadas. Se validó el comportamiento asíncrono y los cambios en el estado global (Zustand \cite{zustand}), así como los contextos de la aplicación (\textit{Context API}).
+    \item \textbf{Pruebas Unitarias lógicas en el \textit{Backend} (Jest \cite{jest}):} En la capa del servidor, las pruebas unitarias se enfocaron en aislar los controladores lógicos (\textit{Controllers}) de la infraestructura externa. Empleando Jest \cite{jest}, se desarrollaron baterías de pruebas que simulaban (\textit{mockeaban}) tanto las consultas a la base de datos PostgreSQL \cite{postgresql} como las operaciones criptográficas.
+    \item \textbf{Pruebas \textit{End-to-End} (E2E) y Testcontainers \cite{testcontainers} en la API REST:} El nivel más avanzado de la estrategia de calidad del \textit{backend} fue la validación completa del ciclo de vida de las peticiones HTTP mediante entornos efímeros. Para ello, se integró Testcontainers \cite{testcontainers}, orquestando de forma aislada una instancia de PostgreSQL \cite{postgresql} en Docker \cite{docker} para cada batería de pruebas automatizadas mediante Supertest \cite{supertest}, garantizando el aislamiento (idempotencia) entre cada prueba.
+\end{enumerate}
+
+\section{Despliegue}
+
+% TODO: Añadir detalles sobre el despliegue con Docker \cite{docker} si el sistema se implementa en un servidor remoto de manera pública.

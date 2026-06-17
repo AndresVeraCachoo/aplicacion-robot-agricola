@@ -1,12 +1,21 @@
-// src/store/robotStore.js
 import { create } from 'zustand';
-import axios from "axios";
+import httpClient from '../config/httpClient';
 import { io } from "socket.io-client"; 
 
-const API_URL = `${import.meta.env.VITE_API_URL}/robot`;
+/**
+ * @namespace Stores
+ * @description Gestores de estado global basados en Zustand.
+ */
+
+/**
+ * @namespace Stores.useRobotStore
+ * @memberof Stores
+ * @description Módulo encargado de la telemetría en tiempo real del robot.
+ */
+
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
-const calculateBearing = (startLat, startLng, destLat, destLng) => {
+function calculateBearing(startLat, startLng, destLat, destLng) {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
 
@@ -15,23 +24,34 @@ const calculateBearing = (startLat, startLng, destLat, destLng) => {
   const dLng = toRad(destLng - startLng);
 
   const y = Math.sin(dLng) * Math.cos(destLatRad);
-  const x =
-    Math.cos(startLatRad) * Math.sin(destLatRad) -
-    Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(dLng);
+  const x = Math.cos(startLatRad) * Math.sin(destLatRad) - Math.sin(startLatRad) * Math.cos(destLatRad) * Math.cos(dLng);
 
   let bearing = toDeg(Math.atan2(y, x));
   const offset = 80; 
   return (bearing - offset + 360) % 360; 
-};
+}
 
 export const useRobotStore = create((set, get) => ({
   socket: null, 
   isConnected: false,
-  
   isSidebarOpen: window.innerWidth > 768,
+  
+  /**
+   * @function toggleSidebar
+   * @memberof Stores.useRobotStore
+   * @description Invierte el estado de visibilidad de la barra lateral.
+   */
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  
+  /**
+   * @function setSidebarOpen
+   * @memberof Stores.useRobotStore
+   * @description Modifica el estado de apertura de la barra lateral.
+   * @param {boolean} isOpen - Flag indicador.
+   */
   setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
+  /** @type {import('../types').RobotBateria} */
   battery: {
     percentage: 0,
     status: "IDLE",
@@ -43,6 +63,7 @@ export const useRobotStore = create((set, get) => ({
     netPower: 0,
   },
   
+  /** @type {import('../types').RobotSistema} */
   system: {
     status: "IDLE",
     speed: 0,
@@ -55,16 +76,25 @@ export const useRobotStore = create((set, get) => ({
   pathHistory: [],
   agronomicData: [], 
   sensors: { soilHumidity: 0, ambientTemp: 0, tankLevel: 0 },
-  
   safeZone: null,
   navTarget: null, 
   navQueue: [],
-  
   totalMissionPoints: 0,
   deletedSessionKeys: [],
 
+  /**
+   * @function setTotalMissionPoints
+   * @memberof Stores.useRobotStore
+   * @description Establece la cuantía de puntos asignados a la trayectoria.
+   * @param {number} points - Total waypoints.
+   */
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
 
+  /**
+   * @function connectSocket
+   * @memberof Stores.useRobotStore
+   * @description Establece el flujo websocket bidireccional con el chasis.
+   */
   connectSocket: () => {
     const { socket } = get();
     if (socket) return; 
@@ -142,6 +172,11 @@ export const useRobotStore = create((set, get) => ({
     set({ socket: newSocket });
   },
 
+  /**
+   * @function disconnectSocket
+   * @memberof Stores.useRobotStore
+   * @description Destruye la instancia websocket de red activa.
+   */
   disconnectSocket: () => {
     const { socket } = get();
     if (socket) {
@@ -150,14 +185,17 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
+  /**
+   * @function fetchInitialData
+   * @memberof Stores.useRobotStore
+   * @description Recupera la información estática inicial mediante peticiones api rest concurrentes.
+   * @returns {Promise<void>}
+   */
   fetchInitialData: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-      const estadoRes = await axios.get(`${API_URL}/estado`, config);
-      const datosRes = await axios.get(`${API_URL}/datos`, config);
-      const validData = Array.isArray(datosRes.data) ? datosRes.data : [];
+      const statusResponse = await httpClient.get("/robot/estado");
+      const dataResponse = await httpClient.get("/robot/datos");
+      const validData = Array.isArray(dataResponse.data) ? dataResponse.data : [];
 
       set((state) => {
         const filteredData = validData.filter(d => {
@@ -167,21 +205,21 @@ export const useRobotStore = create((set, get) => ({
 
         return {
             battery: {
-              percentage: estadoRes.data.battery_percentage,
-              status: estadoRes.data.battery_status,
-              voltage: estadoRes.data.battery_voltage || 12.5,
-              temperature: estadoRes.data.battery_temperature || 30,
-              timeRemaining: estadoRes.data.battery_time_remaining || "Calculando...",
+              percentage: statusResponse.data.battery_percentage,
+              status: statusResponse.data.battery_status,
+              voltage: statusResponse.data.battery_voltage || 12.5,
+              temperature: statusResponse.data.battery_temperature || 30,
+              timeRemaining: statusResponse.data.battery_time_remaining || "Calculando...",
               solarInput: 0, 
               consumption: 0.5,
               netPower: -0.5 
             },
-            position: { lat: estadoRes.data.current_lat, lon: estadoRes.data.current_lon },
+            position: { lat: statusResponse.data.current_lat, lon: statusResponse.data.current_lon },
             system: {
                 ...state.system,
-                speed: estadoRes.data.system_speed,
-                heading: estadoRes.data.system_heading,
-                status: estadoRes.data.system_status
+                speed: statusResponse.data.system_speed,
+                heading: statusResponse.data.system_heading,
+                status: statusResponse.data.system_status
             },
             agronomicData: filteredData,
             pathHistory: filteredData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),
@@ -192,6 +230,12 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
+  /**
+   * @function setSpeedLimit
+   * @memberof Stores.useRobotStore
+   * @description Setea un límite a la velocidad del motor.
+   * @param {number} limit - Valor máximo.
+   */
   setSpeedLimit: (limit) => {
     const { socket, system } = get();
     const newLimit = Math.max(0, Math.min(100, limit));
@@ -199,6 +243,13 @@ export const useRobotStore = create((set, get) => ({
     if (socket?.connected) socket.emit("client:set_speed_limit", newLimit);
   },
 
+  /**
+   * @function queueNavigationPoint
+   * @memberof Stores.useRobotStore
+   * @description Encola un waypoint en la ruta geográfica activa.
+   * @param {number} lat - Latitud.
+   * @param {number} lon - Longitud.
+   */
   queueNavigationPoint: (lat, lon) => {
     const { socket, navTarget, navQueue, system, navigateToPoint } = get();
     if (!navTarget && system.mode !== "NAVIGATING") {
@@ -209,36 +260,71 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
+  /**
+   * @function navigateToPoint
+   * @memberof Stores.useRobotStore
+   * @description Fuerza la navegación unívoca y prioritaria a un objetivo.
+   * @param {number} lat - Latitud.
+   * @param {number} lon - Longitud.
+   */
   navigateToPoint: (lat, lon) => {
       const { socket, system } = get();
       set({ navTarget: { lat, lon }, navQueue: [], system: { ...system, mode: "NAVIGATING" } }); 
       if (socket?.connected) socket.emit("client:navigate_to", { lat, lon, clearQueue: true });
   },
 
+  /**
+   * @function setSafeZone
+   * @memberof Stores.useRobotStore
+   * @description Acota el área permitida de operaciones (geofencing).
+   * @param {Array<Array<number>>} bounds - Matriz de vértices gps.
+   */
   setSafeZone: (bounds) => {
     const { socket } = get();
     set({ safeZone: bounds });
     if (socket?.connected) socket.emit("client:update_zone", bounds);
   },
 
+  /**
+   * @function clearSafeZone
+   * @memberof Stores.useRobotStore
+   * @description Remueve la valla virtual del mapa.
+   */
   clearSafeZone: () => {
     const { socket } = get();
     set({ safeZone: null });
     if (socket?.connected) socket.emit("client:clear_zone");
   },
 
+  /**
+   * @function setControlMode
+   * @memberof Stores.useRobotStore
+   * @description Intercambia el modo operativo de conducción de la cpu.
+   * @param {string} mode - MANUAL o AUTO.
+   */
   setControlMode: (mode) => {
       const { socket, system } = get();
       set({ system: { ...system, mode: mode } });
       if (socket?.connected) socket.emit("client:change_mode", mode);
   },
 
+  /**
+   * @function sendManualMove
+   * @memberof Stores.useRobotStore
+   * @description Envía vectores físicos de movimiento direccional.
+   * @param {Object} velocity - Estructura X/Y de velocidad.
+   */
   sendManualMove: (velocity) => {
       const { socket, system } = get();
       if (system.mode !== "MANUAL") return;
       if (socket?.connected) socket.emit("client:manual_control", velocity);
   },
 
+  /**
+   * @function togglePauseMission
+   * @memberof Stores.useRobotStore
+   * @description Conmuta el estado de pausa de las tareas de campo.
+   */
   togglePauseMission: () => {
     const { socket, system } = get();
     if (!socket?.connected) return;
@@ -249,6 +335,11 @@ export const useRobotStore = create((set, get) => ({
     }
   },
 
+  /**
+   * @function cancelMission
+   * @memberof Stores.useRobotStore
+   * @description Aborta de forma definitiva las tareas agrícolas y purga restricciones.
+   */
   cancelMission: () => {
     const { socket, system, clearSafeZone } = get();
     clearSafeZone(); 
@@ -256,6 +347,12 @@ export const useRobotStore = create((set, get) => ({
     if (socket?.connected) socket.emit("client:cancel_mission");
   },
 
+  /**
+   * @function deleteSessionData
+   * @memberof Stores.useRobotStore
+   * @description Filtra y oculta de la UI los datos relativos a una sesión descartada.
+   * @param {string} sessionKey - Clave única identificativa.
+   */
   deleteSessionData: (sessionKey) => {
     set((state) => {
       const newDeletedKeys = [...state.deletedSessionKeys, sessionKey];

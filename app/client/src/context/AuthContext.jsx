@@ -1,32 +1,37 @@
-// src/context/AuthContext.jsx
-/* eslint-disable react-refresh/only-export-components */
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { createContext, useState, useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import httpClient from "../config/httpClient";
 
+/**
+ * @namespace Contextos
+ * @description Proveedores de estado global mediante la API de Context de React.
+ */
+
+/**
+ * Instancia del contexto global para la gestión de la sesión del usuario.
+ * @type {React.Context<any>}
+ * @memberof Contextos
+ * @name AuthContext
+ */
 export const AuthContext = createContext(null);
-const API_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * Proveedor de autenticación.
+ * Coordina el estado local de la sesión con los datos almacenados en el navegador.
+ * @function AuthProvider
+ * @memberof Contextos
+ * @param {Object} props - Propiedades del componente.
+ * @param {React.ReactNode} props.children - Árbol de la aplicación.
+ * @returns {JSX.Element}
+ */
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
-  const [userRole, setUserRole] = useState(() =>
-    localStorage.getItem("userRole"),
-  );
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => !!localStorage.getItem("token"),
-  );
+  const [userRole, setUserRole] = useState(() => localStorage.getItem("userRole"));
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
   const navigate = useNavigate();
 
-  // Función de Logout 
-  const logout = useCallback(() => {
-    delete axios.defaults.headers.common["Authorization"];
+  const logout = useCallback(function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
@@ -37,45 +42,36 @@ export function AuthProvider({ children }) {
     navigate("/login");
   }, [navigate]);
 
-  // 2. Efecto Centinela
   useEffect(() => {
-    const verifyAuthStatus = async () => {
+    async function verifyAuthStatus() {
       if (token) {
         try {
-          axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-          await axios.get(`${API_URL}/auth/verify`);
+          await httpClient.get("/auth/verify");
           setIsLoggedIn(true);
         } catch (error) {
           console.warn("Sesión caducada. Detalle:", error.message);
           logout();
         }
       } else {
-        delete axios.defaults.headers.common["Authorization"];
         setIsLoggedIn(false);
       }
-    };
+    }
     verifyAuthStatus();
   }, [token, logout]);
 
-  // 1. Función de Login
   const login = useCallback(
-    async (name, password) => {
+    async function handleLogin(name, password) {
       try {
-        const response = await axios.post(`${API_URL}/auth/login`, {
-          name,
-          password,
-        });
+        const response = await httpClient.post("/auth/login", { name, password });
 
         if (response.data.token) {
           const { token: newToken, user } = response.data;
 
-          // Validación estricta del Token mediante Regex (Fix para Sonar)
           const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
           if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
             throw new Error("El servidor devolvió un token con formato inválido");
           }
 
-          // Descontaminación del Rol
           let safeRole = "usuario";
           if (user?.role === "admin") {
             safeRole = "admin";
@@ -83,36 +79,27 @@ export function AuthProvider({ children }) {
             safeRole = "operador";
           }
 
-          // --- LÓGICA DE SANITIZACIÓN ---
-          
-          // Sanitización del Nombre: Validación estricta de principio a fin
           let safeName = "Usuario";
           const rawName = response.data.user?.name;
-          // Solo permitimos letras, números y espacios. Ni un solo símbolo raro.
           const nameRegex = /^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]+$/;
           if (typeof rawName === "string" && nameRegex.test(rawName)) {
             safeName = rawName;
           }
 
-          // Sanitización del Avatar: Validación estricta de rutas
           let safeAvatar = "/avatars/robot-fondo-verde.png";
           const rawAvatar = response.data.user?.avatar;
-          // Solo permitimos rutas relativas (/avatars/...) o URLs seguras, sin scripts ocultos
           const avatarRegex = /^(\/[a-zA-Z0-9-_./]+|https?:\/\/[a-zA-Z0-9-_./]+)$/;
           if (typeof rawAvatar === "string" && avatarRegex.test(rawAvatar)) {
             safeAvatar = rawAvatar;
           }
 
-          // Guardamos los datos LIMPIOS en el navegador (¡Sin necesidad de NOSONAR!)
           localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
           localStorage.setItem("userName", safeName);
           localStorage.setItem("userAvatar", safeAvatar);
 
-          // Avisamos a la Sidebar
           globalThis.dispatchEvent(new Event("avatarUpdated"));
 
-          axios.defaults.headers.common["Authorization"] = "Bearer " + newToken;
           setToken(newToken);
           setUserRole(safeRole);
           setIsLoggedIn(true);
@@ -128,12 +115,11 @@ export function AuthProvider({ children }) {
         };
       }
     },
-    [navigate],
+    [navigate]
   );
 
-  // INTERCEPTOR AXIOS
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    const interceptor = httpClient.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
@@ -143,14 +129,14 @@ export function AuthProvider({ children }) {
           }
         }
         return Promise.reject(error);
-      },
+      }
     );
-    return () => axios.interceptors.response.eject(interceptor);
+    return () => httpClient.interceptors.response.eject(interceptor);
   }, [logout]);
 
   const contextValue = useMemo(
     () => ({ isLoggedIn, userRole, login, logout }),
-    [isLoggedIn, userRole, login, logout],
+    [isLoggedIn, userRole, login, logout]
   );
 
   return (

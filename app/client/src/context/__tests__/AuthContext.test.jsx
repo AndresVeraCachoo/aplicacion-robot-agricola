@@ -5,7 +5,6 @@ import axios from 'axios';
 import { AuthProvider, AuthContext } from '../AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
-// 1. Mocks de dependencias externas
 vi.mock('axios');
 vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(),
@@ -13,7 +12,6 @@ vi.mock('react-router-dom', () => ({
 
 const mockNavigate = vi.fn();
 
-// Componente para interactuar con el contexto
 const AuthTestComponent = () => {
   const { isLoggedIn, userRole, login, logout } = useContext(AuthContext);
   return (
@@ -26,13 +24,12 @@ const AuthTestComponent = () => {
   );
 };
 
-describe('AuthContext', () => {
+describe('contexto global de autenticación', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
     vi.clearAllMocks();
     useNavigate.mockReturnValue(mockNavigate);
     axios.defaults = { headers: { common: {} } };
-    // Interceptamos eventos globales
     vi.spyOn(globalThis, 'dispatchEvent');
   });
 
@@ -40,8 +37,8 @@ describe('AuthContext', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Inicialización y Verificación (Centinela)', () => {
-    it('inicia desconectado si no hay token', async () => {
+  describe('arranque e inicialización de la sesión', () => {
+    it('debería iniciar en estado desconectado si no detecta token local', async () => {
       render(
         <AuthProvider>
           <AuthTestComponent />
@@ -51,7 +48,7 @@ describe('AuthContext', () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it('verifica el token al montar si existe en localStorage', async () => {
+    it('debería cargar el token guardado y validarlo asíncronamente con la base de datos', async () => {
       globalThis.localStorage.setItem('token', 'fake.jwt.token');
       globalThis.localStorage.setItem('userRole', 'admin');
       axios.get.mockResolvedValueOnce({ data: { success: true } });
@@ -69,7 +66,7 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('auth-status').textContent).toBe('logged_in');
     });
 
-    it('hace logout automático si la verificación falla', async () => {
+    it('debería desloguear y limpiar rastros si el backend rechaza el token actual', async () => {
       globalThis.localStorage.setItem('token', 'fake.jwt.token');
       axios.get.mockRejectedValueOnce(new Error('Token expirado'));
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -89,8 +86,8 @@ describe('AuthContext', () => {
     });
   });
 
-  describe('Función de Login y Sanitización', () => {
-    it('falla y lanza error si el JWT es inválido (seguridad)', async () => {
+  describe('gestión del proceso de inicio de sesión', () => {
+    it('debería bloquear el login y alertar si la firma jwt no cumple con el estándar', async () => {
       axios.post.mockResolvedValueOnce({
         data: { token: 'token_invalido_sin_puntos', user: { name: 'Test' } }
       });
@@ -109,15 +106,14 @@ describe('AuthContext', () => {
       consoleSpy.mockRestore();
     });
 
-    it('realiza login exitoso, sanitiza roles, nombres, avatares y navega a dashboard', async () => {
-      // Mock de una respuesta exitosa con datos "sucios" para probar sanitización
+    it('debería sanitizar variables conflictivas, propagar eventos globales y permitir el acceso', async () => {
       axios.post.mockResolvedValueOnce({
         data: {
-          token: 'header.payload.signature', // Formato válido
+          token: 'header.payload.signature', 
           user: { 
             role: 'operador', 
-            name: 'Andres_Vera<script>', // Nombre con caracteres no permitidos
-            avatar: 'javascript:alert(1)' // URL maliciosa
+            name: 'Andres_Vera<script>', 
+            avatar: 'javascript:alert(1)' 
           }
         }
       });
@@ -130,18 +126,17 @@ describe('AuthContext', () => {
         screen.getByText('Login').click();
       });
 
-      // Verificamos sanitizaciones
       expect(globalThis.localStorage.getItem('token')).toBe('header.payload.signature');
       expect(globalThis.localStorage.getItem('userRole')).toBe('operador');
-      expect(globalThis.localStorage.getItem('userName')).toBe('Usuario'); // Fallback seguro
-      expect(globalThis.localStorage.getItem('userAvatar')).toBe('/avatars/robot-fondo-verde.png'); // Fallback seguro
+      expect(globalThis.localStorage.getItem('userName')).toBe('Usuario'); 
+      expect(globalThis.localStorage.getItem('userAvatar')).toBe('/avatars/robot-fondo-verde.png'); 
       
       expect(globalThis.dispatchEvent).toHaveBeenCalledWith(expect.any(Event));
       expect(mockNavigate).toHaveBeenCalledWith('/app/dashboard');
       expect(screen.getByTestId('auth-status').textContent).toBe('logged_in');
     });
 
-    it('devuelve mensaje de error si el login de axios falla', async () => {
+    it('debería extraer y devolver el mensaje de error normalizado provisto por la api', async () => {
       axios.post.mockRejectedValueOnce({
         response: { data: { error: 'Credenciales inválidas' } }
       });
@@ -167,19 +162,17 @@ describe('AuthContext', () => {
     });
   });
 
-  describe('Interceptor de Axios', () => {
-    it('configura y ejecuta el interceptor, deslogueando en 401 si no es ruta de auth', async () => {
-      // Para probar el interceptor, extraemos las funciones de callback registradas por el hook
+  describe('defensa de rutas mediante interceptor', () => {
+    it('debería destruir la sesión si cualquier petición ordinaria responde con código 401', async () => {
       let errorInterceptor;
       axios.interceptors.response.use = vi.fn((successCb, errorCb) => {
         errorInterceptor = errorCb;
-        return 123; // mock interceptor ID
+        return 123; 
       });
       axios.interceptors.response.eject = vi.fn();
 
       const { unmount } = render(<AuthProvider><AuthTestComponent /></AuthProvider>);
 
-      // Simulamos un error 401 en una ruta protegida
       const mockError = {
         response: { status: 401 },
         config: { url: '/api/data' }
@@ -189,14 +182,13 @@ describe('AuthContext', () => {
         try {
           await errorInterceptor(mockError);
         } catch (error) {
-          // Aseguramos que el error es propagado correctamente por el interceptor
           expect(error).toEqual(mockError);
         }
       });
 
-      expect(mockNavigate).toHaveBeenCalledWith('/login'); // El logout fue ejecutado
+      expect(mockNavigate).toHaveBeenCalledWith('/login'); 
 
-      // Probamos que el interceptor deja pasar los errores 401 de /auth/login sin desloguear (bucle)
+      // verificamos que ignore peticiones que son nativamente de auth
       mockNavigate.mockClear();
       const mockLoginError = {
         response: { status: 401 },
@@ -207,14 +199,12 @@ describe('AuthContext', () => {
         try {
           await errorInterceptor(mockLoginError);
         } catch (error) {
-          // Aseguramos que el error es propagado correctamente
           expect(error).toEqual(mockLoginError);
         }
       });
 
-      expect(mockNavigate).not.toHaveBeenCalled(); // No debe ejecutar logout
+      expect(mockNavigate).not.toHaveBeenCalled(); 
 
-      // Probamos cleanup
       unmount();
       expect(axios.interceptors.response.eject).toHaveBeenCalledWith(123);
     });

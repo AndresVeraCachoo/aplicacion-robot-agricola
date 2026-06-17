@@ -3,16 +3,17 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
-import LoginPage from "./features/authentication/LoginPage";
-import Dashboard from "./features/dashboard/Dashboard";
-import MainLayout from "./layout/MainLayout";
-import CameraPage from "./pages/CameraPage";
-import DataPage from "./pages/DataPage";
-import MissionsPage from "./pages/MissionsPage";
-import UserManagementPage from "./pages/UserManagementPage";
-import ProfilePage from "./pages/ProfilePage";
-import EnergyPage from "./pages/EnergyPage";
-import ControlPage from "./pages/ControlPage";
+
+const LoginPage = React.lazy(() => import("./features/authentication/LoginPage"));
+const Dashboard = React.lazy(() => import("./features/dashboard/Dashboard"));
+const MainLayout = React.lazy(() => import("./layout/MainLayout"));
+const CameraPage = React.lazy(() => import("./pages/CameraPage"));
+const DataPage = React.lazy(() => import("./pages/DataPage"));
+const MissionsPage = React.lazy(() => import("./pages/MissionsPage"));
+const UserManagementPage = React.lazy(() => import("./pages/UserManagementPage"));
+const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
+const EnergyPage = React.lazy(() => import("./pages/EnergyPage"));
+const ControlPage = React.lazy(() => import("./pages/ControlPage"));
 import "./App.css";
 
 function ProtectedRoute({ children }) {
@@ -48,28 +49,34 @@ ProtectedRoute.propTypes = {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/app"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="control" element={<ControlPage />} />
-        <Route path="camera" element={<CameraPage />} />
-        <Route path="data" element={<DataPage />} />
-        <Route path="missions" element={<MissionsPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="users" element={<UserManagementPage />} />
-        <Route path="energy" element={<EnergyPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/app" replace />} />
-    </Routes>
+    <React.Suspense fallback={
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "var(--text-main)" }}>
+        Cargando aplicación...
+      </div>
+    }>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="control" element={<ControlPage />} />
+          <Route path="camera" element={<CameraPage />} />
+          <Route path="data" element={<DataPage />} />
+          <Route path="missions" element={<MissionsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="users" element={<UserManagementPage />} />
+          <Route path="energy" element={<EnergyPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/app" replace />} />
+      </Routes>
+    </React.Suspense>
   );
 }
 

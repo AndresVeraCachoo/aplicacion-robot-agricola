@@ -16,13 +16,12 @@ const ToastTestComponent = () => {
   );
 };
 
-// Componente para probar el error de contexto fuera del Provider
 const ErrorComponent = () => {
   useToast();
   return null;
 };
 
-describe('ToastContext', () => {
+describe('sistema de colas de notificaciones', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -32,14 +31,13 @@ describe('ToastContext', () => {
     vi.useRealTimers();
   });
 
-  it('lanza un error si useToast se usa fuera del ToastProvider', () => {
-    // Evitamos que la consola se llene de errores de React durante el test
+  it('debería detener la compilación mostrando un error si se consume el hook fuera de su scope', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<ErrorComponent />)).toThrow('useToast debe ser usado dentro de un ToastProvider');
     consoleSpy.mockRestore();
   });
 
-  it('renderiza todos los tipos de toasts con sus iconos correspondientes', () => {
+  it('debería inyectar visualmente todas las variantes resolviendo su iconografía', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />
@@ -50,7 +48,7 @@ describe('ToastContext', () => {
     act(() => { screen.getByText('Add Error').click(); });
     act(() => { screen.getByText('Add Warning').click(); });
     act(() => { screen.getByText('Add Info').click(); });
-    act(() => { screen.getByText('Add Default').click(); }); // Para probar el default param 'info'
+    act(() => { screen.getByText('Add Default').click(); }); 
 
     expect(screen.getByText('Éxito')).toBeInTheDocument();
     expect(screen.getByText('✅')).toBeInTheDocument();
@@ -61,11 +59,10 @@ describe('ToastContext', () => {
     expect(screen.getByText('Aviso')).toBeInTheDocument();
     expect(screen.getByText('⚠️')).toBeInTheDocument();
     
-    // Habrá dos informativos (el explícito y el por defecto)
     expect(screen.getAllByText('ℹ️')).toHaveLength(2);
   });
 
-  it('permite cerrar un toast manualmente haciendo clic en la X', () => {
+  it('debería eliminar una notificación puntual de la cola a petición del usuario', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />
@@ -81,7 +78,7 @@ describe('ToastContext', () => {
     expect(screen.queryByText('Info')).not.toBeInTheDocument();
   });
 
-  it('elimina los toasts automáticamente después de 3500ms', () => {
+  it('debería autolimpiar la cola respetando el ciclo de visualización configurado de 3.5s', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />
@@ -91,11 +88,9 @@ describe('ToastContext', () => {
     act(() => { screen.getByText('Add Success').click(); });
     expect(screen.getByText('Éxito')).toBeInTheDocument();
 
-    // Avanzamos 3000ms, aún debe estar
     act(() => { vi.advanceTimersByTime(3000); });
     expect(screen.getByText('Éxito')).toBeInTheDocument();
 
-    // Avanzamos 500ms más (total 3500), debe desaparecer
     act(() => { vi.advanceTimersByTime(500); });
     expect(screen.queryByText('Éxito')).not.toBeInTheDocument();
   });

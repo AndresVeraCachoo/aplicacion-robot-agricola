@@ -1,0 +1,17 @@
+\capitulo{1}{Introducción}
+
+La aplicación cubre los procesos esenciales de operación: desde el control de misiones y la visualización telemétrica, hasta la supervisión en vivo mediante el flujo de cámara y el control manual del vehículo. Al integrar estas funcionalidades en una plataforma modular, se pretende no solo agilizar los flujos de trabajo, sino ofrecer una herramienta que se adapte con facilidad a las exigencias de la agricultura de precisión.
+
+Un pilar diferenciador de este proyecto es su arquitectura orientada a la baja latencia y el procesamiento dinámico de datos. Aunque el sistema fue concebido originalmente para su integración con una plataforma robótica física desarrollada en colaboración con el área de ingeniería electrónica, la solución actual emplea un robusto simulador de telemetría nativo. Este componente permite validar la lógica de control y monitorizar variables críticas —como el nivel de batería, las coordenadas GPS y el estado de carga— garantizando la seguridad operativa y la fiabilidad del \textit{software} como paso previo a una futura implementación en \textit{hardware} real.
+
+Este documento constituye la memoria principal del proyecto, donde se detallan los objetivos, conceptos teóricos, técnicas empleadas y los aspectos más relevantes del desarrollo. La documentación técnica completa se complementa con el historial de desarrollo disponible públicamente en el repositorio de \textit{GitHub} del proyecto:
+
+\begin{center}
+    \url{https://github.com/andresveracachoo/aplicacion-robot-agricola}
+\end{center}
+
+El progreso y la organización de las tareas y \textit{scripts} del proyecto han sido gestionados mediante la herramienta de gestión ágil Zube, permitiendo una trazabilidad clara del flujo de trabajo. Asimismo, para garantizar la robustez y mantenibilidad del \textit{software}, se ha integrado un análisis estático de código realizado por SonarCloud \cite{sonarqube}, cuyos reportes de calidad técnica pueden visualizarse en:
+
+\begin{center}
+    \url{https://sonarcloud.io/project/overview?id=AndresVeraCachoo_aplicacion-robot-agricola}
+\end{center}

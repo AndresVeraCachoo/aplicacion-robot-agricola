@@ -3,7 +3,6 @@ import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, useTheme } from '../ThemeContext.jsx';
 
-// Componente de prueba para consumir el hook
 const ThemeTestComponent = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   return (
@@ -14,9 +13,8 @@ const ThemeTestComponent = () => {
   );
 };
 
-describe('ThemeContext', () => {
+describe('gestión del tema visual', () => {
   beforeEach(() => {
-    // Limpiamos el localStorage y el body antes de cada test
     globalThis.localStorage.clear();
     document.body.className = '';
   });
@@ -25,7 +23,7 @@ describe('ThemeContext', () => {
     vi.restoreAllMocks();
   });
 
-  it('inicia en modo claro por defecto si no hay nada en localStorage', () => {
+  it('debería inicializar en modo claro de forma predeterminada', () => {
     render(
       <ThemeProvider>
         <ThemeTestComponent />
@@ -37,7 +35,7 @@ describe('ThemeContext', () => {
     expect(globalThis.localStorage.getItem('theme')).toBe('light');
   });
 
-  it('inicia en modo oscuro si está guardado en localStorage', () => {
+  it('debería aplicar el modo oscuro al arranque si está guardado en memoria', () => {
     globalThis.localStorage.setItem('theme', 'dark');
 
     render(
@@ -50,7 +48,7 @@ describe('ThemeContext', () => {
     expect(document.body.classList.contains('dark-mode')).toBe(true);
   });
 
-  it('cambia el tema y actualiza localStorage y document.body al ejecutar toggleTheme', () => {
+  it('debería alternar los colores mutando la clase raíz del dom al pulsar el botón', () => {
     render(
       <ThemeProvider>
         <ThemeTestComponent />
@@ -59,7 +57,6 @@ describe('ThemeContext', () => {
 
     const button = screen.getByText('Toggle');
 
-    // Cambiar a Dark
     act(() => {
       button.click();
     });
@@ -68,7 +65,6 @@ describe('ThemeContext', () => {
     expect(document.body.classList.contains('dark-mode')).toBe(true);
     expect(globalThis.localStorage.getItem('theme')).toBe('dark');
 
-    // Volver a Light
     act(() => {
       button.click();
     });

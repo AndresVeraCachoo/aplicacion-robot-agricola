@@ -48,6 +48,14 @@ jobs:
         continue-on-error: true
         run: npm run test:e2e:cov
 
+      - name: Fix LCOV paths for Sonar Modules
+        if: always()
+        run: |
+          # Convertimos las rutas absolutas de la máquina virtual de GitHub a rutas relativas exactas para cada módulo
+          sed -i "s|${{ github.workspace }}/app/client/||g" app/client/coverage/lcov.info || true
+          sed -i "s|${{ github.workspace }}/app/server/||g" app/server/coverage/unit/lcov.info || true
+          sed -i "s|${{ github.workspace }}/app/server/||g" app/server/coverage/e2e/lcov.info || true
+
       # Sube los resultados generados a la plataforma de SonarCloud
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@30dbe5c9eeccb106afb2590dcb61f7a05ffbee14

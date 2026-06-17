@@ -43,3 +43,6 @@ docker-volumes/
 coverage/
 .nyc_output/
 *.lcov
+
+# Archivos de Referencia
+referencias/

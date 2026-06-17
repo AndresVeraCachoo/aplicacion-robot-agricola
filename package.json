@@ -12,6 +12,11 @@
     "dev:server": "npm start -w app/server",
     "dev": "npm run dev:server & npm run dev:client",
     "docker:up": "docker-compose up --build",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "docs": "jsdoc -c jsdoc.json"
+  },
+  "devDependencies": {
+    "clean-jsdoc-theme": "^4.3.2",
+    "jsdoc": "^4.0.5"
   }
 }
