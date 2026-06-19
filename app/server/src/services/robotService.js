@@ -1,105 +1,131 @@
 import { AppError } from "../middlewares/errorHandler.js";
 
 /**
- * Servicio para consultar telemetría e histórico de energía del hardware.
+ * Servicio encargado de gestionar y consultar la telemetría, el estado en tiempo real y el historial energético del robot.
  */
 export class RobotService {
   /**
-   * @param {import('pg').Pool} dbPool - Pool de conexiones de base de datos.
+   * @param {Object} prismaClient - Cliente ORM Prisma.
    */
-  constructor(dbPool) {
-    this.pool = dbPool;
+  constructor(prismaClient) {
+    this.prisma = prismaClient;
   }
 
   /**
-   * Devuelve el último estado de la tabla maestro (ID = 1).
-   * @returns {Promise<Object>}
+   * Recupera el estado actual en tiempo real del robot leyendo la tabla maestra.
+   * 
+   * @returns {Promise<Object>} El estado actual del robot (ID=1).
+   * @throws {AppError} Lanza error 404 si el estado no ha sido inicializado.
    */
   async getRobotState() {
-    const result = await this.pool.query("SELECT * FROM robot_estado WHERE id = 1");
+    const state = await this.prisma.robotState.findUnique({
+      where: { id: 1 }
+    });
     
-    if (result.rows.length === 0) {
-      throw new AppError("Estado del robot no encontrado", 404);
+    if (!state) {
+      throw new AppError("Robot state not found", 404);
     }
     
-    return result.rows[0];
+    return state;
   }
 
   /**
-   * Construye una consulta SQL dinámica para extraer registros agronómicos según filtros.
-   * @param {Object} params - Diccionario con filtros (start, end, misionId).
-   * @returns {Promise<Array>}
+   * Extrae el historial de datos agronómicos y de sensores (NPK, pH, humedad) leídos por el robot.
+   * Permite filtrar los datos por un rango de fechas o por una misión en concreto.
+   * 
+   * @param {Object} filters - Objeto con los criterios de filtrado.
+   * @param {string} [filters.start] - Fecha de inicio del rango de búsqueda.
+   * @param {string} [filters.end] - Fecha de fin del rango de búsqueda.
+   * @param {string|number} [filters.misionId] - Identificador de la misión para filtrar solo las lecturas tomadas durante su ejecución.
+   * @returns {Promise<Array<Object>>} Lista de lecturas agronómicas, formateadas y aplanadas para el frontend (limitado a 2000).
    */
   async getAgronomicData({ start, end, misionId }) {
-    let query = `
-      SELECT 
-        d.id, d.lat, d.lon, d."timestamp", 
-        d.humedad, d.temperatura_suelo, d.ph, 
-        d.nitrogeno, d.fosforo, d.potasio, d.radiacion_solar,
-        m.nombre AS nombre_mision, m.id AS mision_id
-      FROM robot_datos d
-      LEFT JOIN ejecuciones_mision e ON d.ejecucion_id = e.id
-      LEFT JOIN misiones m ON e.mision_id = m.id
-    `;
-
-    const values = [];
-    const whereClauses = [];
-
+    const where = {};
+    
     if (start && end) {
-      whereClauses.push(`d."timestamp" >= $${values.length + 1} AND d."timestamp" <= $${values.length + 2}`);
-      values.push(start, end);
+      where.timestamp = { gte: new Date(start), lte: new Date(end) };
     }
 
-    // Filtramos la cadena 'null' explícitamente ya que clientes HTTP como Axios serializan valores nulos de esta forma
     if (misionId && misionId !== 'null' && misionId !== '') {
-      whereClauses.push(`m.id = $${values.length + 1}`);
-      values.push(Number.parseInt(misionId, 10));
+      where.execution = {
+        missionId: Number.parseInt(misionId, 10)
+      };
     }
 
-    if (whereClauses.length > 0) {
-      query += " WHERE " + whereClauses.join(" AND ");
-    }
+    const data = await this.prisma.robotData.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: 2000,
+      include: {
+        execution: {
+          include: {
+            mission: true
+          }
+        }
+      }
+    });
 
-    // Límite de seguridad para evitar colapsos de RAM en el servidor si hay demasiados datos
-    query += ` ORDER BY d."timestamp" DESC LIMIT 2000`;
-
-    const result = await this.pool.query(query, values);
-    return result.rows;
+    // Mapea al formato plano esperado por el frontend
+    return data.map(d => ({
+      id: d.id,
+      lat: d.lat,
+      lon: d.lon,
+      timestamp: d.timestamp,
+      humidity: d.humidity,
+      soilTemperature: d.soilTemperature,
+      ph: d.ph,
+      nitrogen: d.nitrogen,
+      phosphorus: d.phosphorus,
+      potassium: d.potassium,
+      solarRadiation: d.solarRadiation,
+      missionName: d.execution?.mission?.name || null,
+      missionId: d.execution?.mission?.id || null
+    }));
   }
 
   /**
-   * Construye una consulta SQL dinámica para extraer el histórico de batería.
-   * Utiliza subconsultas para acotar el marco temporal si se solicita el id de una misión en concreto.
-   * @param {Object} params - Diccionario con filtros.
-   * @returns {Promise<Array>}
+   * Consulta el historial de niveles de batería y estado energético del robot a lo largo del tiempo.
+   * Si se especifica una misión, el sistema busca automáticamente el rango de tiempo en el que dicha misión se ejecutó.
+   * 
+   * @param {Object} filters - Objeto con los criterios de filtrado.
+   * @param {string} [filters.start] - Fecha de inicio del rango.
+   * @param {string} [filters.end] - Fecha de fin del rango.
+   * @param {string|number} [filters.misionId] - Identificador de la misión para extraer la energía consumida durante la misma.
+   * @returns {Promise<Array<Object>>} Lista con los registros históricos de batería y radiación solar (limitado a 2000).
    */
   async getEnergyHistory({ start, end, misionId }) {
-    let query = `SELECT "timestamp", bateria_porcentaje, radiacion_solar, estado FROM historial_energia`;
-    const values = [];
-    const whereClauses = [];
+    const where = {};
 
     if (start && end) {
-      whereClauses.push(`"timestamp" >= $${values.length + 1} AND "timestamp" <= $${values.length + 2}`);
-      values.push(start, end);
+      where.timestamp = { gte: new Date(start), lte: new Date(end) };
     }
 
     if (misionId && misionId !== 'null' && misionId !== '') {
-      whereClauses.push(`
-        "timestamp" >= (SELECT fecha_inicio FROM ejecuciones_mision WHERE mision_id = $${values.length + 1} ORDER BY fecha_inicio DESC LIMIT 1)
-        AND 
-        "timestamp" <= (SELECT COALESCE(fecha_fin, NOW()) FROM ejecuciones_mision WHERE mision_id = $${values.length + 1} ORDER BY fecha_inicio DESC LIMIT 1)
-      `);
-      values.push(Number.parseInt(misionId, 10));
+      const lastExecution = await this.prisma.missionExecution.findFirst({
+        where: { missionId: Number.parseInt(misionId, 10) },
+        orderBy: { startTime: 'desc' }
+      });
+
+      if (!lastExecution) {
+        return [];
+      }
+
+      where.timestamp = {
+        gte: lastExecution.startTime,
+        lte: lastExecution.endTime || new Date()
+      };
     }
 
-    if (whereClauses.length > 0) {
-      query += " WHERE " + whereClauses.join(" AND ");
-    }
-
-    // Límite de seguridad para historiales muy largos
-    query += ` ORDER BY "timestamp" ASC LIMIT 2000`;
-    
-    const result = await this.pool.query(query, values);
-    return result.rows;
+    return await this.prisma.energyHistory.findMany({
+      where,
+      orderBy: { timestamp: 'asc' },
+      take: 2000,
+      select: {
+        timestamp: true,
+        batteryPercentage: true,
+        solarRadiation: true,
+        status: true
+      }
+    });
   }
 }

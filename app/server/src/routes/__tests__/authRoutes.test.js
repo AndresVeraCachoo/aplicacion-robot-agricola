@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("Rutas de Autenticación (AuthRoutes)", () => {
+describe("Rutas de Autenticación", () => {
   let app, mockAuthController, mockAuthenticateToken, mockValidate;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe("Rutas de Autenticación (AuthRoutes)", () => {
       env: { JWT_SECRET: 'test-secret' }
     }));
     jest.unstable_mockModule('../../config/db.js', () => ({
-      pool: {}
+      prisma: {}
     }));
 
     mockAuthController = {
@@ -38,13 +38,13 @@ describe("Rutas de Autenticación (AuthRoutes)", () => {
     app.use('/auth', authRoutes);
   });
 
-  it("Debería validar el cuerpo de la petición y alcanzar el controlador en el endpoint de login", async () => {
+  it("Debería validar petición y alcanzar controlador en endpoint de login", async () => {
     await request(app).post('/auth/login').send({});
     expect(mockValidate).toHaveBeenCalled();
     expect(mockAuthController.login).toHaveBeenCalled();
   });
 
-  it("Debería autenticar el token de acceso y alcanzar el controlador de verificación", async () => {
+  it("Debería autenticar token y alcanzar controlador de verificación", async () => {
     await request(app).get('/auth/verify');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockAuthController.verify).toHaveBeenCalled();

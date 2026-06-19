@@ -49,7 +49,7 @@ vi.mock('recharts', () => {
   return { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip };
 });
 
-describe('BatteryModal Component', () => {
+describe('Componente BatteryModal', () => {
   const mockNavigate = vi.fn();
   const mockOnClose = vi.fn();
 
@@ -58,7 +58,7 @@ describe('BatteryModal Component', () => {
     useNavigate.mockReturnValue(mockNavigate);
   });
 
-  it('renderiza el estado de DESCARGA (conectado pero no cargando)', () => {
+  it('renderiza estado DESCARGANDO (conectado pero no cargando)', () => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage: 80, status: 'DISCHARGING', voltage: 12.5, temperature: 25, health: 95 }, isConnected: true };
       return selector(state);
@@ -74,7 +74,7 @@ describe('BatteryModal Component', () => {
     expect(screen.getByText('95%')).toBeInTheDocument();
   });
 
-  it('renderiza el estado de CARGA y usa el color verde', () => {
+  it('renderiza estado CARGANDO y usa el color verde', () => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage: 90, status: 'CHARGING' }, isConnected: true };
       return selector(state);
@@ -97,7 +97,7 @@ describe('BatteryModal Component', () => {
     expect(percentageSpan).toHaveClass('text-alert');
   });
 
-  it('renderiza el estado OFFLINE si no está conectado ni cargando', () => {
+  it('renderiza estado DESCONECTADO si no está conectado o cargando', () => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage: 50, status: 'UNKNOWN' }, isConnected: false };
       return selector(state);
@@ -107,7 +107,7 @@ describe('BatteryModal Component', () => {
     expect(screen.getByText('header.offline')).toBeInTheDocument();
   });
 
-  it('navega a los detalles de energía y cierra el modal al hacer clic en el enlace', () => {
+  it('navega a detalles de energía y cierra modal al hacer clic en enlace', () => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage: 100 }, isConnected: true };
       return selector(state);
@@ -122,7 +122,7 @@ describe('BatteryModal Component', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/app/energy');
   });
 
-  it('evalúa correctamente el renderizado de los fallbacks cuando no hay datos', () => {
+  it('evalúa correctamente renderizado de respaldo cuando no hay datos', () => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage: 0 }, isConnected: false };
       return selector(state);

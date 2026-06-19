@@ -86,11 +86,11 @@ const calculateZoneStats = (safeZone, agronomicData) => {
 
   pointsInZone.forEach(p => {
     if (p.ph !== null && p.ph !== undefined) { totals.ph += Number(p.ph); counts.ph++; }
-    if (p.humedad !== null && p.humedad !== undefined) { totals.hum += Number(p.humedad); counts.hum++; }
-    if (p.temperatura_suelo !== null && p.temperatura_suelo !== undefined) { totals.temp += Number(p.temperatura_suelo); counts.temp++; }
-    if (p.nitrogeno !== null && p.nitrogeno !== undefined) { totals.n += Number(p.nitrogeno); counts.n++; }
-    if (p.fosforo !== null && p.fosforo !== undefined) { totals.p += Number(p.fosforo); counts.p++; }
-    if (p.potasio !== null && p.potasio !== undefined) { totals.k += Number(p.potasio); counts.k++; }
+    if (p.humidity !== null && p.humidity !== undefined) { totals.hum += Number(p.humidity); counts.hum++; }
+    if (p.temperature !== null && p.temperature !== undefined) { totals.temp += Number(p.temperature); counts.temp++; }
+    if (p.nitrogen !== null && p.nitrogen !== undefined) { totals.n += Number(p.nitrogen); counts.n++; }
+    if (p.phosphorus !== null && p.phosphorus !== undefined) { totals.p += Number(p.phosphorus); counts.p++; }
+    if (p.potassium !== null && p.potassium !== undefined) { totals.k += Number(p.potassium); counts.k++; }
   });
 
   return {
@@ -280,9 +280,9 @@ function MapControlsOverlay({
         title={t("mapAdv.selectHeatmap")}
       >
         <option value="none">{t("mapAdv.layerOff")}</option>
-        <option value="humedad">{t("mapAdv.layerHum")}</option>
+        <option value="humidity">{t("mapAdv.layerHum")}</option>
         <option value="ph">{t("mapAdv.layerPh")}</option>
-        <option value="temperatura_suelo">{t("mapAdv.layerTemp")}</option>
+        <option value="temperature">{t("mapAdv.layerTemp")}</option>
       </select>
 
       {safeZone ? (
@@ -417,15 +417,15 @@ function SampleModal({ isOpen, onClose, sample }) {
         <div className="popup-grid">
           <div className="popup-row">
             <span>🌡️ {t("mapAdv.soil")}:</span>{" "}
-            <strong>{sample.temperatura_suelo === null ? t("mapAdv.notCollected", "No recogido") : `${sample.temperatura_suelo}°C`}</strong>
+            <strong>{sample.temperature === null ? t("mapAdv.notCollected", "No recogido") : `${sample.temperature}°C`}</strong>
           </div>
           <div className="popup-row">
             <span>💧 {t("mapAdv.humidity")}:</span>{" "}
-            <strong>{sample.humedad === null ? t("mapAdv.notCollected", "No recogido") : `${sample.humedad}%`}</strong>
+            <strong>{sample.humidity === null ? t("mapAdv.notCollected", "No recogido") : `${sample.humidity}%`}</strong>
           </div>
           <div className="popup-row">
             <span>☀️ {t("mapAdv.rad")}:</span>{" "}
-            <strong>{sample.radiacion_solar === null ? t("mapAdv.notCollected", "No recogido") : `${sample.radiacion_solar} W`}</strong>
+            <strong>{sample.radiation === null ? t("mapAdv.notCollected", "No recogido") : `${sample.radiation} W`}</strong>
           </div>
 
           <hr className="popup-divider" />
@@ -434,19 +434,19 @@ function SampleModal({ isOpen, onClose, sample }) {
             <div className="nutrient-item">
               <span className="nutrient-label n">N</span>
               <span className="nutrient-val">
-                {sample.nitrogeno === null ? "-" : sample.nitrogeno}
+                {sample.nitrogen === null ? "-" : sample.nitrogen}
               </span>
             </div>
             <div className="nutrient-item">
               <span className="nutrient-label p">P</span>
               <span className="nutrient-val">
-                  {sample.fosforo === null ? "-" : sample.fosforo}
+                  {sample.phosphorus === null ? "-" : sample.phosphorus}
               </span>
             </div>
             <div className="nutrient-item">
               <span className="nutrient-label k">K</span>
               <span className="nutrient-val">
-                  {sample.potasio === null ? "-" : sample.potasio}
+                  {sample.potassium === null ? "-" : sample.potassium}
               </span>
             </div>
           </div>
@@ -464,6 +464,11 @@ SampleModal.propTypes = {
 
 // --- Componente Principal ---
 
+/**
+ * Componente principal del visor del mapa.
+ * Permite visualizar al robot, misiones, capas de datos, y delimitar zonas.
+ * @returns {JSX.Element}
+ */
 function MapView() {
   const { t } = useTranslation();
   const position = useRobotStore((state) => state.position);

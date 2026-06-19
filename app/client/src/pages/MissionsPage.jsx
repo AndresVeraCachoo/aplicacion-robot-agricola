@@ -94,9 +94,9 @@ MapClickHandler.propTypes = {
 };
 
 const GeomanMissionControls = ({
-  areaTrabajo,
-  setAreaTrabajo,
-  editandoId,
+  workArea,
+  setWorkArea,
+  editingId,
   addToast,
 }) => {
   const { t, i18n } = useTranslation();
@@ -147,130 +147,134 @@ const GeomanMissionControls = ({
           map.removeLayer(l);
         }
       });
-      setAreaTrabajo(layer.toGeoJSON().geometry);
-
+      setWorkArea(layer.toGeoJSON().geometry);
       layer.on(
         "pm:edit pm:dragend pm:rotateend pm:markerdragend pm:vertexadded pm:vertexremoved",
         (evt) => {
-          setAreaTrabajo(evt.target.toGeoJSON().geometry);
+          setWorkArea(evt.target.toGeoJSON().geometry);
         },
       );
       layer.on("pm:cut", (evt) => {
-        setAreaTrabajo(evt.layer.toGeoJSON().geometry);
+        setWorkArea(evt.layer.toGeoJSON().geometry);
       });
     });
 
-    map.on("pm:remove", () => setAreaTrabajo(null));
+    map.on("pm:remove", () => setWorkArea(null));
 
     return () => {
       map.pm.removeControls();
       map.off("pm:create");
       map.off("pm:remove");
     };
-  }, [map, setAreaTrabajo, i18n.language, t, addToast]);
+  }, [map, setWorkArea, i18n.language, t, addToast]);
 
   useEffect(() => {
-    if (editandoId && areaTrabajo?.type === "Polygon") {
-      if (polygonLoadedRef.current === editandoId) return;
+    if (editingId && workArea?.type === "Polygon") {
+      if (polygonLoadedRef.current === editingId) return;
 
       map.eachLayer((l) => {
         if (l instanceof L.Polygon && !l._pmTempLayer) map.removeLayer(l);
       });
 
-      const latlngs = areaTrabajo.coordinates[0].map((c) => [c[1], c[0]]);
+      const latlngs = workArea.coordinates[0].map((c) => [c[1], c[0]]);
       const polygon = L.polygon(latlngs, { color: "#3388ff" }).addTo(map);
 
       map.fitBounds(polygon.getBounds(), { padding: [20, 20] });
 
       polygon.on(
         "pm:edit pm:dragend pm:rotateend pm:markerdragend pm:vertexadded pm:vertexremoved",
-        (e) => setAreaTrabajo(e.target.toGeoJSON().geometry),
+        (e) => setWorkArea(e.target.toGeoJSON().geometry),
       );
-      polygon.on("pm:cut", (e) => setAreaTrabajo(e.layer.toGeoJSON().geometry));
+      polygon.on("pm:cut", (e) => setWorkArea(e.layer.toGeoJSON().geometry));
 
-      polygonLoadedRef.current = editandoId;
-    } else if (!editandoId) {
+      polygonLoadedRef.current = editingId;
+    } else if (!editingId) {
       polygonLoadedRef.current = null;
     }
-  }, [areaTrabajo, editandoId, map, setAreaTrabajo]);
+  }, [workArea, editingId, map, setWorkArea]);
 
   return null;
 };
 
 GeomanMissionControls.propTypes = {
-  areaTrabajo: PropTypes.object,
-  setAreaTrabajo: PropTypes.func.isRequired,
-  editandoId: PropTypes.number,
+  workArea: PropTypes.object,
+  setWorkArea: PropTypes.func.isRequired,
+  editingId: PropTypes.number,
   addToast: PropTypes.func.isRequired,
 };
 
+/**
+ * Componente de la página de misiones.
+ * Permite crear, visualizar, editar y eliminar misiones en el mapa con Geoman.
+ * @returns {JSX.Element}
+ */
 function MissionsPage() {
   const { t } = useTranslation();
-  const { misiones, fetchMisiones, createMision, updateMision, deleteMision } =
+  const { missions, fetchMissions, createMission, updateMission, deleteMission } =
     useMissionStore();
   const { position, system } = useRobotStore();
   const { addToast } = useToast();
   const mapRef = useRef();
 
-  const [editandoId, setEditandoId] = useState(null);
-  const [nombre, setNombre] = useState("");
-  const [sensores, setSensores] = useState({
-    humedad: true,
-    temperatura: false,
+  const [editingId, setEditingId] = useState(null);
+  const [name, setName] = useState("");
+  const [sensors, setSensors] = useState({
+    humidity: true,
+    temperature: false,
     ph: false,
     npk: false,
-    radiacion: false,
+    radiation: false,
   });
-  const [anchoTrabajo, setAnchoTrabajo] = useState(2);
-  const [anguloPasada, setAnguloPasada] = useState(0);
-  const [bateriaMinima, setBateriaMinima] = useState(20);
-  const [areaTrabajo, setAreaTrabajo] = useState(null);
+  const [workingWidth, setWorkingWidth] = useState(2);
+  const [passAngle, setPassAngle] = useState(0);
+  const [minBattery, setMinBattery] = useState(20);
+  const [workArea, setWorkArea] = useState(null);
   const [clickedPos, setClickedPos] = useState(null);
 
   const [missionToDelete, setMissionToDelete] = useState(null);
 
   useEffect(() => {
-    fetchMisiones();
-  }, [fetchMisiones]);
+    fetchMissions();
+  }, [fetchMissions]);
 
   const handleCheckboxChange = (sensor) => {
-    setSensores({ ...sensores, [sensor]: !sensores[sensor] });
+    setSensors({ ...sensors, [sensor]: !sensors[sensor] });
   };
 
   const handleEditMission = (m) => {
-    setEditandoId(m.id);
-    setNombre(m.nombre);
-    setAnchoTrabajo(m.ancho_trabajo);
-    setAnguloPasada(m.angulo_pasada);
-    setBateriaMinima(m.bateria_minima);
-    setAreaTrabajo(m.area_trabajo);
+    setEditingId(m.id);
+    setName(m.name);
+    setWorkingWidth(m.workingWidth);
+    setPassAngle(m.passAngle);
+    setMinBattery(m.minBattery);
+    setWorkArea(m.workArea);
 
-    const activeSensors = m.tipo_tarea.toLowerCase();
-    setSensores({
-      humedad: activeSensors.includes("humedad"),
-      temperatura: activeSensors.includes("temp"),
+    const activeSensors = m.taskType.toLowerCase();
+    setSensors({
+      humidity: activeSensors.includes("humedad"),
+      temperature: activeSensors.includes("temp"),
       ph: activeSensors.includes("ph"),
       npk: activeSensors.includes("n-p-k") || activeSensors.includes("npk"),
-      radiacion: activeSensors.includes("rad"),
+      radiation: activeSensors.includes("rad"),
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
-    setEditandoId(null);
-    setNombre("");
-    setAnchoTrabajo(2);
-    setAnguloPasada(0);
-    setBateriaMinima(20);
-    setSensores({
-      humedad: true,
-      temperatura: false,
+    setEditingId(null);
+    setName("");
+    setWorkingWidth(2);
+    setPassAngle(0);
+    setMinBattery(20);
+    setSensors({
+      humidity: true,
+      temperature: false,
       ph: false,
       npk: false,
-      radiacion: false,
+      radiation: false,
     });
-    setAreaTrabajo(null);
+    setWorkArea(null);
     if (mapRef.current) {
       mapRef.current.eachLayer((l) => {
         if (l instanceof L.Polygon && !l._pmTempLayer)
@@ -281,7 +285,7 @@ function MissionsPage() {
 
   const handleSaveMission = async (e) => {
     e.preventDefault();
-    if (!areaTrabajo) {
+    if (!workArea) {
       addToast(
         t(
           "missions.alerts.drawAreaFirst",
@@ -293,19 +297,19 @@ function MissionsPage() {
     }
 
     const mapSensorsToLocale = {
-      humedad: t("missions.form.humidity"),
-      temperatura: t("missions.form.soilTemp"),
+      humidity: t("missions.form.humidity"),
+      temperature: t("missions.form.soilTemp"),
       ph: t("missions.form.ph"),
       npk: t("missions.form.npk"),
-      radiacion: t("missions.form.solarRad"),
+      radiation: t("missions.form.solarRad"),
     };
 
-    const sensoresActivos = Object.entries(sensores)
-      .filter(([, activo]) => activo)
-      .map(([key]) => mapSensorsToLocale[key])
-      .join(", ");
+    const activeSensorsString = Object.entries(sensors)
+      .filter(([, isActive]) => isActive)
+      .map(([sensor]) => mapSensorsToLocale[sensor])
+      .join(" - ");
 
-    if (!sensoresActivos) {
+    if (!activeSensorsString) {
       addToast(
         t("missions.alerts.selectData", "Selecciona al menos un tipo de dato."),
         "error",
@@ -314,18 +318,18 @@ function MissionsPage() {
     }
 
     const missionData = {
-      nombre,
-      tipo_tarea: sensoresActivos,
-      ancho_trabajo: anchoTrabajo,
-      angulo_pasada: anguloPasada,
-      bateria_minima: bateriaMinima,
-      area_trabajo: areaTrabajo,
+      name,
+      taskType: activeSensorsString,
+      workingWidth,
+      passAngle,
+      minBattery,
+      workArea,
     };
 
     try {
-      if (editandoId) {
-        const exito = await updateMision(editandoId, missionData);
-        if (exito) {
+      if (editingId) {
+        const success = await updateMission(editingId, missionData);
+        if (success) {
           addToast(
             t(
               "missions.alerts.updateSuccess",
@@ -337,7 +341,7 @@ function MissionsPage() {
           addToast("Error al actualizar la misión", "error");
         }
       } else {
-        await createMision(missionData);
+        await createMission(missionData);
         addToast(
           t("missions.alerts.saveSuccess", "¡Misión creada con éxito!"),
           "success",
@@ -345,23 +349,22 @@ function MissionsPage() {
       }
 
       handleCancelEdit();
-      fetchMisiones();
+      fetchMissions();
     } catch (error) {
       console.error("Error al guardar la misión:", error);
       addToast("Ocurrió un error al guardar la misión", "error");
     }
   };
 
-  const executeDeleteMission = async () => {
-    if (!missionToDelete) return;
+  const handleDeleteMission = async (id) => {
     try {
-      await deleteMision(missionToDelete);
-      setMissionToDelete(null);
+      await deleteMission(id);
       addToast(
         t("missions.card.deleteSuccess", "Misión eliminada correctamente"),
-        "error",
+        "info",
       );
-      fetchMisiones();
+      setMissionToDelete(null);
+      fetchMissions();
     } catch (error) {
       console.error("Error al eliminar la misión:", error);
       addToast("Error al eliminar la misión", "error");
@@ -377,11 +380,12 @@ function MissionsPage() {
     <div className="missions-page">
       <div className="missions-layout">
         <aside className="mission-form-panel">
-          <h3>
-            {editandoId
-              ? `✏️ ${t("missions.editTitle", "Editar Misión")}`
-              : t("missions.createNew")}
-          </h3>
+          <div className="mission-form-card">
+            <h3>
+              {editingId
+                ? t("missions.editTitle", "Editar Misión")
+                : t("missions.createNew")}
+            </h3>
 
           <form onSubmit={handleSaveMission}>
             <div className="form-group">
@@ -389,8 +393,8 @@ function MissionsPage() {
               <input
                 id="mission-name"
                 type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
@@ -409,44 +413,44 @@ function MissionsPage() {
                 {t("missions.form.dataToCollect")}
               </span>
               <div className="sensors-checkbox-group">
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={sensores.humedad}
-                    onChange={() => handleCheckboxChange("humedad")}
-                  />{" "}
+                    checked={sensors.humidity}
+                    onChange={() => handleCheckboxChange("humidity")}
+                  />
                   {t("missions.form.humidity")}
                 </label>
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={sensores.temperatura}
-                    onChange={() => handleCheckboxChange("temperatura")}
-                  />{" "}
+                    checked={sensors.temperature}
+                    onChange={() => handleCheckboxChange("temperature")}
+                  />
                   {t("missions.form.soilTemp")}
                 </label>
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={sensores.ph}
+                    checked={sensors.ph}
                     onChange={() => handleCheckboxChange("ph")}
-                  />{" "}
+                  />
                   {t("missions.form.ph")}
                 </label>
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={sensores.npk}
+                    checked={sensors.npk}
                     onChange={() => handleCheckboxChange("npk")}
-                  />{" "}
+                  />
                   {t("missions.form.npk")}
                 </label>
-                <label>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={sensores.radiacion}
-                    onChange={() => handleCheckboxChange("radiacion")}
-                  />{" "}
+                    checked={sensors.radiation}
+                    onChange={() => handleCheckboxChange("radiation")}
+                  />
                   {t("missions.form.solarRad")}
                 </label>
               </div>
@@ -461,9 +465,9 @@ function MissionsPage() {
                   id="mission-width"
                   type="number"
                   step="0.1"
-                  value={anchoTrabajo}
+                  value={workingWidth}
                   onChange={(e) =>
-                    setAnchoTrabajo(Number.parseFloat(e.target.value))
+                    setWorkingWidth(Number.parseFloat(e.target.value))
                   }
                 />
               </div>
@@ -474,9 +478,9 @@ function MissionsPage() {
                 <input
                   id="mission-angle"
                   type="number"
-                  value={anguloPasada}
+                  value={passAngle}
                   onChange={(e) =>
-                    setAnguloPasada(Number.parseInt(e.target.value))
+                    setPassAngle(Number.parseInt(e.target.value))
                   }
                 />
               </div>
@@ -487,32 +491,33 @@ function MissionsPage() {
                 <input
                   id="mission-battery"
                   type="number"
-                  value={bateriaMinima}
+                  value={minBattery}
                   onChange={(e) =>
-                    setBateriaMinima(Number.parseInt(e.target.value))
+                    setMinBattery(Number.parseInt(e.target.value))
                   }
                 />
               </div>
             </div>
 
             <div className="form-actions-row">
-              <button type="submit" className="btn-save-mission">
-                {editandoId
-                  ? t("missions.form.updateBtn", "Actualizar")
-                  : t("missions.form.saveBtn", "Guardar Misión")}
+              <button type="submit" className="btn-save">
+                {editingId
+                  ? t("missions.form.updateBtn", "Actualizar Misión")
+                  : t("missions.form.saveBtn")}
               </button>
 
-              {editandoId && (
+              {editingId && (
                 <button
                   type="button"
+                  className="btn-cancel"
                   onClick={handleCancelEdit}
-                  className="btn-cancel-mission"
                 >
                   {t("users.cancel", "Cancelar")}
                 </button>
               )}
             </div>
           </form>
+          </div>
         </aside>
 
         <main className="mission-map-panel">
@@ -534,9 +539,9 @@ function MissionsPage() {
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
             <GeomanMissionControls
-              areaTrabajo={areaTrabajo}
-              setAreaTrabajo={setAreaTrabajo}
-              editandoId={editandoId}
+              workArea={workArea}
+              setWorkArea={setWorkArea}
+              editingId={editingId}
               addToast={addToast}
             />
             <CenterButton />
@@ -570,18 +575,18 @@ function MissionsPage() {
       <section className="mission-list-section">
         <h3>{t("missions.savedMissions")}</h3>
         <div className="mission-grid">
-          {misiones.map((m) => (
+          {missions.map((m) => (
             <div key={m.id} className="mission-card">
-              <h4>{m.nombre}</h4>
+              <h4>{m.name}</h4>
               <p>
                 <strong style={{ color: "var(--accent-green)" }}>
                   {t("missions.card.data")}:
                 </strong>{" "}
-                {m.tipo_tarea}
+                {m.taskType}
               </p>
               <p>
                 <strong>{t("missions.card.batteryReq")}:</strong>{" "}
-                {m.bateria_minima}%
+                {m.minBattery}%
               </p>
               <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
                 <button
@@ -600,7 +605,7 @@ function MissionsPage() {
               </div>
             </div>
           ))}
-          {misiones.length === 0 && <p>{t("missions.noMissions")}</p>}
+          {missions.length === 0 && <p>{t("missions.noMissions")}</p>}
         </div>
       </section>
 
@@ -634,7 +639,7 @@ function MissionsPage() {
               {t("users.cancel", "Cancelar")}
             </button>
             <button
-              onClick={executeDeleteMission}
+              onClick={() => handleDeleteMission(missionToDelete)}
               style={{
                 padding: "10px 20px",
                 borderRadius: "6px",

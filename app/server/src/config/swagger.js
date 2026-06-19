@@ -1,8 +1,13 @@
+/**
+
+ * @description Configuración de la especificación OpenAPI/Swagger para generar la documentación de la API REST.
+ */
+
 import swaggerJSDoc from "swagger-jsdoc";
 
 /**
- * Configuración central del generador de documentación Swagger.
- * Define los metadatos de la API, los esquemas de seguridad globales y las rutas donde debe escanear el JSDoc.
+ * Metadatos de la API y esquemas de seguridad requeridos por Swagger.
+ * @type {Object}
  */
 const options = {
   definition: {
@@ -29,8 +34,11 @@ const options = {
       }
     }
   },
-  // Patrón de búsqueda para parsear todos los comentarios de las rutas
   apis: ["./src/routes/*.js"], 
 };
 
+/**
+ * Especificación compilada de Swagger lista para ser servida por la interfaz de usuario.
+ * @type {Object}
+ */
 export const swaggerSpec = swaggerJSDoc(options);

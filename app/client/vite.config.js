@@ -60,7 +60,9 @@ export default defineConfig({
         'vite.config.js',
         'src/main.jsx',
         'src/i18n/**',
-        '**/*.test.{js,jsx}'
+        '**/*.test.{js,jsx}',
+        'dev-dist/**',
+        'translate.js'
       ]
     }
   }

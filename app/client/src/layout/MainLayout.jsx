@@ -8,6 +8,12 @@ import "../features/dashboard/Dashboard.css";
 import { useRobotStore } from "../store/robotStore.js";
 import { useToast } from "../context/ToastContext.jsx";
 
+/**
+ * Componente principal de la estructura de la aplicación.
+ * Contiene el Sidebar, Header y el contenedor central para el contenido dinámico.
+ * Gestiona alertas globales de conexión, batería y emergencias.
+ * @returns {JSX.Element}
+ */
 function MainLayout() {
   const { t } = useTranslation();
 

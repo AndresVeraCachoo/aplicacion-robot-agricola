@@ -1,10 +1,10 @@
 // src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import httpClient from "../config/httpClient";
 import { useTranslation } from "react-i18next";
 import "./ProfilePage.css";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/users`;
+const API_URL = "/users";
 const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
 const PRESET_AVATARS = [
   "/avatars/robot-fondo-verde.png",
@@ -14,6 +14,11 @@ const PRESET_AVATARS = [
   "/avatars/robot-fondo-amarillo.png",
 ];
 
+/**
+ * Componente de la página del perfil de usuario.
+ * Permite al usuario ver su información, cambiar su avatar y actualizar su contraseña.
+ * @returns {JSX.Element}
+ */
 function ProfilePage() {
   const { t } = useTranslation();
   const [profile, setProfile] = useState({ name: "", role: "" });
@@ -30,7 +35,7 @@ function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_URL}/profile`, {
+        const response = await httpClient.get(`${API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(response.data);
@@ -40,7 +45,7 @@ function ProfilePage() {
           globalThis.dispatchEvent(new Event("avatarUpdated"));
         }
       } catch (error) {
-        console.error(error); // ✅ Manejo de excepción según Sonar
+        console.error(error);
         setMessage({ text: t("profile.errorLoadProfile"), type: "error" });
       }
     };
@@ -61,14 +66,14 @@ function ProfilePage() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${API_URL}/profile/password`, {
+      await httpClient.put(`${API_URL}/profile/password`, {
         currentPassword: passwords.currentPassword,
         newPassword: passwords.newPassword,
       }, { headers: { Authorization: `Bearer ${token}` } });
       setMessage({ text: t("profile.successUpdate"), type: "success" });
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
-      console.error(error); // ✅ Manejo de excepción
+      console.error(error);
       setMessage({ text: t("profile.errorServer"), type: "error" });
     } finally {
       setIsLoading(false);
@@ -80,7 +85,7 @@ function ProfilePage() {
     setIsSavingAvatar(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.put(`${API_URL}/profile/avatar`, 
+      const response = await httpClient.put(`${API_URL}/profile/avatar`, 
         { avatarUrl: selectedAvatar }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );

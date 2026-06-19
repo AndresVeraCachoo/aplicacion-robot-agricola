@@ -3,14 +3,8 @@ import httpClient from '../config/httpClient';
 import { io } from "socket.io-client"; 
 
 /**
- * @namespace Stores
- * @description Gestores de estado global basados en Zustand.
- */
-
-/**
- * @namespace Stores.useRobotStore
- * @memberof Stores
- * @description Módulo encargado de la telemetría en tiempo real del robot.
+ * Gestor de estado global para el robot.
+ * Módulo encargado de la telemetría en tiempo real del robot mediante Zustand.
  */
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
@@ -37,21 +31,17 @@ export const useRobotStore = create((set, get) => ({
   isSidebarOpen: window.innerWidth > 768,
   
   /**
-   * @function toggleSidebar
-   * @memberof Stores.useRobotStore
-   * @description Invierte el estado de visibilidad de la barra lateral.
+   * Invierte el estado de visibilidad de la barra lateral.
    */
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   
   /**
-   * @function setSidebarOpen
-   * @memberof Stores.useRobotStore
-   * @description Modifica el estado de apertura de la barra lateral.
+   * Modifica el estado de apertura de la barra lateral.
    * @param {boolean} isOpen - Flag indicador.
    */
   setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
-  /** @type {import('../types').RobotBateria} */
+  /** @type {Object} */
   battery: {
     percentage: 0,
     status: "IDLE",
@@ -63,7 +53,7 @@ export const useRobotStore = create((set, get) => ({
     netPower: 0,
   },
   
-  /** @type {import('../types').RobotSistema} */
+  /** @type {Object} */
   system: {
     status: "IDLE",
     speed: 0,
@@ -83,17 +73,13 @@ export const useRobotStore = create((set, get) => ({
   deletedSessionKeys: [],
 
   /**
-   * @function setTotalMissionPoints
-   * @memberof Stores.useRobotStore
-   * @description Establece la cuantía de puntos asignados a la trayectoria.
+   * Establece la cuantía de puntos asignados a la trayectoria.
    * @param {number} points - Total waypoints.
    */
   setTotalMissionPoints: (points) => set({ totalMissionPoints: points }),
 
   /**
-   * @function connectSocket
-   * @memberof Stores.useRobotStore
-   * @description Establece el flujo websocket bidireccional con el chasis.
+   * Establece el flujo websocket bidireccional con el chasis.
    */
   connectSocket: () => {
     const { socket } = get();
@@ -173,9 +159,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function disconnectSocket
-   * @memberof Stores.useRobotStore
-   * @description Destruye la instancia websocket de red activa.
+   * Destruye la instancia websocket de red activa.
    */
   disconnectSocket: () => {
     const { socket } = get();
@@ -186,9 +170,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function fetchInitialData
-   * @memberof Stores.useRobotStore
-   * @description Recupera la información estática inicial mediante peticiones api rest concurrentes.
+   * Recupera la información estática inicial mediante peticiones api rest concurrentes.
    * @returns {Promise<void>}
    */
   fetchInitialData: async () => {
@@ -226,14 +208,12 @@ export const useRobotStore = create((set, get) => ({
         };
       });
     } catch (error) { 
-      console.error("Error carga inicial:", error); 
+      console.error("Error en carga inicial:", error); 
     }
   },
 
   /**
-   * @function setSpeedLimit
-   * @memberof Stores.useRobotStore
-   * @description Setea un límite a la velocidad del motor.
+   * Setea un límite a la velocidad del motor.
    * @param {number} limit - Valor máximo.
    */
   setSpeedLimit: (limit) => {
@@ -244,9 +224,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function queueNavigationPoint
-   * @memberof Stores.useRobotStore
-   * @description Encola un waypoint en la ruta geográfica activa.
+   * Encola un waypoint en la ruta geográfica activa.
    * @param {number} lat - Latitud.
    * @param {number} lon - Longitud.
    */
@@ -261,9 +239,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function navigateToPoint
-   * @memberof Stores.useRobotStore
-   * @description Fuerza la navegación unívoca y prioritaria a un objetivo.
+   * Fuerza la navegación unívoca y prioritaria a un objetivo.
    * @param {number} lat - Latitud.
    * @param {number} lon - Longitud.
    */
@@ -274,9 +250,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function setSafeZone
-   * @memberof Stores.useRobotStore
-   * @description Acota el área permitida de operaciones (geofencing).
+   * Acota el área permitida de operaciones (geofencing).
    * @param {Array<Array<number>>} bounds - Matriz de vértices gps.
    */
   setSafeZone: (bounds) => {
@@ -286,9 +260,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function clearSafeZone
-   * @memberof Stores.useRobotStore
-   * @description Remueve la valla virtual del mapa.
+   * Remueve la valla virtual del mapa.
    */
   clearSafeZone: () => {
     const { socket } = get();
@@ -297,9 +269,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function setControlMode
-   * @memberof Stores.useRobotStore
-   * @description Intercambia el modo operativo de conducción de la cpu.
+   * Intercambia el modo operativo de conducción de la cpu.
    * @param {string} mode - MANUAL o AUTO.
    */
   setControlMode: (mode) => {
@@ -309,9 +279,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function sendManualMove
-   * @memberof Stores.useRobotStore
-   * @description Envía vectores físicos de movimiento direccional.
+   * Envía vectores físicos de movimiento direccional.
    * @param {Object} velocity - Estructura X/Y de velocidad.
    */
   sendManualMove: (velocity) => {
@@ -321,9 +289,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function togglePauseMission
-   * @memberof Stores.useRobotStore
-   * @description Conmuta el estado de pausa de las tareas de campo.
+   * Conmuta el estado de pausa de las tareas de campo.
    */
   togglePauseMission: () => {
     const { socket, system } = get();
@@ -336,9 +302,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function cancelMission
-   * @memberof Stores.useRobotStore
-   * @description Aborta de forma definitiva las tareas agrícolas y purga restricciones.
+   * Aborta de forma definitiva las tareas agrícolas y purga restricciones.
    */
   cancelMission: () => {
     const { socket, system, clearSafeZone } = get();
@@ -348,9 +312,7 @@ export const useRobotStore = create((set, get) => ({
   },
 
   /**
-   * @function deleteSessionData
-   * @memberof Stores.useRobotStore
-   * @description Filtra y oculta de la UI los datos relativos a una sesión descartada.
+   * Filtra y oculta de la UI los datos relativos a una sesión descartada.
    * @param {string} sessionKey - Clave única identificativa.
    */
   deleteSessionData: (sessionKey) => {

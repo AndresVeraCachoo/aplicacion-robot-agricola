@@ -53,11 +53,11 @@ vi.mock('recharts', () => {
 vi.mock('../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
 vi.mock('../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
 
-describe('EnergyPage Component', () => {
+describe('Componente EnergyPage', () => {
   let consoleSpy;
   let mockFetchMisiones;
   
-  const MOCK_NOW = new Date('2026-01-02T12:00:00Z').getTime();
+  const MOCK_NOW = Date.now();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,7 +69,7 @@ describe('EnergyPage Component', () => {
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     mockFetchMisiones = vi.fn();
-    useMissionStore.mockReturnValue({ misiones: [], fetchMisiones: mockFetchMisiones });
+    useMissionStore.mockReturnValue({ missions: [], fetchMissions: mockFetchMisiones });
 
     useRobotStore.mockImplementation((selector) => {
       const state = { 
@@ -89,8 +89,8 @@ describe('EnergyPage Component', () => {
     vi.useRealTimers();
   });
 
-  describe('Renderizado Inicial y KPIs', () => {
-    it('muestra los datos de batería, amperaje y estado de carga', async () => {
+  describe('Render Inicial y KPIs', () => {
+    it('muestra datos de batería, amperaje y estado de carga', async () => {
       useRobotStore.mockImplementation((selector) => {
         return selector({ 
           battery: { percentage: 15, status: 'CHARGING', voltage: 12, temperature: 30, health: 95 }
@@ -108,7 +108,7 @@ describe('EnergyPage Component', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/app/dashboard');
     });
 
-    it('calcula el amperaje como 0 si el voltaje es 0 o negativo', () => {
+    it('calcula amperaje como 0 si el voltaje es 0 o negativo', () => {
       useRobotStore.mockImplementation((selector) => {
         return selector({ battery: { percentage: 50, status: 'IDLE', voltage: 0 } });
       });
@@ -119,11 +119,11 @@ describe('EnergyPage Component', () => {
     });
   });
 
-  describe('Filtro de 24 horas y Auto-Refresh', () => {
-    it('filtra los datos históricos para mostrar solo las últimas 24h si no hay filtros', async () => {
+  describe('Filtro de 24 horas y Auto-refresco', () => {
+    it('filtra historial para mostrar solo las últimas 24h si no hay filtros', async () => {
       const apiResponse = [
-        { timestamp: new Date(MOCK_NOW - 1000 * 3600 * 2).toISOString(), bateria_porcentaje: 80, radiacion_solar: 150 }, 
-        { timestamp: new Date(MOCK_NOW - 1000 * 3600 * 48).toISOString(), bateria_porcentaje: 90, radiacion_solar: 200 } 
+        { timestamp: new Date(MOCK_NOW - 1000 * 3600 * 2).toISOString(), batteryPercentage: 80, solarRadiation: 150 }, 
+        { timestamp: new Date(MOCK_NOW - 1000 * 3600 * 48).toISOString(), batteryPercentage: 90, solarRadiation: 200 } 
       ];
       axios.get.mockResolvedValue({ data: apiResponse });
 
@@ -138,13 +138,13 @@ describe('EnergyPage Component', () => {
     });
   });
 
-  describe('Filtro Activo (DateRangePicker)', () => {
-    it('pasa los parámetros a la API, deshabilita el auto-refresh y maneja datos corruptos (NaN)', async () => {
+  describe('Filtro Activo', () => {
+    it('pasa parámetros a API, deshabilita auto-refresco y maneja datos corruptos', async () => {
       vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'setTimeout', 'clearInterval', 'clearTimeout'] });
       vi.setSystemTime(MOCK_NOW);
 
       const apiResponse = [
-        { timestamp: new Date(MOCK_NOW).toISOString(), bateria_porcentaje: "basura", radiacion_solar: null }
+        { timestamp: new Date(MOCK_NOW).toISOString(), batteryPercentage: "basura", solarRadiation: null }
       ];
       axios.get.mockResolvedValue({ data: apiResponse });
 
@@ -170,26 +170,26 @@ describe('EnergyPage Component', () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it('captura correctamente los errores de la API', async () => {
+    it('captura correctamente errores de la API', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network Fail'));
       
       render(<EnergyPage />);
       
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith("Error cargando energía:", expect.any(Error));
+        expect(consoleSpy).toHaveBeenCalledWith("Error al cargar la energía:", expect.any(Error));
         expect(screen.getByText('No se encontraron registros de energía para este filtro.')).toBeInTheDocument();
       });
     });
   });
 
-  describe('Idioma y Formateo (Inglés)', () => {
-    it('formatea las fechas en inglés si i18n language es "en"', async () => {
+  describe('Idioma y Formateo', () => {
+    it('formatea fechas en inglés si el idioma es en', async () => {
       useTranslation.mockReturnValue({
         t: (k, def) => def || k,
         i18n: { language: 'en-US' }
       });
 
-      axios.get.mockResolvedValue({ data: [{ timestamp: new Date(MOCK_NOW).toISOString(), bateria_porcentaje: 80, radiacion_solar: 10 }] });
+      axios.get.mockResolvedValue({ data: [{ timestamp: new Date(MOCK_NOW).toISOString(), batteryPercentage: 80, radiation: 10 }] });
 
       render(<EnergyPage />);
 

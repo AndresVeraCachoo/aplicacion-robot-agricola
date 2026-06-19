@@ -26,26 +26,38 @@ import "./ChartWidget.css";
 const MetricOptions = ({ t }) => (
   <>
     <optgroup label={t("chart.climateSoil")}>
-      <option value="humedad">{t("chart.humidity")}</option>
-      <option value="temperatura_suelo">{t("chart.temp")}</option>
+      <option value="humidity">{t("chart.humidity")}</option>
+      <option value="temperature">{t("chart.temp")}</option>
       <option value="ph">{t("chart.ph")}</option>
-      <option value="radiacion_solar">{t("chart.solarRad")}</option>
+      <option value="radiation">{t("chart.solarRad")}</option>
     </optgroup>
     <optgroup label={t("chart.nutrients")}>
-      <option value="nitrogeno">{t("chart.nitrogen")}</option>
-      <option value="fosforo">{t("chart.phosphorus")}</option>
-      <option value="potasio">{t("chart.potassium")}</option>
+      <option value="nitrogen">{t("chart.nitrogen")}</option>
+      <option value="phosphorus">{t("chart.phosphorus")}</option>
+      <option value="potassium">{t("chart.potassium")}</option>
     </optgroup>
   </>
 );
 MetricOptions.propTypes = { t: PropTypes.func.isRequired };
 
+/**
+ * Componente interactivo para mostrar gráficos de métricas.
+ * Soporta múltiples tipos de gráficos y comparación de métricas.
+ * @param {Object} props - Propiedades del componente.
+ * @param {Array} props.data - Datos a graficar.
+ * @param {string} props.title - Título del gráfico.
+ * @param {string} props.initialType - Tipo de gráfico inicial.
+ * @param {string} props.initialMetric1 - Métrica 1 inicial.
+ * @param {string} props.initialMetric2 - Métrica 2 inicial.
+ * @param {boolean} props.forcedCompare - Si la comparación es obligatoria.
+ * @returns {JSX.Element}
+ */
 function ChartWidget({
   data,
   title = "Análisis de Datos",
   initialType = "area",
-  initialMetric1 = "humedad",
-  initialMetric2 = "temperatura_suelo",
+  initialMetric1 = "humidity",
+  initialMetric2 = "temperature",
   forcedCompare = false,
 }) {
   const { t } = useTranslation();
@@ -62,52 +74,52 @@ function ChartWidget({
     return processedData.map((d) => ({
       ...d,
       timeMs: new Date(d.timestamp).getTime(),
-      humedad: d.humedad !== null && d.humedad !== undefined ? Number(d.humedad) : null,
-      temperatura_suelo: d.temperatura_suelo !== null && d.temperatura_suelo !== undefined ? Number(d.temperatura_suelo) : null,
+      humidity: d.humidity !== null && d.humidity !== undefined ? Number(d.humidity) : null,
+      temperature: d.temperature !== null && d.temperature !== undefined ? Number(d.temperature) : null,
       ph: d.ph !== null && d.ph !== undefined ? Number(d.ph) : null,
-      nitrogeno: d.nitrogeno !== null && d.nitrogeno !== undefined ? Number(d.nitrogeno) : null,
-      fosforo: d.fosforo !== null && d.fosforo !== undefined ? Number(d.fosforo) : null,
-      potasio: d.potasio !== null && d.potasio !== undefined ? Number(d.potasio) : null,
-      radiacion_solar: d.radiacion_solar !== null && d.radiacion_solar !== undefined ? Number(d.radiacion_solar) : null,
+      nitrogen: d.nitrogen !== null && d.nitrogen !== undefined ? Number(d.nitrogen) : null,
+      phosphorus: d.phosphorus !== null && d.phosphorus !== undefined ? Number(d.phosphorus) : null,
+      potassium: d.potassium !== null && d.potassium !== undefined ? Number(d.potassium) : null,
+      radiation: d.radiation !== null && d.radiation !== undefined ? Number(d.radiation) : null,
     }));
   }, [data]);
 
   const config = {
-    humedad: {
+    humidity: {
       color: "#3b82f6",
       label: t("chart.humidityLabel"),
       domain: [0, 100],
     },
-    temperatura_suelo: {
+    temperature: {
       color: "#f97316",
       label: t("chart.tempLabel"),
       domain: ["auto", "auto"],
     },
     ph: { color: "#10b981", label: t("chart.phLabel"), domain: [0, 14] },
-    nitrogeno: {
-      color: "#0ea5e9",
+    nitrogen: {
+      color: "#3b82f6",
       label: t("chart.nitrogenLabel"),
       domain: [0, "auto"],
     },
-    fosforo: {
+    phosphorus: {
       color: "#eab308",
       label: t("chart.phosphorusLabel"),
       domain: [0, "auto"],
     },
-    potasio: {
-      color: "#8b5cf6",
+    potassium: {
+      color: "#a855f7",
       label: t("chart.potassiumLabel"),
       domain: [0, "auto"],
     },
-    radiacion_solar: {
+    radiation: {
       color: "#ef4444",
       label: t("chart.solarRadLabel"),
       domain: [0, "auto"],
     },
   };
 
-  const conf1 = config[metric1] || config["humedad"];
-  const conf2 = config[metric2] || config["temperatura_suelo"];
+  const conf1 = config[metric1] || config["humidity"];
+  const conf2 = config[metric2] || config["temperature"];
   const isComparing = forcedCompare || chartType === "compare";
 
   const formatXAxis = (tickItem) => {

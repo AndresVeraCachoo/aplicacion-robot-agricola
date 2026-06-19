@@ -5,6 +5,11 @@ import "./CameraPage.css";
 // 1. Importa el componente del mapa
 import MapView from "../features/dashboard/components/MapView";
 
+/**
+ * Componente principal de la página de la cámara.
+ * Muestra el feed de vídeo principal en modo inmersivo junto con un minimapa.
+ * @returns {JSX.Element}
+ */
 function CameraPage() {
   const { t } = useTranslation();
 

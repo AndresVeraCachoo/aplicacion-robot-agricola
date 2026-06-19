@@ -4,8 +4,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { useAuth } from '../useAuth';
 import { AuthContext } from '../../context/AuthContext';
 
-describe('useAuth Hook', () => {
-  it('debe lanzar un error si se usa fuera de un AuthProvider', () => {
+describe('Hook useAuth', () => {
+  it('debería lanzar un error si se usa fuera de un AuthProvider', () => {
     // Silenciamos el error de consola de React que ocurre al lanzar errores intencionados en el renderizado
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -16,7 +16,7 @@ describe('useAuth Hook', () => {
     consoleSpy.mockRestore();
   });
 
-  it('debe devolver el contexto de autenticación cuando se usa dentro de un AuthProvider', () => {
+  it('debería retornar contexto de autenticación si se usa dentro de AuthProvider', () => {
     const mockAuthValue = {
       isLoggedIn: true,
       userRole: 'admin',

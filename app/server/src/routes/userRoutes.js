@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { pool } from "../config/db.js";
+import { prisma } from "../config/db.js";
 import { authenticateToken, requireAdmin } from "../middlewares/auth.js";
 import { validate } from "../middlewares/validateRequest.js";
 import { 
@@ -9,7 +9,7 @@ import {
 import { UserService } from "../services/userService.js";
 import { UserController } from "../controllers/userController.js";
 
-const userService = new UserService(pool);
+const userService = new UserService(prisma);
 const userController = new UserController(userService);
 
 const router = Router();
@@ -20,7 +20,7 @@ router.use(authenticateToken);
  * @swagger
  * tags:
  *   name: Usuarios
- *   description: Gestión de usuarios, perfiles y permisos
+ *   description: Gestión de usuarios, perfiles y permisos del sistema
 */
 
 /**
@@ -64,12 +64,12 @@ router.get("/profile", userController.getProfile);
  *                 example: "password123"
  *               newPassword:
  *                 type: string
- *                 example: "nuevaPassword456"
+ *                 example: "newPassword456"
  *     responses:
  *       200:
  *         description: Contraseña actualizada correctamente.
  *       400:
- *         description: La contraseña actual es incorrecta o el formato no es válido.
+ *         description: La contraseña actual es incorrecta o el formato es inválido.
 */
 router.put("/profile/password", validate(updatePasswordSchema), userController.updatePassword);
 
@@ -105,13 +105,13 @@ router.put("/profile/avatar", validate(updateAvatarSchema), userController.updat
  * @swagger
  * /users/:
  *   get:
- *     summary: Lista todos los usuarios del sistema (Solo Admin)
+ *     summary: Lista todos los usuarios del sistema (Sólo administradores)
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Array de usuarios devuelto correctamente.
+ *         description: Lista de usuarios devuelta correctamente.
  *       403:
  *         description: Permisos insuficientes (requiere rol de administrador).
 */
@@ -121,7 +121,7 @@ router.get("/", requireAdmin, userController.getUsers);
  * @swagger
  * /users/:
  *   post:
- *     summary: Crea un nuevo usuario en el sistema (Solo Admin)
+ *     summary: Crea un nuevo usuario en el sistema (Sólo administradores)
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -138,14 +138,14 @@ router.get("/", requireAdmin, userController.getUsers);
  *             properties:
  *               name:
  *                 type: string
- *                 example: "NuevoOperador"
+ *                 example: "NewOperator"
  *               role:
  *                 type: string
- *                 enum: [admin, operador, usuario]
- *                 example: "operador"
+ *                 enum: [admin, operator, user]
+ *                 example: "operator"
  *               password:
  *                 type: string
- *                 example: "secreto123"
+ *                 example: "secret123"
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente.
@@ -160,7 +160,7 @@ router.post("/", requireAdmin, validate(createUserSchema), userController.create
  * @swagger
  * /users/{id}:
  *   put:
- *     summary: Modifica los datos de un usuario existente (Solo Admin)
+ *     summary: Modifica los datos de un usuario existente (Sólo administradores)
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -181,14 +181,14 @@ router.post("/", requireAdmin, validate(createUserSchema), userController.create
  *             properties:
  *               name:
  *                 type: string
- *                 example: "OperadorModificado"
+ *                 example: "ModifiedOperator"
  *               role:
  *                 type: string
- *                 enum: [admin, operador, usuario]
- *                 example: "usuario"
+ *                 enum: [admin, operator, user]
+ *                 example: "user"
  *               password:
  *                 type: string
- *                 example: "nuevaClave123"
+ *                 example: "newPassword123"
  *     responses:
  *       200:
  *         description: Usuario modificado correctamente.
@@ -201,7 +201,7 @@ router.put("/:id", requireAdmin, validate(updateUserSchema), userController.upda
  * @swagger
  * /users/{id}:
  *   delete:
- *     summary: Elimina un usuario del sistema (Solo Admin)
+ *     summary: Elimina un usuario del sistema (Sólo administradores)
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -215,13 +215,13 @@ router.put("/:id", requireAdmin, validate(updateUserSchema), userController.upda
  *         description: ID del usuario a eliminar
  *     responses:
  *       200:
- *         description: Usuario eliminado correctamente.
+ *         description: Usuario eliminado exitosamente.
  *       403:
  *         description: Permisos insuficientes.
  *       404:
  *         description: El usuario no existe.
  *       409:
- *         description: Acción denegada (intentando eliminar administrador principal o usuarios protegidos).
+ *         description: Acción denegada (intento de eliminar administradores principales).
 */
 router.delete("/:id", requireAdmin, userController.deleteUser);
 

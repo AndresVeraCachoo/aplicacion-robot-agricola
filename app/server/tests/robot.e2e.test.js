@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { app } from "../src/index.js";
 import { pool } from "../src/config/db.js";
 
-describe("E2E - Telemetría y Estado del Robot (Robot)", () => {
+describe("E2E - Telemetría y Estado", () => {
   let validToken;
   let misionId;
 
@@ -53,31 +53,31 @@ describe("E2E - Telemetría y Estado del Robot (Robot)", () => {
   });
 
   describe("GET /api/robot/estado", () => {
-    it("Debería devolver el estado actual de los sistemas del robot", async () => {
+    it("debería retornar el estado actual de los sistemas del robot", async () => {
       const response = await getWithAuth(API_ESTADO);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("system_status", "inactivo");
-      expect(response.body).toHaveProperty("battery_percentage", 100);
+      expect(response.body).toHaveProperty("systemStatus", "inactivo");
+      expect(response.body).toHaveProperty("batteryPercentage", 100);
     });
 
-    it("Debería devolver error 404 si el registro del estado general no se encuentra", async () => {
+    it("debería retornar error 404 si el registro maestro no se encuentra", async () => {
       await pool.query("DELETE FROM robot_estado WHERE id = 1");
       const response = await getWithAuth(API_ESTADO);
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toMatch(/no encontrado/i);
+      expect(response.body.error).toMatch(/not found/i);
     });
   });
 
   describe("GET /api/robot/datos", () => {
-    it("Debería devolver todos los datos agronómicos si no se aplican filtros", async () => {
+    it("debería retornar datos agronómicos si no se aplican filtros", async () => {
       const response = await getWithAuth(API_DATOS);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(2); 
     });
 
-    it("Debería filtrar los datos agronómicos por rango de fechas", async () => {
+    it("debería filtrar datos agronómicos por rango de fechas", async () => {
       const response = await getWithAuth(API_DATOS).query({ 
         start: "2024-01-01T00:00:00Z", 
         end: "2026-01-01T00:00:00Z" 
@@ -85,35 +85,35 @@ describe("E2E - Telemetría y Estado del Robot (Robot)", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1); 
-      expect(Number(response.body[0].humedad)).toBe(60);
+      expect(Number(response.body[0].humidity)).toBe(60);
     });
 
-    it("Debería filtrar los datos agronómicos por el identificador de la misión", async () => {
+    it("debería filtrar datos agronómicos por identificador de misión", async () => {
       const response = await getWithAuth(API_DATOS).query({ misionId });
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1); 
-      expect(response.body[0].mision_id).toBe(misionId);
+      expect(response.body[0].missionId).toBe(misionId);
     });
 
-    it("Debería devolver error 400 si se proporciona una fecha de inicio sin fecha de fin", async () => {
+    it("debería retornar error 400 si falta la fecha de fin", async () => {
       const response = await getWithAuth(API_DATOS).query({ 
         start: "2024-01-01T00:00:00Z" 
       });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/ambas fechas/i);
+      expect(response.body.error).toMatch(/both dates/i);
     });
   });
 
   describe("GET /api/robot/energia/historial", () => {
-    it("Debería devolver el historial de energía completo sin filtros", async () => {
+    it("debería retornar el historial completo de energía sin filtros", async () => {
       const response = await getWithAuth(API_ENERGIA);
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(2);
     });
 
-    it("Debería filtrar el historial de energía por rango de fechas", async () => {
+    it("debería filtrar el historial de energía por rango de fechas", async () => {
       const response = await getWithAuth(API_ENERGIA).query({ 
         start: "2022-01-01T00:00:00Z", 
         end: "2023-12-31T00:00:00Z" 
@@ -121,20 +121,20 @@ describe("E2E - Telemetría y Estado del Robot (Robot)", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1); 
-      expect(Number(response.body[0].bateria_porcentaje)).toBe(80);
+      expect(Number(response.body[0].batteryPercentage)).toBe(80);
     });
 
-    it("Debería filtrar el historial de energía correspondiente a una misión específica", async () => {
+    it("debería filtrar historial de energía correspondiente a una misión", async () => {
       const response = await getWithAuth(API_ENERGIA).query({ misionId });
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1);
-      expect(Number(response.body[0].bateria_porcentaje)).toBe(50); 
+      expect(Number(response.body[0].batteryPercentage)).toBe(50); 
     });
   });
 
   describe("Seguridad del Robot", () => {
-    it("Debería devolver error 401 al acceder a los endpoints protegidos sin autenticación", async () => {
+    it("debería retornar error 401 al acceder a endpoints protegidos sin auth", async () => {
       const response = await request(app).get(API_ESTADO); 
       expect(response.status).toBe(401);
     });

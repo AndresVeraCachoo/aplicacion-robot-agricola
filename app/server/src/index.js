@@ -17,15 +17,15 @@ import { setupSockets } from "./websockets/socketHandler.js";
 import { startRobotSimulation } from "./simulator.js";
 import { swaggerSpec } from "./config/swagger.js";
 
-// Evitamos que el servidor se apague de golpe si hay una promesa rota o un fallo crítico que se nos haya escapado
+// Previene que el servidor crashee de forma inesperada si hay una promesa sin manejar o error crítico
 process.on("uncaughtException", (error) => {
-  console.error("[Fatal Error] Excepción no capturada. Deteniendo el proceso para evitar estado corrupto.");
+  console.error("[Error Fatal] Excepción no capturada. Deteniendo el proceso para evitar estado corrupto.");
   console.error(error.name, error.message, error.stack);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("[Fatal Error] Promesa rechazada sin manejador Catch. Deteniendo el proceso.");
+  console.error("[Error Fatal] Promesa rechazada no manejada. Deteniendo el proceso.");
   console.error(reason);
   process.exit(1);
 });
@@ -33,16 +33,16 @@ process.on("unhandledRejection", (reason) => {
 const app = express();
 const server = http.createServer(app);
 
-// Necesario si subimos la app a un servidor de producción que utilice Nginx o balanceadores
+// Necesario si desplegamos la app en un servidor de producción usando Nginx o balanceadores de carga
 app.set("trust proxy", 1);
 
-// Limitamos quién puede comunicarse con nuestra API (CORS)
+// Limita quién puede comunicarse con nuestra API (CORS)
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+$/.test(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`Bloqueado por política CORS: ${origin}`));
+      callback(new Error(`Blocked by CORS policy: ${origin}`));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -50,30 +50,29 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Evitamos que nos tumben el servidor a base de enviar miles de peticiones seguidas (DDoS)
+// Previene ataques DDoS limitando la tasa de peticiones
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-  message: { error: "Demasiadas peticiones desde esta IP. Inténtelo más tarde." }
+  message: { error: "Too many requests from this IP. Please try again later." }
 });
 
-// Reforzamos las cabeceras HTTP de seguridad
+// Refuerza las cabeceras HTTP de seguridad
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       objectSrc: ["'none'"],
-      // Forzamos que si se cargan imágenes de fuera (como el avatar del usuario), tengan que venir por un enlace seguro HTTPS
+      // Fuerza a que las imágenes externas (como avatares) carguen a través de enlaces seguros HTTPS
       imgSrc: ["'self'", "data:", "blob:", "https:"], 
-      upgradeInsecureRequests: [],
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 app.use(cors(corsOptions));
-// Límite de 1MB en los JSON para que no nos saturen la memoria enviando textos gigantes
+// Limita los payloads JSON a 1MB para prevenir agotamiento de memoria
 app.use(express.json({ limit: "1mb" }));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -86,9 +85,9 @@ app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/missions", missionRoutes);
 
-// Si alguien intenta entrar a una ruta que no existe, le mandamos nuestro error 404 estándar
+// Si alguien intenta acceder a una ruta inexistente, devuelve nuestro error 404 estándar
 app.all("*", (req, res, next) => {
-  next(new AppError(`La ruta ${req.method} ${req.originalUrl} no existe en este servidor.`, 404));
+  next(new AppError(`The route ${req.method} ${req.originalUrl} does not exist on this server.`, 404));
 });
 
 app.use(errorHandler);
@@ -96,7 +95,7 @@ app.use(errorHandler);
 const io = new Server(server, { cors: corsOptions });
 setupSockets(io);
 
-// Apagamos el motor del simulador cuando pasamos los tests para que el setInterval no se quede colgado en memoria
+// Detiene el simulador al correr los tests para que el setInterval no se quede colgado en memoria
 if (process.env.NODE_ENV !== "test") {
   startRobotSimulation(io);
 }
@@ -105,11 +104,11 @@ const PORT = process.env.PORT || 3001;
 
 if (process.env.NODE_ENV !== "test") {
   try {
-    // Comprobamos que la base de datos tenga las tablas y los usuarios mínimos creados antes de abrir puertos
+    // Verifica que la base de datos tenga las tablas mínimas y usuarios creados antes de abrir puertos
     await runSeed();
-    server.listen(PORT, () => console.log(`[Server] Escuchando conexiones en puerto ${PORT}`));
+    server.listen(PORT, () => console.log(`[Servidor] Escuchando conexiones en el puerto ${PORT}`));
   } catch (error) {
-    console.error("[Server] No se pudo arrancar:", error.message);
+    console.error("[Servidor] No se pudo iniciar:", error.message);
     process.exit(1);
   }
 }

@@ -1,19 +1,21 @@
 /**
- * Controlador para gestionar el ciclo de vida, permisos y perfiles de los usuarios.
+
+ * @description Controladores para gestionar el ciclo de vida, permisos y perfiles de los usuarios.
  */
 export class UserController {
   /**
-   * @param {import('../services/userService.js').UserService} userService - Servicio de lógica de negocio de usuarios.
+   * @param {Object} userService - Servicio de lógica de negocio de usuarios.
    */
   constructor(userService) {
     this.userService = userService;
   }
 
   /**
-   * Obtiene el perfil público del usuario actualmente autenticado.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Obtiene el perfil público del usuario autenticado actualmente.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   getProfile = async (req, res, next) => {
@@ -27,10 +29,11 @@ export class UserController {
   };
 
   /**
-   * Actualiza la contraseña del usuario actualmente autenticado.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Actualiza la contraseña del usuario autenticado actualmente.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   updatePassword = async (req, res, next) => {
@@ -44,10 +47,11 @@ export class UserController {
   };
 
   /**
-   * Obtiene la lista completa de usuarios del sistema (solo administradores).
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Obtiene la lista completa de usuarios del sistema (solo accesible por administradores).
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   getUsers = async (req, res, next) => {
@@ -61,16 +65,17 @@ export class UserController {
 
   /**
    * Registra un nuevo usuario en la base de datos.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   createUser = async (req, res, next) => {
     try {
       const { name, role, password } = req.body;
       const newUser = await this.userService.createNewUser(name, role, password);
-      // Devolvemos 201 Created explícitamente para cumplir con el estándar REST
+      // Devolvemos explícitamente 201 Created para cumplir con el estándar REST
       res.status(201).json(newUser);
     } catch (error) {
       next(error);
@@ -79,9 +84,10 @@ export class UserController {
 
   /**
    * Modifica los datos (rol, nombre, contraseña) de un usuario existente.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   updateUser = async (req, res, next) => {
@@ -97,9 +103,10 @@ export class UserController {
 
   /**
    * Elimina permanentemente a un usuario del sistema.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   deleteUser = async (req, res, next) => {
@@ -113,10 +120,11 @@ export class UserController {
   };
 
   /**
-   * Actualiza el avatar del perfil del usuario autenticado.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Actualiza la URL del avatar del perfil del usuario autenticado.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   updateAvatar = async (req, res, next) => {

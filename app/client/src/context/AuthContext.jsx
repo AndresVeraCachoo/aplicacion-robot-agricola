@@ -1,26 +1,18 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import httpClient from "../config/httpClient";
 
 /**
- * @namespace Contextos
- * @description Proveedores de estado global mediante la API de Context de React.
- */
-
-/**
  * Instancia del contexto global para la gestión de la sesión del usuario.
  * @type {React.Context<any>}
- * @memberof Contextos
- * @name AuthContext
  */
 export const AuthContext = createContext(null);
 
 /**
  * Proveedor de autenticación.
  * Coordina el estado local de la sesión con los datos almacenados en el navegador.
- * @function AuthProvider
- * @memberof Contextos
  * @param {Object} props - Propiedades del componente.
  * @param {React.ReactNode} props.children - Árbol de la aplicación.
  * @returns {JSX.Element}
@@ -49,7 +41,7 @@ export function AuthProvider({ children }) {
           await httpClient.get("/auth/verify");
           setIsLoggedIn(true);
         } catch (error) {
-          console.warn("Sesión caducada. Detalle:", error.message);
+          console.warn("Sesión expirada. Detalles:", error.message);
           logout();
         }
       } else {
@@ -69,17 +61,17 @@ export function AuthProvider({ children }) {
 
           const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
           if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
-            throw new Error("El servidor devolvió un token con formato inválido");
+            throw new Error("El servidor devolvió un formato de token inválido");
           }
 
-          let safeRole = "usuario";
+          let safeRole = "user";
           if (user?.role === "admin") {
             safeRole = "admin";
-          } else if (user?.role === "operador") {
-            safeRole = "operador";
+          } else if (user?.role === "operator") {
+            safeRole = "operator";
           }
 
-          let safeName = "Usuario";
+          let safeName = "User";
           const rawName = response.data.user?.name;
           const nameRegex = /^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]+$/;
           if (typeof rawName === "string" && nameRegex.test(rawName)) {
@@ -108,10 +100,10 @@ export function AuthProvider({ children }) {
           return { success: true };
         }
       } catch (error) {
-        console.error("Error de login:", error);
+        console.error("Error al iniciar sesión:", error);
         return {
           success: false,
-          message: error.response?.data?.error || "Error al conectar",
+          message: error.response?.data?.error || "Error al conectar con el servidor",
         };
       }
     },

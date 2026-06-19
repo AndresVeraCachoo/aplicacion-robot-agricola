@@ -21,7 +21,7 @@ const ErrorComponent = () => {
   return null;
 };
 
-describe('sistema de colas de notificaciones', () => {
+describe('sistema de cola de notificaciones', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -31,9 +31,9 @@ describe('sistema de colas de notificaciones', () => {
     vi.useRealTimers();
   });
 
-  it('debería detener la compilación mostrando un error si se consume el hook fuera de su scope', () => {
+  it('debería detener compilación mostrando un error si el hook se consume fuera de su alcance', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => render(<ErrorComponent />)).toThrow('useToast debe ser usado dentro de un ToastProvider');
+    expect(() => render(<ErrorComponent />)).toThrow('useToast must be used within a ToastProvider');
     consoleSpy.mockRestore();
   });
 
@@ -62,7 +62,7 @@ describe('sistema de colas de notificaciones', () => {
     expect(screen.getAllByText('ℹ️')).toHaveLength(2);
   });
 
-  it('debería eliminar una notificación puntual de la cola a petición del usuario', () => {
+  it('debería eliminar una notificación específica de la cola a petición del usuario', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />
@@ -78,7 +78,7 @@ describe('sistema de colas de notificaciones', () => {
     expect(screen.queryByText('Info')).not.toBeInTheDocument();
   });
 
-  it('debería autolimpiar la cola respetando el ciclo de visualización configurado de 3.5s', () => {
+  it('debería auto-limpiar la cola respetando el ciclo de visualización de 3.5s', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />

@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { pool } from "../config/db.js";
+import { prisma } from "../config/db.js";
 import { validate } from "../middlewares/validateRequest.js";
 import { 
-  createMisionSchema, updateMisionSchema, updateEjecucionSchema 
+  createMissionSchema, updateMissionSchema, updateExecutionSchema 
 } from "../schemas/missionSchema.js";
 
 import { MissionService } from "../services/missionService.js";
 import { MissionController } from "../controllers/missionController.js";
 
-const missionService = new MissionService(pool);
+const missionService = new MissionService(prisma);
 const missionController = new MissionController(missionService);
 
 const router = Router();
@@ -17,7 +17,7 @@ const router = Router();
  * @swagger
  * tags:
  *   name: Misiones
- *   description: Gestión de misiones de campo y sus ejecuciones
+ *   description: Gestión de misiones de campo y su historial de ejecuciones
 */
 
 /**
@@ -28,9 +28,9 @@ const router = Router();
  *     tags: [Misiones]
  *     responses:
  *       200:
- *         description: Array de misiones devuelto correctamente.
+ *         description: Array de misiones devuelto con éxito.
 */
-router.get("/", missionController.getMisiones);
+router.get("/", missionController.getMissions);
 
 /**
  * @swagger
@@ -45,29 +45,29 @@ router.get("/", missionController.getMisiones);
  *           schema:
  *             type: object
  *             required:
- *               - nombre
- *               - tipo_tarea
- *               - ancho_trabajo
- *               - angulo_pasada
- *               - bateria_minima
- *               - area_trabajo
+ *               - name
+ *               - taskType
+ *               - workWidth
+ *               - passAngle
+ *               - minBattery
+ *               - workArea
  *             properties:
- *               nombre:
+ *               name:
  *                 type: string
- *                 example: "Fumigación Campo Norte"
- *               tipo_tarea:
+ *                 example: "North Field Fumigation"
+ *               taskType:
  *                 type: string
- *                 example: "Fumigación"
- *               ancho_trabajo:
+ *                 example: "Fumigation"
+ *               workWidth:
  *                 type: number
  *                 example: 12.5
- *               angulo_pasada:
+ *               passAngle:
  *                 type: number
  *                 example: 45
- *               bateria_minima:
+ *               minBattery:
  *                 type: number
  *                 example: 20
- *               area_trabajo:
+ *               workArea:
  *                 type: object
  *                 description: Objeto GeoJSON válido
  *                 example:
@@ -84,13 +84,13 @@ router.get("/", missionController.getMisiones);
  *                         ],
  *                       ],
  *                   }
- *               puntos_interes:
+ *               poi:
  *                 type: object
  *                 example: { "type": "FeatureCollection", "features": [] }
- *               punto_retorno:
+ *               returnPoint:
  *                 type: object
  *                 example: { "type": "Point", "coordinates": [-3.65, 40.45] }
- *               fecha_programada:
+ *               scheduledTime:
  *                 type: string
  *                 format: date-time
  *                 nullable: true
@@ -99,9 +99,9 @@ router.get("/", missionController.getMisiones);
  *       201:
  *         description: Misión creada correctamente.
  *       400:
- *         description: Errores en la validación del esquema geográfico o faltan campos obligatorios.
+ *         description: Errores en la validación del esquema geográfico o campos obligatorios faltantes.
 */
-router.post("/", validate(createMisionSchema), missionController.createMision);
+router.post("/", validate(createMissionSchema), missionController.createMission);
 
 /**
  * @swagger
@@ -123,22 +123,22 @@ router.post("/", validate(createMisionSchema), missionController.createMision);
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               name:
  *                 type: string
- *                 example: "Fumigación Campo Sur"
- *               tipo_tarea:
+ *                 example: "South Field Fumigation"
+ *               taskType:
  *                 type: string
- *                 example: "Riego"
- *               ancho_trabajo:
+ *                 example: "Irrigation"
+ *               workWidth:
  *                 type: number
  *                 example: 15.0
- *               angulo_pasada:
- *                 type: numbe
+ *               passAngle:
+ *                 type: number
  *                 example: 90
- *               bateria_minima:
+ *               minBattery:
  *                 type: number
  *                 example: 30
- *               area_trabajo:
+ *               workArea:
  *                 type: object
  *                 example:
  *                   {
@@ -160,7 +160,7 @@ router.post("/", validate(createMisionSchema), missionController.createMision);
  *       404:
  *         description: La misión especificada no existe.
 */
-router.put("/:id", validate(updateMisionSchema), missionController.updateMision);
+router.put("/:id", validate(updateMissionSchema), missionController.updateMission);
 
 /**
  * @swagger
@@ -181,7 +181,7 @@ router.put("/:id", validate(updateMisionSchema), missionController.updateMision)
  *       404:
  *         description: La misión no existe.
 */
-router.delete("/:id", missionController.deleteMision);
+router.delete("/:id", missionController.deleteMission);
 
 /**
  * @swagger
@@ -198,10 +198,9 @@ router.delete("/:id", missionController.deleteMision);
  *           example: 1
  *     responses:
  *       200:
-
- *         descrption: Ejecuciones devueltas correctamente.
+ *         description: Ejecuciones devueltas correctamente.
 */
-router.get("/:id/runs", missionController.getEjecuciones);
+router.get("/:id/runs", missionController.getExecutions);
 
 /**
  * @swagger
@@ -222,13 +221,13 @@ router.get("/:id/runs", missionController.getEjecuciones);
  *       400:
  *         description: La misión no es apta para ser ejecutada.
 */
-router.post("/:id/runs", missionController.iniciarEjecucion);
+router.post("/:id/runs", missionController.startExecution);
 
 /**
  * @swagger
  * /missions/runs/{run_id}:
  *   put:
- *     summary: Actualiza el estado o fecha de fin de una ejecución
+ *     summary: Actualiza el estado o la fecha de finalización de una ejecución
  *     tags: [Misiones]
  *     parameters:
  *       - in: path
@@ -244,23 +243,23 @@ router.post("/:id/runs", missionController.iniciarEjecucion);
  *           schema:
  *             type: object
  *             properties:
- *               estado:
+ *               status:
  *                 type: string
- *                 enum: [en_curso, completado, cancelado, pausado]
- *                 example: "completado"
- *               progreso:
+ *                 enum: [in_progress, completed, cancelled, paused]
+ *                 example: "completed"
+ *               progress:
  *                 type: number
  *                 example: 100
- *               bateria_usada:
+ *               batteryUsed:
  *                 type: number
  *                 example: 45.5
- *               distancia_recorrida:
+ *               distanceCovered:
  *                 type: number
  *                 example: 1250.5
- *               tiempo_transcurrido:
+ *               timeElapsed:
  *                 type: number
  *                 example: 3600
- *               fecha_fin:
+ *               endTime:
  *                 type: string
  *                 format: date-time
  *                 example: "2026-05-29T10:00:00Z"
@@ -270,6 +269,6 @@ router.post("/:id/runs", missionController.iniciarEjecucion);
  *       404:
  *         description: La ejecución especificada no existe.
 */
-router.put("/runs/:run_id", validate(updateEjecucionSchema), missionController.updateEjecucion);
+router.put("/runs/:run_id", validate(updateExecutionSchema), missionController.updateExecution);
 
 export default router;

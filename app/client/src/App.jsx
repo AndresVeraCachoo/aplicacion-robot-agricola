@@ -16,10 +16,17 @@ const EnergyPage = React.lazy(() => import("./pages/EnergyPage"));
 const ControlPage = React.lazy(() => import("./pages/ControlPage"));
 import "./App.css";
 
+/**
+ * Componente para proteger rutas privadas.
+ * Redirige al login si el usuario no está autenticado.
+ * @param {Object} props - Propiedades del componente.
+ * @param {React.ReactNode} props.children - Componentes hijos a renderizar si está autenticado.
+ * @returns {JSX.Element}
+ */
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isLoading } = useAuth();
 
-  // FIX: Evita el Login Fantasma esperando a que se lea el localStorage
+  // Prevenir inicio de sesión fantasma esperando a leer el localStorage
   if (isLoading) {
     return (
       <div
@@ -47,6 +54,11 @@ ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+/**
+ * Componente principal de la aplicación.
+ * Define el enrutamiento y la carga diferida de páginas.
+ * @returns {JSX.Element}
+ */
 function App() {
   return (
     <React.Suspense fallback={

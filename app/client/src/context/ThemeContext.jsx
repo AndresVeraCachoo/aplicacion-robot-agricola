@@ -1,18 +1,15 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect, useContext, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 
 /**
- * Instancia del contexto para las preferencias visuales.
+ * Contexto global para preferencias visuales (modo oscuro/claro).
  * @type {React.Context<any>}
- * @memberof Contextos
- * @name ThemeContext
  */
 const ThemeContext = createContext();
 
 /**
- * Atajo para acceder a los valores del tema.
- * @function useTheme
- * @memberof Contextos
+ * Hook para acceder a los valores del tema visual.
  * @returns {{isDarkMode: boolean, toggleTheme: function}}
  */
 export function useTheme() {
@@ -21,10 +18,8 @@ export function useTheme() {
 
 /**
  * Proveedor del tema visual (claro/oscuro).
- * @function ThemeProvider
- * @memberof Contextos
- * @param {Object} props
- * @param {React.ReactNode} props.children
+ * @param {Object} props - Propiedades del componente.
+ * @param {React.ReactNode} props.children - Árbol de la aplicación.
  * @returns {JSX.Element}
  */
 export function ThemeProvider({ children }) {

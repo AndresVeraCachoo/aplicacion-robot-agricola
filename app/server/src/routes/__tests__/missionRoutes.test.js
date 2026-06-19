@@ -2,24 +2,27 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("Rutas de Misiones (MissionRoutes)", () => {
+describe("Rutas de Misiones", () => {
   let app, mockMissionController, mockValidate;
 
   beforeEach(async () => {
     jest.resetModules();
 
     mockMissionController = {
-      getMisiones: jest.fn((req, res) => res.status(200).send()),
-      createMision: jest.fn((req, res) => res.status(201).send()),
-      updateMision: jest.fn((req, res) => res.status(200).send()),
-      deleteMision: jest.fn((req, res) => res.status(200).send()),
-      getEjecuciones: jest.fn((req, res) => res.status(200).send()),
-      iniciarEjecucion: jest.fn((req, res) => res.status(201).send()),
-      updateEjecucion: jest.fn((req, res) => res.status(200).send()),
+      getMissions: jest.fn((req, res) => res.status(200).send()),
+      createMission: jest.fn((req, res) => res.status(201).send()),
+      updateMission: jest.fn((req, res) => res.status(200).send()),
+      deleteMission: jest.fn((req, res) => res.status(200).send()),
+      getExecutions: jest.fn((req, res) => res.status(200).send()),
+      startExecution: jest.fn((req, res) => res.status(201).send()),
+      updateExecution: jest.fn((req, res) => res.status(200).send()),
     };
 
     mockValidate = jest.fn(() => (req, res, next) => next());
 
+    jest.unstable_mockModule('../../config/db.js', () => ({
+      prisma: {}
+    }));
     jest.unstable_mockModule('../../controllers/missionController.js', () => ({
       MissionController: jest.fn(() => mockMissionController)
     }));
@@ -33,31 +36,31 @@ describe("Rutas de Misiones (MissionRoutes)", () => {
     app.use('/missions', missionRoutes);
   });
 
-  it("Debería enrutar el flujo CRUD de misiones aplicando validación de datos en escritura", async () => {
+  it("Debería enrutar flujo CRUD de misión aplicando validación en escritura", async () => {
     await request(app).get('/missions/');
-    expect(mockMissionController.getMisiones).toHaveBeenCalled();
+    expect(mockMissionController.getMissions).toHaveBeenCalled();
 
     await request(app).post('/missions/');
     expect(mockValidate).toHaveBeenCalled();
-    expect(mockMissionController.createMision).toHaveBeenCalled();
+    expect(mockMissionController.createMission).toHaveBeenCalled();
 
     await request(app).put('/missions/1');
     expect(mockValidate).toHaveBeenCalled();
-    expect(mockMissionController.updateMision).toHaveBeenCalled();
+    expect(mockMissionController.updateMission).toHaveBeenCalled();
 
     await request(app).delete('/missions/1');
-    expect(mockMissionController.deleteMision).toHaveBeenCalled();
+    expect(mockMissionController.deleteMission).toHaveBeenCalled();
   });
 
-  it("Debería enrutar correctamente las peticiones de los sub-recursos de ejecución", async () => {
+  it("Debería enrutar peticiones para sub-recursos de ejecución", async () => {
     await request(app).get('/missions/1/runs');
-    expect(mockMissionController.getEjecuciones).toHaveBeenCalled();
+    expect(mockMissionController.getExecutions).toHaveBeenCalled();
 
     await request(app).post('/missions/1/runs');
-    expect(mockMissionController.iniciarEjecucion).toHaveBeenCalled();
+    expect(mockMissionController.startExecution).toHaveBeenCalled();
 
     await request(app).put('/missions/runs/99');
     expect(mockValidate).toHaveBeenCalled();
-    expect(mockMissionController.updateEjecucion).toHaveBeenCalled();
+    expect(mockMissionController.updateExecution).toHaveBeenCalled();
   });
 });

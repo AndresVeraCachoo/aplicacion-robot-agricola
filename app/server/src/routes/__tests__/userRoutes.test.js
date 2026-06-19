@@ -2,11 +2,16 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 
-describe("Rutas de Usuarios (UserRoutes)", () => {
+describe("Rutas de Usuarios", () => {
   let app, mockUserController, mockAuthenticateToken, mockRequireAdmin, mockValidate;
 
   beforeEach(async () => {
     jest.resetModules();
+
+    // Simula db.js para no conectarse a la base de datos ni crashear el worker
+    jest.unstable_mockModule('../../config/db.js', () => ({
+      prisma: {}
+    }));
 
     mockUserController = {
       getProfile: jest.fn((req, res) => res.status(200).send()),
@@ -38,20 +43,20 @@ describe("Rutas de Usuarios (UserRoutes)", () => {
     app.use('/users', userRoutes);
   });
 
-  it("Debería interceptar las peticiones del perfil mediante el middleware de seguridad", async () => {
+  it("Debería interceptar peticiones de perfil mediante middleware de seguridad", async () => {
     await request(app).get('/users/profile');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockUserController.getProfile).toHaveBeenCalled();
   });
 
-  it("Debería requerir privilegios de administrador y validación de esquema al registrar usuarios", async () => {
+  it("Debería requerir privilegios de admin y validación para registrar usuarios", async () => {
     await request(app).post('/users/').send({});
     expect(mockRequireAdmin).toHaveBeenCalled();
     expect(mockValidate).toHaveBeenCalled();
     expect(mockUserController.createUser).toHaveBeenCalled();
   });
 
-  it("Debería enrutar correctamente las acciones del CRUD a los controladores correspondientes", async () => {
+  it("Debería enrutar acciones CRUD a los controladores correspondientes", async () => {
     await request(app).get('/users/');
     expect(mockUserController.getUsers).toHaveBeenCalled();
     

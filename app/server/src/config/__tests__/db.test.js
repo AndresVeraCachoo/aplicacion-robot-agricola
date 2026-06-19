@@ -1,66 +1,41 @@
 import { jest } from '@jest/globals';
 
-describe('Configuración de Base de Datos (config/db.js)', () => {
-  const originalEnv = process.env;
-
+describe('Configuración de Base de Datos', () => {
   beforeEach(() => {
-    process.env = { ...originalEnv };
     jest.resetModules();
   });
 
-  afterAll(() => {
-    process.env = originalEnv;
-  });
-
-  it('Debería inicializar el Pool con los valores por defecto si no hay variables de entorno', async () => {
-    delete process.env.DB_USER;
-    delete process.env.DB_HOST;
-    delete process.env.DB_NAME;
-    delete process.env.DB_PASSWORD;
-    delete process.env.DB_PORT;
-
-    const mockPoolInstance = { connect: jest.fn() };
+  it('Debería inicializar Pool con DATABASE_URL y crear PrismaClient', async () => {
+    const mockPoolInstance = {};
     const mockPg = { Pool: jest.fn(() => mockPoolInstance) };
     
-    jest.unstable_mockModule('pg', () => ({ default: mockPg }));
+    const mockAdapterInstance = {};
+    const mockPrismaPg = jest.fn(() => mockAdapterInstance);
+    
+    const mockPrismaClientInstance = {};
+    const mockPrismaClient = jest.fn(() => mockPrismaClientInstance);
 
-    const { pool } = await import(`../db.js?default`);
+    jest.unstable_mockModule('pg', () => ({ default: mockPg }));
+    jest.unstable_mockModule('@prisma/adapter-pg', () => ({ PrismaPg: mockPrismaPg }));
+    jest.unstable_mockModule('../../generated/prisma/index.js', () => ({ PrismaClient: mockPrismaClient }));
+    jest.unstable_mockModule('../env.js', () => ({
+      env: { DATABASE_URL: 'postgres://user:pass@host:5432/db' }
+    }));
+
+    const { prisma } = await import(`../db.js?test=${Date.now()}`);
 
     expect(mockPg.Pool).toHaveBeenCalledTimes(1);
     expect(mockPg.Pool).toHaveBeenCalledWith({
-      user: 'postgres',
-      host: 'localhost',
-      database: 'robot_dashboard_db',
-      password: undefined,
-      port: 5432,
+      connectionString: 'postgres://user:pass@host:5432/db',
     });
     
-    expect(pool).toBe(mockPoolInstance);
-  });
-
-  it('Debería inicializar el Pool aplicando las variables de entorno personalizadas si existen', async () => {
-    process.env.DB_USER = 'admin_robot';
-    process.env.DB_HOST = 'db-custom.local';
-    process.env.DB_NAME = 'production_db';
-    process.env.DB_PASSWORD = 'super_secret_password';
-    process.env.DB_PORT = '5433';
-
-    const mockPoolInstance = { connect: jest.fn() };
-    const mockPg = { Pool: jest.fn(() => mockPoolInstance) };
+    expect(mockPrismaPg).toHaveBeenCalledWith(mockPoolInstance);
     
-    jest.unstable_mockModule('pg', () => ({ default: mockPg }));
-
-    const { pool } = await import(`../db.js?custom`);
-
-    expect(mockPg.Pool).toHaveBeenCalledTimes(1);
-    expect(mockPg.Pool).toHaveBeenCalledWith({
-      user: 'admin_robot',
-      host: 'db-custom.local',
-      database: 'production_db',
-      password: 'super_secret_password',
-      port: '5433', 
+    expect(mockPrismaClient).toHaveBeenCalledWith({
+      adapter: mockAdapterInstance,
+      log: ["error"]
     });
     
-    expect(pool).toBe(mockPoolInstance);
+    expect(prisma).toBe(mockPrismaClientInstance);
   });
 });

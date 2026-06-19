@@ -12,7 +12,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k) => k }),
 }));
 
-describe('ControlPanel Component', () => {
+describe('Componente ControlPanel', () => {
   let storeMock;
 
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('ControlPanel Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renderiza los modos de conducción y permite cambiarlos', () => {
+  it('renderiza modos de conducción y permite cambiarlos', () => {
     render(<ControlPanel />);
     
     const autoBtn = screen.getByText('control.auto');
@@ -40,7 +40,7 @@ describe('ControlPanel Component', () => {
     expect(storeMock.setControlMode).toHaveBeenCalledWith('MANUAL');
   });
 
-  it('añade la clase active al botón correcto según el modo actual', () => {
+  it('agrega clase activa al botón correcto basado en el modo actual', () => {
     storeMock.system.mode = 'AUTO';
     const { rerender } = render(<ControlPanel />);
     expect(screen.getByText('control.auto')).toHaveClass('active');
@@ -51,7 +51,7 @@ describe('ControlPanel Component', () => {
     expect(screen.getByText('control.manual')).toHaveClass('active');
   });
 
-  it('permite ajustar el límite de velocidad y parsea el valor a entero', () => {
+  it('permite ajustar el límite de velocidad y formatea a entero', () => {
     render(<ControlPanel />);
     const slider = screen.getByRole('slider');
     
@@ -60,35 +60,35 @@ describe('ControlPanel Component', () => {
     expect(storeMock.setSpeedLimit).toHaveBeenCalledWith(75);
   });
 
-  it('cambia el estado visual del slider si la velocidad es mayor de 80', () => {
+  it('cambia el estado visual del control deslizante si la velocidad supera 80', () => {
     storeMock.system.speedLimit = 85; // Dispara la clase 'high-speed'
     render(<ControlPanel />);
     expect(screen.getByRole('slider')).toHaveClass('high-speed');
   });
 
   describe('Control de Misión', () => {
-    it('muestra el botón PAUSAR cuando la misión está en curso y lo ejecuta', () => {
+    it('muestra botón PAUSA cuando la misión está en curso y lo ejecuta', () => {
       render(<ControlPanel />);
       const btn = screen.getByText(/control\.pause/i);
       act(() => { fireEvent.click(btn); });
       expect(storeMock.togglePauseMission).toHaveBeenCalled();
     });
 
-    it('muestra el botón REANUDAR cuando la misión está pausada', () => {
+    it('muestra botón REANUDAR cuando la misión está en pausa', () => {
       storeMock.system.status = 'PAUSED';
       render(<ControlPanel />);
       const btn = screen.getByText(/control\.resume/i);
       expect(btn).toHaveClass('btn-resume');
     });
 
-    it('muestra el botón CANCELAR si hay un área activa y ejecuta la acción', () => {
+    it('muestra botón CANCELAR si hay área activa y ejecuta la acción', () => {
       render(<ControlPanel />);
       const btn = screen.getByText(/control\.cancelMission/i);
       act(() => { fireEvent.click(btn); });
       expect(storeMock.cancelMission).toHaveBeenCalled();
     });
 
-    it('oculta el botón CANCELAR si no hay área activa', () => {
+    it('oculta botón CANCELAR si no hay área activa', () => {
       storeMock.safeZone = [];
       render(<ControlPanel />);
       expect(screen.queryByText(/control\.cancelMission/i)).not.toBeInTheDocument();

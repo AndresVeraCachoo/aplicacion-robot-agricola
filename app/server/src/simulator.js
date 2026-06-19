@@ -1,5 +1,5 @@
 import crypto from "node:crypto"; 
-import { pool } from "./config/db.js";
+import { prisma } from "./config/db.js";
 import * as turf from "@turf/turf";
 
 const MOVEMENT_INTERVAL = 1000;
@@ -62,11 +62,11 @@ const calculateDistanceMeters = (lat1, lon1, lat2, lon2) => {
 };
 
 /**
- * Comprueba si el robot está dentro de la zona de trabajo dibujada en el mapa.
+ * Comprueba si el robot se encuentra dentro de la zona de trabajo dibujada en el mapa.
  * @param {number} lat - Latitud actual.
  * @param {number} lon - Longitud actual.
- * @param {Array<Array<number>>} vs - Puntos que forman el borde de la zona.
- * @returns {boolean} True si está dentro.
+ * @param {Array<Array<number>>} vs - Puntos que forman el límite de la zona.
+ * @returns {boolean} Verdadero si está dentro.
  */
 const isPointInPolygon = (lat, lon, vs) => {
   let inside = false;
@@ -78,8 +78,8 @@ const isPointInPolygon = (lat, lon, vs) => {
 };
 
 /**
- * Busca el lado más largo de la parcela para que el robot haga sus pasadas en esa misma dirección.
- * @param {Array<Array<number>>} zone - Puntos del borde de la parcela.
+ * Encuentra el lado más largo de la parcela para que el robot haga sus pasadas en esa misma dirección.
+ * @param {Array<Array<number>>} zone - Puntos del límite de la parcela.
  * @returns {number} Dirección en grados.
  */
 const calculateBestAngle = (zone) => {
@@ -100,7 +100,7 @@ const calculateBestAngle = (zone) => {
 /**
  * Ordena los puntos del terreno para que el robot haga un recorrido de barrido continuo (serpentina).
  * @param {Object} rows - Puntos agrupados por filas.
- * @returns {Array<Object>} Camino ordenado paso a paso.
+ * @returns {Array<Object>} Ruta ordenada paso a paso.
  */
 const weavePathRows = (rows) => {
   const finalPath = [];
@@ -114,7 +114,7 @@ const weavePathRows = (rows) => {
 };
 
 /**
- * Calcula automáticamente el camino que debe recorrer el robot para cubrir la zona de trabajo por completo.
+ * Calcula automáticamente la ruta que debe seguir el robot para cubrir toda la zona de trabajo.
  * @param {Array<Array<number>>} zone - Coordenadas del área de trabajo.
  * @returns {Array<Object>} Lista de puntos por los que pasará el robot.
  */
@@ -146,16 +146,16 @@ export const generateCoveragePath = (zone) => {
 
     return [...finalPath, ...weavePathRows(rows)];
   } catch (error) {
-    console.error("[Simulator] Error al calcular la ruta automática:", error);
+    console.error("[Simulador] Error al calcular la ruta automática:", error);
     return [];
   }
 };
 
 /**
- * Devuelve en qué estado general se encuentra el robot en este momento.
- * @param {boolean} isChargingNow - ¿Está enchufado a la base?
+ * Devuelve el estado general actual del robot.
+ * @param {boolean} isChargingNow - ¿Está enchufado en la base?
  * @param {number} currentSpeedNow - Velocidad actual.
- * @returns {string} Estado (trabajando, parado, cargando, etc).
+ * @returns {string} Estado (working, idle, charging, etc).
  */
 const getSystemStatus = (isChargingNow, currentSpeedNow) => {
   if (isChargingNow) return "CHARGING";
@@ -165,7 +165,7 @@ const getSystemStatus = (isChargingNow, currentSpeedNow) => {
 };
 
 /**
- * Controla el movimiento cuando el robot está haciendo una misión automática, guiándolo punto a punto.
+ * Controla el movimiento cuando el robot está en una misión automática, guiándolo punto a punto.
  */
 const handleAutoMode = (lat, lon, speedFactor) => {
   if (autoPath.length === 0 || currentPathIndex >= autoPath.length) return { nextLat: lat, nextLon: lon, dLat: 0, dLon: 0 };
@@ -186,7 +186,7 @@ const handleAutoMode = (lat, lon, speedFactor) => {
 };
 
 /**
- * Pasa al siguiente punto de destino que el usuario haya ordenado manualmente en el mapa.
+ * Avanza al siguiente punto de destino que el usuario ordenó manualmente en el mapa.
  */
 const advanceNavQueue = () => {
   if (navQueue.length > 0) {
@@ -199,7 +199,7 @@ const advanceNavQueue = () => {
 
 /**
  * Función matemática pura: Mueve el robot desde su posición actual hacia un destino específico.
- * Devuelve un aviso ('reached') si ya ha llegado en este turno.
+ * Devuelve un aviso ('reached') si ha llegado en este turno.
  */
 const moveTowardsTarget = (lat, lon, tLat, tLon, speedFactor) => {
   const distLat = tLat - lat;
@@ -215,7 +215,7 @@ const moveTowardsTarget = (lat, lon, tLat, tLon, speedFactor) => {
 };
 
 /**
- * Mueve el robot hacia los puntos que el usuario ha clicado en el mapa.
+ * Mueve el robot hacia los puntos que el usuario hizo clic en el mapa.
  */
 const handleNavigatingMode = (lat, lon, speedFactor) => {
   const tLat = navTarget ? navTarget.lat : lat;
@@ -234,25 +234,25 @@ const handleNavigatingMode = (lat, lon, speedFactor) => {
 };
 
 /**
- * Hace que el robot vuelva automáticamente en línea recta a su base de carga.
+ * Devuelve el robot automáticamente en línea recta a su base de carga.
  */
 const handleRtlMode = (lat, lon, speedFactor) => {
   const result = moveTowardsTarget(lat, lon, BASE_LAT, BASE_LON, Math.max(0.5, speedFactor));
   if (result.reached) {
-    console.log("[Simulator] El robot ha llegado a la base. Preparando la recarga.");
+    console.log("[Simulador] El robot ha llegado a la base. Preparando para recargar.");
     speed = 0;
   }
   return result;
 };
 
 /**
- * Devuelve al robot al punto exacto donde se quedó antes de interrumpir su trabajo.
+ * Devuelve el robot al punto exacto donde estaba antes de interrumpirse su trabajo.
  */
 const handleResumingMode = (lat, lon, speedFactor) => {
   if (!interruptedState) return { nextLat: lat, nextLon: lon, dLat: 0, dLon: 0 };
   const result = moveTowardsTarget(lat, lon, interruptedState.lat, interruptedState.lon, Math.max(0.5, speedFactor));
   if (result.reached) {
-    console.log("[Simulator] El robot ha llegado al punto donde se interrumpió la misión. Continuamos trabajando.");
+    console.log("[Simulador] El robot alcanzó el punto donde se interrumpió la misión. Reanudando el trabajo.");
     controlMode = interruptedState.mode;
     currentPathIndex = interruptedState.autoPathIndex;
     interruptedState = null;
@@ -261,7 +261,7 @@ const handleResumingMode = (lat, lon, speedFactor) => {
 };
 
 /**
- * Calcula el movimiento del robot cuando lo controlamos manualmente con el mando de dirección del frontend.
+ * Calcula el movimiento del robot cuando es controlado manualmente con el mando direccional del frontend.
  */
 const handleManualMode = (lat, lon, speedFactor) => {
   if (manualVelocity.x !== 0) {
@@ -281,7 +281,7 @@ const handleManualMode = (lat, lon, speedFactor) => {
 };
 
 /**
- * Función principal que decide qué tipo de movimiento debe hacer el robot basándose en su modo de control actual.
+ * Función principal que decide qué tipo de movimiento debe hacer el robot en base a su modo de control actual.
  */
 const calculateNextPosition = (lat, lon, speedFactor) => {
   switch(controlMode) {
@@ -294,7 +294,7 @@ const calculateNextPosition = (lat, lon, speedFactor) => {
 };
 
 /**
- * Conecta el robot a la base automáticamente si se queda quieto cerca de ella durante unos segundos.
+ * Conecta el robot a la base automáticamente si se queda parado cerca de ella unos segundos.
  */
 const checkBaseProximityForCharge = () => {
   const distToBase = calculateDistanceMeters(currentLat, currentLon, BASE_LAT, BASE_LON);
@@ -318,13 +318,13 @@ const checkBaseProximityForCharge = () => {
 };
 
 /**
- * Sistema de seguridad: Si nos dejamos el robot olvidado en modo manual sin hacer nada por un rato, se irá a cargar por su cuenta.
+ * Sistema de seguridad: Si dejamos el robot olvidado en modo manual sin hacer nada por un tiempo, se va a cargar solo.
  */
 const checkIdleAutoCharge = () => {
   if (controlMode === "MANUAL" && Number(speed) === 0 && !isCharging) {
       idleTicksCounter++;
       if (idleTicksCounter >= IDLE_CHARGE_THRESHOLD) {
-          console.log("[Simulator] El robot lleva mucho tiempo parado sin hacer nada. Volviendo a la base por seguridad.");
+          console.log("[Simulador] El robot lleva mucho tiempo inactivo. Volviendo a la base por seguridad.");
           isCharging = true;
           currentLat = BASE_LAT;
           currentLon = BASE_LON;
@@ -337,7 +337,7 @@ const checkIdleAutoCharge = () => {
 };
 
 /**
- * Simula la cantidad de sol que hace según la hora del día (más sol al mediodía, nada por la noche).
+ * Simula cuánta luz solar hay dependiendo de la hora del día (más luz a mediodía, nada por la noche).
  * @param {Date} dateObj - Fecha y hora actuales.
  * @returns {number} Nivel de radiación solar simulada.
  */
@@ -349,10 +349,10 @@ export const calculateSolarRadiation = (dateObj) => {
 };
 
 /**
- * Guarda en la memoria qué estaba haciendo el robot antes de enviarlo de vuelta a la base por falta de batería.
+ * Guarda en memoria lo que estaba haciendo el robot antes de mandarlo de vuelta a la base por falta de batería.
  */
 const executeRTLSequence = () => {
-  console.log(`[Simulator] La batería está crítica. Abortando el trabajo para volver a la base y recargar.`);
+  console.log(`[Simulador] Batería crítica. Abortando trabajo para volver a base y recargar.`);
   if (controlMode === "AUTO" || controlMode === "NAVIGATING") {
     interruptedState = { mode: controlMode, autoPathIndex: currentPathIndex, lat: currentLat, lon: currentLon };
   } else {
@@ -362,7 +362,7 @@ const executeRTLSequence = () => {
 };
 
 /**
- * Comprueba cuánta batería queda y a qué distancia está la base para decidir si el robot debe volver ya a recargar antes de apagarse en el campo.
+ * Comprueba cuánta batería queda y a qué distancia está la base para decidir si el robot debe volver a recargar antes de morir en el campo.
  */
 const checkRTLRequired = () => {
   if (isCharging || controlMode === "RETURNING_TO_BASE" || controlMode === "RESUMING_MISSION") return;
@@ -377,7 +377,7 @@ const checkRTLRequired = () => {
 };
 
 /**
- * Rellena la batería rápidamente cuando el robot está conectado a la base.
+ * Recarga la batería rápidamente cuando el robot está conectado a la base.
  */
 const handleBaseCharging = () => {
   const generatedThisTick = 5; 
@@ -386,7 +386,7 @@ const handleBaseCharging = () => {
     battery = 100; 
     isCharging = false; 
     if (interruptedState) {
-      console.log("[Simulator] Carga terminada. Reanudando el trabajo pendiente.");
+      console.log("[Simulador] Carga completa. Reanudando trabajo pendiente.");
       controlMode = "RESUMING_MISSION";
     }
   }
@@ -394,7 +394,7 @@ const handleBaseCharging = () => {
 };
 
 /**
- * Calcula cuánta batería está gastando el robot en base a lo rápido que se está moviendo.
+ * Calcula cuánta batería está gastando el robot en función de lo rápido que se mueve.
  */
 const calculateTickConsumption = () => {
   if (isPaused) return 0.1; 
@@ -405,7 +405,7 @@ const calculateTickConsumption = () => {
 };
 
 /**
- * Apagado de emergencia: Si nos quedamos sin batería en mitad de la nada, forzamos un rescate automático llevándolo a la base.
+ * Apagado de emergencia: Si nos quedamos sin batería en medio de la nada, fuerza un rescate automático llevándolo a la base.
  */
 const triggerFailsafeBattery = () => {
   battery = 0;
@@ -414,11 +414,11 @@ const triggerFailsafeBattery = () => {
   currentLon = BASE_LON;
   controlMode = "MANUAL";
   interruptedState = null;
-  console.error("[Simulator] Nos hemos quedado sin batería por completo. Forzando rescate a la base.");
+  console.error("[Simulador] Nos quedamos completamente sin batería. Forzando rescate a la base.");
 };
 
 /**
- * Calcula si la batería baja o sube enfrentando lo que gastan las ruedas con lo que aporta el panel solar.
+ * Calcula si la batería baja o sube equilibrando el consumo de las ruedas vs la generación del panel solar.
  */
 const handleFieldDischarging = (currentRadiation) => {
   const generatedThisTick = currentRadiation * SOLAR_EFFICIENCY;
@@ -433,7 +433,7 @@ const handleFieldDischarging = (currentRadiation) => {
 };
 
 /**
- * Actualiza la batería del robot y anota lo consumido/generado para las estadísticas.
+ * Actualiza la batería del robot y registra lo que se consumió/generó para las estadísticas.
  */
 const updateBatteryState = () => {
   const currentRadiation = calculateSolarRadiation(new Date());
@@ -451,19 +451,19 @@ const updateBatteryState = () => {
 };
 
 /**
- * Sistema de barrera virtual. Evita que el robot se salga de la zona permitida, funcionando como un muro invisible.
+ * Sistema de barrera virtual. Impide que el robot salga de la zona permitida, actuando como un muro invisible.
  * Solo le permite volver a entrar si, por lo que sea, está fuera.
- * @param {number} cLat - Latitud Actual.
- * @param {number} cLon - Longitud Actual.
- * @param {number} nLat - Latitud hacia la que quiere ir.
- * @param {number} nLon - Longitud hacia la que quiere ir.
- * @returns {Object} El movimiento permitido (si choca, se queda donde está).
+ * @param {number} cLat - Latitud actual.
+ * @param {number} cLon - Longitud actual.
+ * @param {number} nLat - Latitud a la que quiere ir.
+ * @param {number} nLon - Longitud a la que quiere ir.
+ * @returns {Object} Movimiento permitido (si choca, se queda donde está).
  */
 const applyGeofencing = (cLat, cLon, nLat, nLon) => {
   if (!safeZonePolygon || safeZonePolygon.length < 3) return { validLat: nLat, validLon: nLon };
   if (nLat === cLat && nLon === cLon) return { validLat: nLat, validLon: nLon };
   
-  // Apagamos la barrera de seguridad si el robot necesita volver a su base de carga automáticamente
+  // Apaga la barrera de seguridad si el robot necesita volver a su base de carga automáticamente
   if (controlMode !== "MANUAL") return { validLat: nLat, validLon: nLon };
 
   const isCurrentlyInside = isPointInPolygon(cLat, cLon, safeZonePolygon);
@@ -478,7 +478,7 @@ const applyGeofencing = (cLat, cLon, nLat, nLon) => {
 };
 
 /**
- * Actualiza la velocidad y la orientación hacia la que mira el robot basándose en su último movimiento.
+ * Actualiza la velocidad y la orientación a la que mira el robot en base a su último movimiento.
  */
 const updateSpeedAndHeading = (cLat, cLon, nLat, nLon, dLat, dLon) => {
   if (Math.abs(nLat - cLat) > 0 || Math.abs(nLon - cLon) > 0 || Math.abs(dLat) > 0) {
@@ -540,8 +540,8 @@ export const cancelSimulation = () => {
 };
 
 /**
- * Es el "latido" del motor de movimiento. Se ejecuta cada segundo para procesar el movimiento, la batería y avisar a los usuarios.
- * @param {import('socket.io').Server} io - Permite enviar datos en vivo al frontend.
+ * Es el "latido" del motor de movimiento. Se ejecuta cada segundo para procesar el movimiento, la batería y notificar a los usuarios.
+ * @param {Object} io - Permite enviar datos en vivo al frontend.
  */
 const processMovementTick = async (io) => {
   checkRTLRequired();
@@ -561,15 +561,23 @@ const processMovementTick = async (io) => {
 
   const currentSystemStatus = isPaused ? "PAUSED" : getSystemStatus(isCharging, speed);
 
-  const radiacion = calculateSolarRadiation(new Date());
-  const solarInput = radiacion * SOLAR_EFFICIENCY; 
-  const consumoActual = isCharging ? 0 : calculateTickConsumption(); 
+  const radiation = calculateSolarRadiation(new Date());
+  const solarInput = radiation * SOLAR_EFFICIENCY; 
+  const currentConsumption = isCharging ? 0 : calculateTickConsumption(); 
 
   try {
-    await pool.query(
-      `UPDATE robot_estado SET current_lat = $1, current_lon = $2, battery_percentage = $3, battery_status = $4, system_status = $5, system_speed = $6, system_heading = $7 WHERE id = 1`,
-      [currentLat, currentLon, Math.round(battery), isCharging ? "CHARGING" : "IDLE", currentSystemStatus, speed, Math.round(heading)]
-    );
+    await prisma.robotState.update({
+      where: { id: 1 },
+      data: {
+        currentLat: currentLat,
+        currentLon: currentLon,
+        batteryPercentage: Math.round(battery),
+        batteryStatus: isCharging ? "CHARGING" : "IDLE",
+        systemStatus: currentSystemStatus,
+        systemSpeed: speed,
+        systemHeading: Math.round(heading)
+      }
+    });
 
     if (io) {
       io.emit("robot:status", {
@@ -578,21 +586,21 @@ const processMovementTick = async (io) => {
           status: isCharging ? "CHARGING" : "IDLE", 
           voltage: 12.5, 
           temperature: 35, 
-          timeRemaining: isCharging ? "Cargando..." : `${Math.round(battery * 1.5)} min`,
+          timeRemaining: isCharging ? "Charging..." : `${Math.round(battery * 1.5)} min`,
           solarInput: solarInput, 
-          consumption: consumoActual
+          consumption: currentConsumption
         },
         position: { lat: currentLat, lon: currentLon },
         system: { speed: speed, heading: Math.round(heading), status: currentSystemStatus, mode: controlMode, speedLimit: speedLimitPercent, target: navTarget, queue: navQueue }
       });
     }
   } catch (error) { 
-    console.error("[Simulator] Problema al guardar el estado del robot:", error.message); 
+    console.error("[Simulador] Problema al guardar el estado del robot:", error.message); 
   }
 };
 
 /**
- * Guarda en la base de datos de vez en cuando (ej. cada 5 segundos) una foto de cómo va la batería para poder pintar luego las gráficas.
+ * Guarda una instantánea de la batería ocasionalmente (ej. cada 5 segundos) en la base de datos para pintar gráficos más tarde.
  */
 const processEnergyTick = async () => {
   const currentStatus = isPaused ? "PAUSED" : getSystemStatus(isCharging, speed);
@@ -602,38 +610,42 @@ const processEnergyTick = async () => {
   accumulatedGenerated = 0;
 
   try {
-    await pool.query(
-      `INSERT INTO historial_energia (bateria_porcentaje, estado, radiacion_solar, energia_consumida, energia_generada) VALUES ($1, $2, $3, $4, $5)`,
-      [battery.toFixed(2), currentStatus, calculateSolarRadiation(new Date()).toFixed(2), logConsumed.toFixed(4), logGenerated.toFixed(4)]
-    );
-    // Borramos los registros muy antiguos para que el disco duro no se llene infinitamente
-    await pool.query(`DELETE FROM historial_energia WHERE id NOT IN (SELECT id FROM historial_energia ORDER BY timestamp DESC LIMIT $1)`, [MAX_HISTORY_RECORDS]);
+    await prisma.energyHistory.create({
+      data: {
+        batteryPercentage: Number.parseFloat(battery.toFixed(2)),
+        status: currentStatus,
+        solarRadiation: Number.parseFloat(calculateSolarRadiation(new Date()).toFixed(2)),
+        energyConsumed: Number.parseFloat(logConsumed.toFixed(4)),
+        energyGenerated: Number.parseFloat(logGenerated.toFixed(4))
+      }
+    });
+    // Borramos registros muy antiguos usando SQL crudo a través de Prisma para simplificar
+    await prisma.$executeRawUnsafe(`DELETE FROM historial_energia WHERE id NOT IN (SELECT id FROM historial_energia ORDER BY timestamp DESC LIMIT $1)`, MAX_HISTORY_RECORDS);
   } catch (err) { 
-    console.error("[Simulator] Problema al guardar el histórico de energía:", err.message); 
+    console.error("[Simulador] Problema al guardar historial de energía:", err.message); 
   }
 };
 
 /**
- * Revisa si actualmente hay alguna misión agrícola encendida y trabajando.
+ * Comprueba si hay una misión agrícola activa trabajando actualmente.
  * @returns {Promise<Object>} Datos de la misión activa.
  */
 const getActiveMissionContext = async () => {
-  const res = await pool.query(
-    `SELECT e.id, m.nombre, m.tipo_tarea 
-     FROM ejecuciones_mision e 
-     JOIN misiones m ON e.mision_id = m.id 
-     WHERE e.estado IN ('en_curso', 'ejecutando', 'activa') 
-     ORDER BY e.id DESC LIMIT 1`
-  );
-  if (res.rows.length > 0) {
-    return { id: res.rows[0].id, name: res.rows[0].nombre, tipo_tarea: res.rows[0].tipo_tarea.toLowerCase() };
+  const exec = await prisma.missionExecution.findFirst({
+    where: { status: { in: ['en_curso', 'ejecutando', 'activa'] } },
+    orderBy: { id: 'desc' },
+    include: { mission: true }
+  });
+
+  if (exec) {
+    return { id: exec.id, name: exec.mission?.name, taskType: exec.mission?.taskType?.toLowerCase() || "" };
   }
-  return { id: null, name: null, tipo_tarea: "" };
+  return { id: null, name: null, taskType: "" };
 };
 
 /**
- * Decide si deberíamos apagar los sensores de suelo (ej: si el robot está cargando o está aparcado fuera de la parcela).
- * @returns {boolean} True si no hay que tomar lecturas.
+ * Decide si debemos apagar los sensores de suelo (ej. si el robot está cargando o aparcado fuera de la parcela).
+ * @returns {boolean} Verdadero si no se deben tomar lecturas.
  */
 const shouldSkipAgronomy = () => {
   if (isCharging || isPaused || Number.parseFloat(speed) === 0 || controlMode === "RETURNING_TO_BASE" || controlMode === "RESUMING_MISSION") {
@@ -648,8 +660,32 @@ const shouldSkipAgronomy = () => {
 };
 
 /**
- * Se encarga de generar los datos simulados de los sensores (humedad, temperatura, ph, etc.) como si el robot estuviera leyendo el terreno real.
- * @param {import('socket.io').Server} io - Permite enviar datos en vivo al frontend.
+ * Genera valores sintéticos para los sensores en base a la ubicación actual y los requisitos de la misión activa.
+ */
+const generateSensorReadings = (taskStr, lat, lon, hasActiveMission) => {
+  const collectHum = !hasActiveMission || taskStr.includes("humedad") || taskStr.includes("humidity");
+  const collectTemp = !hasActiveMission || taskStr.includes("temp");
+  const collectPh = !hasActiveMission || taskStr.includes("ph");
+  const collectNpk = !hasActiveMission || taskStr.includes("n-p-k") || taskStr.includes("npk");
+  const collectRad = !hasActiveMission || taskStr.includes("rad");
+
+  // Truco matemático para que la simulación del sensor parezca natural y varíe dependiendo de dónde pisa el robot
+  const intensity = (Math.sin(lat * 15000) + Math.cos(lon * 15000) + 2) / 4;
+  
+  return {
+    cHum: collectHum ? Math.max(0, Math.min(100, (20 + (intensity * 70)) + (getSecureRandom() * 4 - 2))).toFixed(1) : null,
+    cTemp: collectTemp ? ((15 + (intensity * 20)) + (getSecureRandom() * 1 - 0.5)).toFixed(1) : null,
+    cPh: collectPh ? Math.max(4, Math.min(10, (5 + (intensity * 3)) + (getSecureRandom() * 0.4 - 0.2))).toFixed(1) : null,
+    cN: collectNpk ? (20 + getSecureRandom() * 60).toFixed(2) : null,
+    cP: collectNpk ? (15 + getSecureRandom() * 45).toFixed(2) : null,
+    cK: collectNpk ? (100 + getSecureRandom() * 150).toFixed(2) : null,
+    cRad: collectRad ? calculateSolarRadiation(new Date()).toFixed(2) : null
+  };
+};
+
+/**
+ * Encargado de generar datos de sensores simulados (humedad, temperatura, ph, etc.) como si el robot estuviera leyendo terreno real.
+ * @param {Object} io - Permite enviar datos en vivo al frontend.
  */
 const processAgronomicTick = async (io) => {
   if (shouldSkipAgronomy()) {
@@ -659,46 +695,40 @@ const processAgronomicTick = async (io) => {
   try {
     const missionCtx = await getActiveMissionContext();
     const hasActiveMission = missionCtx.id !== null;
-    const tareasStr = missionCtx.tipo_tarea || "";
+    const taskStr = missionCtx.taskType || "";
 
-    // Solo leemos el sensor si la tarea lo requiere (ej. si es una misión de "ph", no leemos la "humedad")
-    const collectHum = !hasActiveMission || tareasStr.includes("humedad") || tareasStr.includes("humidity");
-    const collectTemp = !hasActiveMission || tareasStr.includes("temp");
-    const collectPh = !hasActiveMission || tareasStr.includes("ph");
-    const collectNpk = !hasActiveMission || tareasStr.includes("n-p-k") || tareasStr.includes("npk");
-    const collectRad = !hasActiveMission || tareasStr.includes("rad");
+    const readings = generateSensorReadings(taskStr, currentLat, currentLon, hasActiveMission);
 
-    // Truco matemático para que la simulación de los sensores parezca natural y varíe según por donde pise el robot
-    const intensity = (Math.sin(currentLat * 15000) + Math.cos(currentLon * 15000) + 2) / 4;
-    
-    const cHum = collectHum ? Math.max(0, Math.min(100, (20 + (intensity * 70)) + (getSecureRandom() * 4 - 2))).toFixed(1) : null;
-    const cTemp = collectTemp ? ((15 + (intensity * 20)) + (getSecureRandom() * 1 - 0.5)).toFixed(1) : null;
-    const cPh = collectPh ? Math.max(4, Math.min(10, (5 + (intensity * 3)) + (getSecureRandom() * 0.4 - 0.2))).toFixed(1) : null;
-    const cN = collectNpk ? (20 + getSecureRandom() * 60).toFixed(2) : null;
-    const cP = collectNpk ? (15 + getSecureRandom() * 45).toFixed(2) : null;
-    const cK = collectNpk ? (100 + getSecureRandom() * 150).toFixed(2) : null;
-    const cRad = collectRad ? calculateSolarRadiation(new Date()).toFixed(2) : null;
+    const newRecord = await prisma.robotData.create({
+      data: {
+        lat: currentLat,
+        lon: currentLon,
+        humidity: readings.cHum === null ? null : Number.parseFloat(readings.cHum),
+        soilTemperature: readings.cTemp === null ? null : Number.parseFloat(readings.cTemp),
+        ph: readings.cPh === null ? null : Number.parseFloat(readings.cPh),
+        nitrogen: readings.cN === null ? null : Number.parseFloat(readings.cN),
+        phosphorus: readings.cP === null ? null : Number.parseFloat(readings.cP),
+        potassium: readings.cK === null ? null : Number.parseFloat(readings.cK),
+        solarRadiation: readings.cRad === null ? null : Number.parseFloat(readings.cRad),
+        executionId: missionCtx.id
+      }
+    });
 
-    const newRecord = await pool.query(
-      `INSERT INTO robot_datos (lat, lon, humedad, temperatura_suelo, ph, nitrogeno, fosforo, potasio, radiacion_solar, ejecucion_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [currentLat, currentLon, cHum, cTemp, cPh, cN, cP, cK, cRad, missionCtx.id]
-    );
-
-    if (io && newRecord.rows[0]) {
-      io.emit("robot:new_data", { ...newRecord.rows[0], nombre_mision: missionCtx.name });
+    if (io && newRecord) {
+      io.emit("robot:new_data", { ...newRecord, missionName: missionCtx.name });
     }
     
-    await pool.query(`DELETE FROM robot_datos WHERE id NOT IN (SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1)`, [MAX_HISTORY_RECORDS]);
+    await prisma.$executeRawUnsafe(`DELETE FROM robot_datos WHERE id NOT IN (SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1)`, MAX_HISTORY_RECORDS);
   } catch (error) { 
-    console.error("[Simulator] Problema al guardar los datos agronómicos:", error.message); 
+    console.error("[Simulador] Problema al guardar datos agronómicos:", error.message); 
   }
 };
 
 /**
- * Arranca toda la simulación en segundo plano. Mueve el robot y genera datos constantemente.
+ * Inicia toda la simulación en segundo plano. Mueve el robot y genera datos constantemente.
  */
 export const startRobotSimulation = (io) => {
-  console.log("[Simulator] Simulación iniciada correctamente en segundo plano.");
+  console.log("[Simulador] Simulación iniciada correctamente en segundo plano.");
   setInterval(() => processMovementTick(io), MOVEMENT_INTERVAL);
   setInterval(() => processEnergyTick(), ENERGY_LOG_INTERVAL);
   setInterval(() => processAgronomicTick(io), SENSOR_INTERVAL);

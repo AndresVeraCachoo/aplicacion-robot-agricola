@@ -1,13 +1,18 @@
 // src/pages/UserManagementPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import httpClient from "../config/httpClient";
 import { useTranslation } from "react-i18next";
 import Modal from "../components/Modal";
 import "./UserManagementPage.css";
 import { useToast } from "../context/ToastContext";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/users`;
+const API_URL = "/users";
 
+/**
+ * Componente de la página de gestión de usuarios.
+ * Permite listar, crear, editar y eliminar usuarios.
+ * @returns {JSX.Element}
+ */
 function UserManagementPage() {
   const { t } = useTranslation();
   const [users, setUsers] = useState([]);
@@ -19,17 +24,17 @@ function UserManagementPage() {
     id: null,
     name: "",
     password: "",
-    role: "usuario",
+    role: "user",
   });
 
   const [userToDelete, setUserToDelete] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await axios.get(API_URL);
+      const response = await httpClient.get(API_URL);
       setUsers(response.data);
     } catch (err) {
-      console.error("Error al cargar usuarios:", err);
+      console.error("Error al cargar los usuarios:", err);
       addToast(t("users.errorLoad"), "error");
     }
   }, [addToast, t]);
@@ -39,7 +44,7 @@ function UserManagementPage() {
   }, [fetchUsers]);
 
   const openCreateModal = () => {
-    setCurrentUser({ id: null, name: "", password: "", role: "usuario" });
+    setCurrentUser({ id: null, name: "", password: "", role: "user" });
     setIsModalOpen(true);
   };
 
@@ -63,7 +68,7 @@ function UserManagementPage() {
 
     try {
       if (currentUser.id) {
-        await axios.put(`${API_URL}/${currentUser.id}`, userData);
+        await httpClient.put(`${API_URL}/${currentUser.id}`, userData);
         addToast(
           `${t("users.updated", "Usuario actualizado:")} "${userData.name}"`,
           "success",
@@ -73,21 +78,22 @@ function UserManagementPage() {
           addToast(t("users.pwdRequired"), "warning");
           return;
         }
-        await axios.post(API_URL, userData);
+        await httpClient.post(API_URL, userData);
         addToast(`${t("users.created")} "${userData.name}"`, "success");
       }
       closeModal();
       fetchUsers();
     } catch (err) {
-      console.error("Error al guardar usuario:", err);
-      addToast(t("users.errorSave"), "error");
+      console.error("Error al guardar el usuario:", err);
+      const serverError = err.response?.data?.error || t("users.errorSave");
+      addToast(serverError, "error");
     }
   };
 
   const executeDeleteUser = async () => {
     if (!userToDelete) return;
     try {
-      await axios.delete(`${API_URL}/${userToDelete}`);
+      await httpClient.delete(`${API_URL}/${userToDelete}`);
       addToast(
         t("users.deleted", "Usuario eliminado correctamente"),
         "success",
@@ -95,7 +101,7 @@ function UserManagementPage() {
       fetchUsers();
       setUserToDelete(null);
     } catch (err) {
-      console.error("Error al eliminar usuario:", err);
+      console.error("Error al eliminar el usuario:", err);
       // Capturamos el 409 o 403 y mostramos un mensaje amigable en vez de fallar
       if (
         err.response &&
@@ -206,8 +212,8 @@ function UserManagementPage() {
               value={currentUser.role}
               onChange={handleChange}
             >
-              <option value="usuario">{t("users.roleUser")}</option>
-              <option value="operador">{t("users.roleOperator")}</option>
+              <option value="user">{t("users.roleUser")}</option>
+              <option value="operator">{t("users.roleOperator")}</option>
               <option value="admin">{t("users.roleAdmin")}</option>
             </select>
           </div>

@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth.jsx';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (k) => {
-      // Forzamos un valor falsy para cubrir la rama del fallback ( || "Close sidebar" )
+      // Force a falsy value to cover the fallback branch ( || "Close sidebar" )
       if (k === 'modal.close') return undefined;
       return k;
     }
@@ -19,7 +19,7 @@ vi.mock('../../hooks/useAuth', () => ({ useAuth: vi.fn() }));
 
 const renderWithRouter = (ui) => render(<BrowserRouter>{ui}</BrowserRouter>);
 
-describe('Sidebar Component', () => {
+describe('Componente Sidebar', () => {
   const mockOnClose = vi.fn();
   const mockLogout = vi.fn();
 
@@ -32,15 +32,15 @@ describe('Sidebar Component', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Estado de apertura y estilos condicionales (Branch Coverage)', () => {
-    it('renderiza y aplica atributos correctos cuando isOpen es TRUE', () => {
+  describe('Estado Abierto y estilos condicionales', () => {
+    it('renderiza y aplica atributos correctos cuando isOpen es VERDADERO', () => {
       useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
       renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
       const overlay = document.querySelector('.sidebar-overlay-bg');
       expect(overlay).toHaveClass('visible');
       expect(overlay).toHaveAttribute('tabindex', '0');
-      // Verificamos que el fallback del aria-label funciona al no haber traducción
+      // Verify that the aria-label fallback works when there is no translation
       expect(overlay).toHaveAttribute('aria-label', 'Close sidebar');
 
       const aside = document.querySelector('.sidebar');
@@ -48,7 +48,7 @@ describe('Sidebar Component', () => {
       expect(aside).not.toHaveClass('closed');
     });
 
-    it('renderiza y aplica atributos correctos cuando isOpen es FALSE', () => {
+    it('renderiza y aplica atributos correctos cuando isOpen es FALSO', () => {
       useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
       renderWithRouter(<Sidebar isOpen={false} onClose={mockOnClose} />);
 
@@ -62,9 +62,9 @@ describe('Sidebar Component', () => {
     });
   });
 
-  it('renderiza enlaces básicos e invoca onClose al hacer clic en ellos', () => {
+  it('renderiza enlaces básicos e invoca onClose al hacer clic', () => {
     useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
-    // Añadimos isOpen={true} en los demás tests por buenas prácticas de PropTypes
+    // Add isOpen={true} in other tests for PropTypes best practices
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
     const inicioLink = screen.getByText('sidebar.home');
@@ -78,7 +78,7 @@ describe('Sidebar Component', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(2);
   });
 
-  it('muestra el enlace de "Cámara" solo a operadores y administradores', () => {
+  it('muestra enlace de Cámara solo a operadores y administradores', () => {
     useAuth.mockReturnValue({ userRole: 'operador', logout: mockLogout });
     const { rerender } = renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
@@ -89,14 +89,14 @@ describe('Sidebar Component', () => {
     expect(screen.queryByText('sidebar.camera')).not.toBeInTheDocument();
   });
 
-  it('muestra el enlace de "Gestión de Usuarios" exclusivamente a administradores', () => {
+  it('muestra enlace de Gestión de Usuarios solo a administradores', () => {
     useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('sidebar.userManagement')).toBeInTheDocument();
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
   });
 
-  it('ejecuta logout y cierra el sidebar al pulsar "Cerrar Sesión"', () => {
+  it('ejecuta cierre de sesión y cierra sidebar al hacer clic en Salir', () => {
     useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
@@ -116,7 +116,7 @@ describe('Sidebar Component', () => {
       expect(avatarImg).toHaveAttribute('src', '/avatars/robot-fondo-verde.png');
     });
 
-    it('escucha el evento "avatarUpdated" y actualiza la imagen dinámicamente', () => {
+    it('escucha el evento avatarUpdated y actualiza la imagen dinámicamente', () => {
       useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
       globalThis.localStorage.setItem('userAvatar', 'old-avatar.png');
       

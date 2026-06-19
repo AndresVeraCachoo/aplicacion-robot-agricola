@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-describe("Capa de Transporte de WebSockets (socketHandler)", () => {
+describe("Capa de Transporte WebSocket", () => {
   let setupSockets, mockSimulator;
   
   beforeEach(async () => {
@@ -19,7 +19,7 @@ describe("Capa de Transporte de WebSockets (socketHandler)", () => {
     setupSockets = module.setupSockets;
   });
 
-  it("Debería registrar correctamente todos los listeners y propagar los payloads al simulador", () => {
+  it("Debería registrar oyentes y propagar cargas al simulador", () => {
     const socketEvents = {};
     const mockSocket = {
       id: "mock-123",

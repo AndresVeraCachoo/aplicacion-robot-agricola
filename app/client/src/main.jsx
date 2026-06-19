@@ -22,7 +22,7 @@ const updateSW = registerSW({
     }
   },
   onOfflineReady() {
-    console.log("AgroSkopos está lista para trabajar offline.");
+    console.log("AgroSkopos está listo para trabajar sin conexión.");
   },
 });
 

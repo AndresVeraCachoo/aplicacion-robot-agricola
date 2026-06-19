@@ -47,7 +47,7 @@ vi.mock('../../features/dashboard/components/BatteryModal', () => ({
   default: () => <div data-testid="mock-battery-modal">Battery Content</div>,
 }));
 
-describe('Header Component', () => {
+describe('Componente Header', () => {
   const mockOnMenuClick = vi.fn();
   const mockToggleTheme = vi.fn();
   const mockAddToast = vi.fn();
@@ -67,7 +67,7 @@ describe('Header Component', () => {
     });
   };
 
-  it('renderiza correctamente el Header e interacciona con el menú', () => {
+  it('renderiza Header correctamente e interactúa con el menú', () => {
     setupStore(80, 'DISCHARGING');
     render(<Header onMenuClick={mockOnMenuClick} />);
 
@@ -84,8 +84,8 @@ describe('Header Component', () => {
     });
   });
 
-  describe('Control de Tema (Modo Claro/Oscuro)', () => {
-    it('muestra el icono ☀️ y cambia el tema si no es dark mode', () => {
+  describe('Control de Tema', () => {
+    it('muestra icono ☀️ y alterna tema si no es modo oscuro', () => {
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       
@@ -96,7 +96,7 @@ describe('Header Component', () => {
       expect(mockToggleTheme).toHaveBeenCalledTimes(1);
     });
 
-    it('muestra el icono 🌙 si es dark mode', () => {
+    it('muestra icono 🌙 si es modo oscuro', () => {
       useTheme.mockReturnValue({ isDarkMode: true, toggleTheme: mockToggleTheme });
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
@@ -107,7 +107,7 @@ describe('Header Component', () => {
   });
 
   describe('Selector de Idioma', () => {
-    it('permite abrir el dropdown y seleccionar un idioma diferente', async () => {
+    it('permite abrir el menú desplegable y seleccionar otro idioma', async () => {
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       
@@ -128,40 +128,40 @@ describe('Header Component', () => {
     });
   });
 
-  describe('Widget de Batería y Modal', () => {
-    it('aplica la clase "good" si la batería es mayor al 50%', () => {
+  describe('Widget y Modal de Batería', () => {
+    it('aplica clase good si la batería supera 50%', () => {
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       expect(document.querySelector('.battery-widget')).toHaveClass('good');
     });
 
-    it('aplica la clase "low" si la batería está entre 10% y 50%', () => {
+    it('aplica clase low si la batería está entre 10% y 50%', () => {
       setupStore(30, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       expect(document.querySelector('.battery-widget')).toHaveClass('low');
     });
 
-    it('aplica la clase "critical" si la batería es menor a 10%', () => {
+    it('aplica clase critical si la batería es menor a 10%', () => {
       setupStore(5, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       expect(document.querySelector('.battery-widget')).toHaveClass('critical');
     });
 
-    it('aplica la clase "charging" y muestra el rayo si el estado es CHARGING', () => {
+    it('aplica clase charging y muestra rayo si estado es CARGANDO', () => {
       setupStore(50, 'CHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       expect(document.querySelector('.battery-widget')).toHaveClass('charging');
       expect(screen.getByText('⚡')).toBeInTheDocument();
     });
 
-    it('aplica la clase "solar" y muestra el icono 🌤️ si netPower > 0 y no está cargando', () => {
+    it('aplica clase solar y muestra icono 🌤️ si netPower > 0', () => {
       setupStore(50, 'DISCHARGING', 100);
       render(<Header onMenuClick={mockOnMenuClick} />);
       expect(document.querySelector('.battery-widget')).toHaveClass('solar');
       expect(screen.getByText('🌤️')).toBeInTheDocument();
     });
 
-    it('abre y cierra el BatteryModal al hacer clic en el widget', () => {
+    it('abre y cierra BatteryModal al hacer clic en el widget', () => {
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       

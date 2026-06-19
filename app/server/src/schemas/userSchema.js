@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-// Definición estricta centralizada para evitar desincronizaciones con el ENUM de la base de datos
+// Definición centralizada y estricta para evitar desincronizaciones con el ENUM de la base de datos
 const roleEnum = z.enum(["admin", "operador", "usuario"], {
-  invalid_type_error: "Rol inválido. Solo se permite: admin, operador, usuario" 
+  invalid_type_error: "Invalid role. Only allowed: admin, operador, usuario" 
 });
 
 /**
@@ -10,9 +10,9 @@ const roleEnum = z.enum(["admin", "operador", "usuario"], {
  */
 export const createUserSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "El nombre es obligatorio"),
+    name: z.string().trim().min(1, "Name is required"),
     role: roleEnum,
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
+    password: z.string().min(6, "Password must be at least 6 characters")
   })
 });
 
@@ -21,10 +21,10 @@ export const createUserSchema = z.object({
  */
 export const updateUserSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "El nombre es obligatorio"),
+    name: z.string().trim().min(1, "Name is required"),
     role: roleEnum,
-    // Es opcional porque el administrador puede editar el rol o nombre sin alterar las credenciales
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").optional()
+    // Opcional porque el administrador puede editar el rol o nombre sin alterar las credenciales
+    password: z.string().min(6, "Password must be at least 6 characters").optional()
   })
 });
 
@@ -33,16 +33,16 @@ export const updateUserSchema = z.object({
  */
 export const updatePasswordSchema = z.object({
   body: z.object({
-    currentPassword: z.string().min(1, "La contraseña actual es obligatoria"),
-    newPassword: z.string().min(6, "La nueva contraseña debe tener al menos 6 caracteres")
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(6, "New password must be at least 6 characters")
   })
 });
 
 /**
- * Esquema para la actualización de la imagen de perfil.
+ * Esquema para la actualización de la foto de perfil.
  */
 export const updateAvatarSchema = z.object({
   body: z.object({
-    avatarUrl: z.string().regex(/^https?:\/\/.+/, "Debe ser una URL de imagen válida")
+    avatarUrl: z.string().regex(/^(\/|https?:\/\/).+/, "Must be a valid image URL or local path")
   })
 });

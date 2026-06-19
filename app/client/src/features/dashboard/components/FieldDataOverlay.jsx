@@ -6,6 +6,12 @@ import L from "leaflet";
 import "leaflet.heat"; // Extensión mágica para el mapa de calor
 import { useRobotStore } from "../../../store/robotStore";
 
+/**
+ * Componente que renderiza una capa de mapa de calor con los datos agronómicos.
+ * @param {Object} props - Propiedades del componente.
+ * @param {string} props.metric - Métrica a visualizar (humidity, ph, temperature).
+ * @returns {null} Este componente no renderiza elementos DOM.
+ */
 const FieldDataOverlay = ({ metric }) => {
   const map = useMap();
   const { agronomicData } = useRobotStore();
@@ -22,11 +28,11 @@ const FieldDataOverlay = ({ metric }) => {
         const val = Number(d[metric]);
         let intensity = 0;
 
-        if (metric === "humedad") {
+        if (metric === "humidity") {
           intensity = val / 100; // Humedad va de 0% a 100%
         } else if (metric === "ph") {
           intensity = Math.max(0, Math.min(1, (val - 5) / 3)); // Normaliza pH de 5 a 8
-        } else if (metric === "temperatura_suelo") {
+        } else if (metric === "temperature") {
           intensity = Math.max(0, Math.min(1, (val - 10) / 30)); // Normaliza Temp de 10C a 40C
         }
 

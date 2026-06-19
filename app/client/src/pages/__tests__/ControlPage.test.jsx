@@ -20,7 +20,7 @@ vi.mock('../../store/robotStore', () => ({
   useRobotStore: vi.fn(),
 }));
 
-describe('ControlPage Component', () => {
+describe('Componente ControlPage', () => {
   const mockSendManualMove = vi.fn();
 
   beforeEach(() => {
@@ -31,8 +31,8 @@ describe('ControlPage Component', () => {
     });
   });
 
-  describe('Renderizado Inicial y Picture-in-Picture (PiP)', () => {
-    it('renderiza con el mapa como vista principal y cámara como PiP por defecto', () => {
+  describe('Render Inicial y Picture-in-Picture (PiP)', () => {
+    it('renderiza con mapa como vista principal y cámara como PiP', () => {
       render(<ControlPage />);
       
       const page = document.querySelector('.control-page');
@@ -45,7 +45,7 @@ describe('ControlPage Component', () => {
       expect(mapContainer).toHaveClass('is-main');
     });
 
-    it('intercambia las vistas al hacer clic en el contenedor PiP', () => {
+    it('intercambia vistas al hacer clic en contenedor PiP', () => {
       render(<ControlPage />);
       
       // Hacemos clic en la cámara (que empieza siendo PiP)
@@ -61,11 +61,11 @@ describe('ControlPage Component', () => {
       const mapContainer = document.querySelector('.map-container');
       fireEvent.click(mapContainer);
 
-      // Vuelve a su estado original
+      // Vuelve a su status original
       expect(page).toHaveClass('is-map-main');
     });
 
-    it('intercambia las vistas al presionar Enter o Espacio usando el teclado (Accesibilidad)', () => {
+    it('intercambia vistas al presionar Enter o Espacio (Accesibilidad)', () => {
       render(<ControlPage />);
       const cameraContainer = document.querySelector('.camera-container');
       
@@ -85,15 +85,15 @@ describe('ControlPage Component', () => {
     });
   });
 
-  describe('Control por Joystick (Overlay en pantalla)', () => {
-    it('no renderiza el joystick si el modo NO es MANUAL', () => {
+  describe('Control por Joystick', () => {
+    it('no renderiza el joystick si el modo NO ES MANUAL', () => {
       useRobotStore.mockReturnValue({ system: { mode: 'AUTO' }, sendManualMove: mockSendManualMove });
       render(<ControlPage />);
       
       expect(document.querySelector('.joystick-overlay')).toBeNull();
     });
 
-    it('ejecuta los movimientos correctos con los botones del joystick (Ratón)', () => {
+    it('ejecuta movimientos correctos con botones de joystick (Ratón)', () => {
       render(<ControlPage />);
       
       const upBtn = screen.getByText('▲');
@@ -119,7 +119,7 @@ describe('ControlPage Component', () => {
       expect(mockSendManualMove).toHaveBeenCalledWith({ x: 1, y: 0 });
     });
 
-    it('ejecuta los movimientos correctos con eventos táctiles (Móvil)', () => {
+    it('ejecuta movimientos correctos con eventos táctiles (Móvil)', () => {
       render(<ControlPage />);
       const upBtn = screen.getByText('▲');
 
@@ -129,10 +129,24 @@ describe('ControlPage Component', () => {
       fireEvent.touchEnd(upBtn);
       expect(mockSendManualMove).toHaveBeenCalledWith({ x: 0, y: 0 });
     });
+
+    it('previene defensivamente handleMove y handleStop si modo no es MANUAL', () => {
+      // Simulate mode changing to AUTO but an event firing on a stale button reference
+      const { rerender } = render(<ControlPage />);
+      const upBtn = screen.getByText('▲');
+
+      useRobotStore.mockReturnValue({ system: { mode: 'AUTO' }, sendManualMove: mockSendManualMove });
+      rerender(<ControlPage />);
+
+      fireEvent.mouseDown(upBtn);
+      fireEvent.mouseUp(upBtn);
+
+      expect(mockSendManualMove).not.toHaveBeenCalled();
+    });
   });
 
-  describe('Control por Teclado (Global Events)', () => {
-    it('ignora los eventos de teclado si el modo NO es MANUAL', () => {
+  describe('Control por Teclado (Eventos Globales)', () => {
+    it('ignora eventos de teclado si el modo NO ES MANUAL', () => {
       useRobotStore.mockReturnValue({ system: { mode: 'AUTO' }, sendManualMove: mockSendManualMove });
       render(<ControlPage />);
       
@@ -140,7 +154,7 @@ describe('ControlPage Component', () => {
       expect(mockSendManualMove).not.toHaveBeenCalled();
     });
 
-    it('ejecuta los movimientos mapeando teclas direccionales y WASD', () => {
+    it('ejecuta movimientos mapeando teclas de flecha y WASD', () => {
       render(<ControlPage />);
 
       // Arriba
@@ -168,7 +182,7 @@ describe('ControlPage Component', () => {
       expect(mockSendManualMove).toHaveBeenCalledWith({ x: 1, y: 0 });
     });
 
-    it('detiene el movimiento al soltar la tecla (keyup)', () => {
+    it('detiene el movimiento al soltar tecla', () => {
       render(<ControlPage />);
       
       fireEvent.keyUp(globalThis, { key: 'ArrowUp' });
@@ -184,7 +198,7 @@ describe('ControlPage Component', () => {
       expect(mockSendManualMove).not.toHaveBeenCalled();
     });
 
-    it('ignora la pulsación si la tecla se mantiene presionada (e.repeat)', () => {
+    it('ignora presión de tecla si se mantiene presionada', () => {
       render(<ControlPage />);
       
       fireEvent.keyDown(globalThis, { key: 'ArrowUp', repeat: true });

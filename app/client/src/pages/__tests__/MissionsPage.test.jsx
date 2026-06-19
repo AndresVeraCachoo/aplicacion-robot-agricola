@@ -101,19 +101,19 @@ vi.mock('react-leaflet', () => {
 vi.mock('../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
 vi.mock('../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
 
-describe('MissionsPage Component', () => {
+describe('Componente MissionsPage', () => {
   let mockAddToast, consoleSpy;
   let mockFetchMisiones, mockCreateMision, mockUpdateMision, mockDeleteMision;
 
-  const mockMisiones = [
+  const mockMissiones = [
     {
       id: 1,
-      nombre: 'Misión Test',
-      tipo_tarea: 'Humedad, Temp',
-      bateria_minima: 30,
-      ancho_trabajo: 2,
-      angulo_pasada: 0,
-      area_trabajo: { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] }
+      name: 'Misión Test',
+      taskType: 'Humedad, Temp',
+      minBattery: 30,
+      workingWidth: 2,
+      passAngle: 0,
+      workArea: { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] }
     }
   ];
 
@@ -132,11 +132,11 @@ describe('MissionsPage Component', () => {
     mockDeleteMision = vi.fn().mockResolvedValue(true);
 
     useMissionStore.mockReturnValue({
-      misiones: mockMisiones,
-      fetchMisiones: mockFetchMisiones,
-      createMision: mockCreateMision,
-      updateMision: mockUpdateMision,
-      deleteMision: mockDeleteMision
+      missions: mockMissiones,
+      fetchMissions: mockFetchMisiones,
+      createMission: mockCreateMision,
+      updateMission: mockUpdateMision,
+      deleteMission: mockDeleteMision
     });
 
     useRobotStore.mockImplementation((selector) => {
@@ -150,15 +150,15 @@ describe('MissionsPage Component', () => {
     consoleSpy.mockRestore();
   });
 
-  describe('Interacciones con el Mapa y Componentes Internos', () => {
-    it('centra el mapa en el robot al hacer clic en el CenterButton', () => {
+  describe('Interacciones del Mapa y Componentes Internos', () => {
+    it('centra el mapa en el robot al hacer clic en botón central', () => {
       render(<MissionsPage />);
       const centerBtn = screen.getByTitle('missions.map.centerRobot');
       fireEvent.click(centerBtn);
       expect(mockMapInstance.setView).toHaveBeenCalledWith([42, -3], 19);
     });
 
-    it('registra las coordenadas al hacer clic libre en el mapa (MapClickHandler)', () => {
+    it('registra coordenadas al hacer clic libremente en el mapa', () => {
       render(<MissionsPage />);
       act(() => {
         globalThis.__triggerMapClick({
@@ -170,7 +170,7 @@ describe('MissionsPage Component', () => {
       expect(screen.getByText(/-3.67890/)).toBeInTheDocument();
     });
 
-    it('usa coordenadas de fallback si el robot no tiene posición válida', () => {
+    it('usa coordenadas de respaldo si robot no tiene posición válida', () => {
       useRobotStore.mockImplementation((selector) => {
         const state = { position: {}, system: {} };
         if (typeof selector === 'function') return selector(state);
@@ -182,8 +182,8 @@ describe('MissionsPage Component', () => {
     });
   });
 
-  describe('Eventos de Geoman (Dibujo de Polígonos)', () => {
-    it('muestra error si el polígono se cruza a sí mismo y lo elimina', () => {
+  describe('Eventos de Geoman', () => {
+    it('muestra error si el polígono se auto-interseca y lo elimina', () => {
       render(<MissionsPage />);
       act(() => {
         globalThis.__mapOnCallbacks['pm:create']({
@@ -194,7 +194,7 @@ describe('MissionsPage Component', () => {
       expect(mockMapInstance.removeLayer).toHaveBeenCalled();
     });
 
-    it('asigna el polígono, limpia capas anteriores y habilita la edición', () => {
+    it('asigna polígono, limpia capas previas y habilita edición', () => {
       globalThis.__mockLayers = [new L.Polygon()];
       render(<MissionsPage />);
       
@@ -218,7 +218,7 @@ describe('MissionsPage Component', () => {
       expect(mockMapInstance.removeLayer).toHaveBeenCalled(); 
     });
 
-    it('limpia el areaTrabajo al eliminar la capa (pm:remove)', () => {
+    it('limpia área de trabajo cuando se elimina capa', () => {
       render(<MissionsPage />);
       act(() => {
         globalThis.__mapOnCallbacks['pm:remove']();
@@ -226,12 +226,12 @@ describe('MissionsPage Component', () => {
       
       // FIX: Rellenamos el nombre para que el formulario no bloquee el submit nativo
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Test' } });
-      fireEvent.click(screen.getByText('Guardar Misión'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
       expect(mockAddToast).toHaveBeenCalledWith('Dibuja el área de trabajo en el mapa primero.', 'error');
     });
   });
 
-  describe('Validación y Creación de Misiones (Formulario)', () => {
+  describe('Validación y Creación de Misión', () => {
     
     // Silenciamos el warning del Scroll de JSDOM
     beforeEach(() => {
@@ -258,7 +258,7 @@ describe('MissionsPage Component', () => {
       const humCheckbox = screen.getAllByRole('checkbox')[0];
       fireEvent.click(humCheckbox);
 
-      fireEvent.click(screen.getByText('Guardar Misión'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
       
       expect(mockAddToast).toHaveBeenCalledWith('Selecciona al menos un tipo de dato.', 'error');
       expect(mockCreateMision).not.toHaveBeenCalled();
@@ -278,15 +278,15 @@ describe('MissionsPage Component', () => {
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Alfa' } });
-      fireEvent.click(screen.getByText('Guardar Misión'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
 
       await waitFor(() => {
-        expect(mockCreateMision).toHaveBeenCalledWith(expect.objectContaining({ nombre: 'Misión Alfa' }));
+        expect(mockCreateMision).toHaveBeenCalledWith(expect.objectContaining({ name: 'Misión Alfa' }));
         expect(mockAddToast).toHaveBeenCalledWith('¡Misión creada con éxito!', 'success');
       });
     });
 
-    it('gestiona error de servidor al intentar crear', async () => {
+    it('maneja error del servidor al intentar crear', async () => {
       mockCreateMision.mockRejectedValueOnce(new Error('API Down'));
       render(<MissionsPage />);
       
@@ -301,7 +301,7 @@ describe('MissionsPage Component', () => {
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Error' } });
-      fireEvent.click(screen.getByText('Guardar Misión'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
 
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al guardar la misión', 'error');
@@ -310,29 +310,29 @@ describe('MissionsPage Component', () => {
   });
 
   describe('Edición y Cancelación', () => {
-    it('rellena el formulario, carga el polígono de edición y permite guardar (PUT)', async () => {
+    it('llena el formulario, carga polígono de edición y permite guardar', async () => {
       render(<MissionsPage />);
       
       const editBtn = screen.getByText('Editar');
       fireEvent.click(editBtn);
 
       expect(document.querySelector('input[id="mission-name"]').value).toBe('Misión Test');
-      expect(screen.getByText('Actualizar')).toBeInTheDocument();
+      expect(screen.getByText('Actualizar Misión')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByText('Actualizar'));
+      fireEvent.click(screen.getByText('Actualizar Misión'));
 
       await waitFor(() => {
-        expect(mockUpdateMision).toHaveBeenCalledWith(1, expect.objectContaining({ nombre: 'Misión Test' }));
+        expect(mockUpdateMision).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'Misión Test' }));
         expect(mockAddToast).toHaveBeenCalledWith('Misión actualizada correctamente', 'success');
       });
     });
 
-    it('muestra error si updateMision devuelve false', async () => {
+    it('muestra error si updateMission devuelve falso', async () => {
       mockUpdateMision.mockResolvedValueOnce(false);
       render(<MissionsPage />);
       
       fireEvent.click(screen.getByText('Editar'));
-      fireEvent.click(screen.getByText('Actualizar'));
+      fireEvent.click(screen.getByText('Actualizar Misión'));
 
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith('Error al actualizar la misión', 'error');
@@ -349,8 +349,8 @@ describe('MissionsPage Component', () => {
     });
   });
 
-  describe('Eliminación de Misiones (Modal)', () => {
-    it('abre el modal, cancela la eliminación y luego la ejecuta correctamente', async () => {
+  describe('Borrado de Misión', () => {
+    it('abre modal, cancela borrado y luego lo ejecuta correctamente', async () => {
       render(<MissionsPage />);
       
       fireEvent.click(screen.getByText('missions.card.deleteBtn'));
@@ -364,11 +364,11 @@ describe('MissionsPage Component', () => {
 
       await waitFor(() => {
         expect(mockDeleteMision).toHaveBeenCalledWith(1);
-        expect(mockAddToast).toHaveBeenCalledWith('Misión eliminada correctamente', 'error');
+        expect(mockAddToast).toHaveBeenCalledWith('Misión eliminada correctamente', 'info');
       });
     });
 
-    it('captura el error si la API de borrado falla', async () => {
+    it('captura error si API de borrado falla', async () => {
       mockDeleteMision.mockRejectedValueOnce(new Error('Delete Fail'));
       render(<MissionsPage />);
       

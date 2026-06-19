@@ -44,7 +44,7 @@ vi.mock('../Sidebar', () => ({
 
 vi.mock('../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
 
-describe('MainLayout Component', () => {
+describe('Componente MainLayout', () => {
   const mockFetchInitialData = vi.fn();
   const mockConnectSocket = vi.fn();
   const mockDisconnectSocket = vi.fn();
@@ -84,7 +84,7 @@ describe('MainLayout Component', () => {
     Object.defineProperty(globalThis, 'innerWidth', { writable: true, configurable: true, value: width });
   };
 
-  it('ejecuta fetchInitialData, connect y disconnect en el ciclo de vida', () => {
+  it('ejecuta fetchInitialData, conectar y desconectar en ciclo de vida', () => {
     setWindowWidth(1024);
     const { unmount } = render(<MainLayout />);
     
@@ -96,8 +96,8 @@ describe('MainLayout Component', () => {
     expect(mockDisconnectSocket).toHaveBeenCalledTimes(1);
   });
 
-  describe('Notificaciones del Sistema (Alertas Globales)', () => {
-    it('notifica al usuario cuando se conecta y se desconecta', () => {
+  describe('Notificaciones del Sistema', () => {
+    it('notifica al usuario al conectar y desconectar', () => {
       mockState.isConnected = false;
       const { rerender } = render(<MainLayout />);
       expect(mockAddToast).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('MainLayout Component', () => {
       expect(mockAddToast).toHaveBeenCalledWith('notifications.systemReady', 'success');
     });
 
-    it('actualiza lastEmergencyState de forma silenciosa si el robot se desconecta', () => {
+    it('actualiza silenciosamente lastEmergencyState si robot se desconecta', () => {
       mockState.isConnected = false;
       mockState.system = { ...mockState.system, emergencyStop: true };
       
@@ -139,7 +139,7 @@ describe('MainLayout Component', () => {
       expect(mockAddToast).not.toHaveBeenCalled();
     });
 
-    it('notifica cuando el robot vuelve a base por batería baja (RTL_ACTIVE)', () => {
+    it('notifica cuando robot regresa a base por baja batería', () => {
       mockState.isConnected = true;
       const { rerender } = render(<MainLayout />);
       
@@ -159,7 +159,7 @@ describe('MainLayout Component', () => {
   });
 
   describe('Comportamiento Responsivo (Escritorio vs Móvil)', () => {
-    it('Escritorio (>768px): Sidebar arranca y no muestra overlay', () => {
+    it('Escritorio (>768px): Sidebar inicia y no muestra superposición', () => {
       setWindowWidth(1024);
       render(<MainLayout />);
       
@@ -167,7 +167,7 @@ describe('MainLayout Component', () => {
       expect(document.querySelector('.sidebar-overlay')).toBeNull();
     });
 
-    it('Móvil (<=768px): Muestra overlay cuando isSidebarOpen es true y reacciona al click', () => {
+    it('Móvil (<=768px): Muestra superposición cuando isSidebarOpen es verdadero', () => {
       setWindowWidth(500);
       render(<MainLayout />);
       
@@ -179,7 +179,7 @@ describe('MainLayout Component', () => {
       expect(mockSetSidebarOpen).toHaveBeenCalledWith(false);
     });
 
-    it('Móvil (<=768px): La función closeMobileSidebar oculta el menú al navegar', () => {
+    it('Móvil (<=768px): Función closeMobileSidebar oculta menú al navegar', () => {
       setWindowWidth(500);
       render(<MainLayout />);
 
@@ -189,7 +189,7 @@ describe('MainLayout Component', () => {
       expect(mockSetSidebarOpen).toHaveBeenCalledWith(false);
     });
 
-    it('Escritorio (>768px): La función closeMobileSidebar NO oculta el menú al navegar', () => {
+    it('Escritorio (>768px): Función closeMobileSidebar NO oculta menú al navegar', () => {
       setWindowWidth(1024);
       render(<MainLayout />);
       

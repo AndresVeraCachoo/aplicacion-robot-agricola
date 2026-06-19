@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { UserController } from '../userController.js';
 
-describe("Controlador de Usuarios (UserController)", () => {
+describe("Controlador de Usuario", () => {
   let mockUserService, userController, req, res, next;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe("Controlador de Usuarios (UserController)", () => {
     next = jest.fn();
   });
 
-  it("Debería devolver el perfil del usuario autenticado", async () => {
+  it("Debería retornar el perfil del usuario autenticado", async () => {
     mockUserService.getUserProfile.mockResolvedValueOnce({ id: 1 });
     await userController.getProfile(req, res, next);
     expect(res.json).toHaveBeenCalledWith({ id: 1 });
@@ -34,7 +34,7 @@ describe("Controlador de Usuarios (UserController)", () => {
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("Debería devolver estado 201 al crear un nuevo usuario", async () => {
+  it("Debería retornar estado 201 al crear un nuevo usuario", async () => {
     req.body = { name: "Pepe", role: "admin", password: "1" };
     mockUserService.createNewUser.mockResolvedValueOnce({ id: 2 });
     await userController.createUser(req, res, next);
@@ -55,7 +55,7 @@ describe("Controlador de Usuarios (UserController)", () => {
     expect(res.json).toHaveBeenCalled();
   });
 
-  it("Debería actualizar la URL del avatar del usuario", async () => {
+  it("Debería actualizar la URL de avatar del usuario", async () => {
     req.body = { avatarUrl: "http://" };
     mockUserService.updateUserAvatar.mockResolvedValueOnce({ message: "OK" });
     await userController.updateAvatar(req, res, next);
@@ -73,7 +73,7 @@ describe("Controlador de Usuarios (UserController)", () => {
       { method: "updateAvatar", serviceMethod: "updateUserAvatar" },
     ];
 
-    it.each(endpoints)("Debería derivar errores de $method al middleware next()", async ({ method, serviceMethod }) => {
+    it.each(endpoints)("Should route errors from $method to the next() middleware", async ({ method, serviceMethod }) => {
       const errorMock = new Error("Fallo de conexión");
       mockUserService[serviceMethod].mockRejectedValueOnce(errorMock);
       

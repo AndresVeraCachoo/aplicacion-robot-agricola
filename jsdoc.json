@@ -9,7 +9,7 @@
       "./app/client/src"
     ],
     "includePattern": ".+\\.(js|jsx)$",
-    "excludePattern": "(^|\\/|\\\\)_"
+    "excludePattern": "(^|\\/|\\\\)_|generated"
   },
   "plugins": [
     "plugins/markdown"

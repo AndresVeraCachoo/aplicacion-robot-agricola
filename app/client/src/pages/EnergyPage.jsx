@@ -22,6 +22,11 @@ import "./EnergyPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * Componente de la página de energía.
+ * Muestra el historial y estado actual de la batería, carga solar y consumos del robot en tiempo real.
+ * @returns {JSX.Element}
+ */
 function EnergyPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -31,7 +36,7 @@ function EnergyPage() {
   const isCharging = battery?.status === "CHARGING";
 
   // Obtenemos las misiones para rellenar el desplegable
-  const { misiones, fetchMisiones } = useMissionStore();
+  const { missions, fetchMissions } = useMissionStore();
 
   const [chartData, setChartData] = useState([]);
   const [currentSolarInput, setCurrentSolarInput] = useState(0);
@@ -56,8 +61,8 @@ function EnergyPage() {
       // 🛡️ Prevenimos que datos nulos rompan la gráfica (NaN)
       const mappedData = response.data.map((item) => ({
         timeMs: new Date(item.timestamp).getTime(),
-        batteryLevel: Number(item.bateria_porcentaje) || 0,
-        solarWatts: Number(item.radiacion_solar) || 0,
+        batteryLevel: Number(item.batteryPercentage) || 0,
+        solarWatts: Number(item.solarRadiation) || 0,
       }));
 
       // Aseguramos orden cronológico para evitar cruces en la línea
@@ -81,15 +86,15 @@ function EnergyPage() {
         setCurrentSolarInput(0);
       }
     } catch (error) {
-      console.error("Error cargando energía:", error);
+      console.error("Error al cargar la energía:", error);
     } finally {
       setIsFiltering(false);
     }
   }, [dateFilter]);
 
   useEffect(() => {
-    fetchMisiones();
-  }, [fetchMisiones]);
+    fetchMissions();
+  }, [fetchMissions]);
 
   useEffect(() => {
     setIsFiltering(true);
@@ -190,7 +195,7 @@ function EnergyPage() {
               ? t("energy.balance", "Balance Energético")
               : t("energy.balance24h", "Balance Energético (24h)")}
           </h3>
-          <DateRangePicker onFilter={handleFilter} misiones={misiones} />
+          <DateRangePicker onFilter={handleFilter} missions={missions} />
         </div>
 
         {isFiltering ? (

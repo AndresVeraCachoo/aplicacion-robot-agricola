@@ -46,3 +46,6 @@ coverage/
 
 # Archivos de Referencia
 referencias/
+# Archivos generados temporalmente
+docs/
+*.timestamp-*.mjs

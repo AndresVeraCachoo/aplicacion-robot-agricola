@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 vi.mock('axios');
 vi.mock('socket.io-client', () => ({ io: vi.fn() }));
 
-describe('Tienda Global del Robot (robotStore)', () => {
+describe('Store Global de Robot', () => {
   let mockSocket;
   let socketCallbacks = {};
   let consoleSpy;
@@ -49,8 +49,8 @@ describe('Tienda Global del Robot (robotStore)', () => {
 
   const getStore = () => useRobotStore.getState();
 
-  describe('Gestión del Estado Visual e Interfaz', () => {
-    it('Debería alternar y establecer el estado de visibilidad del Sidebar', () => {
+  describe('Visual State and Interface Management', () => {
+    it('debería alternar y establecer el estado de visibilidad de Sidebar', () => {
       getStore().setSidebarOpen(false);
       expect(getStore().isSidebarOpen).toBe(false);
 
@@ -58,14 +58,14 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(getStore().isSidebarOpen).toBe(true);
     });
 
-    it('Debería establecer los puntos totales calculados para la misión actual', () => {
+    it('debería establecer los puntos totales calculados para la misión', () => {
       getStore().setTotalMissionPoints(99);
       expect(getStore().totalMissionPoints).toBe(99);
     });
   });
 
-  describe('Carga Inicial de Datos (fetchInitialData)', () => {
-    it('Debería obtener los datos iniciales y aplicar filtros para sesiones ocultas', async () => {
+  describe('Initial Data Loading (fetchInitialData)', () => {
+    it('debería obtener datos iniciales y aplicar filtros para sesiones ocultas', async () => {
       globalThis.localStorage.setItem('token', 'test-token');
       
       axios.get.mockImplementation((url) => {
@@ -101,7 +101,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(state.pathHistory.length).toBe(1);
     });
 
-    it('Debería aplicar valores de respaldo (fallback) ante propiedades faltantes', async () => {
+    it('debería aplicar valores de respaldo cuando faltan propiedades', async () => {
       globalThis.localStorage.removeItem('token');
       axios.get.mockImplementation((url) => {
         if (url.includes('/estado')) {
@@ -120,15 +120,15 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(state.agronomicData).toEqual([]); 
     });
 
-    it('Debería capturar de forma silenciosa errores de conexión en la carga inicial', async () => {
+    it('debería capturar errores de conexión silenciosamente en carga inicial', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network Error'));
       await getStore().fetchInitialData();
-      expect(consoleSpy).toHaveBeenCalledWith("Error al cargar los datos iniciales del robot:", expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith("Error en carga inicial:", expect.any(Error));
     });
   });
 
-  describe('Conexión y Mapeo de Eventos (WebSockets)', () => {
-    it('Debería conectar el socket, registrar oyentes y emitir la zona de seguridad preexistente', () => {
+  describe('Conexión WebSocket', () => {
+    it('debería conectar socket, registrar listeners y emitir zona segura', () => {
       useRobotStore.setState({ safeZone: [[0,0], [1,1]] });
       getStore().connectSocket();
       
@@ -142,13 +142,13 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(getStore().isConnected).toBe(false);
     });
 
-    it('Debería omitir la inicialización si la instancia del socket ya existe', () => {
+    it('debería omitir inicialización si ya existe instancia de socket', () => {
       useRobotStore.setState({ socket: mockSocket });
       getStore().connectSocket();
       expect(io).not.toHaveBeenCalled(); 
     });
 
-    it('Debería recalcular la orientación visual (Bearing) si el desplazamiento supera el umbral mínimo', () => {
+    it('debería recalcular Rumbo visual si desplazamiento excede umbral', () => {
       getStore().connectSocket();
       
       useRobotStore.setState({ position: { lat: 40, lon: -3 }, system: { mode: 'AUTO', heading: 0 } });
@@ -167,7 +167,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(state.system.heading).not.toBe(0); 
     });
 
-    it('Debería omitir el cálculo de orientación (Bearing) si la distancia es ruido estático de GPS', () => {
+    it('debería omitir cálculo de Rumbo si distancia es ruido GPS', () => {
       getStore().connectSocket();
       useRobotStore.setState({ position: { lat: 40, lon: -3 }, system: { heading: 90 } });
       
@@ -175,7 +175,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(getStore().system.heading).toBe(90);
     });
 
-    it('Debería ignorar inserciones de datos telemétricos si pertenecen a sesiones eliminadas de la vista', () => {
+    it('debería ignorar inserciones de datos si pertenecen a sesiones ocultas', () => {
       useRobotStore.setState({ deletedSessionKeys: ['exec-99'] });
       getStore().connectSocket();
 
@@ -192,7 +192,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       getStore().connectSocket(); 
     });
 
-    it('Debería aplicar límites superiores e inferiores al ajuste de velocidad', () => {
+    it('debería aplicar límites superior e inferior al ajuste de velocidad', () => {
       getStore().setSpeedLimit(150); 
       expect(getStore().system.speedLimit).toBe(100);
       
@@ -203,7 +203,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith("client:set_speed_limit", 75);
     });
 
-    it('Debería encolar coordenadas de navegación o enviar destino directo según el estado de la cola', () => {
+    it('debería encolar coordenadas de navegación o enviar destino directo', () => {
       useRobotStore.setState({ navTarget: null, system: { mode: 'AUTO' } });
       
       getStore().queueNavigationPoint(10, 20);
@@ -217,7 +217,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith("client:queue_point", { lat: 30, lon: 40 });
     });
 
-    it('Debería emitir comandos de movimiento manual únicamente si el sistema está en modo MANUAL', () => {
+    it('debería emitir comandos de movimiento manual solo si modo es MANUAL', () => {
       useRobotStore.setState({ system: { mode: 'AUTO' } });
       getStore().sendManualMove({ x: 1, y: 0 });
       expect(mockSocket.emit).not.toHaveBeenCalledWith("client:manual_control", expect.anything());
@@ -227,7 +227,7 @@ describe('Tienda Global del Robot (robotStore)', () => {
       expect(mockSocket.emit).toHaveBeenCalledWith("client:manual_control", { x: 1, y: 0 });
     });
 
-    it('Debería resetear restricciones y modo operativo al cancelar una misión', () => {
+    it('debería restablecer restricciones y modo al cancelar una misión', () => {
       useRobotStore.setState({ safeZone: [[0,0]] });
       getStore().cancelMission();
       expect(getStore().safeZone).toBeNull();
@@ -236,8 +236,8 @@ describe('Tienda Global del Robot (robotStore)', () => {
     });
   });
 
-  describe('Prevención de Fallos (Lógica Defensiva)', () => {
-    it('Debería prevenir excepciones si se invocan métodos de emisión sin conexión activa', () => {
+  describe('Prevención de Fallos', () => {
+    it('debería prevenir excepciones si se invocan métodos sin conexión', () => {
       useRobotStore.setState({ socket: null, system: { mode: 'MANUAL', status: 'RUNNING' } });
       
       expect(() => {

@@ -24,7 +24,7 @@ const AuthTestComponent = () => {
   );
 };
 
-describe('contexto global de autenticación', () => {
+describe('contexto de autenticación global', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
     vi.clearAllMocks();
@@ -37,8 +37,8 @@ describe('contexto global de autenticación', () => {
     vi.restoreAllMocks();
   });
 
-  describe('arranque e inicialización de la sesión', () => {
-    it('debería iniciar en estado desconectado si no detecta token local', async () => {
+  describe('inicio e inicialización de sesión', () => {
+    it('debería iniciar en estado desconectado si no se detecta token local', async () => {
       render(
         <AuthProvider>
           <AuthTestComponent />
@@ -48,7 +48,7 @@ describe('contexto global de autenticación', () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
 
-    it('debería cargar el token guardado y validarlo asíncronamente con la base de datos', async () => {
+    it('debería cargar el token guardado y validarlo asincrónicamente con la base de datos', async () => {
       globalThis.localStorage.setItem('token', 'fake.jwt.token');
       globalThis.localStorage.setItem('userRole', 'admin');
       axios.get.mockResolvedValueOnce({ data: { success: true } });
@@ -61,12 +61,11 @@ describe('contexto global de autenticación', () => {
         );
       });
 
-      expect(axios.defaults.headers.common['Authorization']).toBe('Bearer fake.jwt.token');
       expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/auth/verify'));
       expect(screen.getByTestId('auth-status').textContent).toBe('logged_in');
     });
 
-    it('debería desloguear y limpiar rastros si el backend rechaza el token actual', async () => {
+    it('debería cerrar sesión y limpiar rastros si el backend rechaza el token actual', async () => {
       globalThis.localStorage.setItem('token', 'fake.jwt.token');
       axios.get.mockRejectedValueOnce(new Error('Token expirado'));
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -106,12 +105,12 @@ describe('contexto global de autenticación', () => {
       consoleSpy.mockRestore();
     });
 
-    it('debería sanitizar variables conflictivas, propagar eventos globales y permitir el acceso', async () => {
+    it('debería limpiar variables conflictivas, propagar eventos globales y permitir acceso', async () => {
       axios.post.mockResolvedValueOnce({
         data: {
           token: 'header.payload.signature', 
           user: { 
-            role: 'operador', 
+            role: 'operator', 
             name: 'Andres_Vera<script>', 
             avatar: 'javascript:alert(1)' 
           }
@@ -127,8 +126,8 @@ describe('contexto global de autenticación', () => {
       });
 
       expect(globalThis.localStorage.getItem('token')).toBe('header.payload.signature');
-      expect(globalThis.localStorage.getItem('userRole')).toBe('operador');
-      expect(globalThis.localStorage.getItem('userName')).toBe('Usuario'); 
+      expect(globalThis.localStorage.getItem('userRole')).toBe('operator');
+      expect(globalThis.localStorage.getItem('userName')).toBe('User'); 
       expect(globalThis.localStorage.getItem('userAvatar')).toBe('/avatars/robot-fondo-verde.png'); 
       
       expect(globalThis.dispatchEvent).toHaveBeenCalledWith(expect.any(Event));
@@ -136,7 +135,7 @@ describe('contexto global de autenticación', () => {
       expect(screen.getByTestId('auth-status').textContent).toBe('logged_in');
     });
 
-    it('debería extraer y devolver el mensaje de error normalizado provisto por la api', async () => {
+    it('debería extraer y devolver el mensaje de error normalizado proporcionado por la api', async () => {
       axios.post.mockRejectedValueOnce({
         response: { data: { error: 'Credenciales inválidas' } }
       });
@@ -162,8 +161,8 @@ describe('contexto global de autenticación', () => {
     });
   });
 
-  describe('defensa de rutas mediante interceptor', () => {
-    it('debería destruir la sesión si cualquier petición ordinaria responde con código 401', async () => {
+  describe('defensa de ruta vía interceptor', () => {
+    it('debería destruir la sesión si cualquier petición ordinaria responde con un código 401', async () => {
       let errorInterceptor;
       axios.interceptors.response.use = vi.fn((successCb, errorCb) => {
         errorInterceptor = errorCb;

@@ -6,7 +6,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 export default [
   // 1. Ignorar carpetas de compilación
   {
-    ignores: ['dist', 'eslint-report.json']
+    ignores: ['dist', 'eslint-report.json', 'dev-dist', 'coverage']
   },
 
   // 2. Configuración para el FRONTEND (Vite/React)

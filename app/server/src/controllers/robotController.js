@@ -1,70 +1,74 @@
 /**
- * Controlador para monitorizar la telemetría, datos agronómicos y energía del robot.
+
+ * @description Controladores para monitorizar la telemetría, datos agronómicos y la energía del robot.
  */
 export class RobotController {
   /**
-   * @param {import('../services/robotService.js').RobotService} robotService - Servicio de lógica de negocio del robot.
+   * @param {Object} robotService - Servicio de lógica de negocio del robot.
    */
   constructor(robotService) {
     this.robotService = robotService;
   }
 
   /**
-   * Obtiene el estado actual en tiempo real de los sistemas del robot.
-   * @param {import('express').Request} req - Petición Express.
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Obtiene el estado actual y en tiempo real de los sistemas del robot.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
-  getEstadoRobot = async (req, res, next) => {
+  getRobotState = async (req, res, next) => {
     try {
-      const estado = await this.robotService.getRobotState();
-      res.json(estado);
+      const state = await this.robotService.getRobotState();
+      res.json(state);
     } catch (error) {
       next(error);
     }
   };
 
   /**
-   * Recupera los datos agronómicos capturados por el robot con filtros opcionales.
-   * @param {import('express').Request} req - Petición Express (con query params: start, end, misionId).
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Recupera los datos agronómicos capturados por el robot, aplicando filtros opcionales.
+   * 
+   * @param {Object} req - Petición Express (con query params opcionales: start, end, missionId).
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
-  getDatosAgronomicos = async (req, res, next) => {
+  getAgronomicData = async (req, res, next) => {
     try {
-      // Extraemos propiedades explícitas en lugar de pasar req.query entero para evitar inyecciones de parámetros no contemplados en la BD
-      const filtros = {
+      // Extrae propiedades explícitas en lugar de pasar req.query entero para prevenir inyecciones de parámetros en BD
+      const filters = {
         start: req.query.start,
         end: req.query.end,
         misionId: req.query.misionId,
       };
       
-      const datos = await this.robotService.getAgronomicData(filtros);
-      res.json(datos);
+      const data = await this.robotService.getAgronomicData(filters);
+      res.json(data);
     } catch (error) {
       next(error);
     }
   };
 
   /**
-   * Recupera el historial de consumo energético y niveles de batería.
-   * @param {import('express').Request} req - Petición Express (con query params: start, end, misionId).
-   * @param {import('express').Response} res - Respuesta Express.
-   * @param {import('express').NextFunction} next - Middleware de errores.
+   * Recupera el historial de consumo de energía y niveles de batería.
+   * 
+   * @param {Object} req - Petición Express (con query params opcionales: start, end, missionId).
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
-  getHistorialEnergia = async (req, res, next) => {
+  getEnergyHistory = async (req, res, next) => {
     try {
-      const filtros = {
+      const filters = {
         start: req.query.start,
         end: req.query.end,
         misionId: req.query.misionId,
       };
 
-      const historial = await this.robotService.getEnergyHistory(filtros);
-      res.json(historial);
+      const history = await this.robotService.getEnergyHistory(filters);
+      res.json(history);
     } catch (error) {
       next(error);
     }

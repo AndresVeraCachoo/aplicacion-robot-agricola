@@ -1,51 +1,51 @@
 import { z } from "zod";
 
 const isoDateValidator = z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-  message: "Debe tener un formato de fecha ISO 8601 válido"
+  message: "Must have a valid ISO 8601 date format"
 });
 
 /**
- * Esquema integral para la creación de misiones agrícolas.
+ * Esquema completo para la creación de misiones agrícolas.
  */
-export const createMisionSchema = z.object({
+export const createMissionSchema = z.object({
   body: z.object({
-    nombre: z.string().trim().min(1, "El nombre de la misión es obligatorio"),
-    tipo_tarea: z.string().trim().min(1, "El tipo de tarea es obligatorio"),
-    ancho_trabajo: z.number().positive("El ancho de trabajo debe ser mayor a 0"),
-    angulo_pasada: z.number(),
-    bateria_minima: z.number().min(0).max(100, "La batería debe estar entre 0 y 100"),
-    // Valida la estructura básica como objeto; la validación topológica profunda del GeoJSON la asume la base de datos
-    area_trabajo: z.record(z.any(), { message: "El área de trabajo debe ser un objeto GeoJSON válido" }),
-    puntos_interes: z.union([z.array(z.any()), z.record(z.any())]).optional(),
-    punto_retorno: z.record(z.any()).optional(),
-    fecha_programada: isoDateValidator.nullable().optional()
+    name: z.string().trim().min(1, "Mission name is required"),
+    taskType: z.string().trim().min(1, "Task type is required"),
+    workWidth: z.number().positive("Work width must be greater than 0"),
+    passAngle: z.number(),
+    minBattery: z.number().min(0).max(100, "Battery must be between 0 and 100"),
+    // Valida la estructura básica como un objeto; la validación topológica profunda del GeoJSON la asume la base de datos
+    workArea: z.record(z.any(), { message: "Work area must be a valid GeoJSON object" }),
+    poi: z.union([z.array(z.any()), z.record(z.any())]).optional(),
+    returnPoint: z.record(z.any()).optional(),
+    scheduledTime: isoDateValidator.nullable().optional()
   })
 });
 
 /**
- * Esquema para actualización parcial de parámetros de misión.
+ * Esquema para la actualización parcial de los parámetros de una misión.
  */
-export const updateMisionSchema = z.object({
+export const updateMissionSchema = z.object({
   body: z.object({
-    nombre: z.string().trim().min(1).optional(),
-    tipo_tarea: z.string().trim().min(1).optional(),
-    ancho_trabajo: z.number().positive().optional(),
-    angulo_pasada: z.number().optional(),
-    bateria_minima: z.number().min(0).max(100).optional(),
-    area_trabajo: z.record(z.any()).optional()
+    name: z.string().trim().min(1).optional(),
+    taskType: z.string().trim().min(1).optional(),
+    workWidth: z.number().positive().optional(),
+    passAngle: z.number().optional(),
+    minBattery: z.number().min(0).max(100).optional(),
+    workArea: z.record(z.any()).optional()
   })
 });
 
 /**
  * Esquema para el registro de estados de ejecución reportados por el hardware del robot.
  */
-export const updateEjecucionSchema = z.object({
+export const updateExecutionSchema = z.object({
   body: z.object({
-    estado: z.enum(["en_curso", "completado", "cancelado", "pausado"]).optional(),
-    progreso: z.number().min(0).max(100).optional(),
-    bateria_usada: z.number().min(0).max(100).optional(),
-    distancia_recorrida: z.number().nonnegative().optional(),
-    tiempo_transcurrido: z.number().nonnegative().optional(),
-    fecha_fin: isoDateValidator.optional()
+    status: z.enum(["in_progress", "completed", "cancelled", "paused"]).optional(),
+    progress: z.number().min(0).max(100).optional(),
+    batteryUsed: z.number().min(0).max(100).optional(),
+    distanceCovered: z.number().nonnegative().optional(),
+    timeElapsed: z.number().nonnegative().optional(),
+    endTime: isoDateValidator.optional()
   })
 });

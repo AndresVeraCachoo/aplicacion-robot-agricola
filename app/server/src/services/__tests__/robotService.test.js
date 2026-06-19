@@ -1,91 +1,101 @@
 import { jest } from '@jest/globals';
 
-describe("Servicio de Telemetría (RobotService)", () => {
-  let mockQuery;
+describe("Servicio de Telemetría", () => {
+  let mockFindUnique, mockFindMany;
   let RobotService;
   let robotServiceInstance;
+  let fakePrisma;
 
   beforeEach(async () => {
     jest.resetModules();
-    mockQuery = jest.fn();
+    
+    mockFindUnique = jest.fn();
+    mockFindMany = jest.fn();
+
+    fakePrisma = {
+      robotState: { findUnique: mockFindUnique },
+      robotData: { findMany: mockFindMany },
+      energyHistory: { findMany: mockFindMany },
+      missionExecution: { findFirst: jest.fn().mockResolvedValue({ startTime: new Date() }) },
+      $queryRaw: jest.fn().mockResolvedValue([{ fecha_inicio: new Date() }])
+    };
 
     const module = await import('../robotService.js');
     RobotService = module.RobotService;
     
-    robotServiceInstance = new RobotService({ query: mockQuery });
+    robotServiceInstance = new RobotService(fakePrisma);
   });
 
-  describe("getRobotState", () => {
-    it("Debería arrojar error 404 si el registro maestro del estado ha sido alterado o borrado", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
-      await expect(robotServiceInstance.getRobotState()).rejects.toThrow("no encontrado");
+  describe("obtener estado del robot", () => {
+    it("Debería lanzar error 404 si el registro maestro fue alterado o eliminado", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      await expect(robotServiceInstance.getRobotState()).rejects.toThrow("not found");
     });
   });
 
-  describe("Construcción Dinámica SQL (Agronomic Data)", () => {
-    it("Debería generar una consulta base sin predicados WHERE al no recibir parámetros", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+  describe("Construcción SQL Dinámica (Agronómica)", () => {
+    it("Debería generar consulta sin WHERE si no se reciben parámetros", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getAgronomicData({});
       
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).not.toContain("WHERE");
-      expect(sql).toContain("ORDER BY");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where).toEqual({});
+      expect(args.orderBy).toEqual({ timestamp: 'desc' });
     });
 
-    it("Debería acotar temporalmente la búsqueda inyectando cláusulas de fechas", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+    it("Debería acotar la búsqueda temporal inyectando cláusulas de fecha", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getAgronomicData({ start: '2026-01-01', end: '2026-01-31' });
       
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).toContain("WHERE d.\"timestamp\" >= $1");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where.timestamp).toHaveProperty('gte');
     });
 
-    it("Debería ignorar la variable misionId de forma segura si recibe un string 'null' emitido por Axios", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+    it("Debería ignorar variable misionId si recibe string 'null'", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getAgronomicData({ misionId: 'null' });
       
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).not.toContain("WHERE m.id =");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where).not.toHaveProperty('execution');
     });
   });
 
-  describe("Construcción Dinámica SQL (Energy History)", () => {
-    it("Debería resolver límites de memoria inyectando subconsultas indexadas si se especifica misionId", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+  describe("Construcción SQL Dinámica (Energía)", () => {
+    it("Debería resolver límites inyectando subconsultas indexadas si misionId existe", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getEnergyHistory({ misionId: '5' });
       
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).toContain("SELECT fecha_inicio FROM ejecuciones_mision WHERE mision_id = $1");
-      expect(sql).toContain("LIMIT 1"); 
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where.timestamp).toBeDefined();
     });
   });
 
-  describe("Casos Límite y Resolución de Datos", () => {
-    it("Debería recuperar y retornar el documento de estado si la conexión es exitosa", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ system_status: 'activo' }] });
+  describe("Casos Extremos y Resolución de Datos", () => {
+    it("Debería recuperar y devolver documento de estado si la conexión es exitosa", async () => {
+      mockFindUnique.mockResolvedValueOnce({ systemStatus: 'activo' });
       const result = await robotServiceInstance.getRobotState();
-      expect(result.system_status).toBe('activo');
+      expect(result.systemStatus).toBe('activo');
     });
 
-    it("Debería inyectar la cláusula relacional de misión en la búsqueda si el ID es numérico", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+    it("Debería inyectar la cláusula relacional de misión si el ID es numérico", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getAgronomicData({ misionId: '5' });
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).toContain("m.id =");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where).toHaveProperty('execution.missionId', 5);
     });
 
-    it("Debería devolver la consulta base de historial sin acotar rangos si se envía objeto vacío", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+    it("Debería retornar consulta base de historial si se envía objeto vacío", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getEnergyHistory({});
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).not.toContain("WHERE");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where).toEqual({});
     });
 
-    it("Debería evaluar límites temporales válidos en el historial energético", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
+    it("Debería evaluar límites temporales válidos en historial de energía", async () => {
+      mockFindMany.mockResolvedValueOnce([]);
       await robotServiceInstance.getEnergyHistory({ start: '2026-01-01', end: '2026-01-31' });
-      const sql = mockQuery.mock.calls[0][0];
-      expect(sql).toContain("timestamp\" >=");
+      const args = mockFindMany.mock.calls[0][0];
+      expect(args.where.timestamp).toHaveProperty('gte');
     });
   });
 });

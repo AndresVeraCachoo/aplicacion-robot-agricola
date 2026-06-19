@@ -13,8 +13,8 @@ vi.mock('../../features/dashboard/components/MapView', () => ({
   default: () => <div data-testid="mock-mapview">Mocked MapView</div>,
 }));
 
-describe('CameraPage Component', () => {
-  it('renderiza la vista inmersiva de cámara y el minimapa (Smoke Test)', () => {
+describe('Componente CameraPage', () => {
+  it('renderiza la vista de cámara inmersiva y minimapa', () => {
     render(<CameraPage />);
 
     // Comprobamos el contenedor principal de la página

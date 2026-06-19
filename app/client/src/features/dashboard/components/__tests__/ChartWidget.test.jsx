@@ -38,7 +38,7 @@ vi.mock('recharts', () => {
 
   const Tooltip = ({ formatter, labelFormatter }) => {
     if (formatter) {
-      formatter(50, 'humedad');
+      formatter(50, 'humidity');
       formatter(null, 'ph');
     }
     if (labelFormatter) {
@@ -67,22 +67,22 @@ vi.mock('recharts', () => {
   };
 });
 
-describe('ChartWidget Component', () => {
+describe('Componente ChartWidget', () => {
   const mockData = [
-    { timestamp: '2023-01-01T10:00:00Z', humedad: 40, temperatura_suelo: 22, ph: null, nitrogeno: 10, fosforo: 5, potasio: 20, radiacion_solar: 300 },
-    { timestamp: '2023-01-01T11:00:00Z', humedad: 45, temperatura_suelo: 23, ph: 6.5, nitrogeno: 12, fosforo: 6, potasio: 22, radiacion_solar: 350 },
+    { timestamp: '2023-01-01T10:00:00Z', humidity: 40, temperature: 22, ph: null, nitrogen: 10, phosphorus: 5, potassium: 20, radiation: 300 },
+    { timestamp: '2023-01-01T11:00:00Z', humidity: 45, temperature: 23, ph: 6.5, nitrogen: 12, phosphorus: 6, potassium: 22, radiation: 350 },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('muestra mensaje de "No recogido" si los datos están vacíos', () => {
+  it('muestra mensaje de No recolectado si los datos están vacíos', () => {
     render(<ChartWidget data={[]} />);
     expect(screen.getByText('data.notCollected')).toBeInTheDocument();
   });
 
-  it('renderiza AreaChart por defecto y permite cambiar el tipo de gráfico mediante los botones', () => {
+  it('renderiza Gráfico de Área por defecto y permite cambiar mediante botones', () => {
     render(<ChartWidget data={mockData} />);
     expect(screen.getByTestId('area-chart')).toBeInTheDocument();
 
@@ -104,27 +104,27 @@ describe('ChartWidget Component', () => {
     expect(screen.getByTestId('area-chart')).toBeInTheDocument();
   });
 
-  it('permite cambiar la métrica 1 (eje primario)', () => {
+  it('permite cambiar métrica 1 (eje primario)', () => {
     render(<ChartWidget data={mockData} />);
     const selects = screen.getAllByRole('combobox');
     
-    fireEvent.change(selects[0], { target: { value: 'radiacion_solar' } });
-    expect(selects[0].value).toBe('radiacion_solar');
+    fireEvent.change(selects[0], { target: { value: 'radiation' } });
+    expect(selects[0].value).toBe('radiation');
   });
 
-  it('fuerza la vista ComposedChart (comparación) si forcedCompare es true', () => {
+  it('fuerza vista de Gráfico Compuesto si comparación es verdadera', () => {
     render(<ChartWidget data={mockData} forcedCompare={true} />);
     expect(screen.getByTestId('composed-chart')).toBeInTheDocument();
     
     const selects = screen.getAllByRole('combobox');
     expect(selects.length).toBe(2);
 
-    fireEvent.change(selects[1], { target: { value: 'potasio' } });
-    expect(selects[1].value).toBe('potasio');
+    fireEvent.change(selects[1], { target: { value: 'potassium' } });
+    expect(selects[1].value).toBe('potassium');
   });
 
-  it('muestra "No recogido" si los datos existen pero la métrica seleccionada son puros nulls', () => {
-    const dataWithNulls = [{ timestamp: '2023-01-01T10:00:00Z', humedad: null, temperatura_suelo: null }];
+  it('muestra No recolectado si hay datos pero la métrica tiene puros nulos', () => {
+    const dataWithNulls = [{ timestamp: '2023-01-01T10:00:00Z', humidity: null, temperature: null }];
     render(<ChartWidget data={dataWithNulls} forcedCompare={true} />);
     
     expect(screen.getByText('data.notCollected')).toBeInTheDocument();

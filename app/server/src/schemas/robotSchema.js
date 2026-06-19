@@ -1,21 +1,21 @@
 import { z } from "zod";
 
-// Validador personalizado para asegurar compatibilidad estricta con el estándar exigido por PostgreSQL
+// Validador personalizado para garantizar la compatibilidad estricta con el estándar requerido por PostgreSQL
 const isoDateValidator = z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-  message: "Debe tener un formato de fecha ISO 8601 válido"
+  message: "Must have a valid ISO 8601 date format"
 });
 
 /**
- * Esquema de validación para filtros de búsqueda en históricos y telemetría.
+ * Esquema de validación para los filtros de búsqueda en datos históricos y telemetría.
  */
-export const getDatosSchema = z.object({
+export const getDataSchema = z.object({
   query: z.object({
     start: isoDateValidator.optional(),
     end: isoDateValidator.optional(),
-    // Se permite 'null' o '' porque clientes HTTP como Axios pueden castear variables nulas a strings en las query strings
-    misionId: z.coerce.number().positive("El ID de misión debe ser un número positivo").optional().or(z.literal('null')).or(z.literal(''))
+    // Permite 'null' o '' porque clientes HTTP como Axios pueden castear variables nulas a strings en la query
+    missionId: z.coerce.number().positive("Mission ID must be a positive number").optional().or(z.literal('null')).or(z.literal(''))
   }).refine((data) => {
-    // Regla de negocio: Garantiza la integridad del rango temporal, bloqueando búsquedas de extremo abierto
+    // Regla de negocio: Garantiza la integridad del rango de tiempo, bloqueando búsquedas abiertas
     return Boolean(data.start) === Boolean(data.end);
-  }, { message: "Se deben proporcionar ambas fechas (start y end) o ninguna", path: ["start/end"] })
+  }, { message: "Both dates (start and end) must be provided, or neither", path: ["start/end"] })
 });

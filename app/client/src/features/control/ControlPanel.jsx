@@ -4,6 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useRobotStore } from "../../store/robotStore";
 import "./ControlPanel.css";
 
+/**
+ * Componente del panel de control manual.
+ * Permite cambiar el modo de conducción, ajustar el límite de velocidad y controlar la misión.
+ * @returns {JSX.Element}
+ */
 const ControlPanel = () => {
   const { t } = useTranslation();
   const {

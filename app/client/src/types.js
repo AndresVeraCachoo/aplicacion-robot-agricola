@@ -8,7 +8,6 @@
  * @property {string} nombre - Nombre sanitizado del usuario.
  * @property {string} rol - Nivel de permisos ("admin", "operador", "usuario").
  * @property {string} avatar - URL o ruta local de la foto de perfil.
- * @memberof Entidades
  */
 
 /**
@@ -20,7 +19,6 @@
  * @property {number} solarInput - Energía entrante por paneles solares.
  * @property {number} consumption - Gasto energético de motores y cpu.
  * @property {number} netPower - Balance energético (solarInput - consumption).
- * @memberof Entidades
  */
 
 /**
@@ -30,7 +28,6 @@
  * @property {number} heading - Orientación compensada en grados.
  * @property {string} mode - Modo de conducción ("AUTO", "MANUAL", "NAVIGATING").
  * @property {number} speedLimit - Tope máximo de velocidad impuesto por el usuario.
- * @memberof Entidades
  */
 
 /**
@@ -38,5 +35,4 @@
  * @property {number|string} id - Identificador de base de datos.
  * @property {string} nombre - Etiqueta asignada a la misión.
  * @property {string} fecha_creacion - Marca temporal.
- * @memberof Entidades
  */

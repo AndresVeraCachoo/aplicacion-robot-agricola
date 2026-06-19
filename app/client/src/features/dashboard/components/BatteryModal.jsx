@@ -17,7 +17,6 @@ import "./BatteryModal.css";
 
 // Subcomponente: Tooltip Personalizado
 const CustomTooltip = ({ active, payload, label }) => {
-  // Solución SonarLint S6582: Optional Chaining preferido
   if (active && payload?.length) {
     return (
       <div className="battery-tooltip">
@@ -35,6 +34,13 @@ CustomTooltip.propTypes = {
   label: PropTypes.string,
 };
 
+/**
+ * Componente modal para detalles de batería.
+ * Muestra el estado detallado de la batería y un gráfico histórico de carga.
+ * @param {Object} props - Propiedades del componente.
+ * @param {Function} props.onClose - Función para cerrar el modal.
+ * @returns {JSX.Element}
+ */
 function BatteryModal({ onClose }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -65,7 +71,6 @@ function BatteryModal({ onClose }) {
     navigate("/app/energy");
   };
 
-  // Solución SonarLint S3358: Evitar ternarios anidados para el texto
   let statusText = t("header.offline");
   if (isCharging) {
     statusText = t("battery.charging");
@@ -73,7 +78,6 @@ function BatteryModal({ onClose }) {
     statusText = t("battery.discharging");
   }
 
-  // Solución SonarLint S3358: Evitar ternarios anidados para el color
   let strokeColor = "#3b82f6"; // Azul por defecto
   if (isCharging) {
     strokeColor = "#22c55e"; // Verde si carga

@@ -3,6 +3,11 @@ import React from "react";
 import { useRobotStore } from "../../store/robotStore";
 import "./CameraFeed.css";
 
+/**
+ * Componente que muestra el feed de la cámara del robot.
+ * Utiliza un iframe de YouTube como simulación de vídeo en tiempo real.
+ * @returns {JSX.Element}
+ */
 const CameraFeed = () => {
   const { system } = useRobotStore();
 
@@ -12,12 +17,12 @@ const CameraFeed = () => {
 
   return (
     <div className="camera-feed-container">
-      {/* YouTube Iframe */}
+      {/* Iframe de YouTube */}
       <div className="video-wrapper">
         <iframe
           src={youtubeSrc}
           title="Robot Camera Feed"
-          frameBorder="0"
+          style={{ border: 0 }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="camera-iframe"
@@ -27,7 +32,7 @@ const CameraFeed = () => {
       {/* Crosshair (Mira) */}
       <div className="camera-crosshair"></div>
 
-      {/* HUD Bottom */}
+      {/* HUD Inferior */}
       <div className="camera-hud-bottom">
         <div className="hud-metric">
           <span className="label">SPD</span>

@@ -1,6 +1,6 @@
 import { loginSchema } from '../authSchema.js';
 
-describe("Esquema de Autenticación (authSchema)", () => {
+describe("Esquema de Autenticación", () => {
   it("Debería validar credenciales con el formato correcto", () => {
     const data = { body: { name: "admin_master", password: "password123" } };
     expect(() => loginSchema.parse(data)).not.toThrow();
@@ -14,7 +14,7 @@ describe("Esquema de Autenticación (authSchema)", () => {
     expect(result.error.issues[0].path).toContain("name");
   });
 
-  it("Debería rechazar si la contraseña es menor de 6 caracteres", () => {
+  it("Debería rechazar si la contraseña tiene menos de 6 caracteres", () => {
     const data = { body: { name: "admin", password: "123" } };
     const result = loginSchema.safeParse(data);
     

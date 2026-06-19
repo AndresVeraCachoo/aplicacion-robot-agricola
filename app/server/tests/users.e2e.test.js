@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { app } from "../src/index.js";
 import { pool } from "../src/config/db.js";
 
-describe("E2E - Usuarios y Control de Acceso (Users)", () => {
+describe("E2E - Usuarios y Control de Acceso", () => {
   let adminToken, operatorToken;
   let adminId, operatorId;
 
@@ -39,8 +39,8 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
     operatorToken = jwt.sign({ id: operatorId, name: operatorUser.name, role: operatorUser.role }, process.env.JWT_SECRET);
   });
 
-  describe("Endpoints de Perfil Privado (/api/users/profile)", () => {
-    it("Debería devolver los datos del perfil del usuario autenticado omitiendo la contraseña", async () => {
+  describe("Endpoints de Perfil Privado", () => {
+    it("debería retornar datos del perfil omitiendo la contraseña", async () => {
       const response = await request(app)
         .get("/api/users/profile")
         .set("Authorization", `Bearer ${operatorToken}`);
@@ -50,7 +50,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.body).not.toHaveProperty("password");
     });
 
-    it("Debería actualizar la contraseña si la credencial actual proporcionada es correcta", async () => {
+    it("debería actualizar contraseña si la credencial actual es correcta", async () => {
       const response = await request(app)
         .put("/api/users/profile/password")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -65,7 +65,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(isMatch).toBe(true);
     });
 
-    it("Debería devolver error 400 si la contraseña actual proporcionada es incorrecta", async () => {
+    it("debería retornar error 400 si la contraseña actual es incorrecta", async () => {
       const response = await request(app)
         .put("/api/users/profile/password")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -75,10 +75,10 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/incorrecta/i);
+      expect(response.body.error).toMatch(/incorrect/i);
     });
 
-    it("Debería actualizar la URL de la imagen de perfil del usuario", async () => {
+    it("debería actualizar la URL de la imagen de perfil del usuario", async () => {
       const response = await request(app)
         .put("/api/users/profile/avatar")
         .set("Authorization", `Bearer ${operatorToken}`)
@@ -87,19 +87,19 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("Debería devolver error 400 si la URL de la imagen no tiene un formato válido", async () => {
+    it("debería retornar error 400 si la URL de imagen no tiene formato válido", async () => {
       const response = await request(app)
         .put("/api/users/profile/avatar")
         .set("Authorization", `Bearer ${operatorToken}`)
         .send({ avatarUrl: "esto-no-es-un-enlace" }); 
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/URL de imagen válida/i);
+      expect(response.body.error).toMatch(/valid image URL/i);
     });
   });
 
-  describe("Endpoints de Administración (/api/users)", () => {
-    it("Debería denegar el acceso a la gestión de usuarios si se accede con rol de operador (403)", async () => {
+  describe("Endpoints de Administración", () => {
+    it("debería denegar acceso a gestión de usuarios si es rol operador (403)", async () => {
       const response = await request(app)
         .get("/api/users")
         .set("Authorization", `Bearer ${operatorToken}`);
@@ -107,7 +107,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(403);
     });
 
-    it("Debería devolver la lista completa de usuarios registrados al acceder con rol de administrador", async () => {
+    it("debería retornar lista completa de usuarios si es administrador", async () => {
       const response = await request(app)
         .get("/api/users")
         .set("Authorization", `Bearer ${adminToken}`);
@@ -117,7 +117,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.body.length).toBeGreaterThanOrEqual(5);
     });
 
-    it("Debería crear un nuevo usuario correctamente", async () => {
+    it("debería crear un nuevo usuario correctamente", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -131,7 +131,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.body.name).toBe("NuevoUsuario");
     });
 
-    it("Debería devolver error 400 si el rol proporcionado no pertenece a las opciones permitidas", async () => {
+    it("debería retornar error 400 si el rol no pertenece a opciones permitidas", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -145,7 +145,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.body.error).toMatch(/Invalid option/i);
     });
 
-    it("Debería devolver error 409 si se intenta registrar un nombre de usuario que ya existe", async () => {
+    it("debería retornar error 409 si intenta registrar usuario ya existente", async () => {
       const response = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -158,7 +158,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(409);
     });
 
-    it("Debería actualizar los datos (nombre o rol) de otro usuario", async () => {
+    it("debería actualizar los datos (nombre o rol) de otro usuario", async () => {
       const response = await request(app)
         .put(`/api/users/${operatorId}`)
         .set("Authorization", `Bearer ${adminToken}`)
@@ -170,7 +170,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("Debería eliminar a un usuario estándar del sistema", async () => {
+    it("debería eliminar a un usuario estándar del sistema", async () => {
       const response = await request(app)
         .delete(`/api/users/${operatorId}`)
         .set("Authorization", `Bearer ${adminToken}`);
@@ -178,7 +178,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(200);
     });
 
-    it("Debería impedir la eliminación de los usuarios predeterminados del sistema", async () => {
+    it("debería prevenir eliminación de usuarios predeterminados del sistema", async () => {
       const response = await request(app)
         .delete(`/api/users/1`)
         .set("Authorization", `Bearer ${adminToken}`);
@@ -186,7 +186,7 @@ describe("E2E - Usuarios y Control de Acceso (Users)", () => {
       expect(response.status).toBe(409);
     });
 
-    it("Debería impedir la eliminación del último administrador existente", async () => {
+    it("debería prevenir eliminación del último administrador existente", async () => {
       const response = await request(app)
         .delete(`/api/users/${adminId}`)
         .set("Authorization", `Bearer ${adminToken}`);

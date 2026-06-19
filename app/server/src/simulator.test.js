@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
-describe('Motor de Simulación Física (Simulator)', () => {
-  let mockQuery;
+describe('Motor de Simulación Física', () => {
+  let mockUpdate, mockCreate, mockExecuteRawUnsafe;
   let mockIo;
   let originalConsoleLog, originalConsoleError;
 
@@ -9,7 +9,10 @@ describe('Motor de Simulación Física (Simulator)', () => {
     jest.resetModules();
     jest.useFakeTimers(); 
 
-    mockQuery = jest.fn();
+    mockUpdate = jest.fn();
+    mockCreate = jest.fn();
+    mockExecuteRawUnsafe = jest.fn();
+
     mockIo = { emit: jest.fn() }; 
 
     originalConsoleLog = console.log;
@@ -18,7 +21,11 @@ describe('Motor de Simulación Física (Simulator)', () => {
     console.error = jest.fn();
 
     jest.unstable_mockModule('../config/db.js', () => ({
-      pool: { query: mockQuery },
+      prisma: {
+        robotState: { update: mockUpdate },
+        energyHistory: { create: mockCreate },
+        $executeRawUnsafe: mockExecuteRawUnsafe
+      }
     }));
   });
 
@@ -28,21 +35,21 @@ describe('Motor de Simulación Física (Simulator)', () => {
     console.error = originalConsoleError;
   });
 
-  describe('Modelos Matemáticos de Entorno', () => {
-    it('Debería calcular la radiación solar según la hora del día (nula de noche y máxima al mediodía)', async () => {
+  describe('Modelos Matemáticos Ambientales', () => {
+    it('Debería calcular radiación solar basada en hora del día', async () => {
       const { calculateSolarRadiation } = await import('../simulator.js');
       
-      const noche = new Date('2026-05-10T03:00:00Z'); 
-      const mediodia = new Date('2026-05-10T13:00:00Z'); 
-      const atardecer = new Date('2026-05-10T19:00:00Z'); 
+      const night = new Date('2026-05-10T03:00:00Z'); 
+      const noon = new Date('2026-05-10T13:00:00Z'); 
+      const sunset = new Date('2026-05-10T19:00:00Z'); 
       
-      expect(calculateSolarRadiation(noche)).toBe(0);
-      expect(calculateSolarRadiation(mediodia)).toBeGreaterThan(900); 
-      expect(calculateSolarRadiation(atardecer)).toBeGreaterThan(0);
-      expect(calculateSolarRadiation(atardecer)).toBeLessThan(500); 
+      expect(calculateSolarRadiation(night)).toBe(0);
+      expect(calculateSolarRadiation(noon)).toBeGreaterThan(900); 
+      expect(calculateSolarRadiation(sunset)).toBeGreaterThan(0);
+      expect(calculateSolarRadiation(sunset)).toBeLessThan(500); 
     });
 
-    it('Debería devolver un array vacío si la zona de trabajo especificada no forma un polígono cerrado', async () => {
+    it('Debería retornar un array vacío si la zona no forma polígono cerrado', async () => {
       const { generateCoveragePath } = await import('../simulator.js');
       
       const invalidZone = [[42, -3], [42.1, -3.1]];
@@ -51,7 +58,7 @@ describe('Motor de Simulación Física (Simulator)', () => {
       expect(path).toEqual([]);
     });
 
-    it('Debería generar la ruta de cobertura completa para una zona de trabajo válida', async () => {
+    it('Debería generar la ruta de cobertura completa para una zona válida', async () => {
       const { generateCoveragePath } = await import('../simulator.js');
       
       const squareZone = [
@@ -70,8 +77,8 @@ describe('Motor de Simulación Física (Simulator)', () => {
     });
   });
 
-  describe('Gestión de Estado y Control del Robot', () => {
-    it('Debería procesar los cambios de configuración del robot sin provocar interrupciones en el sistema', async () => {
+  describe('Gestión de Estado y Control de Robot', () => {
+    it('Debería procesar cambios de configuración sin causar interrupciones', async () => {
       const simulator = await import('../simulator.js');
       
       expect(() => {
@@ -87,8 +94,8 @@ describe('Motor de Simulación Física (Simulator)', () => {
     });
   });
 
-  describe('Ciclos de Actualización (Ticks)', () => {
-    it('Debería actualizar periódicamente el estado del robot, la energía y enviar los datos a través del WebSocket', async () => {
+  describe('Ciclos de Actualización', () => {
+    it('Debería actualizar periódicamente estado, energía y emitir datos por WebSocket', async () => {
       const { startRobotSimulation, setRobotMode } = await import('../simulator.js');
       
       startRobotSimulation(mockIo);
@@ -96,17 +103,13 @@ describe('Motor de Simulación Física (Simulator)', () => {
 
       jest.advanceTimersByTime(6000);
 
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE robot_estado SET'), 
-        expect.any(Array)
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
       );
 
       expect(mockIo.emit).toHaveBeenCalledWith('robot:status', expect.any(Object));
 
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO historial_energia'),
-        expect.any(Array)
-      );
+      expect(mockCreate).toHaveBeenCalled();
     });
   });
 });

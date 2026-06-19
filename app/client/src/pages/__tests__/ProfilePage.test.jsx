@@ -12,7 +12,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: mockT }),
 }));
 
-describe('ProfilePage Component', () => {
+describe('Componente ProfilePage', () => {
   let consoleSpy;
   let dispatchSpy;
 
@@ -32,8 +32,8 @@ describe('ProfilePage Component', () => {
     dispatchSpy.mockRestore();
   });
 
-  describe('Carga Inicial del Perfil', () => {
-    it('obtiene los datos del perfil y los muestra correctamente', async () => {
+  describe('Carga Inicial de Perfil', () => {
+    it('obtiene datos de perfil y los muestra correctamente', async () => {
       axios.get.mockResolvedValueOnce({
         data: { name: 'Admin Test', role: 'admin', avatar: '/test-avatar.png' }
       });
@@ -52,7 +52,7 @@ describe('ProfilePage Component', () => {
       expect(dispatchSpy.mock.calls[0][0].type).toBe('avatarUpdated');
     });
 
-    it('cubre la rama donde el perfil no devuelve un avatar personalizado', async () => {
+    it('cubre rama donde el perfil no devuelve avatar personalizado', async () => {
       axios.get.mockResolvedValueOnce({
         data: { name: 'Operador', role: 'operador' }
       });
@@ -67,7 +67,7 @@ describe('ProfilePage Component', () => {
       expect(globalThis.localStorage.getItem('userAvatar')).toBeNull();
     });
 
-    it('gestiona correctamente los errores del servidor al cargar el perfil', async () => {
+    it('maneja correctamente errores de servidor al cargar perfil', async () => {
       axios.get.mockRejectedValueOnce(new Error('API Error'));
 
       render(<ProfilePage />);
@@ -85,7 +85,7 @@ describe('ProfilePage Component', () => {
       axios.get.mockResolvedValue({ data: { name: 'Test', role: 'test' } });
     });
 
-    it('despliega el panel, permite seleccionar un avatar y cancelarlo', async () => {
+    it('abre panel, permite seleccionar un avatar y cancelar', async () => {
       render(<ProfilePage />);
       
       // Esperamos a que la carga inicial se resuelva
@@ -107,7 +107,7 @@ describe('ProfilePage Component', () => {
       expect(document.querySelector('.avatar-selector-panel')).toBeNull();
     });
 
-    it('guarda el avatar correctamente, actualiza localStorage y lanza evento', async () => {
+    it('guarda avatar correctamente, actualiza localStorage y dispara evento', async () => {
       axios.put.mockResolvedValueOnce({
         data: { user: { avatar: '/avatars/robot-fondo-azul.png' } }
       });
@@ -141,7 +141,7 @@ describe('ProfilePage Component', () => {
       expect(dispatchSpy).toHaveBeenCalled();
     });
 
-    it('gestiona correctamente los errores al guardar el avatar', async () => {
+    it('maneja correctamente errores al guardar avatar', async () => {
       axios.put.mockRejectedValueOnce(new Error('Avatar Update Failed'));
 
       render(<ProfilePage />);
@@ -165,7 +165,7 @@ describe('ProfilePage Component', () => {
       axios.get.mockResolvedValue({ data: { name: 'Test', role: 'test' } });
     });
 
-    it('actualiza los campos del formulario al escribir', async () => {
+    it('actualiza campos del formulario al escribir', async () => {
       render(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
@@ -176,7 +176,7 @@ describe('ProfilePage Component', () => {
       expect(currentInput.value).toBe('123');
     });
 
-    it('muestra error si las contraseñas nuevas no coinciden', async () => {
+    it('muestra error si las nuevas contraseñas no coinciden', async () => {
       render(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
@@ -190,7 +190,7 @@ describe('ProfilePage Component', () => {
       expect(screen.getByText('profile.errorMismatch')).toBeInTheDocument();
     });
 
-    it('envía la petición con éxito, muestra mensaje y limpia el formulario', async () => {
+    it('envía solicitud con éxito, muestra mensaje y limpia formulario', async () => {
       axios.put.mockResolvedValueOnce({}); // Responde OK
 
       render(<ProfilePage />);
@@ -220,7 +220,7 @@ describe('ProfilePage Component', () => {
       expect(confirmInput.value).toBe('');
     });
 
-    it('captura el error del servidor si la contraseña antigua es incorrecta o falla la red', async () => {
+    it('captura error de servidor si la contraseña antigua es incorrecta', async () => {
       axios.put.mockRejectedValueOnce(new Error('Wrong password'));
 
       render(<ProfilePage />);

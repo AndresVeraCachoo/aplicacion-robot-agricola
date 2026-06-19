@@ -10,7 +10,7 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-describe('Modal Component', () => {
+describe('Componente Modal', () => {
   beforeEach(() => {
     // Controlamos el tiempo para testear los setTimeout de las animaciones
     vi.useFakeTimers();
@@ -22,12 +22,12 @@ describe('Modal Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('no se renderiza en el DOM si isOpen es false', () => {
+  it('no se renderiza en el DOM si isOpen es falso', () => {
     const { container } = render(<Modal isOpen={false} />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('se renderiza y aplica la clase visible después del delay inicial', () => {
+  it('renderiza y aplica clase visible tras el retraso inicial', () => {
     render(
       <Modal isOpen={true} title="Test Modal">
         <p>Contenido del modal</p>
@@ -49,7 +49,7 @@ describe('Modal Component', () => {
     expect(screen.getByText('Contenido del modal')).toBeInTheDocument();
   });
 
-  it('llama a la función onClose al hacer clic en el botón de cerrar y en el backdrop', () => {
+  it('llama a onClose al hacer clic en el botón de cerrar y en el fondo', () => {
     const handleClose = vi.fn();
     render(<Modal isOpen={true} onClose={handleClose} />);
     
@@ -68,7 +68,7 @@ describe('Modal Component', () => {
     expect(handleClose).toHaveBeenCalledTimes(2);
   });
 
-  it('llama a la función onClose al presionar la tecla Escape', () => {
+  it('llama a onClose cuando se presiona la tecla Escape', () => {
     const handleClose = vi.fn();
     render(<Modal isOpen={true} onClose={handleClose} />);
     
@@ -77,7 +77,7 @@ describe('Modal Component', () => {
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
-  it('remueve el eventListener y no falla si se presiona otra tecla o onClose no existe', () => {
+  it('elimina eventListener y no falla si se presiona otra tecla o onClose no existe', () => {
     const handleClose = vi.fn();
     const { unmount } = render(<Modal isOpen={true} onClose={handleClose} />);
     
@@ -91,7 +91,7 @@ describe('Modal Component', () => {
     expect(handleClose).not.toHaveBeenCalled();
   });
 
-  it('gestiona correctamente la animación de cierre y desmontaje tras 300ms', () => {
+  it('maneja correctamente la animación de cierre y desmontaje después de 300ms', () => {
     const { rerender, container } = render(<Modal isOpen={true} />);
     
     act(() => { vi.advanceTimersByTime(10); });

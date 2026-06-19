@@ -24,30 +24,30 @@ vi.mock('leaflet', () => ({
 // Mock plugin de extensión vacío
 vi.mock('leaflet.heat', () => ({}));
 
-describe('FieldDataOverlay Component', () => {
+describe('Componente FieldDataOverlay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('no hace nada si la métrica es "none" o no hay datos', () => {
+  it('no hace nada si la métrica es ninguna o no hay datos', () => {
     useRobotStore.mockReturnValue({ agronomicData: [] });
     render(<FieldDataOverlay metric="none" />);
     expect(mockHeatLayer).not.toHaveBeenCalled();
 
     useRobotStore.mockReturnValue({ agronomicData: null });
-    render(<FieldDataOverlay metric="humedad" />);
+    render(<FieldDataOverlay metric="humidity" />);
     expect(mockHeatLayer).not.toHaveBeenCalled();
   });
 
-  it('calcula intensidades y añade la capa de humedad (humedad / 100)', () => {
+  it('calcula intensidades y añade capa de humedad', () => {
     useRobotStore.mockReturnValue({
       agronomicData: [
-        { lat: 40, lon: -3, humedad: 80 },
-        { lat: 40.1, lon: -3.1, humedad: 50 }
+        { lat: 40, lon: -3, humidity: 80 },
+        { lat: 40.1, lon: -3.1, humidity: 50 }
       ]
     });
     
-    render(<FieldDataOverlay metric="humedad" />);
+    render(<FieldDataOverlay metric="humidity" />);
     
     // Verificamos que se calculó [lat, lon, intensidad]
     expect(mockHeatLayer).toHaveBeenCalledWith(
@@ -60,7 +60,7 @@ describe('FieldDataOverlay Component', () => {
     expect(mockAddTo).toHaveBeenCalled();
   });
 
-  it('calcula intensidades y añade la capa de pH (normalizado 5-8)', () => {
+  it('calcula intensidades y añade capa de pH', () => {
     useRobotStore.mockReturnValue({
       agronomicData: [
         { lat: 40, lon: -3, ph: 4 }, // Menos de 5 => intensidad 0
@@ -81,16 +81,16 @@ describe('FieldDataOverlay Component', () => {
     );
   });
 
-  it('calcula intensidades y añade la capa de temperatura_suelo (normalizado 10-40C)', () => {
+  it('calcula intensidades y añade capa de temperatura', () => {
     useRobotStore.mockReturnValue({
       agronomicData: [
-        { lat: 40, lon: -3, temperatura_suelo: 5 }, // Intensidad 0
-        { lat: 40.1, lon: -3.1, temperatura_suelo: 25 }, // Intensidad 0.5
-        { lat: 40.2, lon: -3.2, temperatura_suelo: 50 } // Intensidad 1
+        { lat: 40, lon: -3, temperature: 5 }, // Intensidad 0
+        { lat: 40.1, lon: -3.1, temperature: 25 }, // Intensidad 0.5
+        { lat: 40.2, lon: -3.2, temperature: 50 } // Intensidad 1
       ]
     });
     
-    render(<FieldDataOverlay metric="temperatura_suelo" />);
+    render(<FieldDataOverlay metric="temperature" />);
     
     expect(mockHeatLayer).toHaveBeenCalledWith(
       [
@@ -102,12 +102,12 @@ describe('FieldDataOverlay Component', () => {
     );
   });
 
-  it('limpia la capa del mapa (removeLayer) cuando el componente se desmonta o la métrica cambia', () => {
+  it('limpia capa de mapa al desmontar componente o cambiar métrica', () => {
     useRobotStore.mockReturnValue({
-      agronomicData: [{ lat: 40, lon: -3, humedad: 50 }]
+      agronomicData: [{ lat: 40, lon: -3, humidity: 50 }]
     });
     
-    const { unmount } = render(<FieldDataOverlay metric="humedad" />);
+    const { unmount } = render(<FieldDataOverlay metric="humidity" />);
     unmount();
 
     expect(mockRemoveLayer).toHaveBeenCalled();

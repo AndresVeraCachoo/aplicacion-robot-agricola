@@ -6,6 +6,11 @@ import ControlPanel from "../features/control/ControlPanel";
 import { useRobotStore } from "../store/robotStore";
 import "./ControlPage.css";
 
+/**
+ * Componente de la página de control manual.
+ * Permite controlar el robot manualmente alternando entre vista de cámara y mapa.
+ * @returns {JSX.Element}
+ */
 const ControlPage = () => {
   const { system, sendManualMove } = useRobotStore();
 

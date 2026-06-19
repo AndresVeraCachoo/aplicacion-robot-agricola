@@ -14,8 +14,13 @@ COPY app/server/package.json ./app/server/
 # Instalación de dependencias (solo producción) acotada al workspace específico
 RUN npm ci -w app/server --omit=dev && npm cache clean --force
 
-# Inyección del código fuente
+# Inyección de los esquemas de Prisma y código fuente
+COPY app/server/prisma ./app/server/prisma
 COPY app/server/src ./app/server/src
+COPY app/server/prisma.config.ts ./app/server/
+
+# Generación del cliente para Alpine Linux
+RUN npx prisma generate --schema=./app/server/prisma/schema.prisma
 
 WORKDIR /usr/src/app/app/server
 

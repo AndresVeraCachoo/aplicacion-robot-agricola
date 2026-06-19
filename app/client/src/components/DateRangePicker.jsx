@@ -7,11 +7,18 @@ import PropTypes from "prop-types";
 import "react-datepicker/dist/react-datepicker.css";
 import "./DateRangePicker.css";
 
-export const DateRangePicker = ({ onFilter, misiones }) => {
+/**
+ * Componente para filtrar datos por rango de fechas y misión.
+ * @param {Object} props - Propiedades del componente.
+ * @param {Function} props.onFilter - Función de callback al aplicar el filtro.
+ * @param {Array} props.missions - Lista de misiones disponibles.
+ * @returns {JSX.Element}
+ */
+export const DateRangePicker = ({ onFilter, missions }) => {
   const { t, i18n } = useTranslation(); 
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [misionId, setMisionId] = useState("");
+  const [missionId, setMissionId] = useState("");
 
   const currentLocale = i18n.language.startsWith("en") ? enUS : es;
 
@@ -24,33 +31,33 @@ export const DateRangePicker = ({ onFilter, misiones }) => {
     onFilter(
       startDate ? startDate.toISOString() : null,
       endDate ? endDate.toISOString() : null,
-      misionId === "" ? null : misionId,
+      missionId === "" ? null : missionId,
     );
   };
 
   const handleClear = () => {
     setStartDate(null);
     setEndDate(null);
-    setMisionId("");
+    setMissionId("");
     onFilter(null, null, null);
   };
 
   return (
     <div className="filter-bar-container">
       <div className="filter-group">
-        {/* CORRECCIÓN: Etiqueta actualizada */}
-        <label htmlFor="filter-mision">{t("data.dataSource", "DATOS:")}</label>
+        {/* Etiqueta actualizada */}
+        <label htmlFor="filter-mission">{t("data.dataSource", "DATOS:")}</label>
         <select
-          id="filter-mision"
-          value={misionId}
-          onChange={(e) => setMisionId(e.target.value)}
-          className="custom-datepicker-input select-mision"
+          id="filter-mission"
+          value={missionId}
+          onChange={(e) => setMissionId(e.target.value)}
+          className="custom-datepicker-input select-mission"
         >
           {/* Opción base que engloba manuales y automatizados */}
           <option value="">{t("data.allData", "Todos los datos")}</option>
-          {misiones?.map((m) => (
+          {missions?.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.nombre}
+              {m.name}
             </option>
           ))}
         </select>
@@ -103,5 +110,5 @@ export const DateRangePicker = ({ onFilter, misiones }) => {
 
 DateRangePicker.propTypes = {
   onFilter: PropTypes.func.isRequired,
-  misiones: PropTypes.array,
+  missions: PropTypes.array,
 };

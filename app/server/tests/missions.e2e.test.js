@@ -2,20 +2,20 @@ import request from "supertest";
 import { app } from "../src/index.js";
 import { pool } from "../src/config/db.js";
 
-describe("E2E - Misiones y Ejecuciones (Missions)", () => {
+describe("E2E - Misiones y Ejecuciones", () => {
   let seedMissionId;
   let seedRunId;
 
   const newMissionPayload = {
-    nombre: "Exploración Sector Sur",
-    tipo_tarea: "mapeo",
-    ancho_trabajo: 10.5,
-    angulo_pasada: 0,
-    bateria_minima: 15,
-    area_trabajo: { type: "Polygon", coordinates: [[[40.1, -3.1]]] }, 
-    puntos_interes: [],
-    punto_retorno: { lat: 40, lng: -3 },
-    fecha_programada: new Date().toISOString(),
+    name: "Exploración Sector Sur",
+    taskType: "mapeo",
+    workWidth: 10.5,
+    passAngle: 0,
+    minBattery: 15,
+    workArea: { type: "Polygon", coordinates: [[[40.1, -3.1]]] }, 
+    poi: [],
+    returnPoint: { lat: 40, lng: -3 },
+    scheduledTime: new Date().toISOString(),
   };
 
   beforeEach(async () => {
@@ -34,37 +34,37 @@ describe("E2E - Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("POST /api/missions", () => {
-    it("Debería crear una nueva misión y devolver estado 201", async () => {
+    it("debería crear una nueva misión y retornar estado 201", async () => {
       const response = await request(app)
         .post("/api/missions")
         .send(newMissionPayload);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("id");
-      expect(response.body.nombre).toBe(newMissionPayload.nombre);
+      expect(response.body.name).toBe(newMissionPayload.name);
     });
 
-    it("Debería devolver error 400 si faltan campos obligatorios en el payload", async () => {
+    it("debería retornar error 400 si faltan campos en la carga útil", async () => {
       const response = await request(app)
         .post("/api/missions")
-        .send({ nombre: "Misión Incompleta" });
+        .send({ name: "Misión Incompleta" });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/Error de validación/i);
+      expect(response.body.error).toMatch(/Validation Error/i);
     });
 
-    it("Debería devolver error 400 si el parámetro de batería mínima excede el valor permitido", async () => {
+    it("debería retornar error 400 si la batería mínima excede el valor", async () => {
       const response = await request(app)
         .post("/api/missions")
-        .send({ ...newMissionPayload, bateria_minima: 150 }); 
+        .send({ ...newMissionPayload, minBattery: 150 }); 
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/estar entre 0 y 100/i);
+      expect(response.body.error).toMatch(/between 0 and 100/i);
     });
   });
 
   describe("GET /api/missions", () => {
-    it("Debería devolver la lista de todas las misiones registradas", async () => {
+    it("debería retornar la lista de todas las misiones registradas", async () => {
       const response = await request(app).get("/api/missions");
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -72,10 +72,10 @@ describe("E2E - Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("PUT /api/missions/:id", () => {
-    it("Debería actualizar los parámetros especificados de una misión existente", async () => {
+    it("debería actualizar los parámetros de una misión existente", async () => {
       const response = await request(app)
         .put(`/api/missions/${seedMissionId}`)
-        .send({ nombre: "Misión Semilla Editada", ancho_trabajo: 5 });
+        .send({ name: "Misión Semilla Editada", workWidth: 5 });
 
       expect(response.status).toBe(200);
       const dbCheck = await pool.query("SELECT nombre, ancho_trabajo FROM misiones WHERE id = $1", [seedMissionId]);
@@ -84,33 +84,33 @@ describe("E2E - Misiones y Ejecuciones (Missions)", () => {
   });
 
   describe("DELETE /api/missions/:id", () => {
-    it("Debería eliminar la misión y sus ejecuciones asociadas", async () => {
+    it("debería eliminar la misión y sus ejecuciones asociadas", async () => {
       const response = await request(app).delete(`/api/missions/${seedMissionId}`);
       expect(response.status).toBe(200);
     });
   });
 
   describe("POST /api/missions/:id/runs", () => {
-    it("Debería registrar el inicio de una nueva ejecución para la misión", async () => {
+    it("debería registrar el inicio de una nueva ejecución para la misión", async () => {
       const response = await request(app).post(`/api/missions/${seedMissionId}/runs`);
       expect(response.status).toBe(201);
     });
   });
 
   describe("GET /api/missions/:id/runs", () => {
-    it("Debería devolver el historial de ejecuciones correspondiente a una misión", async () => {
+    it("debería retornar el historial de ejecución correspondiente", async () => {
       const response = await request(app).get(`/api/missions/${seedMissionId}/runs`);
       expect(response.status).toBe(200);
     });
   });
 
   describe("PUT /api/missions/runs/:run_id", () => {
-    it("Debería actualizar el progreso y los datos telemétricos de una ejecución", async () => {
+    it("debería actualizar el progreso y telemetría de la ejecución", async () => {
       const updateData = {
-        estado: "completado",
-        bateria_usada: 45,
-        distancia_recorrida: 120.5,
-        progreso: 100
+        status: "completed",
+        batteryUsed: 45,
+        distanceCovered: 120.5,
+        progress: 100
       };
 
       const response = await request(app)

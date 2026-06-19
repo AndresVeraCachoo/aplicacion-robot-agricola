@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
+describe("Filtros de Seguridad de Rutas", () => {
   let mockJwtVerify, authenticateToken, requireAdmin;
 
   beforeEach(async () => {
@@ -26,8 +26,8 @@ describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
     return res;
   };
 
-  describe("Validación de Token (authenticateToken)", () => {
-    it("Debería emitir un error 401 bloqueando la solicitud si la cabecera Authorization está ausente", () => {
+  describe("Validación de Token", () => {
+    it("Debería emitir error 401 bloqueando petición si falta Authorization", () => {
       const req = { headers: {} }; 
       const res = getMockRes();
       const next = jest.fn();
@@ -37,7 +37,7 @@ describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
       expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
     });
 
-    it("Debería emitir un error 403 si el proveedor JWT detecta manipulación o caducidad", () => {
+    it("Debería emitir error 403 si JWT detecta manipulación o expiración", () => {
       const req = { headers: { authorization: "Bearer mal-token" } };
       const res = getMockRes();
       const next = jest.fn();
@@ -51,7 +51,7 @@ describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
       expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
     });
 
-    it("Debería inyectar la carga útil decodificada en req.user si la verificación criptográfica es exitosa", () => {
+    it("Debería inyectar payload en req.user si verificación es exitosa", () => {
       const req = { headers: { authorization: "Bearer buen-token" } };
       const res = getMockRes();
       const next = jest.fn();
@@ -67,8 +67,8 @@ describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
     });
   });
 
-  describe("Control de Roles (requireAdmin)", () => {
-    it("Debería emitir un error 403 si el usuario evaluado no posee los privilegios de sistema", () => {
+  describe("Control de Roles", () => {
+    it("Debería emitir error 403 si usuario no posee privilegios", () => {
       const req = { user: { role: 'operador' } };
       const res = getMockRes();
       const next = jest.fn();
@@ -78,7 +78,7 @@ describe("Filtros de Seguridad de Rutas (Middlewares Auth)", () => {
       expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
     });
 
-    it("Debería permitir la continuación de la cadena de middlewares si el rol es válido", () => {
+    it("Debería permitir continuar cadena de middleware si el rol es válido", () => {
       const req = { user: { role: 'admin' } };
       const res = getMockRes();
       const next = jest.fn();

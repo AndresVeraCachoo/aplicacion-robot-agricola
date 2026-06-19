@@ -3,27 +3,25 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
 import UserManagementPage from '../UserManagementPage.jsx';
-import { useToast } from '../../context/ToastContext'; // <-- CORREGIDO
+import { useToast } from '../../context/ToastContext';
 
-// --- MOCKS LIMPIOS PARA SONARQUBE ---
+
+
 vi.mock('axios');
 
+const mockT = (key, defaultValue) => {
+  if (typeof defaultValue === 'string') return defaultValue;
+  return key;
+};
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    // Simulamos la función de traducción. Si se le pasa un texto por defecto, lo usa.
-    t: (key, defaultValue) => {
-      if (typeof defaultValue === 'string') return defaultValue;
-      return key;
-    }
-  }),
+  useTranslation: () => ({ t: mockT }),
 }));
-
-vi.mock('../../context/ToastContext', () => ({ // <-- CORREGIDO
+vi.mock('../../context/ToastContext', () => ({
   useToast: vi.fn(),
 }));
 
 // Mock del modal evitando validación de props con arguments[0]
-vi.mock('../../components/Modal', () => ({ // <-- CORREGIDO
+vi.mock('../../components/Modal', () => ({
   default: function MockModal() {
     const { isOpen, children, title } = arguments[0];
     if (!isOpen) return null;
@@ -36,8 +34,8 @@ vi.mock('../../components/Modal', () => ({ // <-- CORREGIDO
   }
 }));
 
-// --- INICIO DE LOS TESTS ---
-describe('UserManagementPage Component', () => {
+
+describe('Componente UserManagementPage', () => {
   let mockAddToast;
   let consoleSpy;
 
@@ -60,7 +58,7 @@ describe('UserManagementPage Component', () => {
   });
 
   describe('Carga y Listado de Usuarios', () => {
-    it('carga la lista de usuarios y bloquea el botón de borrar para usuarios protegidos', async () => {
+    it('carga lista de usuarios y bloquea botón eliminar para protegidos', async () => {
       axios.get.mockResolvedValueOnce({ data: mockUsers });
       render(<UserManagementPage />);
 
@@ -75,7 +73,7 @@ describe('UserManagementPage Component', () => {
       expect(deleteBtns[1]).not.toBeDisabled(); // ID 4 (Habilitado)
     });
 
-    it('captura el error y muestra un toast si la carga falla', async () => {
+    it('captura error y muestra un toast si falla la carga', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network error'));
       render(<UserManagementPage />);
       
@@ -86,12 +84,12 @@ describe('UserManagementPage Component', () => {
     });
   });
 
-  describe('Creación de Usuarios (Modal & POST)', () => {
+  describe('Creación de Usuario', () => {
     beforeEach(() => {
        axios.get.mockResolvedValue({ data: mockUsers });
     });
 
-    it('muestra un aviso si se intenta crear un usuario sin contraseña', async () => {
+    it('muestra advertencia si intenta crear usuario sin contraseña', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Admin Protector'));
 
@@ -107,7 +105,7 @@ describe('UserManagementPage Component', () => {
       expect(axios.post).not.toHaveBeenCalled();
     });
 
-    it('envía los datos correctamente al backend, muestra éxito y recarga la lista', async () => {
+    it('envía datos al backend, muestra éxito y recarga lista', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Admin Protector'));
 
@@ -124,14 +122,14 @@ describe('UserManagementPage Component', () => {
       await waitFor(() => {
         expect(axios.post).toHaveBeenCalledWith(expect.any(String), {
           name: 'Nuevo User',
-          role: 'usuario',
+          role: 'user',
           password: '1234'
         });
         expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('users.created'), 'success');
       });
     });
 
-    it('captura el error del servidor al crear', async () => {
+    it('captura error del servidor en la creación', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Admin Protector'));
 
@@ -149,12 +147,12 @@ describe('UserManagementPage Component', () => {
     });
   });
 
-  describe('Edición de Usuarios (Modal & PUT)', () => {
+  describe('Edición de Usuario', () => {
     beforeEach(() => {
       axios.get.mockResolvedValue({ data: mockUsers });
     });
 
-    it('abre el modal con datos del usuario, permite editar el rol y guarda (PUT)', async () => {
+    it('abre modal con datos de usuario, permite editar rol y guarda', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
@@ -181,7 +179,7 @@ describe('UserManagementPage Component', () => {
       });
     });
 
-    it('permite cancelar la edición cerrando el modal sin guardar', async () => {
+    it('permite cancelar edición cerrando modal sin guardar', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
@@ -195,12 +193,12 @@ describe('UserManagementPage Component', () => {
     });
   });
 
-  describe('Eliminación de Usuarios (Modal & DELETE)', () => {
+  describe('Borrado de Usuario', () => {
     beforeEach(() => {
       axios.get.mockResolvedValue({ data: mockUsers });
     });
 
-    it('abre el modal de confirmación y permite cancelar sin borrar nada', async () => {
+    it('abre confirmación modal y permite cancelar sin borrar', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
@@ -215,7 +213,7 @@ describe('UserManagementPage Component', () => {
       expect(axios.delete).not.toHaveBeenCalled();
     });
 
-    it('ejecuta la eliminación correctamente', async () => {
+    it('ejecuta borrado correctamente', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
@@ -234,7 +232,7 @@ describe('UserManagementPage Component', () => {
       });
     });
 
-    it('maneja el error estándar al eliminar', async () => {
+    it('maneja error estándar al borrar', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
@@ -251,7 +249,7 @@ describe('UserManagementPage Component', () => {
       });
     });
 
-    it('maneja el error especial (403/409) si se intenta vulnerar la API con un usuario protegido', async () => {
+    it('maneja error especial si intenta vulnerar API con usuario protegido', async () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 

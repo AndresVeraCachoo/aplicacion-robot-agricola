@@ -1,19 +1,15 @@
 import axios from "axios";
 
 /**
- * @namespace Configuracion
- * @description Ajustes globales y utilidades de infraestructura del cliente.
- */
-
-/**
- * Cliente HTTP centralizado de la aplicación.
+ * Cliente HTTP centralizado para la aplicación mediante Axios.
+ * Configura la base URL y los interceptores de seguridad.
  * @type {import("axios").AxiosInstance}
- * @memberof Configuracion
- * @name httpClient
  */
-const httpClient = axios.create({
+const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
+
+const httpClient = instance || axios;
 
 httpClient.interceptors.request.use(
   (config) => {

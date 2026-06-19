@@ -1,0 +1,99 @@
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model MissionExecution {
+  id              Int           @id @default(autoincrement())
+  missionId       Int?          @map("mision_id")
+  status          String?       @default("pendiente") @db.VarChar(50) @map("estado")
+  startTime       DateTime?     @default(now()) @db.Timestamp(6) @map("fecha_inicio")
+  endTime         DateTime?     @db.Timestamp(6) @map("fecha_fin")
+  batteryUsed     Int?          @default(0) @map("bateria_usada")
+  distanceCovered Decimal?      @default(0.0) @db.Decimal(10, 2) @map("distancia_recorrida")
+  timeElapsed     Int?          @default(0) @map("tiempo_transcurrido")
+  progress        Int?          @default(0) @map("progreso")
+  mission         Mission?      @relation(fields: [missionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  robotData       RobotData[]
+
+  @@map("ejecuciones_mision")
+}
+
+model Mission {
+  id              Int                  @id @default(autoincrement())
+  name            String               @db.VarChar(255) @map("nombre")
+  taskType        String               @db.VarChar(100) @map("tipo_tarea")
+  workWidth       Decimal?             @db.Decimal(5, 2) @map("ancho_trabajo")
+  passAngle       Decimal?             @db.Decimal(5, 2) @map("angulo_pasada")
+  minBattery      Int?                 @default(20) @map("bateria_minima")
+  workArea        Json                 @map("area_trabajo")
+  poi             Json?                @map("puntos_interes")
+  returnPoint     Json?                @map("punto_retorno")
+  scheduledTime   DateTime?            @db.Timestamp(6) @map("fecha_programada")
+  createdAt       DateTime?            @default(now()) @db.Timestamp(6) @map("fecha_creacion")
+  executions      MissionExecution[]
+
+  @@map("misiones")
+}
+
+model RobotData {
+  id              Int                 @id @default(autoincrement())
+  lat             Decimal?            @db.Decimal(10, 7)
+  lon             Decimal?            @db.Decimal(10, 7)
+  timestamp       DateTime?           @default(now()) @db.Timestamptz(6)
+  humidity        Decimal?            @db.Decimal(5, 2) @map("humedad")
+  soilTemperature Decimal?            @db.Decimal(5, 2) @map("temperatura_suelo")
+  ph              Decimal?            @db.Decimal(3, 1)
+  nitrogen        Decimal?            @db.Decimal(6, 2) @map("nitrogeno")
+  phosphorus      Decimal?            @db.Decimal(6, 2) @map("fosforo")
+  potassium       Decimal?            @db.Decimal(6, 2) @map("potasio")
+  solarRadiation  Decimal?            @db.Decimal(6, 2) @map("radiacion_solar")
+  executionId     Int?                @map("ejecucion_id")
+  execution       MissionExecution?   @relation(fields: [executionId], references: [id], onUpdate: NoAction)
+
+  @@map("robot_datos")
+}
+
+model RobotState {
+  id                   Int      @id
+  batteryPercentage    Int?     @map("battery_percentage")
+  batteryStatus        String?  @db.VarChar(50) @map("battery_status")
+  batteryVoltage       Decimal? @db.Decimal(5, 2) @map("battery_voltage")
+  batteryTemperature   Decimal? @db.Decimal(5, 2) @map("battery_temperature")
+  batteryTimeRemaining String?  @db.VarChar(50) @map("battery_time_remaining")
+  systemStatus         String?  @db.VarChar(50) @map("system_status")
+  systemSpeed          Decimal? @db.Decimal(5, 2) @map("system_speed")
+  systemHeading        Int?     @map("system_heading")
+  currentLat           Decimal? @db.Decimal(10, 7) @map("current_lat")
+  currentLon           Decimal? @db.Decimal(10, 7) @map("current_lon")
+
+  @@map("robot_estado")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique @db.VarChar(100)
+  password String  @db.VarChar(100)
+  role     String  @db.VarChar(20)
+  avatar   String? @default("/avatars/robot-fondo-verde.png") @db.VarChar(255)
+
+  @@map("usuarios")
+}
+
+model EnergyHistory {
+  id                 Int       @id @default(autoincrement())
+  timestamp          DateTime? @default(now()) @db.Timestamptz(6)
+  batteryPercentage  Decimal   @db.Decimal(5, 2) @map("bateria_porcentaje")
+  status             String    @db.VarChar(50) @map("estado")
+  solarRadiation     Decimal?  @default(0) @db.Decimal(6, 2) @map("radiacion_solar")
+  energyConsumed     Decimal?  @default(0) @db.Decimal(6, 2) @map("energia_consumida")
+  energyGenerated    Decimal?  @default(0) @db.Decimal(6, 2) @map("energia_generada")
+  temperature        Decimal?  @default(25.00) @db.Decimal(5, 2) @map("temperatura")
+
+  @@map("historial_energia")
+}

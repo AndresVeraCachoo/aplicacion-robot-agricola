@@ -34,7 +34,7 @@ vi.mock('../FieldDataOverlay.jsx', () => {
 });
 
 const shared = vi.hoisted(() => ({
-  mapClickHandler: null,
+  mapClickHandlers: [],
   mapMouseMoveHandler: null,
   mapInstance: {
     setView: vi.fn(),
@@ -91,19 +91,19 @@ vi.mock('react-leaflet', () => {
     MapContainer, TileLayer, Marker, Polyline, Polygon, CircleMarker, LayersControl, Tooltip,
     useMap: () => shared.mapInstance,
     useMapEvents: (handlers) => {
-      if (handlers.click) shared.mapClickHandler = handlers.click;
+      if (handlers.click) shared.mapClickHandlers.push(handlers.click);
       if (handlers.mousemove) shared.mapMouseMoveHandler = handlers.mousemove;
       return {};
     }
   };
 });
 
-describe('MapView Component', () => {
+describe('Componente MapView', () => {
   let robotStoreMock, toastMock;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    shared.mapClickHandler = null;
+    shared.mapClickHandlers = [];
     shared.mapMouseMoveHandler = null;
 
     robotStoreMock = {
@@ -128,14 +128,14 @@ describe('MapView Component', () => {
     useToast.mockReturnValue(toastMock);
   });
 
-  it('renderiza correctamente el mapa y los controles iniciales', () => {
+  it('renderiza el mapa y controles iniciales correctamente', () => {
     render(<MapView />);
     expect(screen.getByTestId('map-container')).toBeInTheDocument();
     expect(screen.getByText('mapAdv.layerOff')).toBeInTheDocument();
     expect(screen.getByTitle('mapAdv.drawArea')).toBeInTheDocument();
   });
 
-  it('cambia la métrica del mapa de calor (FieldDataOverlay)', () => {
+  it('cambia métrica de mapa de calor', () => {
     render(<MapView />);
     const select = screen.getByTitle('mapAdv.selectHeatmap');
     
@@ -143,9 +143,9 @@ describe('MapView Component', () => {
     expect(screen.getByTestId('field-overlay')).toHaveTextContent('ph');
   });
 
-  describe('Flujo de dibujo de Zona Segura (ZoneDrawer)', () => {
+  describe('Flujo de Dibujo de Zona Segura', () => {
 
-    it('cancela el modo de dibujo usando el botón o la tecla ESCAPE', () => {
+    it('cancela modo de dibujo mediante botón o tecla ESC', () => {
       render(<MapView />);
       const drawBtn = screen.getByTitle('mapAdv.drawArea');
       
@@ -160,13 +160,13 @@ describe('MapView Component', () => {
     });
   });
 
-  describe('Cálculos Agronómicos y Marcadores (calculateZoneStats & SampleMarker)', () => {
-    it('procesa marcadores dentro y fuera del polígono, y calcula las medias agronómicas', () => {
+  describe('Cálculos Agronómicos y Marcadores', () => {
+    it('procesa marcadores dentro y fuera del polígono, y calcula promedios', () => {
       robotStoreMock.safeZone = [[0, 0], [0, 10], [10, 10], [10, 0]];
       
       robotStoreMock.agronomicData = [
-        { id: 1, lat: 5, lon: 5, ph: 7, humedad: 50, temperatura_suelo: 25, nitrogeno: 10, fosforo: 5, potasio: 8 },
-        { id: 2, lat: 20, lon: 20, ph: 4, humedad: null } 
+        { id: 1, lat: 5, lon: 5, ph: 7, humidity: 50, temperature: 25, nitrogen: 10, phosphorus: 5, potassium: 8 },
+        { id: 2, lat: 20, lon: 20, ph: 4, humidity: null }
       ];
 
       render(<MapView />);
@@ -210,7 +210,7 @@ describe('MapView Component', () => {
     });
   });
 
-  it('centra la vista en el robot usando CenterButtonInternal', () => {
+  it('centra vista en robot usando CenterButtonInternal', () => {
     render(<MapView />);
     const centerBtn = screen.getByTitle('control.centerRobot');
     
@@ -218,4 +218,27 @@ describe('MapView Component', () => {
     expect(shared.mapInstance.setView).toHaveBeenCalledWith([40, -3], 18, { animate: true });
   });
 
+  it('actualiza coordenadas clicadas al hacer clic fuera del modo de dibujo', () => {
+    render(<MapView />);
+    // Simulamos un clic en el mapa llamando al handler registrado
+    act(() => {
+      shared.mapClickHandlers.forEach(handler => {
+        handler({ latlng: { lat: 41, lng: -4 } });
+      });
+    });
+
+    expect(screen.getByText(/41\.00000/)).toBeInTheDocument();
+    expect(screen.getByText(/-4\.00000/)).toBeInTheDocument();
+  });
+
+  it('muestra resumen de zona al hacer clic en polígono de zona segura', () => {
+    robotStoreMock.safeZone = [[0, 0], [0, 10], [10, 10], [10, 0]];
+    robotStoreMock.agronomicData = [{ id: 1, lat: 5, lon: 5, ph: 7 }];
+    render(<MapView />);
+
+    const polygonBtn = screen.getByTestId('polygon');
+    act(() => { fireEvent.click(polygonBtn); });
+
+    expect(screen.getByText('mapAdv.areaSummary')).toBeInTheDocument();
+  });
 });

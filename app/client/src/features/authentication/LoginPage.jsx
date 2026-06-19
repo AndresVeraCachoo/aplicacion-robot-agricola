@@ -10,6 +10,11 @@ const LANGUAGES = [
   { code: "pt", label: "PT" },
 ];
 
+/**
+ * Componente de la página de inicio de sesión.
+ * Permite al usuario autenticarse y cambiar el idioma de la aplicación.
+ * @returns {JSX.Element}
+ */
 function LoginPage() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
@@ -44,7 +49,7 @@ function LoginPage() {
     <div className="login-container">
       <div className="login-box">
         
-        {/* Dropdown de Idiomas */}
+        {/* Desplegable de Idioma */}
         <div className="login-lang-container">
           <button
             type="button"

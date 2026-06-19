@@ -4,6 +4,16 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import "./Modal.css";
 
+/**
+ * Componente genérico de ventana modal.
+ * Maneja la visibilidad, animaciones y cierre mediante teclado o clic fuera.
+ * @param {Object} props - Propiedades del componente.
+ * @param {boolean} props.isOpen - Indica si el modal es visible.
+ * @param {Function} props.onClose - Función para cerrar el modal.
+ * @param {string} props.title - Título del modal.
+ * @param {React.ReactNode} props.children - Contenido del modal.
+ * @returns {JSX.Element|null}
+ */
 function Modal({ isOpen, onClose, title, children }) {
   const { t } = useTranslation();
   // Doble estado para permitir la animación de salida

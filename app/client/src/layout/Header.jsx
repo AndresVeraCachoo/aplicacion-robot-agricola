@@ -15,6 +15,13 @@ const LANGUAGES = [
   { code: "pt", label: "PT" },
 ];
 
+/**
+ * Componente Header del dashboard.
+ * Muestra el estado de conexión, idioma, tema, y widgets de batería.
+ * @param {Object} props - Propiedades del componente.
+ * @param {Function} props.onMenuClick - Función para abrir/cerrar el menú lateral.
+ * @returns {JSX.Element}
+ */
 function Header({ onMenuClick }) {
   const { t, i18n } = useTranslation();
   const battery = useRobotStore((state) => state.battery);

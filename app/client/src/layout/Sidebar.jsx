@@ -8,6 +8,14 @@ import { useAuth } from "../hooks/useAuth";
 
 const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
 
+/**
+ * Componente de la barra lateral de navegación.
+ * Muestra enlaces a las diferentes secciones y el perfil del usuario activo.
+ * @param {Object} props - Propiedades del componente.
+ * @param {boolean} props.isOpen - Indica si el menú está desplegado en móviles.
+ * @param {Function} props.onClose - Función para cerrar el menú en dispositivos móviles.
+ * @returns {JSX.Element}
+ */
 function Sidebar({ isOpen, onClose }) {
   const { t } = useTranslation();
   const { userRole, logout } = useAuth();

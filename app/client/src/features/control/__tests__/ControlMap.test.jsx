@@ -128,7 +128,7 @@ vi.mock('react-leaflet', () => {
   };
 });
 
-describe('ControlMap Component', () => {
+describe('Componente ControlMap', () => {
   let robotStoreMock, missionStoreMock, toastMock;
 
   beforeEach(() => {
@@ -158,19 +158,26 @@ describe('ControlMap Component', () => {
     };
 
     missionStoreMock = {
-      misiones: [
+      missions: [
         { 
-          id: '1', nombre: 'Misión Test', 
-          area_trabajo: { coordinates: [[[ -3, 40 ], [ -3.00001, 40 ], [ -3.00001, 40.00001 ], [ -3, 40.00001 ]]] }, 
-          tipo_tarea: 'Rociado', bateria_minima: 20, ancho_trabajo: 2 
+          id: '1', name: 'Misión Test', 
+          workArea: { coordinates: [[[ -3, 40 ], [ -3.00001, 40 ], [ -3.00001, 40.00001 ], [ -3, 40.00001 ]]] }, 
+          taskType: 'Rociado', minBattery: 20, workingWidth: 2 
         }
       ],
-      fetchMisiones: vi.fn(),
+      fetchMissions: vi.fn(),
       startMissionRun: vi.fn(),
     };
 
     toastMock = { addToast: vi.fn() };
-    useRobotStore.mockReturnValue(robotStoreMock);
+    
+    useRobotStore.mockImplementation((selector) => {
+      if (typeof selector === 'function') {
+        return selector(robotStoreMock);
+      }
+      return robotStoreMock;
+    });
+    
     useMissionStore.mockReturnValue(missionStoreMock);
     useToast.mockReturnValue(toastMock);
   });
@@ -179,27 +186,27 @@ describe('ControlMap Component', () => {
     vi.useRealTimers();
   });
 
-  it('muestra loader si no hay GPS', () => {
+  it('muestra cargador si no hay GPS', () => {
     robotStoreMock.position = { lat: null, lon: null };
     render(<ControlMap />);
     expect(screen.getByText('control.loadingGPS')).toBeInTheDocument();
   });
 
-  it('evalúa puntos de la misión y pasa a modo MANUAL si se completan', () => {
+  it('evalúa puntos de misión y cambia a modo MANUAL si se completó', () => {
     robotStoreMock.totalMissionPoints = 10;
     render(<ControlMap />);
     expect(robotStoreMock.setControlMode).toHaveBeenCalledWith('MANUAL');
     expect(robotStoreMock.setTotalMissionPoints).toHaveBeenCalledWith(0);
   });
 
-  it('renderiza mensaje sin misiones si el array está vacío', () => {
-    missionStoreMock.misiones = [];
+  it('muestra mensaje de no hay misiones si el arreglo está vacío', () => {
+    missionStoreMock.missions = [];
     render(<ControlMap />);
     act(() => { fireEvent.click(screen.getByText(/control\.missionsBtn/)); });
     expect(screen.getByText('control.noMissions')).toBeInTheDocument();
   });
 
-  it('eventos avanzados de Geoman (Intersect, Area, Tooltip y Hectáreas)', () => {
+  it('eventos avanzados de Geoman (Intersección, Área, Tooltip y Hectáreas)', () => {
     render(<ControlMap />);
     
     const badLayer = new L.Polygon();
@@ -233,7 +240,7 @@ describe('ControlMap Component', () => {
     expect(robotStoreMock.clearSafeZone).toHaveBeenCalled();
   });
 
-  it('captura los clics del mapa con restricciones de dibujo (pm)', () => {
+  it('captura clics en el mapa con restricciones de dibujo (pm)', () => {
     robotStoreMock.navTarget = { lat: 40.01, lon: -3.01 }; 
     robotStoreMock.navQueue = [{ lat: 40.02, lon: -3.02 }];
     render(<ControlMap />);
@@ -252,5 +259,58 @@ describe('ControlMap Component', () => {
       });
     });
     expect(robotStoreMock.navigateToPoint).toHaveBeenCalledWith(41, -4);
+  });
+
+  it('dispara centrar mapa cuando se hace clic en botón central', () => {
+    render(<ControlMap />);
+    const centerBtn = screen.getByTitle('control.centerRobot');
+    fireEvent.click(centerBtn);
+    expect(shared.mapInstance.setView).toHaveBeenCalledWith([40, -3], 19);
+  });
+
+  it('maneja clic en marcador de estación base', () => {
+    render(<ControlMap />);
+    // Buscamos el marcador base buscando su evento de click que es disparado por nuestro mock
+    const markers = screen.getAllByTestId('marker');
+    // El primero es la base, el segundo es el robot
+    fireEvent.click(markers[0]);
+    expect(robotStoreMock.navigateToPoint).toHaveBeenCalledWith(42.36317, -3.69882);
+    expect(toastMock.addToast).toHaveBeenCalledWith('control.returningToBase', 'info');
+  });
+
+  it('genera ruta e inicia misión automática', async () => {
+    robotStoreMock.system.battery = 100;
+    render(<ControlMap />);
+    
+    // Open panel
+    act(() => { fireEvent.click(screen.getByText(/control\.missionsBtn/)); });
+    
+    // Hover mission to cover `hoveredZigZag` generator
+    const missionCard = screen.getByRole('article', { name: 'Misión: Misión Test' });
+    fireEvent.mouseEnter(missionCard);
+    
+    // Load mission
+    const loadBtn = screen.getByText('control.loadZone');
+    fireEvent.click(loadBtn);
+    
+    // Start mission
+    const startBtn = screen.getByText('control.startAuto');
+    await act(async () => {
+      fireEvent.click(startBtn);
+    });
+
+    expect(missionStoreMock.startMissionRun).toHaveBeenCalledWith('1');
+    expect(robotStoreMock.setControlMode).toHaveBeenCalledWith('AUTO');
+  });
+
+  it('rechaza inicio de misión si batería es baja', () => {
+    robotStoreMock.system.battery = 10;
+    render(<ControlMap />);
+    
+    act(() => { fireEvent.click(screen.getByText(/control\.missionsBtn/)); });
+    const loadBtn = screen.getByText('control.loadZone');
+    fireEvent.click(loadBtn);
+
+    expect(toastMock.addToast).toHaveBeenCalledWith(expect.stringContaining('Batería insuficiente'), 'error');
   });
 });

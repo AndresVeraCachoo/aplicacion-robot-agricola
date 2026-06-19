@@ -9,8 +9,8 @@ vi.mock('../components/MapView', () => ({
   default: () => <div data-testid="mock-map-view">MapView Component</div>
 }));
 
-describe('Dashboard Component', () => {
-  it('renderiza la estructura principal y monta el componente MapView', () => {
+describe('Componente Dashboard', () => {
+  it('renderiza estructura principal y monta componente MapView', () => {
     render(<Dashboard />);
     
     // Verificamos el contenedor principal

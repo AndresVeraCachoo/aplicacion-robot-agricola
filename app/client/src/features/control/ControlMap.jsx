@@ -11,7 +11,7 @@ import {
   Polygon,
   useMapEvents,
   useMap,
-  Tooltip, // 👈 AÑADIDO: Importamos Tooltip
+  Tooltip, // Importamos Tooltip
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -315,7 +315,7 @@ GeomanControls.propTypes = {
   ignoreClickRef: PropTypes.shape({ current: PropTypes.bool }).isRequired,
 };
 
-// 👈 FIX: Añadido cursor: pointer al icono de la base
+// Añadido cursor: pointer al icono de la base
 const baseIcon = new L.DivIcon({
   className: "base-station-icon",
   html: `<div style="background-color: #3b82f6; color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); cursor: pointer;">⚡</div>`,
@@ -381,6 +381,13 @@ const CenterButton = () => {
   );
 };
 
+/**
+ * Componente principal del mapa de control.
+ * Gestiona la visualización del mapa, el trazado de misiones, marcadores y navegación del robot.
+ * @param {Object} props - Propiedades del componente.
+ * @param {boolean} [props.isPip=false] - Indica si el mapa está en modo Picture-in-Picture.
+ * @returns {JSX.Element}
+ */
 const ControlMap = ({ isPip = false }) => {
   const { t } = useTranslation();
   const {
@@ -397,7 +404,7 @@ const ControlMap = ({ isPip = false }) => {
     setTotalMissionPoints,
   } = useRobotStore();
 
-  const { misiones, fetchMisiones, startMissionRun } = useMissionStore();
+  const { missions, fetchMissions, startMissionRun } = useMissionStore();
   const { addToast } = useToast();
   const ignoreClickRef = useRef(false);
 
@@ -406,8 +413,8 @@ const ControlMap = ({ isPip = false }) => {
   const [loadedMission, setLoadedMission] = useState(null);
 
   useEffect(() => {
-    fetchMisiones();
-  }, [fetchMisiones]);
+    fetchMissions();
+  }, [fetchMissions]);
 
   const pointsRemaining = navQueue.length + (navTarget ? 1 : 0);
   const pointsCompleted = Math.max(0, totalMissionPoints - pointsRemaining);
@@ -429,14 +436,14 @@ const ControlMap = ({ isPip = false }) => {
   ]);
 
   const handleLoadMission = (mission) => {
-    if (system.battery < mission.bateria_minima) {
+    if (system.battery < mission.minBattery) {
       addToast(
-        `⚠️ Batería insuficiente. La misión requiere ${mission.bateria_minima}%, pero el robot tiene ${system.battery}%`,
+        `⚠️ Batería insuficiente. La misión requiere ${mission.minBattery}%, pero el robot tiene ${system.battery}%`,
         "error",
       );
       return;
     }
-    setSafeZone(mission.area_trabajo.coordinates[0].map((c) => [c[1], c[0]]));
+    setSafeZone(mission.workArea.coordinates[0].map((c) => [c[1], c[0]]));
     setLoadedMission(mission);
   };
 
@@ -447,8 +454,8 @@ const ControlMap = ({ isPip = false }) => {
     setControlMode("AUTO");
 
     const path = generateZigZag(
-      loadedMission.area_trabajo,
-      loadedMission.ancho_trabajo,
+      loadedMission.workArea,
+      loadedMission.workingWidth,
     );
     if (path.length > 0) {
       setTotalMissionPoints(path.length);
@@ -459,7 +466,7 @@ const ControlMap = ({ isPip = false }) => {
     setShowMissionsPanel(false);
   };
 
-  // 👈 NUEVA FUNCIÓN: Al hacer click en la base, manda al robot y detiene eventos
+  // Función: Al hacer click en la base, manda al robot y detiene eventos
   const handleBaseStationClick = (e) => {
     L.DomEvent.stopPropagation(e);
     // Mandamos el robot a las coordenadas base predefinidas
@@ -479,15 +486,15 @@ const ControlMap = ({ isPip = false }) => {
     navQueue.forEach((p) => fullQueuePath.push([p.lat, p.lon]));
   }
 
-  const hoveredPolygon = hoveredMission?.area_trabajo?.coordinates?.[0]?.map((c) => [c[1], c[0]]) || [];
+  const hoveredPolygon = hoveredMission?.workArea?.coordinates?.[0]?.map((c) => [c[1], c[0]]) || [];
   const hoveredZigZag = hoveredMission
-    ? generateZigZag(hoveredMission.area_trabajo, hoveredMission.ancho_trabajo)
+    ? generateZigZag(hoveredMission.workArea, hoveredMission.workingWidth)
     : [];
 
   return (
     <div className="control-map-wrapper">
       <button
-        className="toggle-missions-btn btn-misiones"
+        className="toggle-missions-btn btn-missions"
         onClick={() => setShowMissionsPanel(!showMissionsPanel)}
       >
         🗺️ {t("control.missionsBtn")}
@@ -545,7 +552,7 @@ const ControlMap = ({ isPip = false }) => {
           </>
         )}
 
-        {/* 👈 FIX: Tooltip (hover) y EventHandler (click) añadidos a la base */}
+        {/* Tooltip (hover) y EventHandler (click) añadidos a la base */}
         <Marker
           position={[42.36317, -3.69882]}
           icon={baseIcon}
@@ -609,7 +616,7 @@ const ControlMap = ({ isPip = false }) => {
           </div>
 
           <div className="sidebar-mission-list">
-            {misiones.map((m) => (
+            {missions.map((m) => (
               <article
                 key={m.id}
                 className={`sidebar-mission-card ${loadedMission?.id === m.id ? "loaded" : ""}`}
@@ -617,14 +624,14 @@ const ControlMap = ({ isPip = false }) => {
                 onMouseLeave={() => setHoveredMission(null)}
                 onFocus={() => setHoveredMission(m)}
                 onBlur={() => setHoveredMission(null)}
-                aria-label={`Misión: ${m.nombre}`}
+                aria-label={`Misión: ${m.name}`}
               >
-                <h4>{m.nombre}</h4>
+                <h4>{m.name}</h4>
                 <p>
-                  {t("control.data")}: {m.tipo_tarea}
+                  {t("control.data")}: {m.taskType}
                 </p>
                 <p>
-                  {t("control.batteryReq")}: {m.bateria_minima}%
+                  {t("control.batteryReq")}: {m.minBattery}%
                 </p>
 
                 <div className="card-actions">
@@ -645,7 +652,7 @@ const ControlMap = ({ isPip = false }) => {
                 </div>
               </article>
             ))}
-            {misiones.length === 0 && (
+            {missions.length === 0 && (
               <p style={{ textAlign: "center", marginTop: "20px" }}>
                 {t("control.noMissions")}
               </p>

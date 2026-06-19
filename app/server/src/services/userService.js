@@ -2,184 +2,207 @@ import bcrypt from "bcrypt";
 import { AppError } from "../middlewares/errorHandler.js";
 
 /**
- * Servicio para gestión de cuentas de usuario, control de accesos y seguridad.
+ * Servicio para la gestión de cuentas de usuario, control de acceso y seguridad utilizando Prisma.
  */
 export class UserService {
   /**
-   * @param {import('pg').Pool} dbPool - Pool de conexiones de base de datos.
+   * @param {Object} prismaClient - Cliente ORM Prisma.
    */
-  constructor(dbPool) {
-    this.pool = dbPool;
+  constructor(prismaClient) {
+    this.prisma = prismaClient;
   }
 
   /**
-   * Devuelve los datos públicos de perfil de un usuario.
-   * @param {number|string} userId - ID interno del usuario.
-   * @returns {Promise<Object>}
+   * Obtiene los datos del perfil público de un usuario.
+   * 
+   * @param {number|string} userId - Identificador único del usuario.
+   * @returns {Promise<Object>} Datos del perfil (id, nombre, rol, avatar).
+   * @throws {AppError} Lanza error 404 si el usuario no existe.
    */
   async getUserProfile(userId) {
-    const result = await this.pool.query(
-      "SELECT id, name, role, avatar FROM usuarios WHERE id = $1",
-      [userId]
-    );
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number.parseInt(userId, 10) },
+      select: { id: true, name: true, role: true, avatar: true }
+    });
 
-    if (result.rows.length === 0) {
-      throw new AppError("Usuario no encontrado", 404);
+    if (!user) {
+      throw new AppError("User not found", 404);
     }
 
-    return result.rows[0];
+    return user;
   }
 
   /**
-   * Cambia la clave de acceso de un usuario tras verificar la anterior.
-   * @param {number|string} userId - ID del usuario.
-   * @param {string} currentPassword - Clave en texto plano actual.
-   * @param {string} newPassword - Clave en texto plano nueva.
-   * @returns {Promise<Object>}
+   * Cambia la contraseña de un usuario validando primero su contraseña actual.
+   * 
+   * @param {number|string} userId - Identificador del usuario.
+   * @param {string} currentPassword - Contraseña actual en texto plano para verificar la identidad.
+   * @param {string} newPassword - Nueva contraseña en texto plano que será encriptada.
+   * @returns {Promise<Object>} Mensaje confirmando la actualización.
+   * @throws {AppError} Lanza error 400 si la contraseña actual no coincide o 404 si el usuario no existe.
    */
   async updateUserPassword(userId, currentPassword, newPassword) {
-    const userResult = await this.pool.query("SELECT * FROM usuarios WHERE id = $1", [userId]);
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number.parseInt(userId, 10) }
+    });
 
-    if (userResult.rows.length === 0) {
-      throw new AppError("Usuario no encontrado", 404);
+    if (!user) {
+      throw new AppError("User not found", 404);
     }
 
-    const user = userResult.rows[0];
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
-      throw new AppError("La contraseña actual es incorrecta", 400);
+      throw new AppError("Current password is incorrect", 400);
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.pool.query("UPDATE usuarios SET password = $1 WHERE id = $2", [hashedPassword, userId]);
+    
+    await this.prisma.user.update({
+      where: { id: Number.parseInt(userId, 10) },
+      data: { password: hashedPassword }
+    });
 
-    return { message: "Contraseña actualizada correctamente" };
+    return { message: "Password updated successfully" };
   }
 
   /**
-   * Lista todos los usuarios registrados.
-   * @returns {Promise<Array>}
+   * Lista todos los usuarios registrados en el sistema.
+   * 
+   * @returns {Promise<Array<Object>>} Lista de usuarios ordenados por ID (limitada a 1000 registros).
    */
   async getAllUsers() {
-    // Límite de seguridad
-    const result = await this.pool.query("SELECT id, name, role FROM usuarios ORDER BY id ASC LIMIT 1000");
-    return result.rows;
+    return await this.prisma.user.findMany({
+      select: { id: true, name: true, role: true },
+      orderBy: { id: 'asc' },
+      take: 1000
+    });
   }
 
   /**
-   * Instancia una nueva cuenta en el sistema asegurando que no existan nombres duplicados.
+   * Crea una nueva cuenta en el sistema garantizando que no haya nombres duplicados.
+   * 
    * @param {string} name - Nombre de usuario (debe ser único).
-   * @param {string} role - Nivel de privilegio.
-   * @param {string} password - Clave a hashear.
-   * @returns {Promise<Object>}
+   * @param {string} role - Rol asignado ('admin' o 'operator').
+   * @param {string} password - Contraseña en texto plano (se almacenará hasheada).
+   * @returns {Promise<Object>} Datos del usuario recién creado.
+   * @throws {AppError} Lanza error 409 si el nombre de usuario ya está en uso.
    */
   async createNewUser(name, role, password) {
-    const userExists = await this.pool.query("SELECT * FROM usuarios WHERE name = $1", [name]);
+    const userExists = await this.prisma.user.findUnique({
+      where: { name }
+    });
     
-    if (userExists.rows.length > 0) {
-      throw new AppError("El nombre de usuario ya está en uso", 409);
+    if (userExists) {
+      throw new AppError("Username is already in use", 409);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = await this.pool.query(
-      "INSERT INTO usuarios (name, role, password) VALUES ($1, $2, $3) RETURNING id, name, role",
-      [name, role, hashedPassword]
-    );
-
-    return result.rows[0];
+    return await this.prisma.user.create({
+      data: {
+        name,
+        role,
+        password: hashedPassword
+      },
+      select: { id: true, name: true, role: true }
+    });
   }
 
   /**
-   * Actualización parcial del modelo de usuario. Si no se provee password, se ignora la edición de la clave.
-   * @param {number|string} id - ID del objetivo.
-   * @param {string} name - Nombre nuevo.
-   * @param {string} role - Rol nuevo.
-   * @param {string} [password] - Clave nueva (opcional).
-   * @returns {Promise<Object>}
+   * Actualización parcial del modelo de usuario. Si no se proporciona contraseña, se omite su modificación.
+   * 
+   * @param {number|string} id - Identificador del usuario.
+   * @param {string} name - Nuevo nombre de usuario.
+   * @param {string} role - Nuevo rol ('admin' o 'operator').
+   * @param {string} [password] - (Opcional) Nueva contraseña en texto plano.
+   * @returns {Promise<Object>} Mensaje de confirmación.
+   * @throws {AppError} Lanza error 404 si el usuario no existe.
    */
   async updateExistingUser(id, name, role, password) {
-    let result;
+    try {
+      const updateData = { name, role };
+      
+      if (password) {
+        updateData.password = await bcrypt.hash(password, 10);
+      }
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      result = await this.pool.query(
-        "UPDATE usuarios SET name = $1, role = $2, password = $3 WHERE id = $4",
-        [name, role, hashedPassword, id]
-      );
-    } else {
-      result = await this.pool.query(
-        "UPDATE usuarios SET name = $1, role = $2 WHERE id = $3",
-        [name, role, id]
-      );
+      await this.prisma.user.update({
+        where: { id: Number.parseInt(id, 10) },
+        data: updateData
+      });
+
+      return { message: "User updated" };
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new AppError("User not found", 404);
+      }
+      throw error;
     }
-
-    if (result.rowCount === 0) {
-      throw new AppError("Usuario no encontrado", 404);
-    }
-
-    return { message: "Usuario actualizado" };
   }
 
   /**
-   * Ejecuta la eliminación de un usuario protegiendo las cuentas maestras del sistema.
-   * @param {number|string} id - ID del objetivo a eliminar.
-   * @returns {Promise<Object>}
+   * Elimina un usuario, protegiendo las cuentas maestras del sistema y garantizando que quede al menos un administrador.
+   * 
+   * @param {number|string} id - Identificador del usuario a eliminar.
+   * @returns {Promise<Object>} Mensaje de éxito de la operación.
+   * @throws {AppError} Lanza error 409 si se intenta borrar cuentas por defecto o al último administrador.
    */
   async deleteExistingUser(id) {
-    // Protegemos a los usuarios principales del sistema para evitar quedarnos sin cuentas de acceso
     if (["1", "2", "3"].includes(String(id))) {
-      throw new AppError("Acción denegada: Los usuarios predeterminados del sistema no pueden ser eliminados.", 409);
+      throw new AppError("Access denied: Default system users cannot be deleted.", 409);
     }
 
-    const client = await this.pool.connect(); 
-    
-    try {
-      await client.query('BEGIN'); 
+    return await this.prisma.$transaction(async (tx) => {
+      const userResult = await tx.user.findUnique({
+        where: { id: Number.parseInt(id, 10) },
+        select: { role: true }
+      });
 
-      const userResult = await client.query("SELECT role FROM usuarios WHERE id = $1", [id]);
-      if (userResult.rows.length === 0) {
-        throw new AppError("Usuario no encontrado", 404);
+      if (!userResult) {
+        throw new AppError("User not found", 404);
       }
 
-      const isDeletingAdmin = userResult.rows[0].role === "admin";
-
-      if (isDeletingAdmin) {
-        const countResult = await client.query("SELECT COUNT(*) FROM usuarios WHERE role = 'admin'");
-        if (Number.parseInt(countResult.rows[0].count, 10) <= 1) {
-          throw new AppError("Acción denegada: Debe existir al menos un administrador en el sistema.", 409);
+      if (userResult.role === "admin") {
+        const adminCount = await tx.user.count({
+          where: { role: 'admin' }
+        });
+        
+        if (adminCount <= 1) {
+          throw new AppError("Access denied: There must be at least one administrator in the system.", 409);
         }
       }
 
-      await client.query("DELETE FROM usuarios WHERE id = $1", [id]);
-      
-      await client.query('COMMIT'); 
-      return { message: "Usuario eliminado correctamente" };
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release(); 
-    }
+      await tx.user.delete({
+        where: { id: Number.parseInt(id, 10) }
+      });
+
+      return { message: "User deleted successfully" };
+    });
   }
 
   /**
-   * Actualiza la URL de la foto de perfil de un usuario concreto.
-   * @param {number|string} userId - ID del usuario afectado.
-   * @param {string} avatarUrl - Ruta a la nueva imagen.
-   * @returns {Promise<Object>}
+   * Actualiza la URL de la imagen de perfil (avatar) de un usuario específico.
+   * 
+   * @param {number|string} userId - Identificador del usuario.
+   * @param {string} avatarUrl - URL de la nueva imagen de perfil.
+   * @returns {Promise<Object>} Mensaje de confirmación y el objeto usuario actualizado.
+   * @throws {AppError} Lanza error 404 si el usuario no existe.
    */
   async updateUserAvatar(userId, avatarUrl) {
-    const result = await this.pool.query(
-      "UPDATE usuarios SET avatar = $1 WHERE id = $2 RETURNING id, name, role, avatar",
-      [avatarUrl, userId]
-    );
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id: Number.parseInt(userId, 10) },
+        data: { avatar: avatarUrl },
+        select: { id: true, name: true, role: true, avatar: true }
+      });
 
-    if (result.rows.length === 0) {
-      throw new AppError("Usuario no encontrado", 404);
+      return { message: "Avatar updated", user: updatedUser };
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new AppError("User not found", 404);
+      }
+      throw error;
     }
-
-    return { message: "Avatar actualizado", user: result.rows[0] };
   }
 }

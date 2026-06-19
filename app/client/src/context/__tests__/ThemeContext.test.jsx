@@ -23,7 +23,7 @@ describe('gestión del tema visual', () => {
     vi.restoreAllMocks();
   });
 
-  it('debería inicializar en modo claro de forma predeterminada', () => {
+  it('debería inicializar en modo claro por defecto', () => {
     render(
       <ThemeProvider>
         <ThemeTestComponent />
@@ -35,7 +35,7 @@ describe('gestión del tema visual', () => {
     expect(globalThis.localStorage.getItem('theme')).toBe('light');
   });
 
-  it('debería aplicar el modo oscuro al arranque si está guardado en memoria', () => {
+  it('debería aplicar modo oscuro al inicio si está guardado en memoria', () => {
     globalThis.localStorage.setItem('theme', 'dark');
 
     render(
@@ -48,7 +48,7 @@ describe('gestión del tema visual', () => {
     expect(document.body.classList.contains('dark-mode')).toBe(true);
   });
 
-  it('debería alternar los colores mutando la clase raíz del dom al pulsar el botón', () => {
+  it('debería alternar colores mutando la clase raíz del dom al presionar el botón', () => {
     render(
       <ThemeProvider>
         <ThemeTestComponent />

@@ -27,11 +27,11 @@ vi.mock('react-datepicker', () => ({
   ),
 }));
 
-describe('DateRangePicker Component', () => {
+describe('Componente DateRangePicker', () => {
   const mockOnFilter = vi.fn();
-  const mockMisiones = [
-    { id: '1', nombre: 'Misión Alfa' },
-    { id: '2', nombre: 'Misión Beta' }
+  const mockMissiones = [
+    { id: '1', name: 'Misión Alfa' },
+    { id: '2', name: 'Misión Beta' }
   ];
 
   beforeEach(() => {
@@ -40,8 +40,8 @@ describe('DateRangePicker Component', () => {
     vi.spyOn(globalThis, 'alert').mockImplementation(() => {});
   });
 
-  it('renderiza todos los elementos y opciones de misiones', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('renderiza todos los elementos y opciones de misión', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     expect(screen.getByText('DATOS:')).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Todos los datos' })).toBeInTheDocument();
@@ -49,8 +49,8 @@ describe('DateRangePicker Component', () => {
     expect(screen.getByRole('option', { name: 'Misión Beta' })).toBeInTheDocument();
   });
 
-  it('lanza un alert y detiene la ejecución si se selecciona sólo la fecha de inicio', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('muestra una alerta y detiene la ejecución si solo se selecciona la fecha de inicio', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     const startDateInput = screen.getByTestId('filter-start-date');
     fireEvent.change(startDateInput, { target: { value: '2023-10-01T10:00:00.000Z' } });
@@ -62,8 +62,8 @@ describe('DateRangePicker Component', () => {
     expect(mockOnFilter).not.toHaveBeenCalled();
   });
 
-  it('lanza un alert y detiene la ejecución si se selecciona sólo la fecha de fin', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('muestra una alerta y detiene la ejecución si solo se selecciona la fecha de fin', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     const endDateInput = screen.getByTestId('filter-end-date');
     fireEvent.change(endDateInput, { target: { value: '2023-10-05T10:00:00.000Z' } });
@@ -75,14 +75,14 @@ describe('DateRangePicker Component', () => {
     expect(mockOnFilter).not.toHaveBeenCalled();
   });
 
-  it('llama a onFilter con las fechas en ISO y el ID de misión al aplicar', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('llama a onFilter con fechas ISO e ID de misión al aplicar', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     const startDateInput = screen.getByTestId('filter-start-date');
     const endDateInput = screen.getByTestId('filter-end-date');
     const select = screen.getByRole('combobox');
 
-    // Cambiar estado interno a través de eventos
+    // Cambiar status interno a través de eventos
     fireEvent.change(startDateInput, { target: { value: '2023-10-01T00:00:00.000Z' } });
     fireEvent.change(endDateInput, { target: { value: '2023-10-31T23:59:00.000Z' } });
     fireEvent.change(select, { target: { value: '2' } });
@@ -98,8 +98,8 @@ describe('DateRangePicker Component', () => {
     );
   });
 
-  it('llama a onFilter con nulls cuando se presiona Limpiar', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('llama a onFilter con nulos cuando se presiona Limpiar', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     // Seteamos un valor inicial primero para asegurar que el clear hace su trabajo
     const select = screen.getByRole('combobox');
@@ -113,8 +113,8 @@ describe('DateRangePicker Component', () => {
     expect(mockOnFilter).toHaveBeenCalledWith(null, null, null);
   });
 
-  it('devuelve id nulo si no se ha seleccionado una misión específica', () => {
-    render(<DateRangePicker onFilter={mockOnFilter} misiones={mockMisiones} />);
+  it('devuelve ID nulo si no se selecciona una misión específica', () => {
+    render(<DateRangePicker onFilter={mockOnFilter} missions={mockMissiones} />);
     
     const applyButton = screen.getByText('Aplicar');
     fireEvent.click(applyButton); // Se aplican fechas vacías y misión en opción 'Todos' ("")

@@ -1,18 +1,38 @@
 import { jest } from '@jest/globals';
 
-describe("Servicio de Usuarios (UserService)", () => {
-  let mockQuery, mockConnect, mockClientQuery, mockClientRelease, mockBcryptHash, mockBcryptCompare;
+describe("Servicio de Usuarios", () => {
+  let mockFindUnique, mockFindMany, mockCreate, mockUpdate, mockDelete, mockCount, mockTransaction;
+  let mockBcryptHash, mockBcryptCompare;
   let UserService;
   let userServiceInstance;
+  let fakePrisma;
 
   beforeEach(async () => {
     jest.resetModules();
 
-    mockQuery = jest.fn();
-    mockClientQuery = jest.fn();
-    mockClientRelease = jest.fn();
+    mockFindUnique = jest.fn();
+    mockFindMany = jest.fn();
+    mockCreate = jest.fn();
+    mockUpdate = jest.fn();
+    mockDelete = jest.fn();
+    mockCount = jest.fn();
     
-    mockConnect = jest.fn().mockResolvedValue({ query: mockClientQuery, release: mockClientRelease });
+    // Simula la transacción para ejecutar simplemente el callback con fakePrisma
+    mockTransaction = jest.fn(async (cb) => {
+      return await cb(fakePrisma);
+    });
+
+    fakePrisma = {
+      user: {
+        findUnique: mockFindUnique,
+        findMany: mockFindMany,
+        create: mockCreate,
+        update: mockUpdate,
+        delete: mockDelete,
+        count: mockCount,
+      },
+      $transaction: mockTransaction
+    };
 
     mockBcryptHash = jest.fn();
     mockBcryptCompare = jest.fn();
@@ -24,113 +44,142 @@ describe("Servicio de Usuarios (UserService)", () => {
     const module = await import('../userService.js');
     UserService = module.UserService;
     
-    const fakePool = { query: mockQuery, connect: mockConnect };
-    userServiceInstance = new UserService(fakePool);
+    userServiceInstance = new UserService(fakePrisma);
   });
 
-  describe("getUserProfile & updateUserPassword", () => {
-    it("Debería arrojar error 404 al solicitar perfil de un ID inexistente", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
-      await expect(userServiceInstance.getUserProfile(99)).rejects.toThrow("Usuario no encontrado");
+  describe("perfil y contraseña de usuario", () => {
+    it("Debería lanzar error 404 al solicitar perfil de un ID inexistente", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      await expect(userServiceInstance.getUserProfile(99)).rejects.toThrow("User not found");
     });
 
-    it("Debería estructurar y devolver los campos públicos de perfil", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, name: 'Test' }] });
+    it("Debería estructurar y retornar los campos de perfil público", async () => {
+      mockFindUnique.mockResolvedValueOnce({ id: 1, name: 'Test' });
       const result = await userServiceInstance.getUserProfile(1);
       expect(result).toEqual({ id: 1, name: 'Test' });
     });
 
-    it("Debería prevenir el cambio de credenciales si la verificación de la contraseña antigua fracasa", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, password: 'old-hash' }] });
+    it("Debería prevenir cambio de credenciales si falla verificación antigua", async () => {
+      mockFindUnique.mockResolvedValueOnce({ id: 1, password: 'old-hash' });
       mockBcryptCompare.mockResolvedValueOnce(false);
 
-      await expect(userServiceInstance.updateUserPassword(1, 'mala', 'nueva')).rejects.toThrow("incorrecta");
+      await expect(userServiceInstance.updateUserPassword(1, 'mala', 'nueva')).rejects.toThrow("incorrect");
+    });
+
+    it("Debería lanzar error 404 si el usuario no existe al actualizar contraseña", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      await expect(userServiceInstance.updateUserPassword(99, 'current', 'new')).rejects.toThrow("User not found");
+    });
+
+    it("Debería actualizar contraseña si la actual es correcta", async () => {
+      mockFindUnique.mockResolvedValueOnce({ id: 1, password: 'old-hash' });
+      mockBcryptCompare.mockResolvedValueOnce(true);
+      mockBcryptHash.mockResolvedValueOnce('new-hash');
+      mockUpdate.mockResolvedValueOnce({ id: 1 });
+
+      const result = await userServiceInstance.updateUserPassword(1, 'correcta', 'nueva');
+      expect(result.message).toBe("Password updated successfully");
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        data: { password: 'new-hash' }
+      }));
     });
   });
 
-  describe("createNewUser", () => {
-    it("Debería asegurar unicidad de entidad rechazando registros duplicados (409)", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1 }] }); 
-      await expect(userServiceInstance.createNewUser('pepe', 'operador', '123')).rejects.toThrow("ya está en uso");
+  describe("crear nuevo usuario", () => {
+    it("Debería asegurar unicidad rechazando registros duplicados (409)", async () => {
+      mockFindUnique.mockResolvedValueOnce({ id: 1 }); 
+      await expect(userServiceInstance.createNewUser('pepe', 'operator', '123')).rejects.toThrow("in use");
     });
 
-    it("Debería encriptar las credenciales mediante Hash y persistir al usuario", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] }); 
+    it("Debería encriptar credenciales usando Hash y persistir usuario", async () => {
+      mockFindUnique.mockResolvedValueOnce(null); 
       mockBcryptHash.mockResolvedValueOnce('new-hash');
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 5, name: 'pepe', role: 'operador' }] });
+      mockCreate.mockResolvedValueOnce({ id: 5, name: 'pepe', role: 'operator' });
 
-      const result = await userServiceInstance.createNewUser('pepe', 'operador', '123');
-      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO usuarios"), ['pepe', 'operador', 'new-hash']);
+      const result = await userServiceInstance.createNewUser('pepe', 'operator', '123');
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: 'pepe', role: 'operator', password: 'new-hash' } }));
       expect(result).toHaveProperty('name', 'pepe');
     });
   });
 
-  describe("Transacción: deleteExistingUser", () => {
-    it("SEGURIDAD: Debería bloquear hardcoded delete requests sobre cuentas raíz (1, 2, 3)", async () => {
-      await expect(userServiceInstance.deleteExistingUser("1")).rejects.toThrow("Acción denegada");
-      expect(mockConnect).not.toHaveBeenCalled(); 
+  describe("Transacción de borrado", () => {
+    it("Debería bloquear borrado directo en cuentas root (1, 2, 3)", async () => {
+      await expect(userServiceInstance.deleteExistingUser("1")).rejects.toThrow("Access denied");
+      expect(mockTransaction).not.toHaveBeenCalled(); 
     });
 
-    it("Debería garantizar retención de rol bloqueando la eliminación del último administrador", async () => {
-      mockClientQuery
-        .mockResolvedValueOnce(undefined) 
-        .mockResolvedValueOnce({ rows: [{ role: 'admin' }] }) 
-        .mockResolvedValueOnce({ rows: [{ count: '1' }] }); 
+    it("Debería garantizar retención de rol bloqueando borrado del último admin", async () => {
+      mockFindUnique.mockResolvedValueOnce({ role: 'admin' });
+      mockCount.mockResolvedValueOnce(1); 
 
-      await expect(userServiceInstance.deleteExistingUser("4")).rejects.toThrow("al menos un administrador");
-      
-      expect(mockClientQuery).toHaveBeenCalledWith("ROLLBACK");
-      expect(mockClientRelease).toHaveBeenCalled();
+      await expect(userServiceInstance.deleteExistingUser("4")).rejects.toThrow("at least one administrator");
     });
 
-    it("Debería proceder con el ciclo normal de eliminación si no infringe restricciones de rol", async () => {
-      mockClientQuery
-        .mockResolvedValueOnce(undefined) 
-        .mockResolvedValueOnce({ rows: [{ role: 'operador' }] }) 
-        .mockResolvedValueOnce(undefined); 
+    it("Debería lanzar error 404 si no se encuentra el usuario a borrar", async () => {
+      mockFindUnique.mockResolvedValueOnce(null); 
+      await expect(userServiceInstance.deleteExistingUser("99")).rejects.toThrow("User not found");
+    });
+
+    it("Debería proceder con ciclo de borrado normal si no viola restricciones", async () => {
+      mockFindUnique.mockResolvedValueOnce({ role: 'operator' });
+      mockDelete.mockResolvedValueOnce(undefined); 
 
       const result = await userServiceInstance.deleteExistingUser("5");
       
-      expect(mockClientQuery).toHaveBeenCalledWith("COMMIT");
-      expect(mockClientRelease).toHaveBeenCalled();
-      expect(result.message).toBe("Usuario eliminado correctamente");
+      expect(mockDelete).toHaveBeenCalledWith({ where: { id: 5 } });
+      expect(result.message).toBe("User deleted successfully");
     });
   });
   
-  describe("Operaciones Secundarias (Users)", () => {
-    it("Debería resolver la colección entera de usuarios en el sistema", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1 }, { id: 2 }] });
+  describe("Operaciones Secundarias (Usuarios)", () => {
+    it("Debería resolver toda la colección de usuarios", async () => {
+      mockFindMany.mockResolvedValueOnce([{ id: 1 }, { id: 2 }]);
       const result = await userServiceInstance.getAllUsers();
       expect(result.length).toBe(2);
     });
 
     it("Debería ejecutar actualizaciones parciales omitiendo la columna de credenciales", async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
-      const result = await userServiceInstance.updateExistingUser(1, "Editado", "admin", null);
-      expect(result.message).toMatch(/actualizado/i);
+      mockUpdate.mockResolvedValueOnce({ id: 1 });
+      const result = await userServiceInstance.updateExistingUser(1, "Edited", "admin", null);
+      expect(result.message).toMatch(/updated/i);
+      expect(mockBcryptHash).not.toHaveBeenCalled();
     });
 
-    it("Debería ejecutar reescritura de hash si se suministra un password opcional nuevo", async () => {
+    it("Debería ejecutar reescritura de hash si se provee nueva contraseña opcional", async () => {
       mockBcryptHash.mockResolvedValueOnce("hash");
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
-      const result = await userServiceInstance.updateExistingUser(1, "Editado", "admin", "123");
-      expect(result.message).toMatch(/actualizado/i);
+      mockUpdate.mockResolvedValueOnce({ id: 1 });
+      const result = await userServiceInstance.updateExistingUser(1, "Edited", "admin", "123");
+      expect(result.message).toMatch(/updated/i);
     });
 
-    it("Debería arrojar error 404 ante solicitudes de edición en cuentas huérfanas", async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 });
-      await expect(userServiceInstance.updateExistingUser(99, "a", "b")).rejects.toThrow("Usuario no encontrado");
+    it("Debería lanzar error 404 en peticiones de edición de cuentas huérfanas", async () => {
+      mockUpdate.mockRejectedValueOnce({ code: 'P2025' });
+      await expect(userServiceInstance.updateExistingUser(99, "a", "b")).rejects.toThrow("User not found");
     });
 
-    it("Debería reflejar cambios asíncronos en el valor URL del avatar", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [{ id: 1, avatar: "url" }] });
+    it("Debería relanzar errores genéricos desde updateExistingUser", async () => {
+      const error = new Error("DB Error");
+      error.code = 'P5000';
+      mockUpdate.mockRejectedValueOnce(error);
+      await expect(userServiceInstance.updateExistingUser(99, "a", "b")).rejects.toThrow("DB Error");
+    });
+
+    it("Debería reflejar cambios asíncronos en la URL de avatar", async () => {
+      mockUpdate.mockResolvedValueOnce({ id: 1, avatar: "url" });
       const result = await userServiceInstance.updateUserAvatar(1, "url");
-      expect(result.message).toMatch(/Avatar actualizado/i);
+      expect(result.message).toMatch(/Avatar updated/i);
     });
 
-    it("Debería rechazar la actualización de imagen en perfiles borrados lógicamente o físicos", async () => {
-      mockQuery.mockResolvedValueOnce({ rows: [] });
-      await expect(userServiceInstance.updateUserAvatar(99, "url")).rejects.toThrow("Usuario no encontrado");
+    it("Debería rechazar actualización de imagen en perfiles borrados", async () => {
+      mockUpdate.mockRejectedValueOnce({ code: 'P2025' });
+      await expect(userServiceInstance.updateUserAvatar(99, "url")).rejects.toThrow("User not found");
+    });
+
+    it("Debería relanzar errores genéricos desde updateUserAvatar", async () => {
+      const error = new Error("DB Error");
+      error.code = 'P5000';
+      mockUpdate.mockRejectedValueOnce(error);
+      await expect(userServiceInstance.updateUserAvatar(99, "url")).rejects.toThrow("DB Error");
     });
   });
 });

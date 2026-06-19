@@ -22,9 +22,14 @@ vi.mock('../../components/DateRangePicker', () => ({
   DateRangePicker: function MockPicker() {
     const onFilter = arguments[0].onFilter;
     return (
-      <button data-testid="mock-date-picker" onClick={() => onFilter('2026-01-01', '2026-01-31', '1')}>
-        Filter
-      </button>
+      <div>
+        <button data-testid="mock-date-picker" onClick={() => onFilter('2026-01-01', '2026-01-31', '1')}>
+          Filter
+        </button>
+        <button data-testid="mock-date-picker-clear" onClick={() => onFilter(null, null, null)}>
+          Clear
+        </button>
+      </div>
     );
   }
 }));
@@ -33,8 +38,9 @@ vi.mock('../../features/dashboard/components/ChartWidget', () => ({
   default: () => <div data-testid="mock-chart">Chart</div>
 }));
 
+const mockT = (k) => k;
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (k) => k, i18n: { language: 'es' } }),
+  useTranslation: () => ({ t: mockT, i18n: { language: 'es' } }),
 }));
 
 vi.mock('../../context/ToastContext', () => ({
@@ -66,8 +72,8 @@ vi.mock('jspdf', () => ({
   }
 }));
 
-// --- INICIO DE LOS TESTS ---
-describe('DataPage Component', () => {
+
+describe('Componente DataPage', () => {
   let mockAddToast, mockDeleteSessionData, mockFetchMisiones, consoleSpy;
   let mockAgronomicData;
 
@@ -81,15 +87,11 @@ describe('DataPage Component', () => {
     useToast.mockReturnValue({ addToast: mockAddToast });
     
     useMissionStore.mockReturnValue({ 
-      misiones: [{ nombre: 'Misión A', area_trabajo: { coordinates: [[[-3.1, 40.1]]] } }], 
-      fetchMisiones: mockFetchMisiones 
+      missions: [{ name: 'Misión A', workArea: { coordinates: [[[-3.1, 40.1]]] } }], 
+      fetchMissions: mockFetchMisiones 
     });
 
     mockAgronomicData = Array.from({ length: 12 }).map((_, i) => {
-      let phValue = 7;
-      if (i < 5) phValue = 5;
-      else if (i > 8) phValue = 9;
-
       let timestamp = new Date(`2026-01-01T10:00:${i.toString().padStart(2, '0')}Z`).toISOString();
       if (i === 1) timestamp = new Date(`2026-01-01T07:00:00Z`).toISOString(); 
 
@@ -97,20 +99,20 @@ describe('DataPage Component', () => {
         id: i,
         timestamp,
         lat: 40 + (i * 0.01), lon: -3,
-        humedad: i === 0 ? null : 50 + i,
-        temperatura_suelo: i === 0 ? null : 20 + i,
-        ph: i === 0 ? null : phValue,
-        nitrogeno: i === 0 ? null : 10,
-        fosforo: i === 0 ? null : 10,
-        potasio: i === 0 ? null : 10,
-        radiacion_solar: i === 0 ? null : 300,
-        nombre_mision: i % 2 === 0 ? 'Misión A' : null, 
-        ejecucion_id: i % 2 === 0 ? 1 : null
+        humidity: i === 0 ? null : 50 + i,
+        temperature: i === 0 ? null : 20 + i,
+        ph: i === 0 ? null : 6 + (i * 0.1),
+        nitrogen: i === 0 ? null : 10,
+        phosphorus: i === 0 ? null : 10,
+        potassium: i === 0 ? null : 10,
+        radiation: i === 0 ? null : 300,
+        missionName: i % 2 === 0 ? 'Mission A' : null, 
+        executionId: i % 2 === 0 ? 1 : null
       };
     });
 
     mockDeleteSessionData = vi.fn((id) => {
-      mockAgronomicData = mockAgronomicData.filter(d => `exec-${d.ejecucion_id}` !== id && `miss-${d.nombre_mision}` !== id);
+      mockAgronomicData = mockAgronomicData.filter(d => `exec-${d.executionId}` !== id && `miss-${d.missionName}` !== id);
     });
 
     useRobotStore.mockImplementation((selector) => {
@@ -129,7 +131,7 @@ describe('DataPage Component', () => {
   });
 
   describe('Paginación y Filtrado', () => {
-    it('renderiza la tabla y gestiona la paginación (Next, Prev, Jump)', () => {
+    it('renderiza la tabla y maneja paginación', () => {
       render(<DataPage />);
       
       const nextBtn = screen.getByText('→');
@@ -146,7 +148,7 @@ describe('DataPage Component', () => {
       expect(nextBtn).not.toBeDisabled();
     });
 
-    it('ajusta currentPage automáticamente si totalPages disminuye (ej. al filtrar)', async () => {
+    it('ajusta automáticamente currentPage si totalPages disminuye', async () => {
       render(<DataPage />);
       
       // 1. Vamos a la página 2
@@ -157,7 +159,7 @@ describe('DataPage Component', () => {
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       
       // 3. SOLUCIÓN ANTI-FLAKY: Esperamos a que la petición termine 
-      // comprobando que el estado de "Cargando..." ha desaparecido.
+      // comprobando que el status de "Cargando..." ha desaparecido.
       await waitFor(() => {
         expect(screen.queryByText(/data.waitingData/i)).not.toBeInTheDocument();
       });
@@ -170,7 +172,7 @@ describe('DataPage Component', () => {
   });
 
   describe('Filtrado desde DateRangePicker', () => {
-    it('filtra datos haciendo llamada a la API y muestra Loading', async () => {
+    it('filtra datos llamando a API y muestra Cargando', async () => {
       axios.get.mockResolvedValueOnce({ data: [{ id: 99, lat: 0, lon: 0, timestamp: new Date().toISOString() }] });
       render(<DataPage />);
       
@@ -182,7 +184,7 @@ describe('DataPage Component', () => {
       });
     });
 
-    it('captura errores al filtrar', async () => {
+    it('captura errores de filtrado', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network Error'));
       render(<DataPage />);
       fireEvent.click(screen.getByTestId('mock-date-picker'));
@@ -191,10 +193,30 @@ describe('DataPage Component', () => {
         expect(mockAddToast).toHaveBeenCalledWith('data.fetchError', 'error');
       });
     });
+
+    it('limpia filtros si todos se pasan como nulos', async () => {
+      render(<DataPage />);
+      
+      // Filtramos primero para tener datos filtrados
+      axios.get.mockResolvedValueOnce({ data: [{ id: 99, lat: 0, lon: 0, timestamp: new Date().toISOString() }] });
+      fireEvent.click(screen.getByTestId('mock-date-picker'));
+      
+      await waitFor(() => {
+        expect(mockAddToast).toHaveBeenCalledWith('data.recordsFound', 'info');
+      });
+
+      // Luego limpiamos
+      fireEvent.click(screen.getByTestId('mock-date-picker-clear'));
+      
+      // La tabla debería volver a mostrar todos los registros, que son 12
+      await waitFor(() => {
+        expect(screen.getByText('12 data.totalRecords')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Historial de Sesiones (Misiones)', () => {
-    it('agrupa los datos en sesiones y permite seleccionar una', () => {
+    it('agrupa datos en sesiones y permite seleccionar una', () => {
       render(<DataPage />);
       
       const sessionBtn = document.querySelector('.mission-item-main');
@@ -204,7 +226,7 @@ describe('DataPage Component', () => {
       expect(screen.getByText('data.duration:')).toBeInTheDocument();
     });
 
-    it('deselecciona la misión automáticamente si la que estabas viendo se elimina', () => {
+    it('deselecciona automáticamente misión si se elimina la que se está viendo', () => {
       render(<DataPage />);
       
       const sessionBtns = document.querySelectorAll('.mission-item-main');
@@ -218,7 +240,7 @@ describe('DataPage Component', () => {
       expect(screen.getByText('data.noSelection')).toBeInTheDocument();
     });
 
-    it('exporta los datos a CSV correctamente', () => {
+    it('exporta datos a CSV correctamente', () => {
       const originalCreateElement = document.createElement.bind(document);
       const mockClick = vi.fn();
       
@@ -243,7 +265,7 @@ describe('DataPage Component', () => {
       document.createElement.mockRestore();
     });
 
-    it('exporta el informe a PDF correctamente', async () => {
+    it('exporta reporte a PDF correctamente', async () => {
       render(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
@@ -256,7 +278,7 @@ describe('DataPage Component', () => {
       });
     });
 
-    it('captura errores al exportar PDF', async () => {
+    it('captura errores de exportación a PDF', async () => {
       html2canvas.mockRejectedValueOnce(new Error('Canvas Error'));
       
       render(<DataPage />);
