@@ -22,7 +22,7 @@ Para alcanzar el objetivo general propuesto, se han definido una serie de metas 
 \subsection{Objetivos Técnicos}
 
 \begin{itemize}
-    \item \textbf{Arquitectura de Baja Latencia:} Configurar un sistema de comunicación cliente-servidor mediante técnicas de consultas periódicas u optimizadas (\textit{polling} a intervalos de 2 segundos) para asegurar que la telemetría refleje el estado real del vehículo.
+    \item \textbf{Arquitectura de Baja Latencia:} Configurar un sistema de comunicación cliente-servidor en tiempo real mediante canales bidireccionales (\textit{WebSockets}) para asegurar que la telemetría refleje de forma instantánea el estado del vehículo y permitir el control remoto sin retardos.
     \item \textbf{Gestión de Estado Global:} Utilizar Zustand \cite{zustand} para la administración del estado de la aplicación en el \textit{frontend}, garantizando una reactividad fluida sin las sobrecargas de rendimiento asociadas a otras librerías.
     \item \textbf{Simulación Cinemática:} Desarrollar un motor de simulación nativo en el \textit{backend} que emule el comportamiento físico y energético del robot, permitiendo validar la lógica de la aplicación sin dependencia inicial del \textit{hardware} físico.
     \item \textbf{Contenerización:} Orquestar todo el ecosistema de \textit{software} (interfaz, lógica de servidor y base de datos) mediante Docker \cite{docker} para asegurar la portabilidad, escalabilidad y un despliegue robusto del sistema.
