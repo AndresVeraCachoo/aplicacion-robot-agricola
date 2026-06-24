@@ -1,13 +1,113 @@
 \apendice{Plan de Proyecto Software}
 
 \section{Introducción}
+Este anexo detalla la gestión y planificación del desarrollo de AgroSkopos, así como el análisis de su viabilidad técnica, económica y legal. Dada la naturaleza evolutiva del \textit{software}, el proyecto se ha gestionado empleando la metodología ágil Scrum, adaptada a un entorno de desarrollo individual.
+
+Para la gestión del ciclo de vida de la aplicación se ha utilizado la herramienta \textbf{Zube}, estrechamente integrada con GitHub. El proyecto se ha fragmentado teóricamente en iteraciones o \textit{sprints} de dos semanas de duración. La estimación del esfuerzo de las tareas (Issues) se ha realizado midiendo las horas de trabajo estimadas, lo que resulta más representativo que los tradicionales \textit{Story Points} en el contexto de un Trabajo de Fin de Grado compaginado con la actividad académica. El seguimiento del trabajo se documenta a través de gráficos de trabajo pendiente (\textit{Burndown Charts}) generados automáticamente por la plataforma.
+
+\textbf{Adopción metodológica:} Durante los primeros compases del proyecto (septiembre y octubre de 2025), el desarrollo se llevó a cabo sin una metodología formal, priorizando el autoaprendizaje tecnológico y la planificación general con el profesor tutor. Fue a mediados de noviembre cuando se tomó la decisión de adoptar formalmente Scrum con la herramienta \textbf{Zube}, con el propósito de imponer una estructura organizativa que obligara a cumplir plazos de ``entrega'' estrictos e incrementara la productividad frente a la elevada carga de trabajo.
+
+\textbf{Flexibilidad lectiva:} La distribución temporal de los 9 \textit{sprints} resultantes a lo largo del curso lectivo presenta cierta irregularidad y espacios de inactividad entre las iteraciones. Esta flexibilidad en la planificación responde a la realidad de compatibilizar el desarrollo del \textit{software} con la alta carga lectiva de la universidad (asistencia a clases, realización de trabajos y exámenes), así como con la dedicación a otros proyectos personales de programación. Asimismo, el inicio y cierre de los \textit{sprints} ha estado condicionado por la disponibilidad conjunta del alumno y el tutor, ajustando las fechas para garantizar que las reuniones de validación y revisión del código se pudieran llevar a cabo.
 
 \section{Planificación temporal}
+El desarrollo del proyecto estructurado en iteraciones abarca desde mediados de noviembre hasta la fecha de entrega, distribuyendo el esfuerzo total en 9 Sprints. Adicionalmente, existió una fase previa de cimentación técnica. A continuación, se detallan los objetivos registrados para cada etapa y la respectiva gráfica de rendimiento de los Sprints.
+
+% TODO: Añadir un gráfico Burn Up general sacado de GitHub Projects para dar una visión global de todo el progreso a lo largo del año.
+
+\subsection*{Fase de Pre-desarrollo (Septiembre - Octubre 2025)}
+\textbf{Desarrollo fundamental:} Previo a la adopción de Scrum, se ejecutó una fase de desarrollo inicial (sin metodología formal ni control temporal por \textit{Burndown}) orientada a asentar las bases estructurales del \textit{frontend}. Durante estas semanas iniciales se diseñó y programó la cimentación de la Interfaz de Usuario (UI), incluyendo la pantalla principal interactiva y las vistas de \textit{login}. A nivel arquitectónico, se implementó el enrutamiento base con React Router y la gestión de estado global a través de Zustand. Paralelamente, se sentaron las bases del visor cartográfico integrando la librería Leaflet, habilitando controles de capas, eventos de clic, un minimapa de orientación y modales informativos de estado de batería. Todas las funcionalidades de esta etapa operaron exclusivamente contra datos estáticos locales (\textit{mocks}).
+
+\subsection{Sprint 1 (12 Nov. 2025 - 26 Nov. 2025)}
+\textbf{Migración a entorno productivo:} El objetivo primordial de esta iteración consistió en la transición hacia un entorno \textit{backend} productivo, migrando la persistencia de datos desde un sistema de simulación estática hacia una arquitectura relacional sólida mediante la integración de PostgreSQL. A lo largo del \textit{sprint}, el esfuerzo se diversificó en tres grandes bloques funcionales: en primer lugar, se consolidaron los mecanismos de seguridad y gestión de usuarios (autenticación JWT, cifrado con bcrypt, roles de administrador y gestión de perfiles). En segundo lugar, se revolucionó la interfaz de usuario con mejoras de accesibilidad como el sistema de Modo Oscuro, un menú móvil completamente responsivo y un diseño avanzado de \textit{dashboard} para el análisis de datos. Por último, se abordó el núcleo cartográfico y telemétrico, implementando comunicaciones en tiempo real para visualizar puntos de muestreo agronómico, habilitando herramientas de \textit{geofencing} poligonal y desplegando un simulador interno capaz de generar y registrar datos telemétricos.
+\imagen{img/apendice_A/Sprint_1.png}{Gráfico Burndown del Sprint 1}
+
+\subsection{Sprint 2 (27 Dic. 2025 - 10 Ene. 2026)}
+\textbf{Estabilización con Docker:} Tras el periodo de pausa invernal, el esfuerzo se focalizó en la estabilización de los entornos de despliegue y desarrollo mediante la adopción de la tecnología de contenerización Docker. Este cambio estructural sentó las bases para un desarrollo mucho más robusto y escalable, minimizando las dependencias del entorno local. En paralelo a esta importante migración de infraestructura, se llevó a cabo un proceso iterativo de resolución de incidencias técnicas detectadas en fases anteriores y se dio continuidad a la implementación de funcionalidades operativas remanentes.
+\imagen{img/apendice_A/Sprint_2.png}{Gráfico Burndown del Sprint 2}
+
+\subsection{Sprint 3 (9 Feb. 2026 - 23 Feb. 2026)}
+\textbf{Telemando y analítica:} El núcleo de esta iteración fue la implementación de los módulos de telemando interactivo, habilitando el control bidireccional del vehículo. Esto incluyó no solo una interfaz para la navegación manual asistida, sino también sistemas de seguridad avanzados como una parada de emergencia (\textit{E-Stop}), navegación automatizada multipunto y algoritmos para generar rutas de cobertura sistemática sobre parcelas agrícolas. Asimismo, se integró una interfaz de visualización de vídeo en tiempo real (\textit{feed} de cámara) orientada a la monitorización. En el ámbito del análisis agronómico, se desarrollaron algoritmos espaciales para interpolar datos y representar la variabilidad de los parámetros recogidos a través de mapas de calor visuales e interactivos (\textit{heatmaps}).
+\imagen{img/apendice_A/Sprint_3.png}{Gráfico Burndown del Sprint 3}
+
+\subsection{Sprint 4 (9 Mar. 2026 - 23 Mar. 2026)}
+\textbf{Sistema de misiones e i18n:} La iteración se estructuró en torno al desarrollo del sistema integral de Misiones, dotando al usuario de herramientas avanzadas para el diseño, almacenamiento y ejecución autónoma de rutas complejas sobre el terreno. Este módulo abarcó desde la configuración de la base de datos relacional y el panel de control de ejecución en tiempo real, hasta la generación de historiales y reportes analíticos posmisión. De forma concurrente, se reacondicionó la arquitectura de la interfaz gráfica integrando la librería \textit{react-i18next}, lo que permitió establecer un selector dinámico para cambiar el idioma de la aplicación. Finalmente, se dedicó esfuerzo a refactorizar el código base para cumplir rigurosamente con los estándares de calidad de \textit{SonarQube}.
+\imagen{img/apendice_A/Sprint_4.png}{Gráfico Burndown del Sprint 4}
+
+\subsection{Sprint 5 (1 Abr. 2026 - 15 Abr. 2026)}
+Se acometió una expansión funcional transversal que afectó tanto a la capa de presentación como a la lógica de negocio subyacente. Entre los avances más destacados, se construyó la infraestructura base para la ingesta de telemetría dinámica y la monitorización de consumos energéticos, culminando con el diseño de una máquina de estados que otorga al robot la autonomía suficiente para retornar a la estación de recarga solar de forma automática. Asimismo, se perfeccionó la experiencia de usuario (UX) mediante gráficas de consumo temporal mejoradas, alertas visuales de estado y una barra lateral responsiva adaptada a dispositivos móviles. El Sprint también abordó tareas de arquitectura \textit{backend}, mejorando la resiliencia de las sesiones de usuario e introduciendo un módulo de siembra de datos automáticos (\textit{Seed}).
+\imagen{img/apendice_A/Sprint_5.png}{Gráfico Burndown del Sprint 5}
+
+\subsection{Sprint 6 (21 Abr. 2026 - 5 May. 2026)}
+A nivel de \textit{software}, la iteración se centró en mejoras arquitectónicas significativas: se consolidó la reestructuración de todo el código bajo un patrón Modelo-Vista-Controlador (MVC) integrado dentro de un ecosistema Monorepositorio. Además, se culminó la transición del cliente hacia una Aplicación Web Progresiva (PWA), garantizando el funcionamiento fluido de la herramienta en entornos rurales sin conectividad estable, y se implementó un sistema de filtrado temporal avanzado para las gráficas telemétricas. Simultáneamente, y coincidiendo con este hito de madurez técnica del producto, se dio inicio formal a la redacción académica de la memoria del Trabajo de Fin de Grado.
+\imagen{img/apendice_A/Sprint_6.png}{Gráfico Burndown del Sprint 6}
+
+\subsection{Sprint 7 (7 May. 2026 - 21 May. 2026)}
+\textbf{Aseguramiento de Calidad (QA):} Iteración dedicada prioritariamente a asegurar la robustez del código. Se desplegó una ambiciosa estrategia integral de pruebas automatizadas (\textit{testing}) que cubrió tanto el cliente web (\textit{React/Vite}) como el servidor (\textit{Node.js/Express}). Para este último, se incorporaron herramientas como Jest y \textit{Supertest}, orquestando pruebas de integración \textit{End-to-End} (E2E) que validaron exhaustivamente los flujos principales de la API. A su vez, se enriqueció la experiencia de usuario resolviendo errores latentes, incorporando un sistema de avatares persistentes, habilitando la selección dinámica de parámetros agronómicos a registrar durante las misiones, y culminando la localización del sistema añadiendo soporte para el idioma portugués.
+\imagen{img/apendice_A/Sprint_7.png}{Gráfico Burndown del Sprint 7}
+
+\subsection{Sprint 8 (26 May. 2026 - 9 Jun. 2026)}
+El enfoque técnico se dividió entre el perfeccionamiento de la memoria académica y la consolidación definitiva del \textit{backend}. La arquitectura lógica de la API REST experimentó una refactorización integral hacia un modelo estricto de tres capas, implementando soporte transaccional (ACID) para garantizar la consistencia en las operaciones SQL. La seguridad y estabilidad del sistema se maximizaron integrando validaciones modulares estrictas a través de esquemas \textit{Zod} y centralizando el manejo de errores no capturados. Por último, se llevó a cabo un esfuerzo sustancial de estandarización documental, describiendo el código base de la lógica de cliente con \textit{JSDoc} y generando una interfaz interactiva OpenAPI (Swagger) para exponer y testear los \textit{endpoints}.
+\imagen{img/apendice_A/Sprint_8.png}{Gráfico Burndown del Sprint 8}
+
+\subsection{Sprint 9 (17 Jun. 2026 - 1 Jul. 2026)}
+Esta fase de cierre está dedicada de forma exclusiva a la maquetación y redacción final de la memoria principal, incluyendo el desarrollo exhaustivo de sus respectivos anexos técnicos y organizativos (A, B, C, D, E). El objetivo último de este ciclo es generar un documento académico sólido que fundamente y describa rigurosamente el trabajo de ingeniería desarrollado. (En curso, sin gráfico \textit{Burndown}).
 
 \section{Estudio de viabilidad}
 
 \subsection{Viabilidad económica}
+El presupuesto general del proyecto se divide en diferentes partidas de gasto.
+
+\subsubsection*{Costes de Personal}
+Considerando las limitaciones temporales de un Trabajo de Fin de Grado, se asume una dedicación media de unas 20 horas semanales. Esta dedicación abarca la fase inicial de planificación y diseño (aprox. 2 semanas en septiembre), la fase de pre-desarrollo técnico sin metodología (aprox. 3 semanas en octubre) y los 9 Sprints de desarrollo formal (aprox. 18 semanas), sumando un total de 23 semanas de trabajo efectivo. Esto supone un total de 460 horas de desarrollo.
+
+Tomando como referencia el mercado laboral actual en la provincia de Burgos, el coste de mercado para un desarrollador de \textit{software} Junior se sitúa alrededor de los 14€/hora (cálculo estimado partiendo de un salario base de unos 24.500€ brutos anuales dividido entre 1.750 horas laborables estándar por convenio).
+$$ 460 \text{ horas} \times 14 \text{ €/hora} = 6.440 \text{ €} $$
+Para calcular el coste de facturación real que tendría este desarrollo para una empresa, se debe añadir el Impuesto sobre el Valor Añadido (IVA) general aplicable en España (21\%):
+$$ 6.440 \text{ €} + (6.440 \text{ €} \times 0.21) = 7.792,40 \text{ €} $$
+
+\subsubsection*{Costes de Hardware y Software}
+Todo el desarrollo, prueba de contenedores y simulación algorítmica se ha ejecutado íntegramente de manera local empleando el equipo informático personal del autor. Al tratarse de un ordenador portátil amortizado, se establece un coste de \textit{hardware} para la fase de desarrollo de 0€.
+
+A nivel de herramientas lógicas, el proyecto hace uso exclusivo de librerías, \textit{frameworks} (React, Node, PostgreSQL) e IDEs (Visual Studio Code) amparados por licencias de código abierto o gratuitas, resultando en un coste de licencias de \textit{software} de 0€.
+
+\subsubsection*{Costes de Infraestructura y Mantenimiento}
+Aunque la fase de desarrollo se ha ejecutado y simulado en local de manera gratuita, el despliegue del sistema AgroSkopos en un entorno B2B de producción comercial incurriría en costes fijos de infraestructura. Alojar la API REST y la base de datos PostgreSQL en un Servidor Privado Virtual (VPS) de gama de entrada en la nube, junto con el alojamiento estático del \textit{frontend}, supondría un coste operativo estimado de 15€/mes, lo que equivale a un gasto de mantenimiento de 180€ anuales.
+
+De este modo, el coste total presupuestado para la creación del prototipo inicial asciende a \textbf{7.792,40 €} (IVA incluido) imputables de forma directa al esfuerzo de ingeniería.
 
 \subsection{Viabilidad legal}
+Al tratarse de una aplicación de monitorización con persistencia de información y cuentas de usuario, el cumplimiento normativo es esencial.
 
+\subsubsection*{Protección de Datos (RGPD)}
+El sistema requiere registro previo y almacena credenciales cifradas y datos básicos de los operarios para la asignación de misiones. El tratamiento de esta información cumple con el Reglamento General de Protección de Datos (RGPD), garantizando que las contraseñas no se guarden nunca en texto plano y limitando la recolección de información a la estrictamente necesaria para la operativa del negocio B2B.
 
+\subsubsection*{Licenciamiento de Terceros}
+El desarrollo de AgroSkopos se ha apoyado en el uso de diversas bibliotecas, \textit{frameworks} y herramientas de terceros. Para garantizar la viabilidad legal del proyecto, es fundamental analizar las licencias de estos componentes y asegurar que permiten su uso comercial y la creación de obras derivadas. 
+
+En la tabla \ref{tab:licencias_terceros} se presenta un resumen de las licencias de las principales tecnologías integradas en la arquitectura del sistema:
+
+\tablaSmall{Resumen de licencias de las herramientas y tecnologías utilizadas}{p{0.25\linewidth} p{0.5\linewidth} p{0.15\linewidth}}{licencias_terceros}
+{ \textbf{Herramienta / Librería} & \textbf{Uso en el proyecto} & \textbf{Licencia} \\}
+{
+React & Librería base de la interfaz de usuario (\textit{frontend}) & MIT \\
+Node.js \& Express & Entorno de ejecución y \textit{framework} del \textit{backend} & MIT \\
+PostgreSQL & Sistema de gestión de base de datos relacional & PostgreSQL \\
+Leaflet & Librería cartográfica interactiva y mapas & BSD-2-Clause \\
+Docker & Contenerización y despliegue virtualizado & Apache 2.0 \\
+Zustand & Gestión del estado global en el cliente & MIT \\
+Prisma & ORM para la interacción tipada con la base de datos & Apache 2.0 \\
+Zod & Validación estricta de esquemas y tipos de datos & MIT \\
+Vite & Herramienta de construcción y empaquetado del \textit{frontend} & MIT \\
+i18next & Internacionalización y soporte multilenguaje & MIT \\
+Recharts & Visualización de datos y generación de gráficas & MIT \\
+Jest \& Supertest & \textit{Frameworks} para pruebas unitarias y de integración & MIT \\
+Swagger (OpenAPI) & Documentación interactiva de la API REST & Apache 2.0 \\
+}
+\FloatBarrier
+
+Como se observa detalladamente en la tabla, la gran mayoría de las tecnologías base operan bajo licencias altamente permisivas (MIT, Apache 2.0, BSD y PostgreSQL). Todas estas licencias son perfectamente compatibles entre sí y carecen de un carácter vírico estricto (a diferencia de licencias como GPL), lo que significa que no obligan a publicar como código abierto el \textit{software} propietario que interactúa con ellas. Esta compatibilidad estructural avala la viabilidad legal plena de AgroSkopos, garantizando que la plataforma puede ser distribuida o explotada comercialmente en el sector B2B sin riesgo de infracción de propiedad intelectual heredada.
+
+% TODO: Añadir aquí la licencia definitiva para el código fuente cuando se decida con el tutor.
+
+\subsubsection*{Selección de Licencia para la Documentación}
+Para la memoria principal y la documentación técnica del proyecto (incluyendo los anexos y diagramas), se ha seleccionado la licencia \textbf{Creative Commons Attribution 4.0 International (CC BY 4.0)}. Esta licencia ampara el trabajo literario fomentando la divulgación del conocimiento universitario, permitiendo a otros investigadores o alumnos compartir y adaptar el material para cualquier propósito, con la única condición indispensable de otorgar el crédito apropiado al autor original del documento.

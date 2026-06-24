@@ -4,6 +4,10 @@ import pg from "pg";
 import { generateCoveragePath, calculateSolarRadiation } from "../simulator.js"; 
 import { env } from "../config/env.js";
 
+// En este archivo se utiliza una conexión directa con pg (SQL crudo) en lugar del ORM Prisma
+// por motivos de rendimiento durante la fase de siembra (Seed) de la base de datos.
+// Esto permite ejecutar inserciones en bloque saltándose las validaciones a nivel
+// de aplicación y evitando saturar la RAM de Node.js al crear miles de registros de golpe.
 const pool = new pg.Pool({
   connectionString: env.DATABASE_URL
 });

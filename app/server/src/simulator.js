@@ -619,7 +619,11 @@ const processEnergyTick = async () => {
         energyGenerated: Number.parseFloat(logGenerated.toFixed(4))
       }
     });
-    // Borramos registros muy antiguos usando SQL crudo a través de Prisma para simplificar
+    // Se utiliza una consulta SQL cruda ($executeRawUnsafe) en lugar de los métodos nativos de Prisma
+    // por motivos de rendimiento y optimización de memoria.
+    // Hacer un borrado "LIMIT" en Prisma puro requeriría dos operaciones a la base de datos
+    // (un SELECT masivo seguido de un DELETE cargando un array enorme de IDs en la RAM de Node.js).
+    // Esta consulta nativa realiza la limpieza del búfer circular en una única y rapidísima transacción.
     await prisma.$executeRawUnsafe(`DELETE FROM historial_energia WHERE id NOT IN (SELECT id FROM historial_energia ORDER BY timestamp DESC LIMIT $1)`, MAX_HISTORY_RECORDS);
   } catch (err) { 
     console.error("[Simulador] Problema al guardar historial de energía:", err.message); 
@@ -718,6 +722,8 @@ const processAgronomicTick = async (io) => {
       io.emit("robot:new_data", { ...newRecord, missionName: missionCtx.name });
     }
     
+    // Igual que en el historial de energía, se recurre a SQL crudo
+    // para limpiar la telemetría antigua y mantener el búfer circular sin penalizar la CPU del servidor.
     await prisma.$executeRawUnsafe(`DELETE FROM robot_datos WHERE id NOT IN (SELECT id FROM robot_datos ORDER BY timestamp DESC LIMIT $1)`, MAX_HISTORY_RECORDS);
   } catch (error) { 
     console.error("[Simulador] Problema al guardar datos agronómicos:", error.message); 

@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant React as Frontend (React)
+    participant API as Backend (Express)
+    participant DB as Prisma (PostgreSQL)
+
+    U->>React: Introduce credenciales
+    React->>API: POST /api/auth/login
+    API->>DB: Busca usuario por 'name'
+    DB-->>API: Retorna hash de password
+    API->>API: Verifica bcrypt.compare()
+    alt Credenciales válidas
+        API->>API: Genera JWT (Token)
+        API-->>React: 200 OK + { token, user }
+        React->>React: AuthContext guarda token en LocalStorage
+        React-->>U: Redirige al Dashboard
+    else Credenciales inválidas
+        API-->>React: 401 Unauthorized
+        React-->>U: Muestra error en pantalla
+    end

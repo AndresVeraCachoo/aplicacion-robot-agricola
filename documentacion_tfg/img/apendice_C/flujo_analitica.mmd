@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario (Administrador)
+    participant UI as Dashboard (React)
+    participant API as Backend (Express)
+    participant DB as Prisma (PostgreSQL)
+
+    U->>UI: Accede a pestaña "Analíticas"
+    UI->>API: GET /api/robot/datos?limit=500
+    UI->>API: GET /api/energia/historico
+    API->>DB: prisma.robotData.findMany(...)
+    DB-->>API: Retorna matriz de datos
+    API->>DB: prisma.energyHistory.findMany(...)
+    DB-->>API: Retorna métricas de consumo
+    API-->>UI: 200 OK (JSON Data)
+    UI->>UI: Formatea datos para Recharts
+    UI-->>U: Renderiza gráficas de barras y líneas

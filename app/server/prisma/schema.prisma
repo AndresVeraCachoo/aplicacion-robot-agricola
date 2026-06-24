@@ -7,6 +7,8 @@ datasource db {
   provider = "postgresql"
 }
 
+
+
 model MissionExecution {
   id              Int           @id @default(autoincrement())
   missionId       Int?          @map("mision_id")
@@ -17,7 +19,9 @@ model MissionExecution {
   distanceCovered Decimal?      @default(0.0) @db.Decimal(10, 2) @map("distancia_recorrida")
   timeElapsed     Int?          @default(0) @map("tiempo_transcurrido")
   progress        Int?          @default(0) @map("progreso")
+  userId          Int?          @map("usuario_id")
   mission         Mission?      @relation(fields: [missionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user            User?         @relation("EjecucionesUsuario", fields: [userId], references: [id])
   robotData       RobotData[]
 
   @@map("ejecuciones_mision")
@@ -35,6 +39,8 @@ model Mission {
   returnPoint     Json?                @map("punto_retorno")
   scheduledTime   DateTime?            @db.Timestamp(6) @map("fecha_programada")
   createdAt       DateTime?            @default(now()) @db.Timestamp(6) @map("fecha_creacion")
+  userId          Int?                 @map("usuario_id")
+  user            User?                @relation("MisionesUsuario", fields: [userId], references: [id])
   executions      MissionExecution[]
 
   @@map("misiones")
@@ -79,8 +85,10 @@ model User {
   id       Int     @id @default(autoincrement())
   name     String  @unique @db.VarChar(100)
   password String  @db.VarChar(100)
-  role     String  @db.VarChar(20)
-  avatar   String? @default("/avatars/robot-fondo-verde.png") @db.VarChar(255)
+  role       String               @db.VarChar(20)
+  avatar     String?              @default("/avatars/robot-fondo-verde.png") @db.VarChar(255)
+  missions   Mission[]            @relation("MisionesUsuario")
+  executions MissionExecution[]   @relation("EjecucionesUsuario")
 
   @@map("usuarios")
 }

@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor U as Operario
+    participant UI as Mapa Interactivo (React)
+    participant API as Backend (Express)
+    participant DB as Prisma (PostgreSQL)
+
+    U->>UI: Dibuja polígono en el mapa
+    UI->>UI: Convierte puntos a formato GeoJSON
+    U->>UI: Completa formulario (Nombre, Tarea)
+    UI->>API: POST /api/misiones { geojson, ... }
+    API->>API: Middleware valida estructura (Zod)
+    alt Validación correcta
+        API->>DB: INSERT INTO misiones (area_trabajo: geojson)
+        DB-->>API: Devuelve misión creada
+        API-->>UI: 201 Created
+        UI->>UI: Muestra notificación de éxito
+        UI-->>U: Redirige a lista de misiones
+    else Validación fallida
+        API-->>UI: 400 Bad Request
+        UI-->>U: Muestra error de formulario
+    end

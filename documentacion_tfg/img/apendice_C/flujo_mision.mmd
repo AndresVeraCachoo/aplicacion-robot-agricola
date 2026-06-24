@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor U as Operario
+    participant UI as React (Dashboard)
+    participant API as Express (Router)
+    participant Sim as Motor Simulador
+    participant DB as Prisma (DB)
+    participant WS as Socket.io
+
+    U->>UI: Clic en "Iniciar Misión"
+    UI->>API: POST /api/misiones/start {id}
+    API->>DB: Verifica batería mínima requerida
+    DB-->>API: Batería suficiente (OK)
+    API->>DB: Crea registro en 'ejecuciones_mision'
+    API->>Sim: Activa missionContext = id
+    Sim->>Sim: generateCoveragePath(waypoints)
+    API-->>UI: 200 OK (Misión Iniciada)
+    Sim->>WS: Emite evento 'robot:new_data' (WORKING)
+    WS-->>UI: Escucha evento
+    UI->>UI: robotStore (Zustand) actualiza estado global
+    UI-->>U: Muestra robot moviéndose en el mapa

@@ -1,0 +1,88 @@
+erDiagram
+    usuarios
+    misiones
+    ejecuciones_mision
+    robot_datos
+    robot_estado
+    historial_energia
+
+    usuarios {
+        int id PK
+        string name
+        string password
+        string role
+        string avatar
+    }
+
+    misiones {
+        int id PK
+        string nombre
+        string tipo_tarea
+        decimal ancho_trabajo
+        decimal angulo_pasada
+        int bateria_minima
+        json area_trabajo
+        json puntos_interes
+        json punto_retorno
+        datetime fecha_programada
+        datetime fecha_creacion
+        int usuario_id FK
+    }
+
+    ejecuciones_mision {
+        int id PK
+        int mision_id FK
+        string estado
+        datetime fecha_inicio
+        datetime fecha_fin
+        int bateria_usada
+        decimal distancia_recorrida
+        int tiempo_transcurrido
+        int progreso
+        int usuario_id FK
+    }
+
+    robot_datos {
+        int id PK
+        decimal lat
+        decimal lon
+        datetime timestamp
+        decimal humedad
+        decimal temperatura_suelo
+        decimal ph
+        decimal nitrogeno
+        decimal fosforo
+        decimal potasio
+        decimal radiacion_solar
+        int ejecucion_id FK
+    }
+
+    robot_estado {
+        int id PK
+        int battery_percentage
+        string battery_status
+        decimal battery_voltage
+        decimal battery_temperature
+        string battery_time_remaining
+        string system_status
+        decimal system_speed
+        int system_heading
+        decimal current_lat
+        decimal current_lon
+    }
+
+    historial_energia {
+        int id PK
+        datetime timestamp
+        decimal bateria_porcentaje
+        string estado
+        decimal radiacion_solar
+        decimal energia_consumida
+        decimal energia_generada
+        decimal temperatura
+    }
+
+    usuarios ||--o{ misiones : "crea"
+    ejecuciones_mision }o--|| usuarios : "es iniciada por"
+    misiones ||--o{ ejecuciones_mision : "contiene"
+    robot_datos }o--|| ejecuciones_mision : "pertenece a"
