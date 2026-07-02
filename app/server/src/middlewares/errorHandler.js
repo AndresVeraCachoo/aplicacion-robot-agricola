@@ -47,11 +47,19 @@ export const errorHandler = (err, req, res, next) => {
     error = new AppError("Servicio temporalmente no disponible (Fallo de conexión interna).", 503, "SERVICE_UNAVAILABLE");
   }
 
-  // Combina todos los fallos de validación de Zod en un solo texto
+  // Combina todos los fallos de validación de Zod en un formato estructurado y limpio
   if (err.name === "ZodError") {
-    const missingFields = err.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(' | ');
-    error = new AppError(`Error de Validación -> ${missingFields}`, 400, "VALIDATION_ERROR");
-    error.details = err.issues; 
+    const details = err.issues.map(issue => {
+      // Remover "body." o "query." del principio del path para hacerlo más limpio
+      const cleanPath = issue.path.filter(p => p !== "body" && p !== "query" && p !== "params").join('.');
+      return {
+        field: cleanPath,
+        message: issue.message // Ahora es una clave de traducción (ej. "validation.user.name_required")
+      };
+    });
+    
+    error = new AppError("Errores de validación en los datos.", 400, "VALIDATION_ERROR");
+    error.details = details; 
   }
 
   // Protecciones del servidor contra fallos raros del frontend o ataques

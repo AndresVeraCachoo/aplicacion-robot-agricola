@@ -14,7 +14,7 @@ describe("Controlador de Autenticación", () => {
     authController = new AuthController(mockAuthService);
 
     req = { body: {}, user: {} };
-    res = { json: jest.fn() };
+    res = { json: jest.fn(), cookie: jest.fn(), clearCookie: jest.fn() };
     next = jest.fn();
   });
 
@@ -28,8 +28,17 @@ describe("Controlador de Autenticación", () => {
       await authController.login(req, res, next);
 
       expect(mockAuthService.loginUser).toHaveBeenCalledWith("admin", "123");
+      expect(res.cookie).toHaveBeenCalledWith("token", "token-falso", expect.any(Object));
       expect(res.json).toHaveBeenCalledWith(authDataSimulada);
       expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("cierre de sesión", () => {
+    it("Debería limpiar la cookie de token y confirmar el cierre", () => {
+      authController.logout(req, res);
+      expect(res.clearCookie).toHaveBeenCalledWith("token", expect.any(Object));
+      expect(res.json).toHaveBeenCalledWith({ message: "Sesión cerrada correctamente" });
     });
   });
 

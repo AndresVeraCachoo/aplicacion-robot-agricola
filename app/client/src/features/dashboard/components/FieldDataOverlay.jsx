@@ -32,7 +32,7 @@ const FieldDataOverlay = ({ metric }) => {
           intensity = val / 100; // Humedad va de 0% a 100%
         } else if (metric === "ph") {
           intensity = Math.max(0, Math.min(1, (val - 5) / 3)); // Normaliza pH de 5 a 8
-        } else if (metric === "temperature") {
+        } else if (metric === "soilTemperature") {
           intensity = Math.max(0, Math.min(1, (val - 10) / 30)); // Normaliza Temp de 10C a 40C
         }
 

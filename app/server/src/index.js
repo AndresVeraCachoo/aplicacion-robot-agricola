@@ -5,17 +5,22 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/authRoutes.js";
 import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import missionRoutes from "./routes/missionRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
 
 import { runSeed } from "./scripts/seed.js";
 import { AppError, errorHandler } from "./middlewares/errorHandler.js";
 import { setupSockets } from "./websockets/socketHandler.js";
 import { startRobotSimulation } from "./simulator.js";
 import { swaggerSpec } from "./config/swagger.js";
+
+// Inicialización de trabajadores en segundo plano
+import "./workers/emailWorker.js";
 
 // Previene que el servidor crashee de forma inesperada si hay una promesa sin manejar o error crítico
 process.on("uncaughtException", (error) => {
@@ -74,6 +79,7 @@ app.use(helmet({
 app.use(cors(corsOptions));
 // Limita los payloads JSON a 1MB para prevenir agotamiento de memoria
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: "AgroSkopos API Docs"
@@ -84,10 +90,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/missions", missionRoutes);
+app.use("/api/support", supportRoutes);
 
 // Si alguien intenta acceder a una ruta inexistente, devuelve nuestro error 404 estándar
 app.all("*", (req, res, next) => {
-  next(new AppError(`The route ${req.method} ${req.originalUrl} does not exist on this server.`, 404));
+  next(new AppError(`La ruta solicitada ${req.method} ${req.originalUrl} no existe en este servidor.`, 404));
 });
 
 app.use(errorHandler);

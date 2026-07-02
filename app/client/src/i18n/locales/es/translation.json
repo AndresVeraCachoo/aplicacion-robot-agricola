@@ -60,6 +60,10 @@
     "auto": "AUTO",
     "manual": "MANUAL",
     "speedLimit": "Límite de Velocidad",
+    "missionControl": "Control de Misión",
+    "resume": "REANUDAR",
+    "pause": "PAUSAR",
+    "cancelMission": "CANCELAR MISIÓN",
     "rearmSystem": "⚠️ REARMAR SISTEMA ⚠️",
     "emergencyStop": "🛑 PARADA DE EMERGENCIA 🛑",
     "polygonError": "El polígono no puede cruzarse a sí mismo.",
@@ -175,8 +179,9 @@
     "createUser": "Crear Usuario",
     "name": "Nombre",
     "password": "Contraseña",
-    "passwordPlaceholder": "(Dejar vacío para no cambiar)",
-    "role": "Rol",
+    "passwordPlaceholder": "Dejar en blanco para mantener actual",
+    "pwdOrEmailHint": "Dejar vacío para autogenerar si hay email",
+    "email": "Correo Electrónico (Opcional)",
     "roleUser": "Usuario",
     "roleOperator": "Operador",
     "roleAdmin": "Admin",
@@ -309,6 +314,45 @@
       "heading": "Rumbo",
       "lat": "Lat",
       "lon": "Lon"
+    }
+  },
+  "errors": {
+    "DB_DUPLICATE_RECORD": "Registro duplicado en la base de datos.",
+    "DB_FOREIGN_KEY_VIOLATION": "Violación de restricción relacional.",
+    "DB_MISSING_DATA": "Faltan datos obligatorios.",
+    "DB_INVALID_FORMAT": "Formato de datos inválido.",
+    "SERVICE_UNAVAILABLE": "Servicio temporalmente no disponible.",
+    "VALIDATION_ERROR": "Error de validación.",
+    "BAD_JSON_FORMAT": "Datos malformados.",
+    "MALFORMED_URI": "Parámetros de URL inválidos.",
+    "PAYLOAD_TOO_LARGE": "Los datos enviados son demasiado grandes.",
+    "INTERNAL_ERROR": "Error interno del servidor.",
+    "UNKNOWN_ERROR": "Error desconocido."
+  },
+  "validation": {
+    "auth": {
+      "username_required": "Nombre de usuario requerido",
+      "password_min_length": "La contraseña debe tener al menos 6 caracteres"
+    },
+    "user": {
+      "name_required": "El nombre es obligatorio",
+      "invalid_role": "Rol no válido",
+      "invalid_email": "Formato de correo electrónico no válido",
+      "password_or_email_required": "Se requiere contraseña o correo",
+      "current_password_required": "Contraseña actual requerida",
+      "invalid_avatar_url": "Debe ser una URL válida o ruta local"
+    },
+    "robot": {
+      "invalid_iso_date": "Debe tener un formato de fecha ISO 8601 válido",
+      "positive_mission_id": "El ID de la misión debe ser un número positivo",
+      "dates_both_or_neither": "Se deben proporcionar ambas fechas (inicio y fin), o ninguna"
+    },
+    "mission": {
+      "name_required": "El nombre de la misión es obligatorio",
+      "task_type_required": "El tipo de tarea es obligatorio",
+      "width_positive": "El ancho de trabajo debe ser mayor que 0",
+      "battery_range": "La batería debe estar entre 0 y 100",
+      "invalid_geojson": "El área de trabajo debe ser un objeto GeoJSON válido"
     }
   }
 }

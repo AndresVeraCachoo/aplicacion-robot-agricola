@@ -97,12 +97,27 @@
     transform 0.2s,
     background-color 0.3s,
     color 0.3s,
-    border-color 0.3s;
+    border-color 0.3s,
+    opacity 0.5s ease-in-out 0.2s; /* Lento y con delay al reaparecer */
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .toggle-missions-btn:hover {
   transform: scale(1.05);
   background-color: #f8fafc;
+}
+
+.toggle-missions-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+  /* Rápido y sin delay al desaparecer */
+  transition:
+    transform 0.2s,
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    opacity 0.2s ease-in-out 0s;
 }
 
 /* 🌙 MODO OSCURO: Botón de Misiones */

@@ -11,6 +11,6 @@ describe("Esquema de Robot", () => {
     const result = getDataSchema.safeParse(data);
     
     expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toMatch(/Both dates/);
+    expect(result.error.issues[0].message).toMatch(/validation\.robot\.dates_both_or_neither/);
   });
 });

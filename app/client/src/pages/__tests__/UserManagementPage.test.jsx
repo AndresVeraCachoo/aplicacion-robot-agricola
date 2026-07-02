@@ -15,6 +15,7 @@ const mockT = (key, defaultValue) => {
 };
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: mockT }),
+  initReactI18next: { type: '3rdParty', init: vi.fn() }
 }));
 vi.mock('../../context/ToastContext', () => ({
   useToast: vi.fn(),
@@ -22,8 +23,7 @@ vi.mock('../../context/ToastContext', () => ({
 
 // Mock del modal evitando validación de props con arguments[0]
 vi.mock('../../components/Modal', () => ({
-  default: function MockModal() {
-    const { isOpen, children, title } = arguments[0];
+  default: function MockModal({ isOpen, children, title }) {
     if (!isOpen) return null;
     return (
       <div data-testid="mock-modal">
@@ -101,7 +101,7 @@ describe('Componente UserManagementPage', () => {
       fireEvent.click(screen.getByText('users.save'));
 
       // Verificamos que abortó la subida (Línea de validación de password)
-      expect(mockAddToast).toHaveBeenCalledWith('users.pwdRequired', 'warning');
+      expect(mockAddToast).toHaveBeenCalledWith('Debe proporcionar una contraseña o un email válido', 'warning');
       expect(axios.post).not.toHaveBeenCalled();
     });
 
@@ -122,8 +122,9 @@ describe('Componente UserManagementPage', () => {
       await waitFor(() => {
         expect(axios.post).toHaveBeenCalledWith(expect.any(String), {
           name: 'Nuevo User',
-          role: 'user',
-          password: '1234'
+          role: 'usuario',
+          password: '1234',
+          email: undefined
         });
         expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('users.created'), 'success');
       });
@@ -173,7 +174,8 @@ describe('Componente UserManagementPage', () => {
         expect(axios.put).toHaveBeenCalledWith(expect.stringContaining('/4'), {
            name: 'Usuario Normal',
            role: 'admin',
-           password: '' // Password va vacía por seguridad si no se teclea
+           password: undefined,
+           email: undefined
         });
         expect(mockAddToast).toHaveBeenCalledWith(expect.stringContaining('Usuario Normal'), 'success');
       });
@@ -207,8 +209,8 @@ describe('Componente UserManagementPage', () => {
       fireEvent.click(deleteBtns[1]); 
 
       // Botón "Cancelar" que pasamos como fallback en tu componente
-      const cancelBtn = screen.getByText('Cancelar'); 
-      fireEvent.click(cancelBtn);
+      const cancelBtns = screen.getAllByText('Cancelar'); 
+      fireEvent.click(cancelBtns[0]);
 
       expect(axios.delete).not.toHaveBeenCalled();
     });
@@ -223,11 +225,11 @@ describe('Componente UserManagementPage', () => {
       fireEvent.click(deleteBtns[1]);
 
       // Botón "Eliminar" del modal de confirmación
-      const confirmBtn = screen.getByText('Eliminar'); 
+      const confirmBtn = screen.getByText('Eliminar');
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(axios.delete).toHaveBeenCalledWith(expect.stringContaining('/4'));
+        expect(axios.delete).toHaveBeenCalledWith(expect.stringContaining('/users/4'));
         expect(mockAddToast).toHaveBeenCalledWith('Usuario eliminado correctamente', 'success');
       });
     });
@@ -236,7 +238,7 @@ describe('Componente UserManagementPage', () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
-      axios.delete.mockRejectedValueOnce(new Error('Standard error'));
+      axios.delete.mockRejectedValue(new Error('Standard error'));
 
       const deleteBtns = screen.getAllByText('users.delete');
       fireEvent.click(deleteBtns[1]);
@@ -253,10 +255,9 @@ describe('Componente UserManagementPage', () => {
       render(<UserManagementPage />);
       await waitFor(() => screen.getByText('Usuario Normal'));
 
-      // Simulamos que el backend rechaza la petición con un 403 Forbidden
       const error403 = new Error('Protected');
       error403.response = { status: 403 };
-      axios.delete.mockRejectedValueOnce(error403);
+      axios.delete.mockRejectedValue(error403);
 
       const deleteBtns = screen.getAllByText('users.delete');
       fireEvent.click(deleteBtns[1]);

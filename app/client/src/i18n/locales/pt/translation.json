@@ -60,6 +60,10 @@
     "auto": "AUTO",
     "manual": "MANUAL",
     "speedLimit": "Limite de Velocidade",
+    "missionControl": "Controlo de Missão",
+    "resume": "RETOMAR",
+    "pause": "PAUSAR",
+    "cancelMission": "CANCELAR MISSÃO",
     "rearmSystem": "⚠️ REARMAR SISTEMA ⚠️",
     "emergencyStop": "🛑 PARAGEM DE EMERGÊNCIA 🛑",
     "polygonError": "O polígono não pode cruzar-se a si próprio.",
@@ -175,7 +179,9 @@
     "createUser": "Criar Utilizador",
     "name": "Nome",
     "password": "Palavra-passe",
-    "passwordPlaceholder": "(Deixar vazio para não mudar)",
+    "passwordPlaceholder": "Deixe em branco para manter a atual",
+    "pwdOrEmailHint": "Deixe em branco para autogerar se o email for fornecido",
+    "email": "Correio Eletrónico (Opcional)",
     "role": "Função",
     "roleUser": "Utilizador",
     "roleOperator": "Operador",
@@ -309,6 +315,45 @@
       "heading": "Rumo",
       "lat": "Lat",
       "lon": "Lon"
+    }
+  },
+  "errors": {
+    "DB_DUPLICATE_RECORD": "Registo duplicado na base de dados.",
+    "DB_FOREIGN_KEY_VIOLATION": "Violação de restrição relacional.",
+    "DB_MISSING_DATA": "Faltam dados obrigatórios.",
+    "DB_INVALID_FORMAT": "Formato de dados inválido.",
+    "SERVICE_UNAVAILABLE": "Serviço temporariamente indisponível.",
+    "VALIDATION_ERROR": "Erro de validação.",
+    "BAD_JSON_FORMAT": "Dados malformados.",
+    "MALFORMED_URI": "Parâmetros de URL inválidos.",
+    "PAYLOAD_TOO_LARGE": "Os dados enviados são demasiado grandes.",
+    "INTERNAL_ERROR": "Erro interno do servidor.",
+    "UNKNOWN_ERROR": "Erro desconhecido."
+  },
+  "validation": {
+    "auth": {
+      "username_required": "O nome de utilizador é obrigatório",
+      "password_min_length": "A palavra-passe deve ter pelo menos 6 caracteres"
+    },
+    "user": {
+      "name_required": "O nome é obrigatório",
+      "invalid_role": "Função não válida",
+      "invalid_email": "Formato de e-mail não válido",
+      "password_or_email_required": "Palavra-passe ou e-mail é obrigatório",
+      "current_password_required": "Palavra-passe atual é obrigatória",
+      "invalid_avatar_url": "Deve ser um URL válido ou caminho local"
+    },
+    "robot": {
+      "invalid_iso_date": "Deve ter um formato de data ISO 8601 válido",
+      "positive_mission_id": "O ID da missão deve ser um número positivo",
+      "dates_both_or_neither": "Ambas as datas (início e fim) devem ser fornecidas, ou nenhuma"
+    },
+    "mission": {
+      "name_required": "O nome da missão é obrigatório",
+      "task_type_required": "O tipo de tarefa é obrigatório",
+      "width_positive": "A largura de trabalho deve ser maior que 0",
+      "battery_range": "A bateria deve estar entre 0 e 100",
+      "invalid_geojson": "A área de trabalho deve ser um objeto GeoJSON válido"
     }
   }
 }

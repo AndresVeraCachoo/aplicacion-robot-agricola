@@ -98,7 +98,7 @@ describe("Servicio de Usuarios", () => {
 
       const result = await userServiceInstance.createNewUser('pepe', 'operator', '123');
       expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: 'pepe', role: 'operator', password: 'new-hash' } }));
-      expect(result).toHaveProperty('name', 'pepe');
+      expect(result.user).toHaveProperty('name', 'pepe');
     });
   });
 

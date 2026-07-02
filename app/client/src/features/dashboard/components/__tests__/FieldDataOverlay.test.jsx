@@ -84,13 +84,13 @@ describe('Componente FieldDataOverlay', () => {
   it('calcula intensidades y añade capa de temperatura', () => {
     useRobotStore.mockReturnValue({
       agronomicData: [
-        { lat: 40, lon: -3, temperature: 5 }, // Intensidad 0
-        { lat: 40.1, lon: -3.1, temperature: 25 }, // Intensidad 0.5
-        { lat: 40.2, lon: -3.2, temperature: 50 } // Intensidad 1
+        { lat: 40, lon: -3, soilTemperature: 5 }, // Intensidad 0
+        { lat: 40.1, lon: -3.1, soilTemperature: 25 }, // Intensidad 0.5
+        { lat: 40.2, lon: -3.2, soilTemperature: 50 } // Intensidad 1
       ]
     });
     
-    render(<FieldDataOverlay metric="temperature" />);
+    render(<FieldDataOverlay metric="soilTemperature" />);
     
     expect(mockHeatLayer).toHaveBeenCalledWith(
       [

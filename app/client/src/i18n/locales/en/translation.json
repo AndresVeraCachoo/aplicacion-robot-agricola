@@ -60,6 +60,10 @@
     "auto": "AUTO",
     "manual": "MANUAL",
     "speedLimit": "Speed Limit",
+    "missionControl": "Mission Control",
+    "resume": "RESUME",
+    "pause": "PAUSE",
+    "cancelMission": "CANCEL MISSION",
     "rearmSystem": "⚠️ REARM SYSTEM ⚠️",
     "emergencyStop": "🛑 EMERGENCY STOP 🛑",
     "polygonError": "The polygon cannot intersect itself.",
@@ -175,7 +179,9 @@
     "createUser": "Create User",
     "name": "Name",
     "password": "Password",
-    "passwordPlaceholder": "(Leave blank to keep unchanged)",
+    "passwordPlaceholder": "Leave blank to keep current",
+    "pwdOrEmailHint": "Leave blank to autogenerate if email is provided",
+    "email": "Email (Optional)",
     "role": "Role",
     "roleUser": "User",
     "roleOperator": "Operator",
@@ -309,6 +315,45 @@
       "heading": "Heading",
       "lat": "Lat",
       "lon": "Lon"
+    }
+  },
+  "errors": {
+    "DB_DUPLICATE_RECORD": "Duplicate record in database.",
+    "DB_FOREIGN_KEY_VIOLATION": "Relational constraint violation.",
+    "DB_MISSING_DATA": "Missing mandatory data.",
+    "DB_INVALID_FORMAT": "Invalid data format.",
+    "SERVICE_UNAVAILABLE": "Service temporarily unavailable.",
+    "VALIDATION_ERROR": "Validation error.",
+    "BAD_JSON_FORMAT": "Malformed data.",
+    "MALFORMED_URI": "Invalid URL parameters.",
+    "PAYLOAD_TOO_LARGE": "Payload too large.",
+    "INTERNAL_ERROR": "Internal server error.",
+    "UNKNOWN_ERROR": "Unknown error."
+  },
+  "validation": {
+    "auth": {
+      "username_required": "Username is required",
+      "password_min_length": "Password must be at least 6 characters"
+    },
+    "user": {
+      "name_required": "Name is required",
+      "invalid_role": "Invalid role",
+      "invalid_email": "Invalid email format",
+      "password_or_email_required": "Password or email is required",
+      "current_password_required": "Current password is required",
+      "invalid_avatar_url": "Must be a valid URL or local path"
+    },
+    "robot": {
+      "invalid_iso_date": "Must have a valid ISO 8601 date format",
+      "positive_mission_id": "Mission ID must be a positive number",
+      "dates_both_or_neither": "Both dates (start and end) must be provided, or neither"
+    },
+    "mission": {
+      "name_required": "Mission name is required",
+      "task_type_required": "Task type is required",
+      "width_positive": "Work width must be greater than 0",
+      "battery_range": "Battery must be between 0 and 100",
+      "invalid_geojson": "Work area must be a valid GeoJSON object"
     }
   }
 }

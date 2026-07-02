@@ -87,7 +87,7 @@ const calculateZoneStats = (safeZone, agronomicData) => {
   pointsInZone.forEach(p => {
     if (p.ph !== null && p.ph !== undefined) { totals.ph += Number(p.ph); counts.ph++; }
     if (p.humidity !== null && p.humidity !== undefined) { totals.hum += Number(p.humidity); counts.hum++; }
-    if (p.temperature !== null && p.temperature !== undefined) { totals.temp += Number(p.temperature); counts.temp++; }
+    if (p.soilTemperature !== null && p.soilTemperature !== undefined) { totals.temp += Number(p.soilTemperature); counts.temp++; }
     if (p.nitrogen !== null && p.nitrogen !== undefined) { totals.n += Number(p.nitrogen); counts.n++; }
     if (p.phosphorus !== null && p.phosphorus !== undefined) { totals.p += Number(p.phosphorus); counts.p++; }
     if (p.potassium !== null && p.potassium !== undefined) { totals.k += Number(p.potassium); counts.k++; }
@@ -262,7 +262,7 @@ function CenterButtonInternal() {
 function MapControlsOverlay({
   selectedMetric,
   setSelectedMetric,
-  safeZone,
+  dashboardZone,
   showZoneSummary,
   setShowZoneSummary,
   handleClearZone,
@@ -282,10 +282,10 @@ function MapControlsOverlay({
         <option value="none">{t("mapAdv.layerOff")}</option>
         <option value="humidity">{t("mapAdv.layerHum")}</option>
         <option value="ph">{t("mapAdv.layerPh")}</option>
-        <option value="temperature">{t("mapAdv.layerTemp")}</option>
+        <option value="soilTemperature">{t("mapAdv.layerTemp")}</option>
       </select>
 
-      {safeZone ? (
+      {dashboardZone ? (
         <div className="zone-active-controls">
           <button
             type="button"
@@ -323,7 +323,7 @@ function MapControlsOverlay({
 MapControlsOverlay.propTypes = {
   selectedMetric: PropTypes.string.isRequired,
   setSelectedMetric: PropTypes.func.isRequired,
-  safeZone: PropTypes.array,
+  dashboardZone: PropTypes.array,
   showZoneSummary: PropTypes.bool.isRequired,
   setShowZoneSummary: PropTypes.func.isRequired,
   handleClearZone: PropTypes.func.isRequired,
@@ -417,7 +417,7 @@ function SampleModal({ isOpen, onClose, sample }) {
         <div className="popup-grid">
           <div className="popup-row">
             <span>🌡️ {t("mapAdv.soil")}:</span>{" "}
-            <strong>{sample.temperature === null ? t("mapAdv.notCollected", "No recogido") : `${sample.temperature}°C`}</strong>
+            <strong>{sample.soilTemperature === null ? t("mapAdv.notCollected", "No recogido") : `${sample.soilTemperature}°C`}</strong>
           </div>
           <div className="popup-row">
             <span>💧 {t("mapAdv.humidity")}:</span>{" "}
@@ -425,7 +425,7 @@ function SampleModal({ isOpen, onClose, sample }) {
           </div>
           <div className="popup-row">
             <span>☀️ {t("mapAdv.rad")}:</span>{" "}
-            <strong>{sample.radiation === null ? t("mapAdv.notCollected", "No recogido") : `${sample.radiation} W`}</strong>
+            <strong>{sample.solarRadiation === null ? t("mapAdv.notCollected", "No recogido") : `${sample.solarRadiation} W`}</strong>
           </div>
 
           <hr className="popup-divider" />
@@ -481,13 +481,14 @@ function MapView() {
   });
 
   const safeZone = useRobotStore((state) => state.safeZone);
-  const { setSafeZone, clearSafeZone } = useRobotStore();
   const { addToast } = useToast();
 
+  const [dashboardZone, setDashboardZone] = useState(null);
   const [isDrawingZone, setIsDrawingZone] = useState(false);
+  const [lastClickedCoords, setLastClickedCoords] = useState(null);
+
   const [selectedSample, setSelectedSample] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [lastClickedCoords, setLastClickedCoords] = useState(null);
   const [showZoneSummary, setShowZoneSummary] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState("none");
 
@@ -498,8 +499,8 @@ function MapView() {
   const pathCoords = pathHistory.map((p) => [p.lat, p.lon]);
 
   const zoneStats = useMemo(
-    () => calculateZoneStats(safeZone, agronomicData),
-    [safeZone, agronomicData],
+    () => calculateZoneStats(dashboardZone, agronomicData),
+    [dashboardZone, agronomicData],
   );
 
   const handleStartDrawing = () => {
@@ -523,14 +524,14 @@ function MapView() {
   };
 
   const handleZoneComplete = (polygonPoints) => {
-    setSafeZone(polygonPoints);
+    setDashboardZone(polygonPoints);
     setIsDrawingZone(false);
     setShowZoneSummary(true);
     addToast(t("mapAdv.areaDelimited"), "success");
   };
 
   const handleClearZone = () => {
-    clearSafeZone();
+    setDashboardZone(null);
     setShowZoneSummary(false);
     addToast(t("mapAdv.limitsRemoved"), "info");
   };
@@ -549,15 +550,6 @@ function MapView() {
     setSelectedSample(null);
   };
 
-  const isInsideZone = (lat, lon) => {
-    if (!safeZone) return true;
-    return isPointInPolygon([lat, lon], safeZone);
-  };
-
-  const handlePolygonClick = (e) => {
-    L.DomEvent.stopPropagation(e);
-    if (zoneStats) setShowZoneSummary(true);
-  };
 
   return (
     <>
@@ -589,13 +581,26 @@ function MapView() {
         {safeZone && (
           <Polygon
             positions={safeZone}
+            interactive={false}
             pathOptions={{
               color: "#22c55e",
               weight: 3,
-              fillOpacity: 0.15,
+              fillOpacity: 0.1,
               dashArray: "5, 10",
             }}
-            eventHandlers={{ click: handlePolygonClick }}
+          />
+        )}
+
+        {dashboardZone && (
+          <Polygon
+            positions={dashboardZone}
+            interactive={false}
+            pathOptions={{
+              color: "#f97316",
+              weight: 3,
+              fillOpacity: 0.15,
+              dashArray: "5, 5",
+            }}
           />
         )}
 
@@ -617,10 +622,10 @@ function MapView() {
         />
 
         {agronomicData.map((sample, index) => {
-          const isVisible = isInsideZone(
-            Number(sample.lat),
-            Number(sample.lon),
-          );
+          const isVisible = dashboardZone 
+            ? isPointInPolygon([Number(sample.lat), Number(sample.lon)], dashboardZone)
+            : true;
+
           const markerKey = sample.id
             ? `sample-${sample.id}`
             : `sample-idx-${index}`;
@@ -658,7 +663,7 @@ function MapView() {
         <MapControlsOverlay
           selectedMetric={selectedMetric}
           setSelectedMetric={setSelectedMetric}
-          safeZone={safeZone}
+          dashboardZone={dashboardZone}
           showZoneSummary={showZoneSummary}
           setShowZoneSummary={setShowZoneSummary}
           handleClearZone={handleClearZone}

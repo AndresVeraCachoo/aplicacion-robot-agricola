@@ -518,7 +518,7 @@ body.dark-mode .mission-map-panel {
   color: white;
   font-weight: 600;
   font-size: 1.05rem;
-  z-index: 9999; /* Asegura que esté por encima de TODO (incluso el mapa) */
+  z-index: 9999; /* Asegura que esté por encima de todos los elementos (incluso el mapa) */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   animation: slideUpFade 0.3s ease-out forwards;
   pointer-events: none; /* Que no bloquee clics si pasa por encima de algo */

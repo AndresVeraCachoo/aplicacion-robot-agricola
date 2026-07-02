@@ -6,6 +6,7 @@ CREATE TYPE rol_usuario AS ENUM ('admin', 'operador', 'usuario');
 CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255),
     password VARCHAR(100) NOT NULL,
     role rol_usuario NOT NULL,
     avatar VARCHAR(255) DEFAULT '/avatars/robot-fondo-verde.png'
@@ -36,7 +37,8 @@ CREATE TABLE IF NOT EXISTS misiones (
     puntos_interes JSONB,
     punto_retorno JSONB,
     fecha_programada TIMESTAMP,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    usuario_id INT REFERENCES usuarios (id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ejecuciones_mision (
@@ -48,7 +50,8 @@ CREATE TABLE IF NOT EXISTS ejecuciones_mision (
     bateria_usada INT DEFAULT 0,
     distancia_recorrida DECIMAL(10, 2) DEFAULT 0.0,
     tiempo_transcurrido INT DEFAULT 0,
-    progreso INT DEFAULT 0
+    progreso INT DEFAULT 0,
+    usuario_id INT REFERENCES usuarios (id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS robot_datos (

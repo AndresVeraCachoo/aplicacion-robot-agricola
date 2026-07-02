@@ -5,7 +5,7 @@ import LoginPage from '../LoginPage.jsx';
 import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useTranslation } from 'react-i18next';
 
-// 1. Mocks of custom hooks and libraries
+// 1. Mocks de custom hooks y librerías
 vi.mock('../../../hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
@@ -21,10 +21,10 @@ describe('Componente LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default mock behavior for most tests
+    // Comportamiento por defecto de mock para la mayoría de los tests
     useAuth.mockReturnValue({ login: mockLogin });
     useTranslation.mockReturnValue({
-      t: (key) => key, // Return the translation key directly
+      t: (key) => key, // Devolver la clave de traducción directamente
       i18n: {
         resolvedLanguage: 'es',
         language: 'es',
@@ -46,7 +46,7 @@ describe('Componente LoginPage', () => {
     render(<LoginPage />);
     const submitButton = screen.getByRole('button', { name: 'login.submit' });
     
-    // Trigger submit without filling anything
+    // Disparar submit sin rellenar nada
     await act(async () => {
       fireEvent.click(submitButton);
     });
@@ -56,7 +56,7 @@ describe('Componente LoginPage', () => {
   });
 
   it('muestra un error si credenciales son inválidas', async () => {
-    // Simulate authentication failure
+    // Simular fallo de autenticación
     mockLogin.mockResolvedValueOnce({ success: false });
     render(<LoginPage />);
 
@@ -76,7 +76,7 @@ describe('Componente LoginPage', () => {
   });
 
   it('envía el formulario correctamente y no muestra errores si el inicio de sesión es exitoso', async () => {
-    // Simulate authentication success
+    // Simular éxito de autenticación
     mockLogin.mockResolvedValueOnce({ success: true });
     render(<LoginPage />);
 
@@ -102,25 +102,25 @@ describe('Componente LoginPage', () => {
       
       const langButton = screen.getByRole('button', { name: 'ES' });
       
-      // Open the dropdown
+      // Abrir el desplegable
       act(() => { fireEvent.click(langButton); });
       
-      // Verify that the other options (EN, PT) are rendered
+      // Verificar que las otras opciones (EN, PT) se renderizan
       const enOption = screen.getByRole('button', { name: 'EN' });
       const ptOption = screen.getByRole('button', { name: 'PT' });
       expect(enOption).toBeInTheDocument();
       expect(ptOption).toBeInTheDocument();
 
-      // Change language to English
+      // Cambiar idioma a inglés
       act(() => { fireEvent.click(enOption); });
 
       expect(mockChangeLanguage).toHaveBeenCalledWith('en');
-      // Verify that the dropdown has been closed
+      // Verificar que el desplegable se ha cerrado
       expect(screen.queryByRole('button', { name: 'EN' })).not.toBeInTheDocument();
     });
 
     it('usa el idioma por defecto (ES) si i18n no tiene idioma resuelto', () => {
-      // Modify the mock to force the language fallback branch
+      // Modificar el mock para forzar la rama de fallback de idioma
       useTranslation.mockReturnValue({
         t: (key) => key,
         i18n: {
@@ -131,7 +131,7 @@ describe('Componente LoginPage', () => {
       });
 
       render(<LoginPage />);
-      // If it is null, it should fall back to "es" which is the first one via .startsWith()
+      // Si es null, debería usar "es" por defecto, que es el primero vía .startsWith()
       expect(screen.getByRole('button', { name: 'ES' })).toBeInTheDocument();
     });
 
@@ -145,7 +145,7 @@ describe('Componente LoginPage', () => {
       });
 
       render(<LoginPage />);
-      // Since find() fails, it should fallback to LANGUAGES[0] which is "ES"
+      // Dado que find() falla, debería usar LANGUAGES[0] que es "ES"
       expect(screen.getByRole('button', { name: 'ES' })).toBeInTheDocument();
     });
   });

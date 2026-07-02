@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Definición centralizada y estricta para evitar desincronizaciones con el ENUM de la base de datos
 const roleEnum = z.enum(["admin", "operador", "usuario"], {
-  invalid_type_error: "Invalid role. Only allowed: admin, operador, usuario" 
+  invalid_type_error: "validation.user.invalid_role" 
 });
 
 /**
@@ -10,9 +10,13 @@ const roleEnum = z.enum(["admin", "operador", "usuario"], {
  */
 export const createUserSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "Name is required"),
+    name: z.string().trim().min(1, "validation.user.name_required"),
     role: roleEnum,
-    password: z.string().min(6, "Password must be at least 6 characters")
+    password: z.string().min(6, "validation.auth.password_min_length").optional(),
+    email: z.string().email("validation.user.invalid_email").optional()
+  }).refine((data) => data.password || data.email, {
+    message: "validation.user.password_or_email_required",
+    path: ["password"]
   })
 });
 
@@ -21,10 +25,10 @@ export const createUserSchema = z.object({
  */
 export const updateUserSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "Name is required"),
+    name: z.string().trim().min(1, "validation.user.name_required"),
     role: roleEnum,
     // Opcional porque el administrador puede editar el rol o nombre sin alterar las credenciales
-    password: z.string().min(6, "Password must be at least 6 characters").optional()
+    password: z.string().min(6, "validation.auth.password_min_length").optional()
   })
 });
 
@@ -33,8 +37,8 @@ export const updateUserSchema = z.object({
  */
 export const updatePasswordSchema = z.object({
   body: z.object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(6, "New password must be at least 6 characters")
+    currentPassword: z.string().min(1, "validation.user.current_password_required"),
+    newPassword: z.string().min(6, "validation.auth.password_min_length")
   })
 });
 
@@ -43,6 +47,6 @@ export const updatePasswordSchema = z.object({
  */
 export const updateAvatarSchema = z.object({
   body: z.object({
-    avatarUrl: z.string().regex(/^(\/|https?:\/\/).+/, "Must be a valid image URL or local path")
+    avatarUrl: z.string().regex(/^(\/|https?:\/\/).+/, "validation.user.invalid_avatar_url")
   })
 });

@@ -89,6 +89,65 @@ La única excepción a este principio se aplica a las \textbf{pruebas E2E (End-t
 
 \section{Manual del programador}
 
+Esta sección tiene como propósito servir de guía técnica para futuros desarrolladores que necesiten mantener, extender o depurar el sistema AgroSkopos. Se documentan aquí los patrones de arquitectura aplicados, el ciclo de vida de los datos y las convenciones de programación adoptadas, de manera complementaria a los diagramas arquitectónicos expuestos en el Anexo C.
+
+\subsection{Calidad estática del código}
+El repositorio emplea herramientas automatizadas para garantizar un estilo de código homogéneo y libre de defectos lógicos. En los proyectos de cliente y servidor se utilizan \textbf{ESLint} para la validación estática. Además, todo el código subido al repositorio es analizado de forma continua por \textbf{SonarCloud} (según lo descrito en la configuración CI de \textit{GitHub Actions}), que mide la deuda técnica, las vulnerabilidades y la cobertura de pruebas. Cualquier nuevo desarrollo debe adherirse a estas normativas para superar las barreras de integración. Adicionalmente, es un requisito estricto mantener y ampliar la batería de pruebas (unitarias y E2E) a medida que se escribe nuevo código o se modifican funcionalidades existentes, asegurando que la cobertura no disminuya y protegiendo el sistema continuamente contra regresiones.
+
+\subsection{El flujo de una petición en el Backend (API REST)}
+El servidor, construido sobre Node.js y Express, implementa una filosofía de validación rígida y encapsulación lógica. El flujo típico cuando se recibe una solicitud externa (por ejemplo, para crear una misión) es el siguiente:
+\begin{enumerate}
+    \item \textbf{Capa de Rutas (\texttt{routes/}):} Recibe la petición HTTP y la delega a los interceptores correspondientes.
+    \item \textbf{Capa de Validación Estricta (\texttt{schemas/}):} Antes de invocar a la lógica de negocio, se validan los parámetros de entrada utilizando la librería \textbf{Zod} (ej. \texttt{missionSchema.js}, \texttt{robotSchema.js}). Si la estructura o los tipos de datos no coinciden con los esperados, la solicitud es interceptada y rechazada automáticamente, impidiendo posibles inyecciones o corrupciones en la base de datos.
+    \item \textbf{Capa de Controlador (\texttt{controllers/}):} Extrae la información ya formateada y limpia, para pasársela a los servicios.
+    \item \textbf{Capa de Servicios (\texttt{services/}):} Ejecuta la lógica empresarial pura y realiza las transacciones necesarias empleando \textbf{Prisma ORM} contra la base de datos PostgreSQL.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{img/apendice_D/flujo_trabajo.png}
+    \caption{Diagrama de flujo del ciclo de vida de una petición HTTP en la API REST.}
+    \label{fig:api_flow}
+\end{figure}
+
+% TODO: Ampliar/Modificar esta subsección cuando se termine de implementar el nuevo sistema global de manejo de errores HTTP y logging centralizado (ej. Winston o Morgan).
+\subsection{Manejo de Errores}
+Actualmente, los errores asíncronos y fallos de negocio se gestionan atrapando las excepciones en la capa de controladores y devolviendo respuestas JSON estandarizadas con códigos de estado HTTP semánticos (400, 401, 404, 500) acompañados de un mensaje descriptivo para la correcta interpretación del \textit{frontend}.
+
+\subsection{Comunicaciones asíncronas y simulación física}
+Uno de los componentes centrales y más complejos del servidor es el \textbf{Motor de Simulación} (\texttt{simulator.js}). Este módulo emula en tiempo real la física y las operaciones del robot agrícola, incluyendo:
+\begin{itemize}
+    \item Generación de rutas de cobertura y barrido óptimas usando mallas de polígonos geográficos (\texttt{@turf/turf}).
+    \item Consumo dinámico de batería basado en la velocidad lineal, y recargas mediante simulación de eficiencia de paneles solares.
+    \item Control de estados autónomos: ciclos de inactividad (\textit{IDLE}), reanudación de misiones y retorno seguro a la base (\textit{RTL}).
+\end{itemize}
+Debido a su naturaleza en tiempo real, los datos calculados por el simulador no viajan mediante protocolo HTTP tradicional. Se emplea un canal bidireccional asíncrono con \textbf{WebSockets} (\texttt{websockets/socketHandler.js}), el cual emite paquetes de telemetría constantes (\textit{ticks} de velocidad, latitud, longitud, nivel de batería) a todos los clientes web conectados simultáneamente.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{img/apendice_D/diagrama_websockets.png}
+    \caption{Diagrama del flujo asíncrono de datos emitidos por el simulador mediante WebSockets.}
+    \label{fig:websocket_flow}
+\end{figure}
+
+\subsection{Gestión de estado y arquitectura en el Frontend}
+Para evitar bloqueos y cuellos de botella en la interfaz interactiva (React), AgroSkopos aborda la gestión de estado de forma segregada:
+\begin{itemize}
+    \item \textbf{Estado Global de alta frecuencia (Zustand):} Para suscribirse a la ráfaga de eventos del WebSocket (como las coordenadas en vivo del robot) y gestionar entidades complejas, se utiliza \textit{Zustand}. Este se organiza de manera modular en el directorio \texttt{store/} (ej. \texttt{robotStore.js}, \texttt{missionStore.js}), permitiendo actualizaciones del DOM ultrarrápidas y sin renderizados innecesarios.
+    \item \textbf{Estado Local y Contextos:} Se reserva para datos más estáticos o globales por usuario, como la autenticación (\texttt{AuthContext}) y controles de interfaz visual puramente local.
+\end{itemize}
+
+\subsection{Guía para extender la interfaz (Feature-Sliced Design)}
+Si un desarrollador necesita agregar un nuevo módulo interactivo, debe adherirse al paradigma arquitectónico aplicado en \texttt{app/client/src/features/}. Para añadir una funcionalidad (ej. Módulo de análisis de suelo), los pasos recomendados son:
+\begin{enumerate}
+    \item \textbf{Lógica de dominio (\texttt{features/}):} Crear una nueva carpeta bajo \texttt{features/soil\_analysis/} para aislar sus componentes React, llamadas a la API y \textit{hooks} exclusivos.
+    \item \textbf{Elementos visuales genéricos (\texttt{components/}):} No reinventar la rueda; utilizar los botones, modales o tarjetas genéricas ya existentes en la librería compartida \texttt{components/}.
+    \item \textbf{Estado Global (\texttt{store/}):} Si el módulo necesita leer o escribir variables que deben verse en toda la aplicación (ej. datos del suelo que también usa el dashboard), crear su propio \textit{store} de Zustand.
+    \item \textbf{Ensamblaje y Rutas (\texttt{pages/} y \texttt{App.jsx}):} Exponer desde \texttt{features/} únicamente el bloque principal y usarlo para construir una página en \texttt{pages/SoilAnalysisPage.jsx}, registrándola finalmente en el enrutador \texttt{App.jsx}.
+\end{enumerate}
+
+% TODO: Añadir sección futura para documentar el proceso y la topología de despliegue a producción (Docker Swarm, VPS o Kubernetes) una vez que la infraestructura en la nube esté totalmente definida.
+
 \section{Compilación, instalación y ejecución del proyecto}
 
 \section{Pruebas del sistema}
@@ -138,15 +197,9 @@ La ejecución de los comandos de cobertura generará reportes que se pueden visu
     \item \textbf{Lines (Líneas):} Porcentaje absoluto de líneas de código cubiertas.
 \end{itemize}
 
-Para demostrar la fiabilidad técnica de la aplicación, en la Figura \ref{fig:coverage} se ilustra una captura con los resultados globales del análisis de cobertura del sistema, lo que refleja un alto grado de mitigación frente a regresiones.
+Para demostrar la fiabilidad técnica de la aplicación, se genera un reporte con los resultados globales del análisis de cobertura del sistema, lo que refleja un alto grado de mitigación frente a regresiones.
 
-\begin{figure}[H]
-    \centering
-    % TODO: Añade la imagen de tu captura de coverage en la carpeta correspondiente y sustituye 'ruta/a/tu/captura.png' por la correcta, luego descomenta la línea inferior.
-    % \includegraphics[width=0.8\textwidth]{ruta/a/tu/captura.png}
-    \caption{Reporte analítico general demostrando la cobertura porcentual de las pruebas automatizadas.}
-    \label{fig:coverage}
-\end{figure}
+% TODO: Añadir aquí la captura de pantalla del coverage y su respectivo entorno \begin{figure} cuando se tenga el reporte final.
 
 \subsection{Automatización en Integración Continua (CI)}
 Adicionalmente a la ejecución manual, el proyecto cuenta con un flujo de trabajo de integración continua configurado mediante \textbf{GitHub Actions}. Tal y como se define en el archivo \texttt{.github/workflows/ci-sonarcloud.yml}, cada vez que se suben cambios (\textit{push}) a la rama principal o se interactúa con un \textit{Pull Request}, una máquina virtual instalada en la nube ejecutará de forma desatendida todas las baterías de pruebas del monorepo (frontend, backend unitarias y backend E2E). Si alguna prueba falla, la subida se marca como errónea. Finalmente, los archivos de cobertura generados son procesados y enviados automáticamente a la plataforma \textbf{SonarCloud} para su análisis de calidad estático.

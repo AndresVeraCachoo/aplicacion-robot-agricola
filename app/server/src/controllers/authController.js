@@ -1,5 +1,6 @@
-/**
+import { catchAsync } from "../middlewares/catchAsync.js";
 
+/**
  * @description Controladores para la gestión de inicio de sesión y autenticación de usuarios.
  */
 export class AuthController {
@@ -18,15 +19,33 @@ export class AuthController {
    * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
-  login = async (req, res, next) => {
-    try {
-      // Confiamos en req.body porque el middleware previo de Zod bloquea cualquier petición malformada
-      const { name, password } = req.body; 
-      const authData = await this.authService.loginUser(name, password);
-      res.json(authData);
-    } catch (error) {
-      next(error);
-    }
+  login = catchAsync(async (req, res, next) => {
+    // Confiamos en req.body porque el middleware previo de Zod bloquea cualquier petición malformada
+    const { name, password } = req.body; 
+    const authData = await this.authService.loginUser(name, password);
+    
+    const { token, user } = authData;
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    res.json({ user, token }); // Devuelve el token para compatibilidad hacia atrás en la respuesta API
+  });
+
+  /**
+   * Cierra la sesión del usuario limpiando la cookie de autenticación.
+   */
+  logout = (req, res) => {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+    res.json({ message: "Sesión cerrada correctamente" });
   };
 
   /**

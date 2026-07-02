@@ -102,7 +102,7 @@ describe("E2E - Telemetría y Estado", () => {
       });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/both dates/i);
+      expect(response.body.error).toMatch(/validación/i);
     });
   });
 

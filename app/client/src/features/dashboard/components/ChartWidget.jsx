@@ -75,12 +75,12 @@ function ChartWidget({
       ...d,
       timeMs: new Date(d.timestamp).getTime(),
       humidity: d.humidity !== null && d.humidity !== undefined ? Number(d.humidity) : null,
-      temperature: d.temperature !== null && d.temperature !== undefined ? Number(d.temperature) : null,
+      temperature: d.soilTemperature !== null && d.soilTemperature !== undefined ? Number(d.soilTemperature) : null,
       ph: d.ph !== null && d.ph !== undefined ? Number(d.ph) : null,
       nitrogen: d.nitrogen !== null && d.nitrogen !== undefined ? Number(d.nitrogen) : null,
       phosphorus: d.phosphorus !== null && d.phosphorus !== undefined ? Number(d.phosphorus) : null,
       potassium: d.potassium !== null && d.potassium !== undefined ? Number(d.potassium) : null,
-      radiation: d.radiation !== null && d.radiation !== undefined ? Number(d.radiation) : null,
+      radiation: d.solarRadiation !== null && d.solarRadiation !== undefined ? Number(d.solarRadiation) : null,
     }));
   }, [data]);
 

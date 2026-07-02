@@ -494,8 +494,8 @@ const ControlMap = ({ isPip = false }) => {
   return (
     <div className="control-map-wrapper">
       <button
-        className="toggle-missions-btn btn-missions"
-        onClick={() => setShowMissionsPanel(!showMissionsPanel)}
+        className={`toggle-missions-btn btn-missions ${showMissionsPanel ? "hidden" : ""}`}
+        onClick={() => setShowMissionsPanel(true)}
       >
         🗺️ {t("control.missionsBtn")}
       </button>

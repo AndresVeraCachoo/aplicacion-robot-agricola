@@ -577,7 +577,7 @@ function DataPage() {
                 data={displayData}
                 title={t("data.comparativeAnalysis")}
                 initialType="compare"
-                initialMetric1="soilTemperature"
+                initialMetric1="temperature"
                 initialMetric2="humidity"
                 forcedCompare={true}
               />

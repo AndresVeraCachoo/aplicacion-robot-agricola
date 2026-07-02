@@ -9,7 +9,7 @@ vi.mock('./hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock the lazy components to speed up tests and avoid act() warnings with suspense
+// Simular componentes lazy para acelerar tests y evitar advertencias de act() con suspense
 vi.mock('./features/authentication/LoginPage', () => ({ default: () => <div data-testid="login-page">Login Page</div> }));
 vi.mock('./layout/MainLayout', () => ({ default: () => <div data-testid="main-layout">Main Layout</div> }));
 vi.mock('./features/dashboard/Dashboard', () => ({ default: () => <div data-testid="dashboard">Dashboard</div> }));
@@ -58,7 +58,7 @@ describe('Componente App y Rutas Protegidas', () => {
       );
     });
 
-    // The MainLayout mock should render
+    // El mock de MainLayout debería renderizarse
     expect(screen.getByTestId('main-layout')).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe('Componente App y Rutas Protegidas', () => {
       );
     });
 
-    // Root -> /app -> /app/dashboard (if we mocked Dashboard inside MainLayout it would be there, but here we just check main layout)
+    // Raíz -> /app -> /app/dashboard (si simulamos Dashboard dentro de MainLayout estaría allí, pero aquí solo comprobamos el layout principal)
     expect(screen.getByTestId('main-layout')).toBeInTheDocument();
   });
 

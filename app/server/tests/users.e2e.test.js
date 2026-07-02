@@ -142,7 +142,7 @@ describe("E2E - Usuarios y Control de Acceso", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/Invalid option/i);
+      expect(response.body.error).toMatch(/validación/i);
     });
 
     it("debería retornar error 409 si intenta registrar usuario ya existente", async () => {

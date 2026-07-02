@@ -49,3 +49,6 @@ referencias/
 # Archivos generados temporalmente
 docs/
 *.timestamp-*.mjs
+
+# Herramientas de auditoría
+.unlighthouse/

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
+import httpClient from "../config/httpClient";
 import {
   AreaChart,
   Area,
@@ -20,7 +20,6 @@ import { useMissionStore } from "../store/missionStore";
 import { DateRangePicker } from "../components/DateRangePicker";
 import "./EnergyPage.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Componente de la página de energía.
@@ -47,6 +46,10 @@ function EnergyPage() {
   });
   const [isFiltering, setIsFiltering] = useState(false);
 
+  /**
+   * Obtiene el historial de energía desde la API para pintar la gráfica.
+   * Aplica los filtros de fechas y misión seleccionados.
+   */
   const fetchEnergyHistory = useCallback(async () => {
     try {
       const params = new URLSearchParams();
@@ -54,8 +57,8 @@ function EnergyPage() {
       if (dateFilter.end) params.append("end", dateFilter.end);
       if (dateFilter.misionId) params.append("misionId", dateFilter.misionId);
 
-      const response = await axios.get(
-        `${API_URL}/robot/energia/historial?${params.toString()}`,
+      const response = await httpClient.get(
+        `/robot/energia/historial?${params.toString()}`,
       );
 
       // 🛡️ Prevenimos que datos nulos rompan la gráfica (NaN)
@@ -63,6 +66,7 @@ function EnergyPage() {
         timeMs: new Date(item.timestamp).getTime(),
         batteryLevel: Number(item.batteryPercentage) || 0,
         solarWatts: Number(item.solarRadiation) || 0,
+        temperature: Number(item.temperature) || 0,
       }));
 
       // Aseguramos orden cronológico para evitar cruces en la línea
@@ -233,6 +237,14 @@ function EnergyPage() {
                         stopOpacity={0.05}
                       />
                     </linearGradient>
+                    <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#ef4444"
+                        stopOpacity={0.05}
+                      />
+                    </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="timeMs"
@@ -314,6 +326,7 @@ function EnergyPage() {
                     fill="url(#colorSolar)"
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
+
                 </AreaChart>
               ) : (
                 <div

@@ -55,6 +55,33 @@ ProtectedRoute.propTypes = {
 };
 
 /**
+ * Componente para proteger rutas privadas basadas en roles.
+ * @param {Object} props
+ * @param {Array<string>} props.allowedRoles - Roles permitidos para acceder a la ruta.
+ * @param {React.ReactNode} props.children - Componentes hijos.
+ * @returns {JSX.Element}
+ */
+function RoleRoute({ allowedRoles, children }) {
+  const { userRole } = useAuth();
+  
+  if (!userRole) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(userRole)) {
+    // Si no tiene permisos, lo enviamos al dashboard (inicio)
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  return children;
+}
+
+RoleRoute.propTypes = {
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  children: PropTypes.node.isRequired,
+};
+
+/**
  * Componente principal de la aplicación.
  * Define el enrutamiento y la carga diferida de páginas.
  * @returns {JSX.Element}
@@ -77,14 +104,48 @@ function App() {
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
+          
+          {/* Rutas accesibles por todos (admin, operador, usuario) */}
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="control" element={<ControlPage />} />
           <Route path="camera" element={<CameraPage />} />
           <Route path="data" element={<DataPage />} />
-          <Route path="missions" element={<MissionsPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="users" element={<UserManagementPage />} />
-          <Route path="energy" element={<EnergyPage />} />
+
+          {/* Rutas accesibles por admin y operador (no usuario) */}
+          <Route 
+            path="control" 
+            element={
+              <RoleRoute allowedRoles={["admin", "operador"]}>
+                <ControlPage />
+              </RoleRoute>
+            } 
+          />
+          <Route 
+            path="missions" 
+            element={
+              <RoleRoute allowedRoles={["admin", "operador"]}>
+                <MissionsPage />
+              </RoleRoute>
+            } 
+          />
+          <Route 
+            path="energy" 
+            element={
+              <RoleRoute allowedRoles={["admin", "operador"]}>
+                <EnergyPage />
+              </RoleRoute>
+            } 
+          />
+
+          {/* Rutas exclusivas de admin */}
+          <Route 
+            path="users" 
+            element={
+              <RoleRoute allowedRoles={["admin"]}>
+                <UserManagementPage />
+              </RoleRoute>
+            } 
+          />
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>

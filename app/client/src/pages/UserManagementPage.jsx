@@ -23,8 +23,9 @@ function UserManagementPage() {
   const [currentUser, setCurrentUser] = useState({
     id: null,
     name: "",
+    email: "",
     password: "",
-    role: "user",
+    role: "usuario",
   });
 
   const [userToDelete, setUserToDelete] = useState(null);
@@ -44,12 +45,12 @@ function UserManagementPage() {
   }, [fetchUsers]);
 
   const openCreateModal = () => {
-    setCurrentUser({ id: null, name: "", password: "", role: "user" });
+    setCurrentUser({ id: null, name: "", email: "", password: "", role: "usuario" });
     setIsModalOpen(true);
   };
 
   const openEditModal = (user) => {
-    setCurrentUser({ ...user, password: "" });
+    setCurrentUser({ ...user, password: "", email: user.email || "" });
     setIsModalOpen(true);
   };
 
@@ -62,8 +63,9 @@ function UserManagementPage() {
 
     const userData = {
       name: currentUser.name,
+      email: currentUser.email || undefined,
       role: currentUser.role,
-      password: currentUser.password,
+      password: currentUser.password || undefined,
     };
 
     try {
@@ -74,8 +76,8 @@ function UserManagementPage() {
           "success",
         );
       } else {
-        if (!userData.password) {
-          addToast(t("users.pwdRequired"), "warning");
+        if (!userData.password && !userData.email) {
+          addToast(t("users.pwdOrEmailRequired", "Debe proporcionar una contraseña o un email válido"), "warning");
           return;
         }
         await httpClient.post(API_URL, userData);
@@ -194,6 +196,17 @@ function UserManagementPage() {
             />
           </div>
           <div className="form-group">
+            <label htmlFor="email">{t("users.email", "Correo Electrónico (Opcional)")}</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={currentUser.email}
+              onChange={handleChange}
+              placeholder={t("users.emailPlaceholder", "usuario@empresa.com")}
+            />
+          </div>
+          <div className="form-group">
             <label htmlFor="password">{t("users.password")}</label>
             <input
               type="password"
@@ -201,7 +214,7 @@ function UserManagementPage() {
               name="password"
               value={currentUser.password}
               onChange={handleChange}
-              placeholder={currentUser.id ? t("users.passwordPlaceholder") : ""}
+              placeholder={currentUser.id ? t("users.passwordPlaceholder") : t("users.pwdOrEmailHint", "Dejar vacío para autogenerar si hay email")}
             />
           </div>
           <div className="form-group">
@@ -212,8 +225,8 @@ function UserManagementPage() {
               value={currentUser.role}
               onChange={handleChange}
             >
-              <option value="user">{t("users.roleUser")}</option>
-              <option value="operator">{t("users.roleOperator")}</option>
+              <option value="usuario">{t("users.roleUser")}</option>
+              <option value="operador">{t("users.roleOperator")}</option>
               <option value="admin">{t("users.roleAdmin")}</option>
             </select>
           </div>

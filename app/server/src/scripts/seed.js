@@ -27,14 +27,14 @@ const getSecureRandom = () => {
  */
 async function seedUsers() {
   const adminHash = await bcrypt.hash("admin123", 10);
-  const operatorHash = await bcrypt.hash("operator123", 10);
-  const userHash = await bcrypt.hash("user123", 10);
+  const operatorHash = await bcrypt.hash("operador123", 10);
+  const userHash = await bcrypt.hash("usuario123", 10);
 
   await pool.query(`
     INSERT INTO usuarios (name, password, role) VALUES 
     ('admin', $1, 'admin'),
-    ('operator', $2, 'operator'),
-    ('user', $3, 'user')
+    ('operador', $2, 'operador'),
+    ('usuario', $3, 'usuario')
   `, [adminHash, operatorHash, userHash]);
 }
 
@@ -57,13 +57,15 @@ async function seedRobotState() {
  */
 async function seedMissionsAndData(now) {
   const missionsDef = [
-    { name: 'North Mission', type: 'Humidity, Temperature, pH, N-P-K, Rad', daysAgo: 4, coords: [[42.3647, -3.699], [42.3647, -3.698], [42.3652, -3.6985], [42.3647, -3.699]] },
-    { name: 'South Mission', type: 'Humidity, Temperature, pH, N-P-K, Rad', daysAgo: 3, coords: [[42.3612, -3.699], [42.3612, -3.698], [42.3617, -3.698], [42.3617, -3.699], [42.3612, -3.699]] },
-    { name: 'East Mission', type: 'Humidity, Temperature, pH, N-P-K, Rad', daysAgo: 2, coords: [[42.3627, -3.6962], [42.3627, -3.6957], [42.3631, -3.6955], [42.3634, -3.696], [42.3631, -3.6965], [42.3627, -3.6962]] },
-    { name: 'West Mission', type: 'Humidity, Temperature, pH, N-P-K, Rad', daysAgo: 1, coords: [[42.3627, -3.702], [42.3625, -3.7015], [42.3629, -3.701], [42.3634, -3.701], [42.3636, -3.7015], [42.3632, -3.702], [42.3627, -3.702]] }
+    { name: 'Misión Norte', type: 'Humedad - Temp. Suelo - pH - N-P-K - Rad. Solar', daysAgo: 4, coords: [[42.3647, -3.699], [42.3647, -3.698], [42.3652, -3.6985], [42.3647, -3.699]] },
+    { name: 'Misión Sur', type: 'Humedad - Temp. Suelo - pH - N-P-K - Rad. Solar', daysAgo: 3, coords: [[42.3612, -3.699], [42.3612, -3.698], [42.3617, -3.698], [42.3617, -3.699], [42.3612, -3.699]] },
+    { name: 'Misión Este', type: 'Humedad - Temp. Suelo - pH - N-P-K - Rad. Solar', daysAgo: 2, coords: [[42.3627, -3.6962], [42.3627, -3.6957], [42.3631, -3.6955], [42.3634, -3.696], [42.3631, -3.6965], [42.3627, -3.6962]] },
+    { name: 'Misión Oeste', type: 'Humedad - Temp. Suelo - pH - N-P-K - Rad. Solar', daysAgo: 1, coords: [[42.3627, -3.702], [42.3625, -3.7015], [42.3629, -3.701], [42.3634, -3.701], [42.3636, -3.7015], [42.3632, -3.702], [42.3627, -3.702]] }
   ];
 
   let insertValues = [];
+  let energyInsertValues = [];
+  let simBattery = 85;
 
   for (const mission of missionsDef) {
     let startDate = new Date(now.getTime() - (mission.daysAgo * 24 * 60 * 60 * 1000));
@@ -107,6 +109,11 @@ async function seedMissionsAndData(now) {
 
       // Agrupa filas crudas para realizar una inserción masiva y no saturar el pool de conexiones
       insertValues.push(`(${lat}, ${lon}, '${pointDateObj.toISOString()}', ${humidity}, ${temp}, ${ph}, ${nitrogen}, ${phosphorus}, ${potassium}, ${radiation}, ${executionId})`);
+
+      // Generar y asociar dato de energía para ese mismo punto de la misión
+      let generated = radiation * 0.0015;
+      simBattery = Math.max(0, Math.min(100, simBattery - 2 + generated));
+      energyInsertValues.push(`('${pointDateObj.toISOString()}', ${simBattery.toFixed(2)}, 'WORKING', ${radiation}, 2.00, ${generated.toFixed(2)}, ${temp})`);
     });
   }
 
@@ -116,6 +123,14 @@ async function seedMissionsAndData(now) {
       VALUES ${insertValues.join(', ')}
     `;
     await pool.query(insertQuery);
+  }
+
+  if (energyInsertValues.length > 0) {
+    const insertEnergyQuery = `
+      INSERT INTO historial_energia ("timestamp", bateria_porcentaje, estado, radiacion_solar, energia_consumida, energia_generada, temperatura)
+      VALUES ${energyInsertValues.join(', ')}
+    `;
+    await pool.query(insertEnergyQuery);
   }
 }
 
@@ -144,10 +159,12 @@ async function seedEnergyHistory(now) {
     for (let e of execs) {
       if (tickTime >= new Date(e.fecha_inicio) && tickTime <= new Date(e.fecha_fin)) {
         status = 'WORKING';
-        consumption = 2; 
         break;
       }
     }
+
+    // Si está en misión, saltamos este tick porque ya se insertaron datos de energía precisos en seedMissionsAndData
+    if (status === 'WORKING') continue;
 
     let radiation = calculateSolarRadiation(tickTime);
     let generated = radiation * 0.0015; 

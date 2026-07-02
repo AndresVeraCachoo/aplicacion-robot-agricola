@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import httpClient from '../httpClient';
 
 describe('configuración de httpClient', () => {
@@ -7,26 +7,8 @@ describe('configuración de httpClient', () => {
     // Reset interceptors if needed, but here we can just test the existing one
   });
 
-  it('agrega encabezado Authorization cuando el token está en localStorage', async () => {
-    localStorage.setItem('token', 'test-token');
-    
-    // We can simulate an intercepted request by calling the fulfill handler directly.
-    // The request interceptors are stored in httpClient.interceptors.request.handlers
-    const requestInterceptor = httpClient.interceptors.request.handlers[0].fulfilled;
-    
-    const config = { headers: {} };
-    const newConfig = await requestInterceptor(config);
-    
-    expect(newConfig.headers['Authorization']).toBe('Bearer test-token');
-  });
-
-  it('no agrega encabezado Authorization cuando falta el token', async () => {
-    const requestInterceptor = httpClient.interceptors.request.handlers[0].fulfilled;
-    
-    const config = { headers: {} };
-    const newConfig = await requestInterceptor(config);
-    
-    expect(newConfig.headers['Authorization']).toBeUndefined();
+  it('configura axios con credentials true en lugar de localStorage tokens', () => {
+    expect(httpClient.defaults.withCredentials).toBe(true);
   });
 
   it('rechaza la promesa cuando ocurre un error en la petición', async () => {

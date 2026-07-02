@@ -8,6 +8,7 @@ import { useTheme } from "../context/ThemeContext.jsx";
 import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import SupportModal from "../components/SupportModal.jsx";
 
 const LANGUAGES = [
   { code: "es", label: "ES" },
@@ -33,6 +34,7 @@ function Header({ onMenuClick }) {
   
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   const openBatteryModal = () => setIsBatteryModalOpen(true);
   const closeBatteryModal = () => setIsBatteryModalOpen(false);
@@ -101,6 +103,10 @@ function Header({ onMenuClick }) {
             {isDarkMode ? "🌙" : "☀️"}
           </button>
 
+          <button className="theme-toggle-btn" onClick={() => setIsSupportOpen(true)} title={t("sidebar.support", "Soporte Técnico")}>
+            🎧
+          </button>
+
           <button className={`battery-widget clickable ${getBatteryClass()}`} onClick={openBatteryModal} title={`${t("header.battery")}: ${percentage}%`}>
             <span className="battery-text">
               {isPluggedIn && <span className="charging-bolt">⚡</span>}
@@ -117,6 +123,11 @@ function Header({ onMenuClick }) {
       <Modal isOpen={isBatteryModalOpen} onClose={closeBatteryModal} title={t("header.energyDetail")}>
         <BatteryModal onClose={closeBatteryModal} />
       </Modal>
+
+      <SupportModal 
+        isOpen={isSupportOpen} 
+        onClose={() => setIsSupportOpen(false)} 
+      />
     </>
   );
 }

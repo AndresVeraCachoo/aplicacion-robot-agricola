@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import "./Sidebar.css";
 import { useAuth } from "../hooks/useAuth";
 
+
 const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
 
 /**
@@ -22,6 +23,7 @@ function Sidebar({ isOpen, onClose }) {
   const [avatar, setAvatar] = useState(
     localStorage.getItem("userAvatar") || DEFAULT_AVATAR,
   );
+
 
   useEffect(() => {
     const handleAvatarUpdate = () => {
@@ -74,33 +76,43 @@ function Sidebar({ isOpen, onClose }) {
 
         <nav className="sidebar-nav">
           <ul>
+            {/* Inicio: Todos */}
             <li>
               <Link to="/app/dashboard" onClick={onClose}>
                 {t("sidebar.home")}
               </Link>
             </li>
+            {/* Cámara: Todos */}
             <li>
-              <Link to="/app/control" onClick={onClose}>
-                {t("sidebar.remoteControl")}
+              <Link to="/app/camera" onClick={onClose}>
+                {t("sidebar.camera")}
               </Link>
             </li>
+            {/* Datos: Todos */}
             <li>
               <Link to="/app/data" onClick={onClose}>
                 {t("sidebar.data")}
               </Link>
             </li>
+
+            {/* Control: Admin y Operador */}
             {(userRole === "admin" || userRole === "operador") && (
               <li>
-                <Link to="/app/camera" onClick={onClose}>
-                  {t("sidebar.camera")}
+                <Link to="/app/control" onClick={onClose}>
+                  {t("sidebar.remoteControl")}
                 </Link>
               </li>
             )}
-            <li>
-              <Link to="/app/missions" onClick={onClose}>
-                {t("sidebar.missions")}
-              </Link>
-            </li>
+            {/* Misiones: Admin y Operador */}
+            {(userRole === "admin" || userRole === "operador") && (
+              <li>
+                <Link to="/app/missions" onClick={onClose}>
+                  {t("sidebar.missions")}
+                </Link>
+              </li>
+            )}
+
+            {/* Gestión de Usuarios: Solo Admin */}
             {userRole === "admin" && (
               <li>
                 <Link to="/app/users" onClick={onClose}>
@@ -108,6 +120,7 @@ function Sidebar({ isOpen, onClose }) {
                 </Link>
               </li>
             )}
+
           </ul>
         </nav>
 
@@ -123,6 +136,8 @@ function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
       </aside>
+
+
     </>
   );
 }

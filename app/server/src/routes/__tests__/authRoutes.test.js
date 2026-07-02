@@ -17,6 +17,7 @@ describe("Rutas de Autenticación", () => {
 
     mockAuthController = {
       login: jest.fn((req, res) => res.status(200).json({ ok: true })),
+      logout: jest.fn((req, res) => res.status(200).json({ ok: true })),
       verify: jest.fn((req, res) => res.status(200).json({ ok: true })),
     };
     mockAuthenticateToken = jest.fn((req, res, next) => next());
@@ -48,5 +49,10 @@ describe("Rutas de Autenticación", () => {
     await request(app).get('/auth/verify');
     expect(mockAuthenticateToken).toHaveBeenCalled();
     expect(mockAuthController.verify).toHaveBeenCalled();
+  });
+
+  it("Debería llamar a logout en endpoint de logout", async () => {
+    await request(app).post('/auth/logout');
+    expect(mockAuthController.logout).toHaveBeenCalled();
   });
 });

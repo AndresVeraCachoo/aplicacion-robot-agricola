@@ -1,7 +1,21 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { toast as sonnerToast } from 'sonner';
 import { ToastProvider, useToast } from '../ToastContext.jsx';
+
+vi.mock('sonner', () => {
+  return {
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+      warning: vi.fn(),
+      info: vi.fn(),
+      dismiss: vi.fn(),
+    },
+    Toaster: () => <div data-testid="toaster" />
+  }
+});
 
 const ToastTestComponent = () => {
   const { addToast } = useToast();
@@ -37,7 +51,7 @@ describe('sistema de cola de notificaciones', () => {
     consoleSpy.mockRestore();
   });
 
-  it('debería inyectar visualmente todas las variantes resolviendo su iconografía', () => {
+  it('debería inyectar visualmente todas las variantes usando sonnerToast', () => {
     render(
       <ToastProvider>
         <ToastTestComponent />
@@ -45,21 +59,19 @@ describe('sistema de cola de notificaciones', () => {
     );
 
     act(() => { screen.getByText('Add Success').click(); });
-    act(() => { screen.getByText('Add Error').click(); });
-    act(() => { screen.getByText('Add Warning').click(); });
-    act(() => { screen.getByText('Add Info').click(); });
-    act(() => { screen.getByText('Add Default').click(); }); 
+    expect(sonnerToast.success).toHaveBeenCalledWith('Éxito');
 
-    expect(screen.getByText('Éxito')).toBeInTheDocument();
-    expect(screen.getByText('✅')).toBeInTheDocument();
-    
-    expect(screen.getByText('Error')).toBeInTheDocument();
-    expect(screen.getByText('🚨')).toBeInTheDocument();
-    
-    expect(screen.getByText('Aviso')).toBeInTheDocument();
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
-    
-    expect(screen.getAllByText('ℹ️')).toHaveLength(2);
+    act(() => { screen.getByText('Add Error').click(); });
+    expect(sonnerToast.error).toHaveBeenCalledWith('Error');
+
+    act(() => { screen.getByText('Add Warning').click(); });
+    expect(sonnerToast.warning).toHaveBeenCalledWith('Aviso');
+
+    act(() => { screen.getByText('Add Info').click(); });
+    expect(sonnerToast.info).toHaveBeenCalledWith('Info');
+
+    act(() => { screen.getByText('Add Default').click(); }); 
+    expect(sonnerToast.info).toHaveBeenCalledWith('Default');
   });
 
   it('debería eliminar una notificación específica de la cola a petición del usuario', () => {
@@ -70,28 +82,6 @@ describe('sistema de cola de notificaciones', () => {
     );
 
     act(() => { screen.getByText('Add Info').click(); });
-    expect(screen.getByText('Info')).toBeInTheDocument();
-
-    const closeButton = screen.getByRole('button', { name: /×/i });
-    act(() => { closeButton.click(); });
-
-    expect(screen.queryByText('Info')).not.toBeInTheDocument();
-  });
-
-  it('debería auto-limpiar la cola respetando el ciclo de visualización de 3.5s', () => {
-    render(
-      <ToastProvider>
-        <ToastTestComponent />
-      </ToastProvider>
-    );
-
-    act(() => { screen.getByText('Add Success').click(); });
-    expect(screen.getByText('Éxito')).toBeInTheDocument();
-
-    act(() => { vi.advanceTimersByTime(3000); });
-    expect(screen.getByText('Éxito')).toBeInTheDocument();
-
-    act(() => { vi.advanceTimersByTime(500); });
-    expect(screen.queryByText('Éxito')).not.toBeInTheDocument();
+    expect(sonnerToast.info).toHaveBeenCalledWith('Info');
   });
 });

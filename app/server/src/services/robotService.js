@@ -124,6 +124,7 @@ export class RobotService {
         timestamp: true,
         batteryPercentage: true,
         solarRadiation: true,
+        temperature: true,
         status: true
       }
     });

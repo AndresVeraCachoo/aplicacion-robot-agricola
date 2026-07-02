@@ -6,18 +6,24 @@
 import { z } from "zod";
 import "dotenv/config";
 
+const isTest = process.env.NODE_ENV === 'test';
+
 /**
  * Esquema de validación estricta Zod para las variables de entorno.
  * Previene el arranque de la aplicación si faltan credenciales críticas.
  */
 const envSchema = z.object({
   PORT: z.string().default("3001"),
-  DB_USER: z.string({ required_error: "Falta DB_USER en .env" }),
-  DB_PASSWORD: z.string({ required_error: "Falta DB_PASSWORD en .env" }),
+  DB_USER: isTest ? z.string().default("test") : z.string({ required_error: "Falta DB_USER en .env" }),
+  DB_PASSWORD: isTest ? z.string().default("test") : z.string({ required_error: "Falta DB_PASSWORD en .env" }),
   DB_HOST: z.string().default("localhost"),
   DB_NAME: z.string().default("robot_dashboard_db"),
   DB_PORT: z.string().default("5432"),
-  JWT_SECRET: z.string({ required_error: "Falta JWT_SECRET para firmar tokens" }).min(10, "JWT_SECRET debe ser más largo para ser seguro"),
+  JWT_SECRET: isTest ? z.string().default("test-secret-key-1234567890") : z.string({ required_error: "Falta JWT_SECRET para firmar tokens" }).min(10, "JWT_SECRET debe ser más largo para ser seguro"),
+  REDIS_URL: z.string().default("redis://localhost:6379"),
+  EMAIL_USER: z.string().optional(),
+  EMAIL_PASS: z.string().optional(),
+  ADMIN_EMAIL: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

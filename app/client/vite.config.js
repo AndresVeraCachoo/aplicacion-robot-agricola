@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['robot-fondo-negro.svg', 'robot-arrow.svg'], 
       manifest: {
         name: 'AgroSkopos',

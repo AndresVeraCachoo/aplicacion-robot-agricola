@@ -105,4 +105,16 @@ router.post("/login", validate(loginSchema), loginLimiter, authController.login)
 */
 router.get("/verify", authenticateToken, authController.verify);
 
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Cierra la sesión del usuario actual
+ *     tags: [Autenticación]
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada correctamente.
+ */
+router.post("/logout", authController.logout);
+
 export default router;

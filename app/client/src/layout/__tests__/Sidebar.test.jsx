@@ -78,17 +78,17 @@ describe('Componente Sidebar', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(2);
   });
 
-  it('muestra enlace de Cámara solo a operadores y administradores', () => {
+  it('muestra enlace de Cámara a usuario y operador pero no userManagement', () => {
     useAuth.mockReturnValue({ userRole: 'operador', logout: mockLogout });
     const { rerender } = renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
     expect(screen.queryByText('sidebar.userManagement')).not.toBeInTheDocument();
 
-    useAuth.mockReturnValue({ userRole: 'espectador', logout: mockLogout });
+    useAuth.mockReturnValue({ userRole: 'usuario', logout: mockLogout });
     rerender(<BrowserRouter><Sidebar isOpen={true} onClose={mockOnClose} /></BrowserRouter>);
-    expect(screen.queryByText('sidebar.camera')).not.toBeInTheDocument();
+    expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
+    expect(screen.queryByText('sidebar.userManagement')).not.toBeInTheDocument();
   });
-
   it('muestra enlace de Gestión de Usuarios solo a administradores', () => {
     useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);

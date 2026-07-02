@@ -18,17 +18,19 @@ export const AuthContext = createContext(null);
  * @returns {JSX.Element}
  */
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [userRole, setUserRole] = useState(() => localStorage.getItem("userRole"));
-  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("userRole"));
   const navigate = useNavigate();
 
-  const logout = useCallback(function handleLogout() {
-    localStorage.removeItem("token");
+  const logout = useCallback(async function handleLogout() {
+    try {
+      await httpClient.post("/auth/logout");
+    } catch (error) {
+      console.warn("Logout error:", error.message);
+    }
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
     localStorage.removeItem("userAvatar");
-    setToken(null);
     setUserRole(null);
     setIsLoggedIn(false);
     navigate("/login");
@@ -36,63 +38,55 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function verifyAuthStatus() {
-      if (token) {
-        try {
-          await httpClient.get("/auth/verify");
-          setIsLoggedIn(true);
-        } catch (error) {
+      try {
+        await httpClient.get("/auth/verify");
+        setIsLoggedIn(true);
+      } catch (error) {
+        if (isLoggedIn) {
           console.warn("Sesión expirada. Detalles:", error.message);
           logout();
         }
-      } else {
-        setIsLoggedIn(false);
       }
     }
     verifyAuthStatus();
-  }, [token, logout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logout]);
 
   const login = useCallback(
     async function handleLogin(name, password) {
       try {
         const response = await httpClient.post("/auth/login", { name, password });
 
-        if (response.data.token) {
-          const { token: newToken, user } = response.data;
+        if (response.data.user) {
+          const { user } = response.data;
 
-          const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
-          if (typeof newToken !== "string" || !jwtRegex.test(newToken)) {
-            throw new Error("El servidor devolvió un formato de token inválido");
-          }
-
-          let safeRole = "user";
+          let safeRole = "usuario";
           if (user?.role === "admin") {
             safeRole = "admin";
-          } else if (user?.role === "operator") {
-            safeRole = "operator";
+          } else if (user?.role === "operador") {
+            safeRole = "operador";
           }
 
           let safeName = "User";
-          const rawName = response.data.user?.name;
+          const rawName = user?.name;
           const nameRegex = /^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑ]+$/;
           if (typeof rawName === "string" && nameRegex.test(rawName)) {
             safeName = rawName;
           }
 
           let safeAvatar = "/avatars/robot-fondo-verde.png";
-          const rawAvatar = response.data.user?.avatar;
+          const rawAvatar = user?.avatar;
           const avatarRegex = /^(\/[a-zA-Z0-9-_./]+|https?:\/\/[a-zA-Z0-9-_./]+)$/;
           if (typeof rawAvatar === "string" && avatarRegex.test(rawAvatar)) {
             safeAvatar = rawAvatar;
           }
 
-          localStorage.setItem("token", newToken);
           localStorage.setItem("userRole", safeRole);
           localStorage.setItem("userName", safeName);
           localStorage.setItem("userAvatar", safeAvatar);
 
           globalThis.dispatchEvent(new Event("avatarUpdated"));
 
-          setToken(newToken);
           setUserRole(safeRole);
           setIsLoggedIn(true);
           

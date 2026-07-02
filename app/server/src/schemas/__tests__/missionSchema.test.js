@@ -27,6 +27,6 @@ describe("Esquema de Misión", () => {
     const result = updateExecutionSchema.safeParse(data);
     
     expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toMatch(/valid ISO 8601 date format/i);
+    expect(result.error.issues[0].message).toMatch(/validation\.robot\.invalid_iso_date/i);
   });
 });

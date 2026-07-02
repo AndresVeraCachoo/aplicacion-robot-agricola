@@ -5,7 +5,7 @@ import { z } from "zod";
  */
 export const loginSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "Username is required"),
-    password: z.string().min(6, "Password must be at least 6 characters")
+    name: z.string().trim().min(1, "validation.auth.username_required"),
+    password: z.string().min(6, "validation.auth.password_min_length")
   })
 });

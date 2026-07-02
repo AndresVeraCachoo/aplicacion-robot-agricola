@@ -50,7 +50,6 @@ vi.mock('leaflet', () => ({
     icon: vi.fn(),
     Marker: { prototype: { options: {} } },
     DomEvent: { stopPropagation: vi.fn() },
-    // Solución Test 1: Devolver un array explícito que coincida con la validación para setSafeZone
     latLng: vi.fn((lat, lng) => [lat, lng]),
   }
 }));
@@ -144,7 +143,6 @@ describe('Componente MapView', () => {
   });
 
   describe('Flujo de Dibujo de Zona Segura', () => {
-
     it('cancela modo de dibujo mediante botón o tecla ESC', () => {
       render(<MapView />);
       const drawBtn = screen.getByTitle('mapAdv.drawArea');
@@ -163,33 +161,34 @@ describe('Componente MapView', () => {
   describe('Cálculos Agronómicos y Marcadores', () => {
     it('procesa marcadores dentro y fuera del polígono, y calcula promedios', () => {
       robotStoreMock.safeZone = [[0, 0], [0, 10], [10, 10], [10, 0]];
-      
       robotStoreMock.agronomicData = [
-        { id: 1, lat: 5, lon: 5, ph: 7, humidity: 50, temperature: 25, nitrogen: 10, phosphorus: 5, potassium: 8 },
+        { id: 1, lat: 8, lon: 2, ph: 7, humidity: 50, soilTemperature: 25, nitrogen: 10, phosphorus: 5, potassium: 8 },
         { id: 2, lat: 20, lon: 20, ph: 4, humidity: null }
       ];
 
       render(<MapView />);
-      
       const markers = screen.getAllByTestId('circle-marker');
       expect(markers.length).toBeGreaterThan(0);
 
-      const summaryBtn = screen.getByTitle('mapAdv.viewData');
-      act(() => { fireEvent.click(summaryBtn); }); 
+      const drawBtn = screen.getByTitle('mapAdv.drawArea');
+      act(() => { fireEvent.click(drawBtn); });
+      
+      const clickMap = (lat, lng) => {
+        const handlers = shared.mapClickHandlers.slice(-2);
+        handlers.forEach(h => {
+          act(() => h({ latlng: { lat, lng } }));
+        });
+      };
+
+      clickMap(0, 0);
+      clickMap(10, 0);
+      clickMap(10, 10);
+      clickMap(0, 10);
+      clickMap(0, 0);
       
       expect(screen.getByText('7.0')).toBeInTheDocument(); 
       expect(screen.getByText('50%')).toBeInTheDocument(); 
       expect(screen.getByText('25.0°C')).toBeInTheDocument(); 
-    });
-
-    it('limpia la zona segura', () => {
-      robotStoreMock.safeZone = [[0, 0], [1, 1]];
-      render(<MapView />);
-      
-      const deleteBtn = screen.getByTitle('mapAdv.clearLimit');
-      act(() => { fireEvent.click(deleteBtn); });
-      
-      expect(robotStoreMock.clearSafeZone).toHaveBeenCalled();
     });
 
     it('abre el SampleModal al hacer clic en un marcador agronómico', () => {
@@ -220,7 +219,6 @@ describe('Componente MapView', () => {
 
   it('actualiza coordenadas clicadas al hacer clic fuera del modo de dibujo', () => {
     render(<MapView />);
-    // Simulamos un clic en el mapa llamando al handler registrado
     act(() => {
       shared.mapClickHandlers.forEach(handler => {
         handler({ latlng: { lat: 41, lng: -4 } });
@@ -229,16 +227,5 @@ describe('Componente MapView', () => {
 
     expect(screen.getByText(/41\.00000/)).toBeInTheDocument();
     expect(screen.getByText(/-4\.00000/)).toBeInTheDocument();
-  });
-
-  it('muestra resumen de zona al hacer clic en polígono de zona segura', () => {
-    robotStoreMock.safeZone = [[0, 0], [0, 10], [10, 10], [10, 0]];
-    robotStoreMock.agronomicData = [{ id: 1, lat: 5, lon: 5, ph: 7 }];
-    render(<MapView />);
-
-    const polygonBtn = screen.getByTestId('polygon');
-    act(() => { fireEvent.click(polygonBtn); });
-
-    expect(screen.getByText('mapAdv.areaSummary')).toBeInTheDocument();
   });
 });

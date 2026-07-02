@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const isoDateValidator = z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-  message: "Must have a valid ISO 8601 date format"
+  message: "validation.robot.invalid_iso_date"
 });
 
 /**
@@ -9,13 +9,13 @@ const isoDateValidator = z.string().refine((val) => !Number.isNaN(Date.parse(val
  */
 export const createMissionSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(1, "Mission name is required"),
-    taskType: z.string().trim().min(1, "Task type is required"),
-    workWidth: z.number().positive("Work width must be greater than 0"),
+    name: z.string().trim().min(1, "validation.mission.name_required"),
+    taskType: z.string().trim().min(1, "validation.mission.task_type_required"),
+    workWidth: z.number().positive("validation.mission.width_positive"),
     passAngle: z.number(),
-    minBattery: z.number().min(0).max(100, "Battery must be between 0 and 100"),
+    minBattery: z.number().min(0).max(100, "validation.mission.battery_range"),
     // Valida la estructura básica como un objeto; la validación topológica profunda del GeoJSON la asume la base de datos
-    workArea: z.record(z.any(), { message: "Work area must be a valid GeoJSON object" }),
+    workArea: z.record(z.any(), { message: "validation.mission.invalid_geojson" }),
     poi: z.union([z.array(z.any()), z.record(z.any())]).optional(),
     returnPoint: z.record(z.any()).optional(),
     scheduledTime: isoDateValidator.nullable().optional()

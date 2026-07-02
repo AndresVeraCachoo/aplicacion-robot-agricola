@@ -88,7 +88,7 @@ export class UserService {
    * @returns {Promise<Object>} Datos del usuario recién creado.
    * @throws {AppError} Lanza error 409 si el nombre de usuario ya está en uso.
    */
-  async createNewUser(name, role, password) {
+  async createNewUser(name, role, password, email) {
     const userExists = await this.prisma.user.findUnique({
       where: { name }
     });
@@ -97,16 +97,37 @@ export class UserService {
       throw new AppError("Username is already in use", 409);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (email) {
+      const emailExists = await this.prisma.user.findUnique({ where: { email } });
+      if (emailExists) {
+        throw new AppError("Email is already in use", 409);
+      }
+    }
 
-    return await this.prisma.user.create({
+    let finalPassword = password;
+    let generatedPassword = null;
+
+    if (!password && email) {
+      const crypto = await import('crypto');
+      generatedPassword = crypto.randomBytes(6).toString('hex'); // 12 chars temp pass
+      finalPassword = generatedPassword;
+    } else if (!password) {
+      throw new AppError("Password is required if no email is provided", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(finalPassword, 10);
+
+    const newUser = await this.prisma.user.create({
       data: {
         name,
+        email,
         role,
         password: hashedPassword
       },
-      select: { id: true, name: true, role: true }
+      select: { id: true, name: true, email: true, role: true }
     });
+
+    return { user: newUser, generatedPassword };
   }
 
   /**

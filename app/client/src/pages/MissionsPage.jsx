@@ -500,7 +500,7 @@ function MissionsPage() {
             </div>
 
             <div className="form-actions-row">
-              <button type="submit" className="btn-save">
+              <button type="submit" className="btn-save-mission">
                 {editingId
                   ? t("missions.form.updateBtn", "Actualizar Misión")
                   : t("missions.form.saveBtn")}
@@ -509,7 +509,7 @@ function MissionsPage() {
               {editingId && (
                 <button
                   type="button"
-                  className="btn-cancel"
+                  className="btn-cancel-mission"
                   onClick={handleCancelEdit}
                 >
                   {t("users.cancel", "Cancelar")}
