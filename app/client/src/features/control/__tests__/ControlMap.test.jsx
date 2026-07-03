@@ -5,7 +5,7 @@ import L from 'leaflet';
 import ControlMap from '../ControlMap.jsx';
 import { useRobotStore } from '../../../store/robotStore';
 import { useMissionStore } from '../../../store/missionStore';
-import { useToast } from '../../../context/ToastContext';
+import { useToastStore } from '../../../store/toastStore';
 
 const shared = vi.hoisted(() => ({
   geodesicArea: () => 10000,
@@ -19,8 +19,8 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k) => k, i18n: { language: 'es' } }),
 }));
 
-vi.mock('../../../context/ToastContext', () => ({
-  useToast: vi.fn(),
+vi.mock('../../../store/toastStore', () => ({
+  useToastStore: vi.fn(),
 }));
 
 vi.mock('../../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
@@ -179,7 +179,7 @@ describe('Componente ControlMap', () => {
     });
     
     useMissionStore.mockReturnValue(missionStoreMock);
-    useToast.mockReturnValue(toastMock);
+    useToastStore.mockReturnValue(toastMock);
   });
 
   afterEach(() => {

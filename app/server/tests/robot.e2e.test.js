@@ -74,7 +74,7 @@ describe("E2E - Telemetría y Estado", () => {
     it("debería retornar datos agronómicos si no se aplican filtros", async () => {
       const response = await getWithAuth(API_DATOS);
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(2); 
+      expect(response.body).toHaveLength(2); 
     });
 
     it("debería filtrar datos agronómicos por rango de fechas", async () => {
@@ -84,7 +84,7 @@ describe("E2E - Telemetría y Estado", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(1); 
+      expect(response.body).toHaveLength(1); 
       expect(Number(response.body[0].humidity)).toBe(60);
     });
 
@@ -92,7 +92,7 @@ describe("E2E - Telemetría y Estado", () => {
       const response = await getWithAuth(API_DATOS).query({ misionId });
 
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(1); 
+      expect(response.body).toHaveLength(1); 
       expect(response.body[0].missionId).toBe(misionId);
     });
 
@@ -110,7 +110,7 @@ describe("E2E - Telemetría y Estado", () => {
     it("debería retornar el historial completo de energía sin filtros", async () => {
       const response = await getWithAuth(API_ENERGIA);
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(2);
+      expect(response.body).toHaveLength(2);
     });
 
     it("debería filtrar el historial de energía por rango de fechas", async () => {
@@ -120,7 +120,7 @@ describe("E2E - Telemetría y Estado", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(1); 
+      expect(response.body).toHaveLength(1); 
       expect(Number(response.body[0].batteryPercentage)).toBe(80);
     });
 
@@ -128,7 +128,7 @@ describe("E2E - Telemetría y Estado", () => {
       const response = await getWithAuth(API_ENERGIA).query({ misionId });
 
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(1);
+      expect(response.body).toHaveLength(1);
       expect(Number(response.body[0].batteryPercentage)).toBe(50); 
     });
   });

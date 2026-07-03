@@ -108,7 +108,7 @@ export class UserService {
     let generatedPassword = null;
 
     if (!password && email) {
-      const crypto = await import('crypto');
+      const crypto = await import('node:crypto');
       generatedPassword = crypto.randomBytes(6).toString('hex'); // 12 chars temp pass
       finalPassword = generatedPassword;
     } else if (!password) {

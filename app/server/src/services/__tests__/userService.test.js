@@ -135,7 +135,7 @@ describe("Servicio de Usuarios", () => {
     it("Debería resolver toda la colección de usuarios", async () => {
       mockFindMany.mockResolvedValueOnce([{ id: 1 }, { id: 2 }]);
       const result = await userServiceInstance.getAllUsers();
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
     });
 
     it("Debería ejecutar actualizaciones parciales omitiendo la columna de credenciales", async () => {

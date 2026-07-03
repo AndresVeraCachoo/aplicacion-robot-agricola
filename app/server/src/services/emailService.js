@@ -6,7 +6,9 @@ import { env } from '../config/env.js';
  * (Puede cambiarse a otros proveedores ajustando las opciones de SMTP).
  */
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // Use TLS
   auth: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS,

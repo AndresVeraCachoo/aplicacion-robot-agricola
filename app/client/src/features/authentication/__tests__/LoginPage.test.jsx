@@ -1,17 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import LoginPage from '../LoginPage.jsx';
-import { useAuth } from '../../../hooks/useAuth.jsx';
+import LoginPage from '../../../pages/Login/LoginPage.jsx';
+import { useAuthStore } from '../../../store/authStore';
 import { useTranslation } from 'react-i18next';
 
 // 1. Mocks de custom hooks y librerías
-vi.mock('../../../hooks/useAuth', () => ({
-  useAuth: vi.fn(),
+vi.mock('../../../store/authStore', () => ({
+  useAuthStore: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
   useTranslation: vi.fn(),
+  initReactI18next: { type: '3rdParty', init: vi.fn() }
 }));
 
 describe('Componente LoginPage', () => {
@@ -22,7 +24,8 @@ describe('Componente LoginPage', () => {
     vi.clearAllMocks();
 
     // Comportamiento por defecto de mock para la mayoría de los tests
-    useAuth.mockReturnValue({ login: mockLogin });
+    useAuthStore.mockReturnValue({ login: mockLogin });
+    useAuthStore.getState = vi.fn(() => ({ isLoggedIn: false }));
     useTranslation.mockReturnValue({
       t: (key) => key, // Devolver la clave de traducción directamente
       i18n: {
@@ -34,7 +37,11 @@ describe('Componente LoginPage', () => {
   });
 
   it('renderiza el formulario de login y campos correctamente', () => {
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
     
     expect(screen.getByText('login.welcome')).toBeInTheDocument();
     expect(screen.getByLabelText('login.username')).toBeInTheDocument();
@@ -43,7 +50,11 @@ describe('Componente LoginPage', () => {
   });
 
   it('muestra un error si se intenta enviar formulario con campos vacíos', async () => {
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
     const submitButton = screen.getByRole('button', { name: 'login.submit' });
     
     // Disparar submit sin rellenar nada
@@ -58,7 +69,11 @@ describe('Componente LoginPage', () => {
   it('muestra un error si credenciales son inválidas', async () => {
     // Simular fallo de autenticación
     mockLogin.mockResolvedValueOnce({ success: false });
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
     const nameInput = screen.getByLabelText('login.username');
     const pwdInput = screen.getByLabelText('login.pwdText');
@@ -78,7 +93,11 @@ describe('Componente LoginPage', () => {
   it('envía el formulario correctamente y no muestra errores si el inicio de sesión es exitoso', async () => {
     // Simular éxito de autenticación
     mockLogin.mockResolvedValueOnce({ success: true });
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
     const nameInput = screen.getByLabelText('login.username');
     const pwdInput = screen.getByLabelText('login.pwdText');
@@ -98,7 +117,11 @@ describe('Componente LoginPage', () => {
 
   describe('Selector de Idioma', () => {
     it('abre el menú desplegable y permite cambiar el idioma', () => {
-      render(<LoginPage />);
+      render(
+        <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
+      );
       
       const langButton = screen.getByRole('button', { name: 'ES' });
       
@@ -130,7 +153,11 @@ describe('Componente LoginPage', () => {
         },
       });
 
-      render(<LoginPage />);
+      render(
+        <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
+      );
       // Si es null, debería usar "es" por defecto, que es el primero vía .startsWith()
       expect(screen.getByRole('button', { name: 'ES' })).toBeInTheDocument();
     });
@@ -144,7 +171,11 @@ describe('Componente LoginPage', () => {
         },
       });
 
-      render(<LoginPage />);
+      render(
+        <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
+      );
       // Dado que find() falla, debería usar LANGUAGES[0] que es "ES"
       expect(screen.getByRole('button', { name: 'ES' })).toBeInTheDocument();
     });

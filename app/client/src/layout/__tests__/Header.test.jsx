@@ -3,8 +3,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Header from '../Header.jsx';
 import { useRobotStore } from '../../store/robotStore';
-import { useTheme } from '../../context/ThemeContext';
-import { useToast } from '../../context/ToastContext';
+import { useThemeStore } from '../../store/themeStore';
+import { useToastStore } from '../../store/toastStore';
 
 // Mock de i18next ajustado a la lógica de promesas de tu componente
 let currentLang = 'es';
@@ -23,14 +23,15 @@ vi.mock('react-i18next', () => ({
       getFixedT: () => (k) => k, // Simula la función para traducir el toast
     },
   }),
+  initReactI18next: { type: '3rdParty', init: vi.fn() },
 }));
 
-vi.mock('../../context/ToastContext', () => ({
-  useToast: vi.fn(),
+vi.mock('../../store/toastStore', () => ({
+  useToastStore: vi.fn(),
 }));
 
 vi.mock('../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
-vi.mock('../../context/ThemeContext', () => ({ useTheme: vi.fn() }));
+vi.mock('../../store/themeStore', () => ({ useThemeStore: vi.fn() }));
 
 vi.mock('../../components/Modal', () => ({
   default: ({ isOpen, onClose, children }) => (
@@ -55,8 +56,8 @@ describe('Componente Header', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     currentLang = 'es';
-    useTheme.mockReturnValue({ isDarkMode: false, toggleTheme: mockToggleTheme });
-    useToast.mockReturnValue({ addToast: mockAddToast });
+    useThemeStore.mockReturnValue({ isDarkMode: false, toggleTheme: mockToggleTheme });
+    useToastStore.mockReturnValue({ addToast: mockAddToast });
   });
 
   // Ajustado para mockear netPower e isConnected y cubrir todas las ramas
@@ -97,7 +98,7 @@ describe('Componente Header', () => {
     });
 
     it('muestra icono 🌙 si es modo oscuro', () => {
-      useTheme.mockReturnValue({ isDarkMode: true, toggleTheme: mockToggleTheme });
+      useThemeStore.mockReturnValue({ isDarkMode: true, toggleTheme: mockToggleTheme });
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import httpClient from "../config/httpClient";
+import { missionService } from "../services/missionService";
 
 /**
  * Gestor de estado global para misiones.
@@ -19,8 +19,8 @@ export const useMissionStore = create((set) => ({
   fetchMissions: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await httpClient.get("/missions");
-      set({ missions: response.data, isLoading: false });
+      const responseData = await missionService.getAll();
+      set({ missions: responseData, isLoading: false });
     } catch (error) {
       set({ error: error.message, isLoading: false });
     }
@@ -33,8 +33,8 @@ export const useMissionStore = create((set) => ({
    */
   createMission: async (missionData) => {
     try {
-      const response = await httpClient.post("/missions", missionData);
-      set((state) => ({ missions: [response.data, ...state.missions] }));
+      const responseData = await missionService.create(missionData);
+      set((state) => ({ missions: [responseData, ...state.missions] }));
       return true;
     } catch (error) {
       console.error(error);
@@ -50,9 +50,9 @@ export const useMissionStore = create((set) => ({
    */
   updateMission: async (id, missionData) => {
     try {
-      const response = await httpClient.put(`/missions/${id}`, missionData);
+      const responseData = await missionService.update(id, missionData);
       set((state) => ({
-        missions: state.missions.map((m) => (m.id === id ? response.data : m)),
+        missions: state.missions.map((m) => (m.id === id ? responseData : m)),
       }));
       return true;
     } catch (error) {
@@ -68,7 +68,7 @@ export const useMissionStore = create((set) => ({
    */
   deleteMission: async (id) => {
     try {
-      await httpClient.delete(`/missions/${id}`);
+      await missionService.delete(id);
       set((state) => ({ missions: state.missions.filter((m) => m.id !== id) }));
     } catch (error) {
       console.error(error);
@@ -82,8 +82,8 @@ export const useMissionStore = create((set) => ({
    */
   startMissionRun: async (missionId) => {
     try {
-      const response = await httpClient.post(`/missions/${missionId}/runs`);
-      return response.data;
+      const responseData = await missionService.startRun(missionId);
+      return responseData;
     } catch (error) {
       console.error(error);
       return null;

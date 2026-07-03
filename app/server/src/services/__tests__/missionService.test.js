@@ -119,13 +119,13 @@ describe("Servicio de Misiones", () => {
     it("Debería resolver una lista de misiones existentes", async () => {
       mockFindMany.mockResolvedValueOnce([{ id: 1 }]);
       const result = await missionServiceInstance.getAllMissions();
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
     });
 
     it("Debería resolver el historial de ejecución de una misión", async () => {
       mockFindMany.mockResolvedValueOnce([{ id: 11 }]);
       const result = await missionServiceInstance.getMissionRuns(1);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({
         where: { missionId: 1 }
       }));

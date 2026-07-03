@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import crypto from "node:crypto"; 
 import pg from "pg";
-import { generateCoveragePath, calculateSolarRadiation } from "../simulator.js"; 
+import { generateCoveragePath } from "../simulator/utils.js";
+import { calculateSolarRadiation } from "../simulator/systems/energy.js";
 import { env } from "../config/env.js";
 
 // En este archivo se utiliza una conexión directa con pg (SQL crudo) en lugar del ORM Prisma

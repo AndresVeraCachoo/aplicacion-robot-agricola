@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import httpClient from '../config/httpClient';
+import { robotService } from "../services/robotService";
 import { io } from "socket.io-client"; 
 
 /**
@@ -141,13 +141,19 @@ export const useRobotStore = create((set, get) => ({
 
     newSocket.on("robot:new_data", (newRecord) => {
       set((state) => {
-        const key = newRecord.ejecucion_id ? `exec-${newRecord.ejecucion_id}` : `miss-${newRecord.nombre_mision}`;
+        const normalizedRecord = {
+          ...newRecord,
+          executionId: newRecord.ejecucion_id || newRecord.executionId,
+          missionName: newRecord.nombre_mision || newRecord.missionName
+        };
+
+        const key = normalizedRecord.executionId ? `exec-${normalizedRecord.executionId}` : `miss-${normalizedRecord.missionName}`;
         if (state.deletedSessionKeys.includes(key)) {
             return state; 
         }
 
-        const updatedData = [newRecord, ...state.agronomicData].slice(0, 1000);
-        const newPathPoint = { lat: Number(newRecord.lat), lon: Number(newRecord.lon) };
+        const updatedData = [normalizedRecord, ...state.agronomicData].slice(0, 1000);
+        const newPathPoint = { lat: Number(normalizedRecord.lat), lon: Number(normalizedRecord.lon) };
         return {
           agronomicData: updatedData,
           pathHistory: [...state.pathHistory, newPathPoint]
@@ -175,9 +181,9 @@ export const useRobotStore = create((set, get) => ({
    */
   fetchInitialData: async () => {
     try {
-      const statusResponse = await httpClient.get("/robot/estado");
-      const dataResponse = await httpClient.get("/robot/datos");
-      const validData = Array.isArray(dataResponse.data) ? dataResponse.data : [];
+      const statusData = await robotService.getStatus();
+      const agronomicDataList = await robotService.getAgronomicData();
+      const validData = Array.isArray(agronomicDataList) ? agronomicDataList : [];
 
       set((state) => {
         const filteredData = validData.filter(d => {
@@ -187,21 +193,21 @@ export const useRobotStore = create((set, get) => ({
 
         return {
             battery: {
-              percentage: statusResponse.data.battery_percentage,
-              status: statusResponse.data.battery_status,
-              voltage: statusResponse.data.battery_voltage || 12.5,
-              temperature: statusResponse.data.battery_temperature || 30,
-              timeRemaining: statusResponse.data.battery_time_remaining || "Calculando...",
+              percentage: statusData.battery_percentage,
+              status: statusData.battery_status,
+              voltage: statusData.battery_voltage || 12.5,
+              temperature: statusData.battery_temperature || 30,
+              timeRemaining: statusData.battery_time_remaining || "Calculando...",
               solarInput: 0, 
               consumption: 0.5,
               netPower: -0.5 
             },
-            position: { lat: statusResponse.data.current_lat, lon: statusResponse.data.current_lon },
+            position: { lat: statusData.current_lat, lon: statusData.current_lon },
             system: {
                 ...state.system,
-                speed: statusResponse.data.system_speed,
-                heading: statusResponse.data.system_heading,
-                status: statusResponse.data.system_status
+                speed: statusData.system_speed,
+                heading: statusData.system_heading,
+                status: statusData.system_status
             },
             agronomicData: filteredData,
             pathHistory: filteredData.map(d => ({ lat: Number(d.lat), lon: Number(d.lon) })),

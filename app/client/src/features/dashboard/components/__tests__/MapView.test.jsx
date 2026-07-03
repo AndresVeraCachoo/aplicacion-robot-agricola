@@ -3,14 +3,14 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MapView from '../MapView.jsx';
 import { useRobotStore } from '../../../../store/robotStore';
-import { useToast } from '../../../../context/ToastContext';
+import { useToastStore } from '../../../../store/toastStore';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k) => k }),
 }));
 
-vi.mock('../../../../context/ToastContext', () => ({
-  useToast: vi.fn(),
+vi.mock('../../../../store/toastStore', () => ({
+  useToastStore: vi.fn(),
 }));
 
 vi.mock('../../../../store/robotStore', () => ({
@@ -124,7 +124,7 @@ describe('Componente MapView', () => {
       return robotStoreMock;
     });
     
-    useToast.mockReturnValue(toastMock);
+    useToastStore.mockReturnValue(toastMock);
   });
 
   it('renderiza el mapa y controles iniciales correctamente', () => {

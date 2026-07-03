@@ -17,7 +17,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useRobotStore } from "../../store/robotStore";
 import { useMissionStore } from "../../store/missionStore";
-import { useToast } from "../../context/ToastContext";
+import { useToastStore } from "../../store/toastStore";
 import "./ControlMap.css";
 
 import "@geoman-io/leaflet-geoman-free";
@@ -175,7 +175,7 @@ const GeomanControls = ({ ignoreClickRef }) => {
   const { t, i18n } = useTranslation();
   const map = useMap();
   const { setSafeZone, clearSafeZone, safeZone } = useRobotStore();
-  const { addToast } = useToast();
+  const { addToast } = useToastStore();
   const isZoneLoadedRef = useRef(false);
 
   const handleZoneUpdate = useCallback(
@@ -405,7 +405,7 @@ const ControlMap = ({ isPip = false }) => {
   } = useRobotStore();
 
   const { missions, fetchMissions, startMissionRun } = useMissionStore();
-  const { addToast } = useToast();
+  const { addToast } = useToastStore();
   const ignoreClickRef = useRef(false);
 
   const [showMissionsPanel, setShowMissionsPanel] = useState(false);

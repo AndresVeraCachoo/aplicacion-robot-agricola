@@ -22,14 +22,14 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       const url = error.config?.url || "";
       if (url.includes("/auth/verify") || url.includes("/auth/logout")) {
         return Promise.reject(error);
       }
     }
 
-    if (error.response && error.response.data) {
+    if (error.response?.data) {
       const { errorCode, error: message, details } = error.response.data;
       
       if (errorCode === "VALIDATION_ERROR" && details && details.length > 0) {

@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 
 import { useRobotStore } from "../../../store/robotStore.js";
 import Modal from "../../../components/Modal.jsx";
-import { useToast } from "../../../context/ToastContext.jsx";
+import { useToastStore } from "../../../store/toastStore.js";
 import FieldDataOverlay from "./FieldDataOverlay.jsx";
 import "./MapView.css";
 
@@ -128,7 +128,7 @@ function SampleMarker({ sample, isVisible, onClick }) {
     >
       {isVisible && (
         <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-          <span style={{ fontWeight: 600 }}>pH: {sample.ph === null ? 'N/A' : sample.ph}</span>
+          <span className="sample-ph-tooltip">pH: {sample.ph === null ? 'N/A' : sample.ph}</span>
         </Tooltip>
       )}
     </CircleMarker>
@@ -301,7 +301,7 @@ function MapControlsOverlay({
             onClick={handleClearZone}
             title={t("mapAdv.clearLimit")}
           >
-            <span style={{ fontSize: "1.2em" }}>🗑️</span>
+            <span className="icon-trash">🗑️</span>
           </button>
         </div>
       ) : (
@@ -481,7 +481,7 @@ function MapView() {
   });
 
   const safeZone = useRobotStore((state) => state.safeZone);
-  const { addToast } = useToast();
+  const { addToast } = useToastStore();
 
   const [dashboardZone, setDashboardZone] = useState(null);
   const [isDrawingZone, setIsDrawingZone] = useState(false);
@@ -654,7 +654,7 @@ function MapView() {
 
         {lastClickedCoords && !isDrawingZone && (
           <div className="clicked-coords-display">
-            <span style={{ color: "#ef4444", fontSize: "1.2em" }}>📍</span>
+            <span className="icon-pin">📍</span>
             Lat: {lastClickedCoords.lat.toFixed(5)} | Lon:{" "}
             {lastClickedCoords.lng.toFixed(5)}
           </div>

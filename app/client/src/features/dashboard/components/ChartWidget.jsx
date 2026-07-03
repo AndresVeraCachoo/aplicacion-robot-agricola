@@ -182,7 +182,7 @@ function ChartWidget({
 
     if (chartData.length === 0 || (!hasData1 && !isComparing) || (isComparing && !hasData1 && !hasData2)) {
        return (
-         <div className="no-data-chart" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9ca3af", fontStyle: "italic", fontSize: "1.1rem" }}>
+         <div className="no-data-chart">
            {t("data.notCollected", "No recogido")}
          </div>
        );
@@ -331,19 +331,12 @@ function ChartWidget({
   return (
     <div className="chart-widget-container">
       <div className="chart-header">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "15px",
-          }}
-        >
-          <h3 className="chart-title" style={{ margin: 0 }}>
+        <div className="chart-header-top">
+          <h3 className="chart-title">
             {title}
           </h3>
           {!forcedCompare && (
-            <div className="btn-group" style={{ display: "flex", gap: "5px" }}>
+            <div className="btn-group">
               <button
                 type="button"
                 className={chartType === "area" ? "active" : ""}

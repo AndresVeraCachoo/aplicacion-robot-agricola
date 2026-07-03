@@ -97,8 +97,8 @@ describe('Store Global de Robot', () => {
       const state = getStore();
       expect(state.battery.percentage).toBe(80);
       expect(state.position.lat).toBe(40.5);
-      expect(state.agronomicData.length).toBe(1);
-      expect(state.pathHistory.length).toBe(1);
+      expect(state.agronomicData).toHaveLength(1);
+      expect(state.pathHistory).toHaveLength(1);
     });
 
     it('debería aplicar valores de respaldo cuando faltan propiedades', async () => {
@@ -180,10 +180,10 @@ describe('Store Global de Robot', () => {
       getStore().connectSocket();
 
       socketCallbacks['robot:new_data']({ ejecucion_id: 99, lat: 1, lon: 1 });
-      expect(getStore().agronomicData.length).toBe(0);
+      expect(getStore().agronomicData).toHaveLength(0);
 
       socketCallbacks['robot:new_data']({ ejecucion_id: 100, lat: 2, lon: 2 });
-      expect(getStore().agronomicData.length).toBe(1);
+      expect(getStore().agronomicData).toHaveLength(1);
     });
   });
 

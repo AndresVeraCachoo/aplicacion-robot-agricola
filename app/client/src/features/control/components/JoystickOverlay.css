@@ -1,0 +1,86 @@
+/* src/features/control/components/JoystickOverlay.css */
+
+/* =====================================================================
+   OVERLAYS DE LA CÁMARA (JOYSTICK)
+   ===================================================================== */
+.joystick-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+}
+.joy-row {
+  display: flex;
+  gap: 8px;
+}
+.joy-btn {
+  width: 55px;
+  height: 55px;
+  background: rgba(15, 23, 42, 0.7);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  transition: all 0.1s;
+}
+.joy-btn:active:not(:disabled) {
+  background: rgba(16, 185, 129, 0.9);
+  border-color: #10b981;
+  transform: scale(0.92);
+}
+.joy-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Joystick en móvil vertical */
+@media (max-width: 768px) {
+  .joystick-overlay {
+    bottom: 30px;
+  }
+  .joy-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+}
+
+/* Joystick en móvil horizontal (Transparente y Centrado) */
+@media (max-height: 600px) and (orientation: landscape) {
+  .joystick-overlay {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 5px;
+  }
+  .joy-row {
+    gap: 5px;
+  }
+
+  .joy-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(3px);
+  }
+
+  .joy-btn:active:not(:disabled) {
+    background: rgba(5, 131, 89, 0.774);
+    border-color: rgba(16, 185, 129, 0.8);
+    color: white;
+  }
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Dashboard from '../Dashboard.jsx';
+import Dashboard from '../../../pages/Dashboard/DashboardPage.jsx';
 
 // Mock del componente hijo (MapView) para aislar la prueba unitaria del Dashboard
 // Esto evita cargar Leaflet o lógicas complejas no pertinentes a esta capa

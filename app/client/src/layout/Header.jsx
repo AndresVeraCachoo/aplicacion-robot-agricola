@@ -4,11 +4,11 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import "./Header.css";
 import { useRobotStore } from "../store/robotStore.js";
-import { useTheme } from "../context/ThemeContext.jsx";
+import { useToastStore } from "../store/toastStore.js";
+import { useThemeStore } from "../store/themeStore.js";
 import Modal from "../components/Modal.jsx";
 import BatteryModal from "../features/dashboard/components/BatteryModal.jsx";
-import { useToast } from "../context/ToastContext.jsx";
-import SupportModal from "../components/SupportModal.jsx";
+import SupportModal from "../features/support/components/SupportModal";
 
 const LANGUAGES = [
   { code: "es", label: "ES" },
@@ -27,10 +27,10 @@ function Header({ onMenuClick }) {
   const { t, i18n } = useTranslation();
   const battery = useRobotStore((state) => state.battery);
   const isConnected = useRobotStore((state) => state.isConnected);
-  const { addToast } = useToast();
+  const { addToast } = useToastStore();
 
   const { percentage, status, netPower = 0 } = battery;
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useThemeStore();
   
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);

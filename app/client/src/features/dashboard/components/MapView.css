@@ -507,3 +507,16 @@ body.dark-mode .popup-nutrients {
     padding: 10px;
   }
 }
+
+.sample-ph-tooltip {
+  font-weight: 600;
+}
+
+.icon-trash {
+  font-size: 1.2em;
+}
+
+.icon-pin {
+  color: #ef4444;
+  font-size: 1.2em;
+}

@@ -34,11 +34,17 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 4000000 
       },
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: 'module'
       }
     })
   ],
+  optimizeDeps: {
+    include: [
+      'react', 'react-dom', 'react-router-dom', 'zustand', 'axios', 
+      'sonner', 'react-leaflet', 'leaflet', 'i18next', 'react-i18next'
+    ]
+  },
   server: {
     host: true, 
     port: 5173

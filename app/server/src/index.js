@@ -16,7 +16,7 @@ import supportRoutes from "./routes/supportRoutes.js";
 import { runSeed } from "./scripts/seed.js";
 import { AppError, errorHandler } from "./middlewares/errorHandler.js";
 import { setupSockets } from "./websockets/socketHandler.js";
-import { startRobotSimulation } from "./simulator.js";
+import { startRobotSimulation } from "./simulator/index.js";
 import { swaggerSpec } from "./config/swagger.js";
 
 // Inicialización de trabajadores en segundo plano

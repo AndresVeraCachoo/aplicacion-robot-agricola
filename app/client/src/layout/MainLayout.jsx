@@ -4,9 +4,9 @@ import { Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "./Header.jsx";
 import Sidebar from "./Sidebar.jsx";
-import "../features/dashboard/Dashboard.css";
+import "../pages/Dashboard/DashboardPage.css";
 import { useRobotStore } from "../store/robotStore.js";
-import { useToast } from "../context/ToastContext.jsx";
+import { useToastStore } from "../store/toastStore";
 
 /**
  * Componente principal de la estructura de la aplicación.
@@ -28,7 +28,7 @@ function MainLayout() {
     system,
   } = useRobotStore();
 
-  const { addToast } = useToast();
+  const { addToast } = useToastStore();
 
   const lastEmergencyState = useRef(system.emergencyStop);
   const rtlAlertFired = useRef(false);

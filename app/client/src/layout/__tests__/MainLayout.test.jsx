@@ -9,9 +9,8 @@ vi.mock('react-i18next', () => ({
 }));
 
 const mockAddToast = vi.fn();
-vi.mock('../../context/ToastContext', () => ({
-  // No necesitamos importar useToast en este archivo, el mock actúa en la sombra
-  useToast: vi.fn(() => ({ addToast: mockAddToast })),
+vi.mock('../../store/toastStore', () => ({
+  useToastStore: vi.fn(() => ({ addToast: mockAddToast })),
 }));
 
 vi.mock('react-router-dom', () => ({

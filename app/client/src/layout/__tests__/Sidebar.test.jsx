@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import Sidebar from '../Sidebar.jsx';
-import { useAuth } from '../../hooks/useAuth.jsx';
+import { useAuthStore } from '../../store/authStore';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -15,7 +15,7 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-vi.mock('../../hooks/useAuth', () => ({ useAuth: vi.fn() }));
+vi.mock('../../store/authStore', () => ({ useAuthStore: vi.fn() }));
 
 const renderWithRouter = (ui) => render(<BrowserRouter>{ui}</BrowserRouter>);
 
@@ -34,7 +34,7 @@ describe('Componente Sidebar', () => {
 
   describe('Estado Abierto y estilos condicionales', () => {
     it('renderiza y aplica atributos correctos cuando isOpen es VERDADERO', () => {
-      useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
+      useAuthStore.mockReturnValue({ userRole: 'basico', logout: mockLogout });
       renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
       const overlay = document.querySelector('.sidebar-overlay-bg');
@@ -49,7 +49,7 @@ describe('Componente Sidebar', () => {
     });
 
     it('renderiza y aplica atributos correctos cuando isOpen es FALSO', () => {
-      useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
+      useAuthStore.mockReturnValue({ userRole: 'basico', logout: mockLogout });
       renderWithRouter(<Sidebar isOpen={false} onClose={mockOnClose} />);
 
       const overlay = document.querySelector('.sidebar-overlay-bg');
@@ -63,7 +63,7 @@ describe('Componente Sidebar', () => {
   });
 
   it('renderiza enlaces básicos e invoca onClose al hacer clic', () => {
-    useAuth.mockReturnValue({ userRole: 'basico', logout: mockLogout });
+    useAuthStore.mockReturnValue({ userRole: 'basico', logout: mockLogout });
     // Add isOpen={true} in other tests for PropTypes best practices
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
@@ -79,25 +79,25 @@ describe('Componente Sidebar', () => {
   });
 
   it('muestra enlace de Cámara a usuario y operador pero no userManagement', () => {
-    useAuth.mockReturnValue({ userRole: 'operador', logout: mockLogout });
+    useAuthStore.mockReturnValue({ userRole: 'operador', logout: mockLogout });
     const { rerender } = renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
     expect(screen.queryByText('sidebar.userManagement')).not.toBeInTheDocument();
 
-    useAuth.mockReturnValue({ userRole: 'usuario', logout: mockLogout });
+    useAuthStore.mockReturnValue({ userRole: 'usuario', logout: mockLogout });
     rerender(<BrowserRouter><Sidebar isOpen={true} onClose={mockOnClose} /></BrowserRouter>);
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
     expect(screen.queryByText('sidebar.userManagement')).not.toBeInTheDocument();
   });
   it('muestra enlace de Gestión de Usuarios solo a administradores', () => {
-    useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
+    useAuthStore.mockReturnValue({ userRole: 'admin', logout: mockLogout });
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('sidebar.userManagement')).toBeInTheDocument();
     expect(screen.getByText('sidebar.camera')).toBeInTheDocument();
   });
 
   it('ejecuta cierre de sesión y cierra sidebar al hacer clic en Salir', () => {
-    useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
+    useAuthStore.mockReturnValue({ userRole: 'admin', logout: mockLogout });
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
     const logoutBtn = screen.getByText('sidebar.logout');
@@ -109,7 +109,7 @@ describe('Componente Sidebar', () => {
 
   describe('Gestión de Avatar y Eventos Globales', () => {
     it('carga el avatar por defecto si no hay nada en localStorage', () => {
-      useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
+      useAuthStore.mockReturnValue({ userRole: 'admin', logout: mockLogout });
       renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
       
       const avatarImg = document.querySelector('.sidebar-avatar');
@@ -117,7 +117,7 @@ describe('Componente Sidebar', () => {
     });
 
     it('escucha el evento avatarUpdated y actualiza la imagen dinámicamente', () => {
-      useAuth.mockReturnValue({ userRole: 'admin', logout: mockLogout });
+      useAuthStore.mockReturnValue({ userRole: 'admin', logout: mockLogout });
       globalThis.localStorage.setItem('userAvatar', 'old-avatar.png');
       
       const { unmount } = renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);

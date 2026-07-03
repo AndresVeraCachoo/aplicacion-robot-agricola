@@ -47,7 +47,7 @@ describe('Store Global de Misiones', () => {
       const result = await getStore().createMission({ nombre: 'Nueva' });
 
       expect(result).toBe(true);
-      expect(getStore().missions.length).toBe(2);
+      expect(getStore().missions).toHaveLength(2);
       expect(getStore().missions[0].id).toBe(1);
     });
 
@@ -86,7 +86,7 @@ describe('Store Global de Misiones', () => {
 
       await getStore().deleteMission(1);
 
-      expect(getStore().missions.length).toBe(1);
+      expect(getStore().missions).toHaveLength(1);
       expect(getStore().missions[0].id).toBe(2);
     });
 
@@ -95,7 +95,7 @@ describe('Store Global de Misiones', () => {
       axios.delete.mockRejectedValueOnce(new Error("Integrity Error"));
 
       await getStore().deleteMission(1);
-      expect(getStore().missions.length).toBe(1); 
+      expect(getStore().missions).toHaveLength(1); 
     });
   });
 

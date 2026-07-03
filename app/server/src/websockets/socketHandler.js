@@ -9,7 +9,7 @@ import {
   pauseSimulation,
   resumeSimulation,
   cancelSimulation
-} from "../simulator.js";
+} from "../simulator/index.js";
 
 /**
  * Inicializa y configura el servidor WebSocket.

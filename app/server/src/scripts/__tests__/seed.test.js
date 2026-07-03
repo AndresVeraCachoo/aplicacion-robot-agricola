@@ -29,9 +29,12 @@ describe('Script de Población (Seed)', () => {
     }));
 
     // Simula las físicas del simulador para aislar las pruebas a la lógica del script SQL
-    jest.unstable_mockModule('../../simulator.js', () => ({
+    jest.unstable_mockModule('../../simulator/utils.js', () => ({
       generateCoveragePath: jest.fn().mockReturnValue([{ lat: 42, lon: -3 }]),
-      calculateSolarRadiation: jest.fn().mockReturnValue(800),
+    }));
+
+    jest.unstable_mockModule('../../simulator/systems/energy.js', () => ({
+      calculateSolarRadiation: jest.fn(() => 500),
     }));
   });
 

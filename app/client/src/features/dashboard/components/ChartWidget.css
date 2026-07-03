@@ -197,3 +197,10 @@ body.dark-mode .btn-group button.active {
   background-color: #334155;
   color: var(--primary-dark);
 }
+
+.chart-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}

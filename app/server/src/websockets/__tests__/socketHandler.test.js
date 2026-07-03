@@ -14,7 +14,7 @@ describe("Capa de Transporte WebSocket", () => {
       resumeSimulation: jest.fn(), cancelSimulation: jest.fn(),
     };
 
-    jest.unstable_mockModule('../../simulator.js', () => mockSimulator);
+    jest.unstable_mockModule('../../simulator/index.js', () => mockSimulator);
     const module = await import('../socketHandler.js');
     setupSockets = module.setupSockets;
   });

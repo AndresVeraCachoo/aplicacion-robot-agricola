@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./Sidebar.css";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthStore } from "../store/authStore";
 
 
 const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
@@ -19,7 +19,7 @@ const DEFAULT_AVATAR = "/avatars/robot-fondo-verde.png";
  */
 function Sidebar({ isOpen, onClose }) {
   const { t } = useTranslation();
-  const { userRole, logout } = useAuth();
+  const { userRole, logout } = useAuthStore();
   const [avatar, setAvatar] = useState(
     localStorage.getItem("userAvatar") || DEFAULT_AVATAR,
   );

@@ -2,19 +2,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
+import { useAuthStore } from "./store/authStore";
 
-const LoginPage = React.lazy(() => import("./features/authentication/LoginPage"));
-const Dashboard = React.lazy(() => import("./features/dashboard/Dashboard"));
+const LoginPage = React.lazy(() => import("./pages/Login/LoginPage"));
+const DashboardPage = React.lazy(() => import("./pages/Dashboard/DashboardPage"));
 const MainLayout = React.lazy(() => import("./layout/MainLayout"));
-const CameraPage = React.lazy(() => import("./pages/CameraPage"));
-const DataPage = React.lazy(() => import("./pages/DataPage"));
-const MissionsPage = React.lazy(() => import("./pages/MissionsPage"));
-const UserManagementPage = React.lazy(() => import("./pages/UserManagementPage"));
-const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
-const EnergyPage = React.lazy(() => import("./pages/EnergyPage"));
-const ControlPage = React.lazy(() => import("./pages/ControlPage"));
-import "./App.css";
+const CameraPage = React.lazy(() => import("./pages/Camera/CameraPage"));
+const DataPage = React.lazy(() => import("./pages/Data/DataPage"));
+const MissionsPage = React.lazy(() => import("./pages/Missions/MissionsPage"));
+const UserManagementPage = React.lazy(() => import("./pages/UserManagement/UserManagementPage"));
+const ProfilePage = React.lazy(() => import("./pages/Profile/ProfilePage"));
+const EnergyPage = React.lazy(() => import("./pages/Energy/EnergyPage"));
+const ControlPage = React.lazy(() => import("./pages/Control/ControlPage"));
 
 /**
  * Componente para proteger rutas privadas.
@@ -24,7 +23,7 @@ import "./App.css";
  * @returns {JSX.Element}
  */
 function ProtectedRoute({ children }) {
-  const { isLoggedIn, isLoading } = useAuth();
+  const { isLoggedIn, isLoading } = useAuthStore();
 
   // Prevenir inicio de sesión fantasma esperando a leer el localStorage
   if (isLoading) {
@@ -62,7 +61,7 @@ ProtectedRoute.propTypes = {
  * @returns {JSX.Element}
  */
 function RoleRoute({ allowedRoles, children }) {
-  const { userRole } = useAuth();
+  const { userRole } = useAuthStore();
   
   if (!userRole) {
     return <Navigate to="/login" replace />;
@@ -87,6 +86,15 @@ RoleRoute.propTypes = {
  * @returns {JSX.Element}
  */
 function App() {
+  const { initAuth } = useAuthStore();
+
+  React.useEffect(() => {
+    const cleanup = initAuth();
+    return () => {
+      cleanup.then(fn => fn && fn());
+    };
+  }, [initAuth]);
+
   return (
     <React.Suspense fallback={
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "var(--text-main)" }}>
@@ -106,7 +114,7 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           
           {/* Rutas accesibles por todos (admin, operador, usuario) */}
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="camera" element={<CameraPage />} />
           <Route path="data" element={<DataPage />} />
           <Route path="profile" element={<ProfilePage />} />
