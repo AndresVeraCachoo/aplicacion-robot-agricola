@@ -1,4 +1,3 @@
-/* src/features/control/ControlMap.css */
 .control-map-wrapper {
   display: flex;
   flex-direction: row;
@@ -34,7 +33,6 @@
   border: none;
 }
 
-/* Tooltip de Geoman Área */
 .area-tooltip {
   background: rgba(0, 0, 0, 0.7);
   color: white;
@@ -53,7 +51,6 @@
   border-right-color: rgba(0, 0, 0, 0.7);
 }
 
-/* --- BOTÓN DE CENTRADO --- */
 .center-map-button {
   position: absolute !important;
   bottom: 25px !important;
@@ -79,7 +76,6 @@
   transform: scale(1.05);
 }
 
-/* --- BOTÓN LATERAL DE MISIONES --- */
 .toggle-missions-btn {
   position: absolute;
   top: 20px;
@@ -98,7 +94,7 @@
     background-color 0.3s,
     color 0.3s,
     border-color 0.3s,
-    opacity 0.5s ease-in-out 0.2s; /* Lento y con delay al reaparecer */
+    opacity 0.5s ease-in-out 0.2s;
   opacity: 1;
   pointer-events: auto;
 }
@@ -111,7 +107,7 @@
 .toggle-missions-btn.hidden {
   opacity: 0;
   pointer-events: none;
-  /* Rápido y sin delay al desaparecer */
+
   transition:
     transform 0.2s,
     background-color 0.3s,
@@ -120,7 +116,6 @@
     opacity 0.2s ease-in-out 0s;
 }
 
-/* 🌙 MODO OSCURO: Botón de Misiones */
 body.dark-mode .toggle-missions-btn {
   background-color: rgba(30, 41, 59, 0.95);
   color: #ffffff;
@@ -131,7 +126,6 @@ body.dark-mode .toggle-missions-btn:hover {
   background-color: #1e293b;
 }
 
-/* --- CONTENEDOR FLEX DEL PANEL --- */
 .missions-sidebar-container {
   width: 0;
   height: 100%;
@@ -267,7 +261,6 @@ body.dark-mode .toggle-missions-btn:hover {
   }
 }
 
-/* --- WIDGET BARRA DE PROGRESO --- */
 .mission-progress-widget {
   position: absolute;
   top: 20px;
@@ -293,7 +286,6 @@ body.dark-mode .toggle-missions-btn:hover {
     border-color 0.3s;
 }
 
-/* 🌙 MODO OSCURO: Widget de Progreso */
 body.dark-mode .mission-progress-widget {
   background-color: rgba(30, 41, 59, 0.95);
   color: #ffffff;
@@ -316,7 +308,6 @@ body.dark-mode .mission-progress-widget {
   transition: color 0.3s;
 }
 
-/* 🌙 MODO OSCURO: Texto de los puntos */
 body.dark-mode .progress-points {
   color: #94a3b8;
 }
@@ -330,7 +321,6 @@ body.dark-mode .progress-points {
   transition: background-color 0.3s;
 }
 
-/* 🌙 MODO OSCURO: Fondo de la pista de progreso */
 body.dark-mode .progress-bar-container {
   background-color: #334155;
 }

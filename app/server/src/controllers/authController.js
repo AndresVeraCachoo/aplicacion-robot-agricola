@@ -12,6 +12,25 @@ export class AuthController {
   }
 
   /**
+   * Helper privado para establecer las cookies de autenticación
+   */
+  _setAuthCookies(res, accessToken, refreshToken) {
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  /**
    * Autentica a un usuario en el sistema y devuelve sus datos junto con un token JWT firmado.
    * 
    * @param {Object} req - Petición Express.
@@ -24,23 +43,23 @@ export class AuthController {
     const { name, password } = req.body; 
     const authData = await this.authService.loginUser(name, password);
     
-    const { token, user } = authData;
+    const { accessToken, refreshToken, user } = authData;
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-    });
+    this._setAuthCookies(res, accessToken, refreshToken);
 
-    res.json({ user, token }); // Devuelve el token para compatibilidad hacia atrás en la respuesta API
+    res.json({ user, accessToken }); // Devolver temporalmente para compatibilidad hacia atrás
   });
 
   /**
    * Cierra la sesión del usuario limpiando la cookie de autenticación.
    */
   logout = (req, res) => {
-    res.clearCookie("token", {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+    res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -59,4 +78,26 @@ export class AuthController {
     // Si la petición llega aquí, el middleware authenticateToken ya ha validado la firma del JWT con éxito
     res.json({ valid: true, user: req.user });
   };
+
+  /**
+   * Refresca el token de acceso usando el token de refresco.
+   * 
+   * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @param {Function} next - Middleware para el manejo global de errores.
+   * @returns {Promise<void>}
+   */
+  refresh = catchAsync(async (req, res, next) => {
+    const { refreshToken: currentRefreshToken } = req.cookies;
+
+    if (!currentRefreshToken) {
+      return res.status(401).json({ message: "No refresh token provided" });
+    }
+
+    const { accessToken, refreshToken, user } = await this.authService.refreshUserToken(currentRefreshToken);
+
+    this._setAuthCookies(res, accessToken, refreshToken);
+
+    res.json({ user, accessToken });
+  });
 }

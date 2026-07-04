@@ -1,6 +1,6 @@
 export default {
   testEnvironment: 'node',
-  testMatch: ['**/tests/*.e2e.test.js'],
+  testMatch: ['**/tests/e2e/*.e2e.test.js'],
   
   globalSetup: './tests/config/globalSetup.js',
   setupFilesAfterEnv: ['./tests/config/setup.js'],

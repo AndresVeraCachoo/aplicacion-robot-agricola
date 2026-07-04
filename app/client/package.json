@@ -10,10 +10,13 @@
     "lint:report": "eslint . -f json -o eslint-report.json",
     "sonar": "npm run lint:report && node sonar-scanner.js",
     "test": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:unit": "vitest run",
+    "test:unit:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.19.2",
+    "@tanstack/react-query": "^5.101.2",
     "@turf/turf": "^7.3.4",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",

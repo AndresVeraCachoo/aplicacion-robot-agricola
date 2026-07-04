@@ -1,6 +1,6 @@
 // src/pages/UserManagement/UserManagementPage.jsx
-import React, { useState, useEffect, useCallback } from "react";
-import { userService } from "../../services/userService";
+import React, { useState } from "react";
+import { useUsers } from "../../features/userManagement/hooks/useUsers";
 import { useTranslation } from "react-i18next";
 import { useToastStore } from "../../store/toastStore";
 import UserList from "../../features/userManagement/components/UserList";
@@ -16,11 +16,10 @@ import "./UserManagementPage.css";
  */
 function UserManagementPage() {
   const { t } = useTranslation();
-  const [users, setUsers] = useState([]);
+  const { users, error, createUser, updateUser, deleteUser } = useUsers();
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const { addToast } = useToastStore();
-
   const [currentUser, setCurrentUser] = useState({
     id: null,
     name: "",
@@ -28,21 +27,12 @@ function UserManagementPage() {
     password: "",
     role: "usuario",
   });
-
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const responseData = await userService.getAll();
-      setUsers(responseData);
-    } catch {
-      addToast(t("users.errorLoad"), "error");
-    }
-  }, [addToast, t]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  if (error) {
+    // Podríamos disparar un toast aquí si fuera necesario
+    console.error(error);
+  }
 
   const openCreateModal = () => {
     setCurrentUser({ id: null, name: "", email: "", password: "", role: "usuario" });
@@ -70,7 +60,7 @@ function UserManagementPage() {
 
     try {
       if (currentUser.id) {
-        await userService.update(currentUser.id, userData);
+        await updateUser(currentUser.id, userData);
         addToast(
           `${t("users.updated", "Usuario actualizado:")} "${userData.name}"`,
           "success",
@@ -80,11 +70,10 @@ function UserManagementPage() {
           addToast(t("users.pwdOrEmailRequired", "Debe proporcionar una contraseña o un email válido"), "warning");
           return;
         }
-        await userService.create(userData);
+        await createUser(userData);
         addToast(`${t("users.created")} "${userData.name}"`, "success");
       }
       closeModal();
-      fetchUsers();
     } catch (err) {
       const serverError = err.response?.data?.error || t("users.errorSave");
       addToast(serverError, "error");
@@ -94,12 +83,11 @@ function UserManagementPage() {
   const executeDeleteUser = async () => {
     if (!userToDelete) return;
     try {
-      await userService.delete(userToDelete);
+      await deleteUser(userToDelete);
       addToast(
         t("users.deleted", "Usuario eliminado correctamente"),
         "success",
       );
-      fetchUsers();
       setUserToDelete(null);
     } catch (err) {
       // Capturamos el 409 o 403 y mostramos un mensaje amigable en vez de fallar

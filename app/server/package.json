@@ -7,10 +7,15 @@
   "scripts": {
     "start": "node --env-file=../../.env src/index.js",
     "dev": "node --watch --env-file=../../.env src/index.js",
-    "test:unit": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:unit:cov": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage --coverageDirectory='coverage/unit'",
+    "test:unit": "cross-env NODE_ENV=test IS_UNIT_TEST=true NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit:cov": "cross-env NODE_ENV=test IS_UNIT_TEST=true NODE_OPTIONS=--experimental-vm-modules jest --coverage --coverageDirectory='coverage/unit'",
     "test:e2e": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.js --runInBand",
-    "test:e2e:cov": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.js --runInBand --coverage --coverageDirectory='coverage/e2e'"
+    "test:e2e:cov": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.js --runInBand --coverage --coverageDirectory='coverage/e2e'",
+    "test:cov": "npm run test:unit:cov && npm run test:e2e:cov",
+    "test:k6:load": "node tests/load/run-k6.js load_test.js",
+    "test:k6:stress": "node tests/load/run-k6.js stress_test.js",
+    "test:k6:spike": "node tests/load/run-k6.js spike_test.js",
+    "test:k6:soak": "node tests/load/run-k6.js soak_test.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -36,6 +41,7 @@
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.15.0",
     "@testcontainers/postgresql": "^11.14.0",
+    "@testcontainers/redis": "^12.0.4",
     "cross-env": "^10.1.0",
     "jest": "^30.4.2",
     "prisma": "^7.8.0",

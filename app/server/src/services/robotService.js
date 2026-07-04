@@ -12,6 +12,17 @@ export class RobotService {
   }
 
   /**
+   * Helper privado para construir el filtro base de fechas
+   */
+  _buildBaseDateFilter(start, end) {
+    const where = {};
+    if (start && end) {
+      where.timestamp = { gte: new Date(start), lte: new Date(end) };
+    }
+    return where;
+  }
+
+  /**
    * Recupera el estado actual en tiempo real del robot leyendo la tabla maestra.
    * 
    * @returns {Promise<Object>} El estado actual del robot (ID=1).
@@ -40,11 +51,7 @@ export class RobotService {
    * @returns {Promise<Array<Object>>} Lista de lecturas agronómicas, formateadas y aplanadas para el frontend (limitado a 2000).
    */
   async getAgronomicData({ start, end, misionId }) {
-    const where = {};
-    
-    if (start && end) {
-      where.timestamp = { gte: new Date(start), lte: new Date(end) };
-    }
+    const where = this._buildBaseDateFilter(start, end);
 
     if (misionId && misionId !== 'null' && misionId !== '') {
       where.execution = {
@@ -94,11 +101,7 @@ export class RobotService {
    * @returns {Promise<Array<Object>>} Lista con los registros históricos de batería y radiación solar (limitado a 2000).
    */
   async getEnergyHistory({ start, end, misionId }) {
-    const where = {};
-
-    if (start && end) {
-      where.timestamp = { gte: new Date(start), lte: new Date(end) };
-    }
+    const where = this._buildBaseDateFilter(start, end);
 
     if (misionId && misionId !== 'null' && misionId !== '') {
       const lastExecution = await this.prisma.missionExecution.findFirst({

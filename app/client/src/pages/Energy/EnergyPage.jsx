@@ -1,10 +1,10 @@
 // src/pages/Energy/EnergyPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { es, enUS } from "date-fns/locale";
 import { useRobotStore } from "../../store/robotStore";
-import { useMissionStore } from "../../store/missionStore";
+import { useMissions } from "../../hooks/useMissions";
 import { DateRangePicker } from "../../components/DateRangePicker";
 import EnergyKPIs from "../../features/energy/components/EnergyKPIs";
 import EnergyChart from "../../features/energy/components/EnergyChart";
@@ -27,7 +27,7 @@ function EnergyPage() {
   const isCharging = battery?.status === "CHARGING";
 
   // Obtenemos las misiones para rellenar el desplegable
-  const { missions, fetchMissions } = useMissionStore();
+  const { missions } = useMissions();
 
   const [dateFilter, setDateFilter] = useState({
     start: null,
@@ -37,9 +37,6 @@ function EnergyPage() {
 
   const { chartData, currentSolarInput, isFiltering } = useEnergyData(dateFilter);
 
-  useEffect(() => {
-    fetchMissions();
-  }, [fetchMissions]);
 
   const handleFilter = (start, end, misionId) => {
     setDateFilter({ start, end, misionId });

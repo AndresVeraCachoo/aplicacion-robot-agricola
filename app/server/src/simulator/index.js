@@ -12,7 +12,6 @@ const MAX_HISTORY_RECORDS = 1000;
 
 export const setSpeedLimit = (limit) => { state.speedLimitPercent = limit; };
 export const queueNavPoint = (point) => { state.navQueue.push(point); };
-export const clearNavQueue = () => { state.navQueue = []; };
 export const setSimulationZone = (zone) => { state.safeZonePolygon = zone; state.autoPath = generateCoveragePath(zone); state.currentPathIndex = 0; };
 export const clearSimulationZone = () => { state.safeZonePolygon = null; state.autoPath = []; state.currentPathIndex = 0; };
 

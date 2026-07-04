@@ -1,5 +1,3 @@
-/* src/components/Modal.css */
-
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -33,7 +31,7 @@
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  max-width: 500px; /* 🛡️ Reducido para que no sea un bloque inmenso */
+  max-width: 500px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -98,7 +96,6 @@
   overflow-y: visible;
 }
 
-/* --- MODO OSCURO --- */
 body.dark-mode .modal-content {
   background-color: var(--card-bg, #1e293b);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
@@ -115,16 +112,12 @@ body.dark-mode .modal-title {
   color: #f1f5f9;
 }
 
-/* =========================================
-   📱 RESPONSIVE: MÓVILES EN HORIZONTAL
-   ========================================= */
 @media (max-height: 500px) and (orientation: landscape) {
   .modal-overlay {
-    padding: 15px; /* 🛡️ FIX: Mantiene un margen exterior visible */
+    padding: 15px;
   }
 
   .modal-content {
-    /* 🛡️ FIX: No llega al 100% de la pantalla, deja respirar al modal */
     max-height: 85vh;
     padding: 20px;
     border-radius: 12px;

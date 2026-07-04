@@ -91,7 +91,7 @@ function App() {
   React.useEffect(() => {
     const cleanup = initAuth();
     return () => {
-      cleanup.then(fn => fn && fn());
+      cleanup.then(fn => fn?.());
     };
   }, [initAuth]);
 

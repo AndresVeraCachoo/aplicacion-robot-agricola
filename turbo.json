@@ -1,0 +1,37 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "build": {
+      "outputs": ["dist/**", "build/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "outputs": ["coverage/**"]
+    },
+    "test:unit": {
+      "outputs": ["coverage/unit/**"]
+    },
+    "test:e2e": {
+      "outputs": ["coverage/e2e/**"]
+    },
+    "test:cov": {
+      "outputs": ["coverage/**"],
+      "dependsOn": ["^build"]
+    },
+    "test:unit:cov": {
+      "outputs": ["coverage/unit/**"]
+    },
+    "test:e2e:cov": {
+      "outputs": ["coverage/e2e/**"]
+    },
+    "sonar": {
+      "outputs": []
+    }
+  }
+}

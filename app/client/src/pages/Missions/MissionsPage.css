@@ -1,5 +1,3 @@
-/* src/pages/MissionsPage.css */
-
 .missions-page {
   padding: 30px;
   display: flex;
@@ -38,7 +36,6 @@
   overflow-y: auto;
 }
 
-/* Scrollbar predeterminada para móviles/tablets */
 .mission-form-panel::-webkit-scrollbar {
   width: 6px;
 }
@@ -99,7 +96,6 @@
   outline: none;
 }
 
-/* --- ESTILOS DE LA CUADRÍCULA DE SENSORES (Formato 2, 2, 1) --- */
 .sensors-checkbox-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -128,7 +124,6 @@
   grid-column: 1 / -1;
 }
 
-/* --- CHECKBOXES PERSONALIZADOS --- */
 .sensors-checkbox-group input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
@@ -216,7 +211,6 @@
   box-shadow: 0 6px 10px rgba(239, 68, 68, 0.3);
 }
 
-/* --- MAPA --- */
 .mission-map-panel {
   flex: 1;
   border-radius: 12px;
@@ -227,7 +221,6 @@
   box-sizing: border-box;
 }
 
-/* --- LISTA DE MISIONES GUARDADAS --- */
 .mission-list-section {
   background-color: var(--background-widget, #ffffff);
   padding: 25px;
@@ -307,7 +300,6 @@
   color: white;
 }
 
-/* --- CONTROLES FLOTANTES DEL MAPA --- */
 .center-map-button {
   position: absolute;
   bottom: 25px;
@@ -352,29 +344,21 @@
   pointer-events: none;
 }
 
-/* ========================================================= */
-/* 🖥️ RESPONSIVE DESKTOP: PANTALLA COMPLETA PC                 */
-/* ========================================================= */
 @media (min-width: 1024px) {
   .missions-layout {
-    /* 🛡️ FIX DEFINITIVO SCROLL: La altura se ajusta automáticamente al contenido */
     height: auto;
     min-height: 600px;
     max-height: none;
-    align-items: stretch; /* Obliga al mapa a crecer al mismo tamaño exacto que el formulario */
+    align-items: stretch;
   }
 
   .mission-form-panel {
-    /* 🛡️ ELIMINACIÓN DEL SCROLL INTERNO */
     height: auto;
     overflow: visible !important;
     padding-bottom: 25px;
   }
 }
 
-/* ========================================================= */
-/* 📱 RESPONSIVE MOBILE: ESTRICTAMENTE VERTICAL (Portrait)   */
-/* ========================================================= */
 @media (max-width: 768px) and (orientation: portrait) {
   .missions-page {
     padding: 15px;
@@ -423,9 +407,6 @@
   }
 }
 
-/* ========================================================= */
-/* 📱 RESPONSIVE MOBILE: HORIZONTAL (Landscape)              */
-/* ========================================================= */
 @media (max-height: 600px) and (orientation: landscape) {
   .missions-page {
     padding: 10px 15px;
@@ -456,9 +437,6 @@
   }
 }
 
-/* ========================================================= */
-/* 🌙 MODO OSCURO GLOBAL (OVERRIDES)                         */
-/* ========================================================= */
 body.dark-mode .missions-page {
   color: #f8fafc;
 }
@@ -505,12 +483,9 @@ body.dark-mode .mission-map-panel {
   border-color: var(--border-light, transparent);
 }
 
-/* ========================================================= */
-/* 🔔 NOTIFICACIONES FLOTANTES (TOASTS)                      */
-/* ========================================================= */
 .custom-toast {
   position: fixed;
-  bottom: 40px; /* Separado del fondo de la pantalla */
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   padding: 14px 28px;
@@ -518,13 +493,12 @@ body.dark-mode .mission-map-panel {
   color: white;
   font-weight: 600;
   font-size: 1.05rem;
-  z-index: 9999; /* Asegura que esté por encima de todos los elementos (incluso el mapa) */
+  z-index: 9999;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   animation: slideUpFade 0.3s ease-out forwards;
-  pointer-events: none; /* Que no bloquee clics si pasa por encima de algo */
+  pointer-events: none;
 }
 
-/* Colores según el tipo de aviso */
 .toast-error {
   background-color: #ef4444;
   border: 1px solid #dc2626;
@@ -535,7 +509,6 @@ body.dark-mode .mission-map-panel {
   border: 1px solid #059669;
 }
 
-/* Animación de entrada fluida */
 @keyframes slideUpFade {
   from {
     opacity: 0;

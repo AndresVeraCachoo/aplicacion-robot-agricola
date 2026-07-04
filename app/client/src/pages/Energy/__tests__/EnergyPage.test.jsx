@@ -1,13 +1,20 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import EnergyPage from '../EnergyPage.jsx';
 import { useRobotStore } from '../../../store/robotStore';
-import { useMissionStore } from '../../../store/missionStore';
+import { useMissions } from '../../../hooks/useMissions';
 
 // --- MOCKS EXTERNOS ---
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui) => render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+
 vi.mock('axios');
 
 vi.mock('react-i18next', () => ({
@@ -52,7 +59,7 @@ vi.mock('recharts', () => {
 });
 
 vi.mock('../../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
-vi.mock('../../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
+vi.mock('../../../hooks/useMissions', () => ({ useMissions: vi.fn() }));
 
 describe('Componente EnergyPage', () => {
   let consoleSpy;
@@ -62,6 +69,7 @@ describe('Componente EnergyPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
     
     // FIX: SOLO mockeamos 'Date' a nivel global. Dejamos setTimeout vivo para que RTL (waitFor) funcione.
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -70,7 +78,7 @@ describe('Componente EnergyPage', () => {
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
     mockFetchMisiones = vi.fn();
-    useMissionStore.mockReturnValue({ missions: [], fetchMissions: mockFetchMisiones });
+    useMissions.mockReturnValue({ missions: [], fetchMissions: mockFetchMisiones });
 
     useRobotStore.mockImplementation((selector) => {
       const state = { 
@@ -99,7 +107,7 @@ describe('Componente EnergyPage', () => {
       });
       axios.get.mockResolvedValueOnce({ data: [] });
 
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
 
       expect(screen.getByText('~10.0 A')).toBeInTheDocument();
       expect(screen.getByText('15%')).toBeInTheDocument();
@@ -115,7 +123,7 @@ describe('Componente EnergyPage', () => {
       });
       axios.get.mockResolvedValueOnce({ data: [] });
 
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
       expect(screen.getByText('~0.0 A')).toBeInTheDocument(); 
     });
   });
@@ -128,7 +136,7 @@ describe('Componente EnergyPage', () => {
       ];
       axios.get.mockResolvedValue({ data: apiResponse });
 
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
 
       await waitFor(() => {
         expect(axios.get).toHaveBeenCalled();
@@ -149,7 +157,7 @@ describe('Componente EnergyPage', () => {
       ];
       axios.get.mockResolvedValue({ data: apiResponse });
 
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
       
       await act(async () => {
         fireEvent.click(screen.getByTestId('mock-date-picker'));
@@ -174,7 +182,7 @@ describe('Componente EnergyPage', () => {
     it('captura correctamente errores de la API', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network Fail'));
       
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
       
       await waitFor(() => {
         // expect(consoleSpy).toHaveBeenCalledWith("Error al cargar la energía:", expect.any(Error));
@@ -192,7 +200,7 @@ describe('Componente EnergyPage', () => {
 
       axios.get.mockResolvedValue({ data: [{ timestamp: new Date(MOCK_NOW).toISOString(), batteryPercentage: 80, radiation: 10 }] });
 
-      render(<EnergyPage />);
+      renderWithProviders(<EnergyPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId('recharts-area-chart')).toBeInTheDocument();
@@ -200,3 +208,5 @@ describe('Componente EnergyPage', () => {
     });
   });
 });
+
+

@@ -1,23 +1,18 @@
-/* src/pages/ProfilePage.css */
-
 .profile-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 30px;
   color: #333;
 
-  /* Hacemos que la página sea un entorno controlado */
   height: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 
-  /* Scroll por defecto (se sobreescribe en PC) */
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* Ocultar barra de scroll en navegadores móviles/tablets */
 .profile-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -30,7 +25,7 @@
   border-bottom: 2px solid var(--primary-dark, #166534);
   margin-bottom: 30px;
   padding-bottom: 10px;
-  flex-shrink: 0; /* Evita que el título se aplaste si falta espacio */
+  flex-shrink: 0;
 }
 
 .profile-header h1 {
@@ -38,17 +33,15 @@
   margin: 0;
 }
 
-/* Grid layout */
 .profile-content-grid {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 30px;
-  /* El flex-grow y min-height 0 permite que el scroll funcione correctamente si es necesario */
+
   flex-grow: 1;
   min-height: 0;
 }
 
-/* Tarjetas */
 .profile-info-card,
 .password-section {
   background: white;
@@ -59,7 +52,6 @@
   display: flex;
   flex-direction: column;
 
-  /* Permite que el contenido no se desborde visualmente */
   max-height: 100%;
 }
 
@@ -67,7 +59,6 @@
   overflow-y: auto;
 }
 
-/* Ocultar scroll interno de las tarjetas también */
 .password-section::-webkit-scrollbar {
   width: 4px;
 }
@@ -76,7 +67,6 @@
   border-radius: 10px;
 }
 
-/* Sección Info Perfil */
 .avatar-section {
   text-align: center;
   margin-bottom: 30px;
@@ -111,12 +101,11 @@
   background: var(--border-color, #e5e7eb);
 }
 
-/* NUEVOS ESTILOS PARA EL SELECTOR DE AVATARES */
 .avatar-selector-panel {
   background: var(--bg-card, #ffffff);
   padding: 15px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   border: 1px solid var(--border-color, #e5e7eb);
   animation: slideDown 0.3s ease-out;
@@ -157,7 +146,10 @@
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid transparent;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
   background-color: var(--bg-secondary, #f3f4f6);
 }
 
@@ -188,12 +180,18 @@
 }
 
 .btn-save-avatar:not(:disabled):hover {
-  background-color: #059669; /* Verde más oscuro */
+  background-color: #059669;
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .info-details {
@@ -212,7 +210,6 @@
   color: var(--primary-main, #22c55e);
 }
 
-/* Sección Contraseña */
 .password-section h2 {
   color: var(--primary-dark, #166534);
   margin-top: 0;
@@ -244,7 +241,9 @@
   border: 1px solid var(--border-color, #d1d5db);
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 
 .form-group input:focus {
@@ -275,7 +274,6 @@
   cursor: not-allowed;
 }
 
-/* Mensajes */
 .message {
   padding: 12px 15px;
   border-radius: 8px;
@@ -296,23 +294,17 @@
   border: 1px solid #fecaca;
 }
 
-/* =========================================================
-   💻 RESPONSIVE PC (Escritorios grandes)
-   ========================================================= */
 @media (min-width: 1024px) {
   .profile-container {
-    overflow: hidden; /* Aniquila la barra de scroll en PC */
-    justify-content: center; /* Centra el bloque verticalmente si la pantalla es muy grande */
+    overflow: hidden;
+    justify-content: center;
   }
 
   .profile-content-grid {
-    align-items: start; /* Asegura que las tarjetas no intenten rellenar la altura vacía causando un falso scroll */
+    align-items: start;
   }
 }
 
-/* =========================================================
-   📱 RESPONSIVE MÓVIL (Vertical)
-   ========================================================= */
 @media (max-width: 767px) {
   .profile-container {
     padding: 15px;
@@ -326,9 +318,6 @@
   }
 }
 
-/* =========================================================
-   📱 RESPONSIVE MÓVIL (Horizontal / Landscape)
-   ========================================================= */
 @media (max-height: 600px) and (orientation: landscape) {
   .profile-container {
     padding: 15px 25px;

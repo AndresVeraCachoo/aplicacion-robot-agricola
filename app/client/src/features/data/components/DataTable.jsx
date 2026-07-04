@@ -1,31 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-// Componente para valores no recogidos
-const NotCollected = ({ t }) => (
-  <span className="not-collected-text">
-    {t("data.notCollected", "No recogido")}
-  </span>
-);
-
-NotCollected.propTypes = {
-  t: PropTypes.func.isRequired,
-};
-
-const formatDate = (iso, lng) =>
-  iso
-    ? new Date(iso).toLocaleString(lng || "es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })
-    : "-";
-
-const formatNum = (n, d = 2) =>
-  n === null || n === undefined || Number.isNaN(Number(n)) ? "-" : Number(n).toFixed(d);
+import NotCollected from "./NotCollected";
+import { formatDate, formatNum } from "../utils/formatters";
 
 const getPhClass = (val) => {
   const ph = Number(val);

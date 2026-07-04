@@ -18,7 +18,7 @@ import { AppError } from "./errorHandler.js";
  */
 export const authenticateToken = (req, res, next) => {
   // Leer el token desde la cookie HttpOnly
-  const token = req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
+  const token = req.cookies?.accessToken || req.headers["authorization"]?.split(" ")[1];
 
   if (!token) {
     return next(new AppError("Acceso denegado: Token no proporcionado", 401, "AUTH_MISSING_TOKEN"));
@@ -26,7 +26,10 @@ export const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      return next(new AppError("Token inválido o expirado", 403, "AUTH_INVALID_TOKEN"));
+      if (err.name === "TokenExpiredError") {
+        return next(new AppError("Token expirado", 401, "AUTH_EXPIRED_TOKEN"));
+      }
+      return next(new AppError("Token inválido", 403, "AUTH_INVALID_TOKEN"));
     }
     // Inyecta el payload decodificado para que los controladores no tengan que revalidar el token
     req.user = user;

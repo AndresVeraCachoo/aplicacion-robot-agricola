@@ -1,12 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DataPage from '../DataPage.jsx';
 import { useRobotStore } from '../../../store/robotStore';
-import { useMissionStore } from '../../../store/missionStore';
+import { useMissions } from '../../../hooks/useMissions';
 import { useToastStore } from '../../../store/toastStore';
 import axios from 'axios';
 import html2canvas from 'html2canvas';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui) => render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 
 // --- MOCKS EXTERNOS LIMPIOS PARA SONARQUBE ---
 vi.mock('react-leaflet', () => ({
@@ -47,7 +54,7 @@ vi.mock('react-i18next', () => ({
 vi.mock('../../../store/toastStore', () => ({ useToastStore: vi.fn() }));
 
 vi.mock('../../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
-vi.mock('../../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
+vi.mock('../../../hooks/useMissions', () => ({ useMissions: vi.fn() }));
 
 vi.mock('axios');
 
@@ -78,6 +85,7 @@ describe('Componente DataPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
     mockAddToast = vi.fn();
     mockFetchMisiones = vi.fn();
     
@@ -85,7 +93,7 @@ describe('Componente DataPage', () => {
 
     useToastStore.mockReturnValue({ addToast: mockAddToast });
     
-    useMissionStore.mockReturnValue({ 
+    useMissions.mockReturnValue({ 
       missions: [{ name: 'Misión A', workArea: { coordinates: [[[-3.1, 40.1]]] } }], 
       fetchMissions: mockFetchMisiones 
     });
@@ -131,7 +139,7 @@ describe('Componente DataPage', () => {
 
   describe('Paginación y Filtrado', () => {
     it('renderiza la tabla y maneja paginación', () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       const nextBtn = screen.getByText('→');
       const prevBtn = screen.getByText('←');
@@ -148,7 +156,7 @@ describe('Componente DataPage', () => {
     });
 
     it('ajusta automáticamente currentPage si totalPages disminuye', async () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       // 1. Vamos a la página 2
       fireEvent.click(screen.getByText('→')); 
@@ -173,7 +181,7 @@ describe('Componente DataPage', () => {
   describe('Filtrado desde DateRangePicker', () => {
     it('filtra datos llamando a API y muestra Cargando', async () => {
       axios.get.mockResolvedValueOnce({ data: [{ id: 99, lat: 0, lon: 0, timestamp: new Date().toISOString() }] });
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       expect(screen.getByText(/data.waitingData/)).toBeInTheDocument();
@@ -185,7 +193,7 @@ describe('Componente DataPage', () => {
 
     it('captura errores de filtrado', async () => {
       axios.get.mockRejectedValueOnce(new Error('Network Error'));
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       
       await waitFor(() => {
@@ -194,7 +202,7 @@ describe('Componente DataPage', () => {
     });
 
     it('limpia filtros si todos se pasan como nulos', async () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       // Filtramos primero para tener datos filtrados
       axios.get.mockResolvedValueOnce({ data: [{ id: 99, lat: 0, lon: 0, timestamp: new Date().toISOString() }] });
@@ -216,7 +224,7 @@ describe('Componente DataPage', () => {
 
   describe('Historial de Sesiones (Misiones)', () => {
     it('agrupa datos en sesiones y permite seleccionar una', () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       const sessionBtn = document.querySelector('.mission-item-main');
       fireEvent.click(sessionBtn);
@@ -226,7 +234,7 @@ describe('Componente DataPage', () => {
     });
 
     it('deselecciona automáticamente misión si se elimina la que se está viendo', () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       
       const sessionBtns = document.querySelectorAll('.mission-item-main');
       fireEvent.click(sessionBtns[0]);
@@ -252,7 +260,7 @@ describe('Componente DataPage', () => {
         return originalCreateElement(tag);
       });
 
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main')); 
       
       const csvBtn = screen.getByText(/data.exportCsv/);
@@ -265,7 +273,7 @@ describe('Componente DataPage', () => {
     });
 
     it('exporta reporte a PDF correctamente', async () => {
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
       const pdfBtn = screen.getByText(/data.exportPdf/);
@@ -280,7 +288,7 @@ describe('Componente DataPage', () => {
     it('captura errores de exportación a PDF', async () => {
       html2canvas.mockRejectedValueOnce(new Error('Canvas Error'));
       
-      render(<DataPage />);
+      renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
       const pdfBtn = screen.getByText(/data.exportPdf/);
@@ -292,3 +300,5 @@ describe('Componente DataPage', () => {
     });
   });
 });
+
+

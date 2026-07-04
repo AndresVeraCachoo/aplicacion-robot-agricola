@@ -120,11 +120,10 @@ export class UserService {
     const newUser = await this.prisma.user.create({
       data: {
         name,
-        email,
         role,
         password: hashedPassword
       },
-      select: { id: true, name: true, email: true, role: true }
+      select: { id: true, name: true, role: true }
     });
 
     return { user: newUser, generatedPassword };

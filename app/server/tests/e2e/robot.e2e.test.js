@@ -1,7 +1,7 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
-import { app } from "../src/index.js";
-import { pool } from "../src/config/db.js";
+import { app } from "../../src/index.js";
+import { pool } from "../../src/config/db.js";
 
 describe("E2E - Telemetría y Estado", () => {
   let validToken;

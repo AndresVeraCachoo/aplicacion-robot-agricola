@@ -18,6 +18,7 @@ dev-dist/
 dist-ssr
 build/
 .cache/
+.turbo/
 
 # Variables de entorno 
 .env

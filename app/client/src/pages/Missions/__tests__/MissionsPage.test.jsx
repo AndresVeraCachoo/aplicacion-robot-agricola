@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import MissionsPage from '../MissionsPage.jsx';
 import { useRobotStore } from '../../../store/robotStore';
-import { useMissionStore } from '../../../store/missionStore';
+import { useMissions } from '../../../hooks/useMissions';
 import { useToastStore } from '../../../store/toastStore';
 import L from 'leaflet';
 
@@ -97,7 +97,7 @@ vi.mock('react-leaflet', () => {
 });
 
 vi.mock('../../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
-vi.mock('../../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
+vi.mock('../../../hooks/useMissions', () => ({ useMissions: vi.fn() }));
 
 describe('Componente MissionsPage', () => {
   let mockAddToast, consoleSpy;
@@ -129,7 +129,7 @@ describe('Componente MissionsPage', () => {
     mockUpdateMision = vi.fn().mockResolvedValue(true);
     mockDeleteMision = vi.fn().mockResolvedValue(true);
 
-    useMissionStore.mockReturnValue({
+    useMissions.mockReturnValue({
       missions: mockMissiones,
       fetchMissions: mockFetchMisiones,
       createMission: mockCreateMision,
@@ -176,7 +176,7 @@ describe('Componente MissionsPage', () => {
       });
       render(<MissionsPage />);
       const mapContainer = screen.getByTestId('map-container');
-      expect(mapContainer.dataset.center).toBe('37.7749,-122.4194');
+      expect(mapContainer.dataset.center).toBe('37.3828,-5.9731');
     });
   });
 
@@ -224,8 +224,8 @@ describe('Componente MissionsPage', () => {
       
       // FIX: Rellenamos el nombre para que el formulario no bloquee el submit nativo
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Test' } });
-      fireEvent.click(screen.getByText('missions.form.saveBtn'));
-      expect(mockAddToast).toHaveBeenCalledWith('Dibuja el área de trabajo en el mapa primero.', 'error');
+      fireEvent.click(screen.getByText('missions.form.savePlan'));
+      expect(mockAddToast).toHaveBeenCalledWith('Debes dibujar un polígono en el mapa', 'warning');
     });
   });
 
@@ -243,7 +243,7 @@ describe('Componente MissionsPage', () => {
         globalThis.__mapOnCallbacks['pm:create']({
           layer: {
             pm: { hasSelfIntersection: () => false },
-            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [] } }),
+            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] } }),
             on: vi.fn()
           }
         });
@@ -256,9 +256,9 @@ describe('Componente MissionsPage', () => {
       const humCheckbox = screen.getAllByRole('checkbox')[0];
       fireEvent.click(humCheckbox);
 
-      fireEvent.click(screen.getByText('missions.form.saveBtn'));
+      fireEvent.click(screen.getByText('missions.form.savePlan'));
       
-      expect(mockAddToast).toHaveBeenCalledWith('Selecciona al menos un tipo de dato.', 'error');
+      expect(mockAddToast).toHaveBeenCalledWith('Selecciona al menos un sensor', 'warning');
       expect(mockCreateMision).not.toHaveBeenCalled();
     });
 
@@ -269,40 +269,40 @@ describe('Componente MissionsPage', () => {
         globalThis.__mapOnCallbacks['pm:create']({
           layer: {
             pm: { hasSelfIntersection: () => false },
-            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [] } }),
+            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] } }),
             on: vi.fn()
           }
         });
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Alfa' } });
-      fireEvent.click(screen.getByText('missions.form.saveBtn'));
+      fireEvent.click(screen.getByText('missions.form.savePlan'));
 
       await waitFor(() => {
         expect(mockCreateMision).toHaveBeenCalledWith(expect.objectContaining({ name: 'Misión Alfa' }));
-        expect(mockAddToast).toHaveBeenCalledWith('¡Misión creada con éxito!', 'success');
+        expect(mockAddToast).toHaveBeenCalledWith('Misión creada', 'success');
       });
     });
 
     it('maneja error del servidor al intentar crear', async () => {
-      mockCreateMision.mockRejectedValueOnce(new Error('API Down'));
+      mockCreateMision.mockResolvedValueOnce(false);
       render(<MissionsPage />);
       
       act(() => {
         globalThis.__mapOnCallbacks['pm:create']({
           layer: {
             pm: { hasSelfIntersection: () => false },
-            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [] } }),
+            toGeoJSON: () => ({ geometry: { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] } }),
             on: vi.fn()
           }
         });
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Error' } });
-      fireEvent.click(screen.getByText('missions.form.saveBtn'));
+      fireEvent.click(screen.getByText('missions.form.savePlan'));
 
       await waitFor(() => {
-        expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al guardar la misión', 'error');
+        expect(mockAddToast).toHaveBeenCalledWith('Error al guardar la misión', 'error');
       });
     });
   });
@@ -315,13 +315,13 @@ describe('Componente MissionsPage', () => {
       fireEvent.click(editBtn);
 
       expect(document.querySelector('input[id="mission-name"]').value).toBe('Misión Test');
-      expect(screen.getByText('Actualizar Misión')).toBeInTheDocument();
+      expect(screen.getByText('Guardar')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByText('Actualizar Misión'));
+      fireEvent.click(screen.getByText('Guardar'));
 
       await waitFor(() => {
         expect(mockUpdateMision).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'Misión Test' }));
-        expect(mockAddToast).toHaveBeenCalledWith('Misión actualizada correctamente', 'success');
+        expect(mockAddToast).toHaveBeenCalledWith('Misión actualizada', 'success');
       });
     });
 
@@ -330,7 +330,7 @@ describe('Componente MissionsPage', () => {
       render(<MissionsPage />);
       
       fireEvent.click(screen.getByText('Editar'));
-      fireEvent.click(screen.getByText('Actualizar Misión'));
+      fireEvent.click(screen.getByText('Guardar'));
 
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith('Error al actualizar la misión', 'error');
@@ -375,8 +375,8 @@ describe('Componente MissionsPage', () => {
 
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith('Error al eliminar la misión', 'error');
-        // expect(consoleSpy).toHaveBeenCalled();
       });
     });
   });
 });
+

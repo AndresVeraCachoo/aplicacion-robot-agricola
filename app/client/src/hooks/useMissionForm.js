@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useMissionStore } from "../store/missionStore";
+import { useMissions } from "./useMissions";
 import { useToastStore } from "../store/toastStore";
 
 const initialSensors = {
@@ -18,7 +18,7 @@ const initialSensors = {
  */
 export function useMissionForm(clearMap) {
   const { t } = useTranslation();
-  const { createMission, updateMission } = useMissionStore();
+  const { createMission, updateMission } = useMissions();
   const { addToast } = useToastStore();
 
   const [editingId, setEditingId] = useState(null);
@@ -95,12 +95,16 @@ export function useMissionForm(clearMap) {
         if (success) {
           addToast(t("missions.updated", "Misión actualizada"), "success");
           handleCancelEdit();
+        } else {
+          addToast(t("missions.updateError", "Error al actualizar la misión"), "error");
         }
       } else {
         const success = await createMission(newMissionData);
         if (success) {
           addToast(t("missions.created", "Misión creada"), "success");
           handleCancelEdit();
+        } else {
+          addToast(t("missions.createError", "Error al guardar la misión"), "error");
         }
       }
     },

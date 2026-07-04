@@ -117,7 +117,7 @@ describe('Componente ChartWidget', () => {
     expect(screen.getByTestId('composed-chart')).toBeInTheDocument();
     
     const selects = screen.getAllByRole('combobox');
-    expect(selects.length).toBe(2);
+    expect(selects).toHaveLength(2);
 
     fireEvent.change(selects[1], { target: { value: 'potassium' } });
     expect(selects[1].value).toBe('potassium');

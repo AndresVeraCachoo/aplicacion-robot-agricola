@@ -1,5 +1,3 @@
-/* src/pages/UserManagementPage.css */
-
 .user-management-container {
   padding: 30px;
   height: 100%;
@@ -38,7 +36,6 @@
   font-weight: bold;
 }
 
-/* === Lista de Usuarios === */
 .user-list {
   display: flex;
   flex-direction: column;
@@ -51,7 +48,7 @@
 .user-item {
   display: flex;
   justify-content: space-between;
-  /* 🛡️ FIX: Centra todo el contenido verticalmente respecto a la tarjeta */
+  
   align-items: center;
   padding: 15px;
   background-color: #ffffff;
@@ -63,7 +60,7 @@
 
 .user-info {
   display: flex;
-  /* 🛡️ FIX: Centra el texto verticalmente */
+  
   align-items: center;
   flex: 1;
   overflow: hidden;
@@ -91,7 +88,7 @@
 .user-actions {
   display: flex;
   gap: 10px;
-  /* 🛡️ FIX CRÍTICO: Obliga a los dos botones a estar perfectamente alineados entre sí en el centro */
+  
   align-items: center;
   height: 100%;
 }
@@ -107,7 +104,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  margin: 0; /* Evita que el navegador meta márgenes por defecto */
+  margin: 0; 
 }
 
 .btn-edit {
@@ -125,7 +122,6 @@
   background-color: #ef4444;
 }
 
-/* === Formulario en el Modal === */
 .user-form {
   display: flex;
   flex-direction: column;
@@ -170,9 +166,6 @@
   cursor: pointer;
 }
 
-/* =========================================
-   📱 RESPONSIVE MOBILE: VERTICAL
-   ========================================= */
 @media (max-width: 768px) {
   .user-management-container {
     padding: 15px;
@@ -187,7 +180,7 @@
 
   .user-info {
     flex-direction: column;
-    align-items: flex-start; /* Alinea el nombre y rol a la izquierda */
+    align-items: flex-start; 
     justify-content: center;
   }
 
@@ -204,7 +197,7 @@
   .user-actions {
     flex-direction: row;
     gap: 6px;
-    /* 🛡️ FIX: Mantiene los botones alineados verticalmente entre sí */
+    
     align-items: center;
   }
 
@@ -215,9 +208,6 @@
   }
 }
 
-/* =========================================
-   📱 RESPONSIVE: MÓVILES EN HORIZONTAL
-   ========================================= */
 @media (max-height: 500px) and (orientation: landscape) {
   .user-management-container {
     padding: 10px 15px;
@@ -248,202 +238,7 @@
   }
 
   .user-actions {
-    align-items: center; /* Asegura el centrado estricto también aquí */
-  }
-
-  .user-actions button {
-border: 2px solid var(--border-light);
-  flex-shrink: 0;
-}
-
-.user-info {
-  display: flex;
-  /* 🛡️ FIX: Centra el texto verticalmente */
-  align-items: center;
-  flex: 1;
-  overflow: hidden;
-}
-
-.user-name {
-  font-weight: bold;
-  font-size: 1.2em;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0;
-  line-height: 1;
-}
-.user-role {
-  font-style: italic;
-  color: #555;
-  margin-left: 15px;
-  flex-shrink: 0;
-  margin-top: 0;
-  line-height: 1;
-}
-
-.user-actions {
-  display: flex;
-  gap: 10px;
-  /* 🛡️ FIX CRÍTICO: Obliga a los dos botones a estar perfectamente alineados entre sí en el centro */
-  align-items: center;
-  height: 100%;
-}
-
-.user-actions button {
-  padding: 0;
-  width: 90px;
-  height: 38px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 0; /* Evita que el navegador meta márgenes por defecto */
-}
-
-.btn-edit {
-  background-color: #0f766e;
-  color: white;
-}
-.btn-edit:hover {
-  background-color: #0d9488;
-}
-.btn-delete {
-  background-color: #d90429;
-  color: white;
-}
-.btn-delete:hover {
-  background-color: #ef4444;
-}
-
-/* === Formulario en el Modal === */
-.user-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-.user-form .form-group {
-  display: flex;
-  flex-direction: column;
-}
-.user-form label {
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
-}
-.user-form input,
-.user-form select {
-  padding: 10px;
-  border: 2px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
-}
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-.form-actions .btn-cancel {
-  background-color: #555555;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.form-actions .btn-submit {
-  background-color: var(--accent-green);
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-/* =========================================
-   📱 RESPONSIVE MOBILE: VERTICAL
-   ========================================= */
-@media (max-width: 768px) {
-  .user-management-container {
-    padding: 15px;
-  }
-
-  .user-item {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 10px;
-    gap: 10px;
-  }
-
-  .user-info {
-    flex-direction: column;
-    align-items: flex-start; /* Alinea el nombre y rol a la izquierda */
-    justify-content: center;
-  }
-
-  .user-name {
-    font-size: 1.05em;
-    margin-bottom: 4px;
-  }
-  .user-role {
-    margin-left: 0;
-    font-size: 0.8em;
-    margin-top: 0;
-  }
-
-  .user-actions {
-    flex-direction: row;
-    gap: 6px;
-    /* 🛡️ FIX: Mantiene los botones alineados verticalmente entre sí */
-    align-items: center;
-  }
-
-  .user-actions button {
-    width: 75px;
-    height: 34px;
-    font-size: 0.85em;
-  }
-}
-
-/* =========================================
-   📱 RESPONSIVE: MÓVILES EN HORIZONTAL
-   ========================================= */
-@media (max-height: 500px) and (orientation: landscape) {
-  .user-management-container {
-    padding: 10px 15px;
-  }
-
-  .user-management-container h1 {
-    font-size: 1.3em;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-  }
-
-  .btn-create {
-    margin-bottom: 10px;
-    padding: 6px 12px;
-    font-size: 0.95em;
-  }
-
-  .user-list {
-    gap: 8px;
-  }
-
-  .user-item {
-    padding: 8px 12px;
-  }
-
-  .user-name {
-    font-size: 1.05em;
-  }
-
-  .user-actions {
-    align-items: center; /* Asegura el centrado estricto también aquí */
+    align-items: center; 
   }
 
   .user-actions button {

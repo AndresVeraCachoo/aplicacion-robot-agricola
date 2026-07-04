@@ -58,7 +58,7 @@ const corsOptions = {
 // Previene ataques DDoS limitando la tasa de peticiones
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: process.env.NODE_ENV === "test" ? 100000 : 200,
   message: { error: "Too many requests from this IP. Please try again later." }
 });
 
@@ -120,4 +120,4 @@ if (process.env.NODE_ENV !== "test") {
   }
 }
 
-export { app };
+export { app, server };

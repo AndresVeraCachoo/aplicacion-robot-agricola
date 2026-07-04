@@ -1,19 +1,12 @@
-// src/pages/DataPage.jsx
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useRobotStore } from "../../store/robotStore";
-import { useMissionStore } from "../../store/missionStore";
+import { useMissions } from "../../hooks/useMissions";
 import { useToastStore } from "../../store/toastStore";
 import ChartWidget from "../../features/dashboard/components/ChartWidget";
 import { DateRangePicker } from "../../components/DateRangePicker";
-import {
-  MapContainer,
-  TileLayer,
-  Polygon,
-  CircleMarker,
-  Popup,
-} from "react-leaflet";
+
 
 import "leaflet/dist/leaflet.css";
 import "./DataPage.css";
@@ -30,7 +23,6 @@ import {
 import DataTable from "../../features/data/components/DataTable";
 import MissionList from "../../features/data/components/MissionList";
 import MissionDetailMap from "../../features/data/components/MissionDetailMap";
-import MapUpdater from "../../features/data/components/MapUpdater";
 
 const API_URL = "/data";
 
@@ -50,18 +42,38 @@ const DataPage = () => {
   const [jumpPage, setJumpPage] = useState("");
   const itemsPerPage = 10;
 
-  const [filteredData, setFilteredData] = useState(null);
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [filters, setFilters] = useState(null);
+
+  const { data: filteredData = null, isFetching: isFiltering, isError } = useQuery({
+    queryKey: ["agronomicData", filters],
+    queryFn: () => robotService.getAgronomicData(filters.start, filters.end, filters.misionId),
+    enabled: !!filters,
+  });
+
+  const wasFiltering = React.useRef(false);
+  useEffect(() => {
+    if (isFiltering) {
+      wasFiltering.current = true;
+    } else if (wasFiltering.current) {
+      wasFiltering.current = false;
+      if (filters) {
+        if (isError) {
+          addToast("data.fetchError", "error");
+        } else {
+          addToast("data.recordsFound", "info");
+        }
+      }
+    }
+  }, [isFiltering, isError, filters, addToast]);
 
   const liveAgronomicData = useRobotStore((state) =>
     Array.isArray(state.agronomicData) ? state.agronomicData : [],
   );
   const deleteSessionData = useRobotStore((state) => state.deleteSessionData);
-  const { missions, fetchMissions } = useMissionStore();
+  const { missions, fetchMissions } = useMissions();
   const [selectedSessionId, setSelectedSessionId] = useState(null);
 
-  const displayDataRaw =
-    filteredData === null ? liveAgronomicData : filteredData;
+  const displayDataRaw = filters ? (filteredData || []) : liveAgronomicData;
     
   const displayData = [...displayDataRaw].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -77,30 +89,12 @@ const DataPage = () => {
     fetchMissions();
   }, [fetchMissions]);
 
-  const handleFilter = async (start, end, misionId) => {
+  const handleFilter = (start, end, misionId) => {
     if (!start && !end && !misionId) {
-      setFilteredData(null);
-      return;
-    }
-    setIsFiltering(true);
-    try {
-      const params = new URLSearchParams();
-      if (start && end) {
-        params.append("start", start);
-        params.append("end", end);
-      }
-      if (misionId) {
-        params.append("misionId", misionId);
-      }
-
-      const responseData = await robotService.getAgronomicData(start, end, misionId);
-      setFilteredData(responseData);
+      setFilters(null);
+    } else {
+      setFilters({ start, end, misionId });
       setCurrentPage(1);
-      addToast(t("data.recordsFound", { count: responseData.length }), "info");
-    } catch {
-      addToast(t("data.fetchError"), "error");
-    } finally {
-      setIsFiltering(false);
     }
   };
 

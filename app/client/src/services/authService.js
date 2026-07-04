@@ -12,7 +12,7 @@ export const authService = {
    * @returns {Promise<Object>} Datos de respuesta.
    */
   login: async (username, password) => {
-    const response = await httpClient.post("/auth/login", { username, password });
+    const response = await httpClient.post("/auth/login", { name: username, password });
     return response.data;
   },
 

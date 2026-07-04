@@ -2,7 +2,7 @@ name: CI And SonarCloud Analysis
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -10,56 +10,54 @@ jobs:
   build-test-analyze:
     name: Build, Test & Sonar Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       # Descarga el historial completo del repositorio para que Sonar pueda comparar versiones
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
       # Prepara la máquina virtual con la versión correcta de Node
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
 
       # Instala las dependencias de todas las carpetas a la vez
       - name: Install Monorepo Dependencies
         run: npm ci
 
-      # Ejecutamos las pruebas con "continue-on-error: true" para que, 
+      # Ejecutamos las pruebas con "continue-on-error: true" para que,
       # si un test falla, el pipeline no se corte y Sonar pueda registrar el fallo.
-      
-      - name: Run Frontend Tests & Coverage
-        working-directory: ./app/client
-        continue-on-error: true 
+
+      - name: Run All Tests & Merge Coverage
+        continue-on-error: true
         run: npm run test:cov
-
-      - name: Run Backend Unit Tests & Coverage
-        working-directory: ./app/server
-        continue-on-error: true
-        run: npm run test:unit:cov
-
-      - name: Run Backend E2E Tests & Coverage
-        working-directory: ./app/server
-        continue-on-error: true
-        run: npm run test:e2e:cov
-
-      - name: Fix LCOV paths for Sonar Modules
-        if: always()
-        run: |
-          # Convertimos las rutas absolutas de la máquina virtual de GitHub a rutas relativas exactas para cada módulo
-          sed -i "s|${{ github.workspace }}/app/client/||g" app/client/coverage/lcov.info || true
-          sed -i "s|${{ github.workspace }}/app/server/||g" app/server/coverage/unit/lcov.info || true
-          sed -i "s|${{ github.workspace }}/app/server/||g" app/server/coverage/e2e/lcov.info || true
 
       # Sube los resultados generados a la plataforma de SonarCloud
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@30dbe5c9eeccb106afb2590dcb61f7a05ffbee14
-        if: always() 
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # PRUEBAS DE CARGA (LOAD TESTING) CON k6
+      - name: Start Services in CI for Load Testing
+        if: always()
+        run: docker-compose up -d --build
+
+      - name: Wait for Backend Health
+        if: always()
+        run: |
+          echo "Esperando a que el backend esté listo..."
+          npx wait-on http://localhost:3001/api/auth/verify --timeout 60000
+
+      - name: Run k6 Load Test
+        uses: grafana/k6-action@v0.3.1
+        if: always()
+        with:
+          filename: ./app/server/tests/load/scenarios.load.test.js

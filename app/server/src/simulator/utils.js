@@ -19,7 +19,7 @@ export const isPointInPolygon = (lat, lon, vs) => {
   return inside;
 };
 
-export const calculateBestAngle = (zone) => {
+const calculateBestAngle = (zone) => {
   let maxDist = 0;
   let bestAngle = 0;
   for (let i = 0; i < zone.length; i++) {
@@ -34,7 +34,7 @@ export const calculateBestAngle = (zone) => {
   return bestAngle;
 };
 
-export const weavePathRows = (rows) => {
+const weavePathRows = (rows) => {
   const finalPath = [];
   const sortedKeys = Object.keys(rows).sort((a, b) => a.localeCompare(b)).reverse();
   sortedKeys.forEach((key, index) => {

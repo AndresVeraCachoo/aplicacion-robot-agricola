@@ -7,3 +7,18 @@ globalThis.console = {
   // error: () => {},
   // warn: () => {},
 };
+
+import { closeWorker } from './src/workers/emailWorker.js';
+import redisClient from './src/config/redis.js';
+import { prisma, pool } from './src/config/db.js';
+
+afterAll(async () => {
+  try {
+    await closeWorker();
+    await redisClient.quit();
+    await prisma.$disconnect();
+    await pool.end();
+  } catch (e) {
+    // Ignorar errores en el cierre
+  }
+});

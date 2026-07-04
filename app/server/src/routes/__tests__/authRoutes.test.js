@@ -19,6 +19,7 @@ describe("Rutas de Autenticación", () => {
       login: jest.fn((req, res) => res.status(200).json({ ok: true })),
       logout: jest.fn((req, res) => res.status(200).json({ ok: true })),
       verify: jest.fn((req, res) => res.status(200).json({ ok: true })),
+      refresh: jest.fn((req, res) => res.status(200).json({ ok: true })),
     };
     mockAuthenticateToken = jest.fn((req, res, next) => next());
     mockValidate = jest.fn(() => (req, res, next) => next());

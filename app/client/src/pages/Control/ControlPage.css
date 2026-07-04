@@ -1,5 +1,3 @@
-/* src/pages/ControlPage.css */
-
 .control-page {
   display: flex;
   flex-direction: column;
@@ -12,10 +10,6 @@
   background-color: var(--bg-primary, #121212);
 }
 
-/* =====================================================================
-   PANEL INFERIOR (Contenedor limpio)
-   El diseño interno ahora lo maneja exclusivamente ControlPanel.css
-   ===================================================================== */
 .control-bottom-row {
   flex-shrink: 0;
   width: 100%;
@@ -23,7 +17,7 @@
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 20;
-  overflow-x: auto; /* Permite scroll horizontal fluido en pantallas enanas */
+  overflow-x: auto;
   scrollbar-width: none;
 }
 
@@ -31,9 +25,29 @@
   display: none;
 }
 
-/* =====================================================================
-   ESCRITORIO (Diseño Clásico 50/50)
-   ===================================================================== */
+.map-container > div:first-child {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.camera-container > div:first-child {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: #000000;
+  color: #ffffff;
+}
+
 @media (min-width: 900px) {
   .control-top-row {
     display: flex;
@@ -52,35 +66,12 @@
     position: relative;
     transition: border-color 0.3s ease;
   }
-  .map-container > div:first-child {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .camera-container > div:first-child {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background-color: #000000;
-    color: #ffffff;
   }
   .pip-expand-icon {
     display: none;
   }
 }
 
-/* =====================================================================
-   MÓVIL / TABLET (Diseño Picture-in-Picture)
-   ===================================================================== */
 @media (max-width: 899px) {
   .control-top-row {
     position: relative;
@@ -97,7 +88,6 @@
     overflow: hidden;
   }
 
-  /* Visor principal (Pantalla completa) */
   .is-main {
     top: 0;
     left: 0;
@@ -110,7 +100,6 @@
     cursor: default;
   }
 
-  /* Visor secundario (Minimapa) */
   .is-pip {
     width: 140px;
     aspect-ratio: 4 / 3;
@@ -149,28 +138,7 @@
   .map-container.is-pip .leaflet-container {
     touch-action: none;
     pointer-events: none;
-  }
-
-  .map-container > div:first-child {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .camera-container > div:first-child {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background-color: #000000;
-    color: #ffffff;
+    pointer-events: none;
   }
 
   .pip-expand-icon {
@@ -196,7 +164,6 @@
     opacity: 1;
   }
 
-  /* Ocultar botón de misiones si la cámara está en grande */
   .is-camera-main .control-bottom-row .btn-misiones,
   .is-camera-main .control-bottom-row .toggle-missions-btn {
     display: none !important;
@@ -209,9 +176,6 @@
   }
 }
 
-/* =====================================================================
-   ESCUDO CONTRA LA SIDEBAR DE MISIONES
-   ===================================================================== */
 .missions-sidebar-container {
   position: absolute !important;
   top: 0;
@@ -221,14 +185,10 @@
   z-index: 999 !important;
 }
 
-/* =====================================================================
-   MODIFICACIONES DE LEAFLET
-   ===================================================================== */
 .map-container .leaflet-control-attribution {
   display: none !important;
 }
 
-/* Ocultar botones de mapa en modo minimapa */
 .map-container.is-pip .leaflet-control-container,
 .map-container.is-pip button,
 .map-container.is-pip a,
@@ -236,13 +196,9 @@
   display: none !important;
 }
 
-/* Ajustar posición de botones de mapa en pantalla completa */
 .map-container.is-main .leaflet-top .leaflet-control {
   margin-top: 5px !important;
 }
 .map-container.is-main .leaflet-top {
   top: 5px !important;
 }
-
-/* Joystick css moved to src/features/control/components/JoystickOverlay.css */
-

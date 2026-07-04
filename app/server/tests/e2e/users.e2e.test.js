@@ -1,8 +1,8 @@
 import request from "supertest";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { app } from "../src/index.js";
-import { pool } from "../src/config/db.js";
+import { app } from "../../src/index.js";
+import { pool } from "../../src/config/db.js";
 
 describe("E2E - Usuarios y Control de Acceso", () => {
   let adminToken, operatorToken;
@@ -94,7 +94,11 @@ describe("E2E - Usuarios y Control de Acceso", () => {
         .send({ avatarUrl: "esto-no-es-un-enlace" }); 
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/valid image URL/i);
+      expect(response.body.details).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ message: "validation.user.invalid_avatar_url" })
+        ])
+      );
     });
   });
 

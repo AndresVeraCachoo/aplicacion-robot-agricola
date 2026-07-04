@@ -1,7 +1,4 @@
-/* src/index.css */
-
 :root {
-  /* --- MODO CLARO (Variables originales) --- */
   --primary-dark: #166534;
   --primary-darkest: #14532d;
   --background-color: #2fad55;
@@ -13,34 +10,29 @@
   --background-widget: #f0fdf4;
   --background-app: #a7f3d0;
 
-  /* Nuevas variables para texto y superficies */
-  --text-main: #14532d; /* Color de texto principal */
-  --text-inverse: #ffffff; /* Texto sobre fondos oscuros */
-  --card-bg: #ffffff; /* Fondo de tarjetas (perfil, usuarios) */
-  --icon-color: #14532d; /* Color de iconos (menú, etc) */
+  --text-main: #14532d;
+  --text-inverse: #ffffff;
+  --card-bg: #ffffff;
+  --icon-color: #14532d;
 
   --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* --- MODO OSCURO (Sobreescritura de variables) --- */
 body.dark-mode {
-  /* Fondos oscuros */
-  --background-color: #0f172a; /* Azul noche profundo */
-  --background-app: #1e293b; /* Header y contenedores */
-  --background-widget: #334155; /* Widgets y tarjetas */
-  --card-bg: #1e293b; /* Tarjetas en modo oscuro */
+  --background-color: #0f172a;
+  --background-app: #1e293b;
+  --background-widget: #334155;
+  --card-bg: #1e293b;
 
-  /* Textos claros */
-  --primary-dark: #4ade80; /* Verde neón suave para resaltar */
-  --primary-darkest: #f1f5f9; /* Texto casi blanco */
-  --text-main: #e2e8f0; /* Texto general gris claro */
+  --primary-dark: #4ade80;
+  --primary-darkest: #f1f5f9;
+  --text-main: #e2e8f0;
   --text-light-accent: #94a3b8;
 
-  /* Elementos de UI */
-  --accent-green: #15803d; /* Botones un poco más apagados */
+  --accent-green: #15803d;
   --accent-green-hover: #166534;
-  --border-light: #475569; /* Bordes sutiles */
-  --icon-color: #f1f5f9; /* Iconos blancos */
+  --border-light: #475569;
+  --icon-color: #f1f5f9;
 }
 
 body {
@@ -50,10 +42,9 @@ body {
   color: var(--text-main);
   transition:
     background-color 0.3s ease,
-    color 0.3s ease; /* Transición suave */
+    color 0.3s ease;
 }
 
-/* Forzar color de texto en elementos específicos para que respeten el modo oscuro */
 body.dark-mode h1,
 body.dark-mode h2,
 body.dark-mode h3,
@@ -69,7 +60,6 @@ body.dark-mode .profile-info-card {
   border-color: var(--border-light);
 }
 
-/* Leaflet Controls */
 .leaflet-control-zoom-in,
 .leaflet-control-zoom-out {
   border-radius: 50% !important;
@@ -77,7 +67,7 @@ body.dark-mode .profile-info-card {
   height: 30px !important;
   line-height: 30px !important;
   font-size: 1.2em !important;
-  background-color: var(--card-bg) !important; /* Adaptar controles al tema */
+  background-color: var(--card-bg) !important;
   color: var(--text-main) !important;
 }
 

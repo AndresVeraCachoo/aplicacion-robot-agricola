@@ -8,15 +8,23 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "dev:client": "npm run dev -w app/client",
-    "dev:server": "npm start -w app/server",
-    "dev": "npm run dev:server & npm run dev:client",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "npm run test --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspaces --if-present",
+    "test:cov": "npm run test:cov --workspaces --if-present && node scripts/merge-coverage.js all",
+    "test:unit:cov": "npm run test:unit:cov --workspaces --if-present && node scripts/merge-coverage.js unit",
+    "test:e2e:cov": "npm run test:e2e:cov --workspaces --if-present && node scripts/merge-coverage.js e2e",
+    "sonar": "npm run sonar --workspaces --if-present",
     "docker:up": "docker-compose up --build",
     "docker:down": "docker-compose down",
     "docs": "jsdoc -c jsdoc.json"
   },
   "devDependencies": {
     "clean-jsdoc-theme": "^4.3.2",
-    "jsdoc": "^4.0.5"
+    "jsdoc": "^4.0.5",
+    "turbo": "^2.10.2"
   }
 }

@@ -1,4 +1,6 @@
 import { pool } from "../../src/config/db.js";
+import redisClient from "../../src/config/redis.js";
+import { closeWorker } from "../../src/workers/emailWorker.js";
 
 /**
  * Limpia los datos de todas las tablas después de cada prueba 
@@ -19,4 +21,6 @@ afterEach(async () => {
 
 afterAll(async () => {
   await pool.end();
+  await closeWorker();
+  await redisClient.quit();
 });

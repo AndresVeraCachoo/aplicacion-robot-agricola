@@ -35,10 +35,10 @@ function LoginPage() {
     }
 
     const result = await login(name, password);
-    if (!result.success) {
-      setError(t("login.invalidCreds"));
-    } else {
+    if (result.success) {
       navigate("/app/dashboard", { replace: true });
+    } else {
+      setError(t("login.invalidCreds"));
     }
   };
 

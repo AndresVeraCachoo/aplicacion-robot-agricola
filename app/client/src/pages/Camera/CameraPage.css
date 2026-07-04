@@ -1,6 +1,3 @@
-/* src/pages/CameraPage.css */
-
-/* Contenedor principal que ocupa todo el espacio de <main> */
 .camera-page-immersive {
   position: relative;
   width: 100%;
@@ -12,13 +9,11 @@
   overflow: hidden;
 }
 
-/* Contenedor y estilos para el minimapa */
 .minimap-container {
   position: absolute;
   bottom: 20px;
   right: 20px;
 
-  /* Ancho dinámico y altura proporcional (apaisada 16:9) */
   width: clamp(200px, 25vw, 350px);
   aspect-ratio: 16 / 9;
   height: auto;
@@ -35,7 +30,6 @@
   height: 100% !important;
 }
 
-/* MUY IMPORTANTE: Anular estilos previos del MapView para el minimapa */
 .minimap-container .map-view-container {
   width: 100% !important;
   height: 100% !important;
@@ -44,22 +38,15 @@
   border-radius: 0 !important;
 }
 
-/* Opcional: Ocultar controles de zoom y atribución en el minimapa */
 .minimap-container .leaflet-control-zoom,
 .minimap-container .leaflet-control-attribution {
   display: none !important;
 }
 
-/* ========================================================
-   --- OVERRIDES ESPECÍFICOS DEL MINIMAPA ---
-   ======================================================== */
-
-/* 1. Ocultar el botón de "Delimitar Área" solo en este mapa */
 .minimap-container .map-controls-overlay {
   display: none !important;
 }
 
-/* 2. Hacer pequeño el botón de centrar y pegarlo a la esquina */
 .minimap-container .center-map-button {
   width: 28px !important;
   height: 28px !important;
@@ -74,7 +61,6 @@
   line-height: 1 !important;
 }
 
-/* 3. Estilo de coordenadas compacto para el minimapa */
 .minimap-container .clicked-coords-display {
   bottom: 8px !important;
   left: 8px !important;
@@ -85,21 +71,18 @@
   max-width: 200px;
 }
 
-/* Ajuste coordenadas minimapa en modo oscuro */
 body.dark-mode .minimap-container .clicked-coords-display {
   background-color: rgba(15, 23, 42, 0.9) !important;
   color: #e2e8f0 !important;
   border: 1px solid #475569;
 }
 
-/* 🛡️ FIX NUEVO: 4. Encoger icono de la Base de Carga y del Robot (60% de su tamaño original) */
 .minimap-container .base-marker-icon,
 .minimap-container .robot-marker-icon {
   transform: scale(0.6) !important;
   transform-origin: center center !important;
 }
 
-/* 🛡️ FIX NUEVO: 5. Hacer el botón de capas (Satélite/Calle) más pequeño */
 .minimap-container .leaflet-control-layers {
   border-radius: 4px !important;
 }

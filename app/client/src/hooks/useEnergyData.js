@@ -1,5 +1,5 @@
 // src/hooks/useEnergyData.js
-import { useState, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { robotService } from "../services/robotService";
 
 /**
@@ -14,20 +14,15 @@ import { robotService } from "../services/robotService";
  * @returns {Object} Objeto con chartData, currentSolarInput, isFiltering y la función fetchEnergyHistory.
  */
 export function useEnergyData(dateFilter) {
-  const [chartData, setChartData] = useState([]);
-  const [currentSolarInput, setCurrentSolarInput] = useState(0);
-  const [isFiltering, setIsFiltering] = useState(false);
+  const isFilteringActive = !!(dateFilter.start || dateFilter.misionId);
 
-  const fetchEnergyHistory = useCallback(async () => {
-    try {
-      const responseData = await robotService.getEnergy(
-        dateFilter.start,
-        dateFilter.end,
-        dateFilter.misionId
-      );
-
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ["energy", dateFilter.start, dateFilter.end, dateFilter.misionId],
+    queryFn: () => robotService.getEnergy(dateFilter.start, dateFilter.end, dateFilter.misionId),
+    refetchInterval: isFilteringActive ? false : 15000,
+    select: (responseData) => {
       // 🛡️ Prevenimos que datos nulos rompan la gráfica (NaN)
-      const mappedData = responseData.map((item) => ({
+      let mappedData = responseData.map((item) => ({
         timeMs: new Date(item.timestamp).getTime(),
         batteryLevel: Number(item.batteryPercentage) || 0,
         solarWatts: Number(item.solarRadiation) || 0,
@@ -38,38 +33,23 @@ export function useEnergyData(dateFilter) {
       mappedData.sort((a, b) => a.timeMs - b.timeMs);
 
       // Si no hay filtro, mostramos solo las últimas 24h
-      if (!dateFilter.start && !dateFilter.misionId) {
-        const now = new Date();
-        setChartData(
-          mappedData.filter((d) => now - d.timeMs <= 24 * 3600 * 1000)
-        );
-      } else {
-        setChartData(mappedData);
+      if (!isFilteringActive) {
+        const now = Date.now();
+        mappedData = mappedData.filter((d) => now - d.timeMs <= 24 * 3600 * 1000);
       }
 
-      if (mappedData.length > 0) {
-        setCurrentSolarInput(
-          Number(mappedData[mappedData.length - 1].solarWatts).toFixed(0)
-        );
-      } else {
-        setCurrentSolarInput(0);
-      }
-    } catch {
-      // Failed to load energy history
-    } finally {
-      setIsFiltering(false);
-    }
-  }, [dateFilter]);
+      const currentSolarInput = mappedData.length > 0 
+        ? Number(mappedData[mappedData.length - 1].solarWatts).toFixed(0) 
+        : 0;
 
-  useEffect(() => {
-    setIsFiltering(true);
-    fetchEnergyHistory();
-    // Auto-refresco de 15s solo si NO hay filtros activos
-    if (!dateFilter.start && !dateFilter.misionId) {
-      const interval = setInterval(fetchEnergyHistory, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [fetchEnergyHistory, dateFilter.start, dateFilter.misionId]);
+      return { chartData: mappedData, currentSolarInput };
+    },
+  });
 
-  return { chartData, currentSolarInput, isFiltering, fetchEnergyHistory };
+  return { 
+    chartData: data?.chartData || [], 
+    currentSolarInput: data?.currentSolarInput || 0, 
+    isFiltering: isFetching, 
+    fetchEnergyHistory: refetch 
+  };
 }

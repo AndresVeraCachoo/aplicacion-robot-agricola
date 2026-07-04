@@ -1,10 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import ProfilePage from '../ProfilePage.jsx';
 
 // --- MOCKS ---
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui) => render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+
 vi.mock('axios');
 
 const mockT = (k) => k; 
@@ -20,6 +27,7 @@ describe('Componente ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.localStorage.clear();
+    queryClient.clear();
     
     // Espiamos los errores de consola para mantener la terminal limpia
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -39,7 +47,7 @@ describe('Componente ProfilePage', () => {
         data: { name: 'Admin Test', role: 'admin', avatar: '/test-avatar.png' }
       });
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
 
       await waitFor(() => {
         expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/users/profile'));
@@ -58,7 +66,7 @@ describe('Componente ProfilePage', () => {
         data: { name: 'Operador', role: 'operador' }
       });
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
 
       await waitFor(() => {
         expect(screen.getByText('Operador')).toBeInTheDocument();
@@ -71,7 +79,7 @@ describe('Componente ProfilePage', () => {
     it('maneja correctamente errores de servidor al cargar perfil', async () => {
       axios.get.mockRejectedValueOnce(new Error('API Error'));
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
 
       await waitFor(() => {
         expect(screen.getByText('profile.errorLoadProfile')).toBeInTheDocument();
@@ -87,7 +95,7 @@ describe('Componente ProfilePage', () => {
     });
 
     it('abre panel, permite seleccionar un avatar y cancelar', async () => {
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       
       // Esperamos a que la carga inicial se resuelva
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
@@ -113,7 +121,7 @@ describe('Componente ProfilePage', () => {
         data: { user: { avatar: '/avatars/robot-fondo-azul.png' } }
       });
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       fireEvent.click(screen.getByText('profile.changePhotoBtn'));
@@ -144,7 +152,7 @@ describe('Componente ProfilePage', () => {
     it('maneja correctamente errores al guardar avatar', async () => {
       axios.put.mockRejectedValueOnce(new Error('Avatar Update Failed'));
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       fireEvent.click(screen.getByText('profile.changePhotoBtn'));
@@ -166,7 +174,7 @@ describe('Componente ProfilePage', () => {
     });
 
     it('actualiza campos del formulario al escribir', async () => {
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       // SOLUCIÓN: Buscamos el input por su atributo "name" en el DOM real
@@ -177,7 +185,7 @@ describe('Componente ProfilePage', () => {
     });
 
     it('muestra error si las nuevas contraseñas no coinciden', async () => {
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       fireEvent.change(document.querySelector('input[name="currentPassword"]'), { target: { name: 'currentPassword', value: 'oldpass' } });
@@ -193,7 +201,7 @@ describe('Componente ProfilePage', () => {
     it('envía solicitud con éxito, muestra mensaje y limpia formulario', async () => {
       axios.put.mockResolvedValueOnce({}); // Responde OK
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       const currentInput = document.querySelector('input[name="currentPassword"]');
@@ -222,7 +230,7 @@ describe('Componente ProfilePage', () => {
     it('captura error de servidor si la contraseña antigua es incorrecta', async () => {
       axios.put.mockRejectedValueOnce(new Error('Wrong password'));
 
-      render(<ProfilePage />);
+      renderWithProviders(<ProfilePage />);
       await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
       
       fireEvent.change(document.querySelector('input[name="currentPassword"]'), { target: { name: 'currentPassword', value: 'wrongpass' } });

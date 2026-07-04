@@ -1,6 +1,6 @@
 import request from "supertest";
-import { app } from "../src/index.js";
-import { pool } from "../src/config/db.js";
+import { app } from "../../src/index.js";
+import { pool } from "../../src/config/db.js";
 
 describe("E2E - Misiones y Ejecuciones", () => {
   let seedMissionId;
@@ -50,7 +50,7 @@ describe("E2E - Misiones y Ejecuciones", () => {
         .send({ name: "Misión Incompleta" });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/Validation Error/i);
+      expect(response.body.error).toBe("Errores de validación en los datos.");
     });
 
     it("debería retornar error 400 si la batería mínima excede el valor", async () => {
@@ -59,7 +59,11 @@ describe("E2E - Misiones y Ejecuciones", () => {
         .send({ ...newMissionPayload, minBattery: 150 }); 
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toMatch(/between 0 and 100/i);
+      expect(response.body.details).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ message: "validation.mission.battery_range" })
+        ])
+      );
     });
   });
 

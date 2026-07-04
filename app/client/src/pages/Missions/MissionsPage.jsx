@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useMissionStore } from "../../store/missionStore";
+import { useMissions } from "../../hooks/useMissions";
 import { useToastStore } from "../../store/toastStore";
 import { useMissionForm } from "../../hooks/useMissionForm";
 
@@ -19,7 +19,7 @@ import "./MissionsPage.css";
  */
 function MissionsPage() {
   const { t } = useTranslation();
-  const { missions, fetchMissions, deleteMission } = useMissionStore();
+  const { missions, deleteMission } = useMissions();
   const { addToast } = useToastStore();
   const mapRef = useRef();
 
@@ -31,7 +31,7 @@ function MissionsPage() {
     if (mapRef.current) {
       const map = mapRef.current;
       map.eachLayer((l) => {
-        if (l.pm && l instanceof window.L.Polygon && !l._pmTempLayer) {
+        if (l.pm && l instanceof globalThis.L.Polygon && !l._pmTempLayer) {
           map.removeLayer(l);
         }
       });
@@ -39,10 +39,6 @@ function MissionsPage() {
   }, []);
 
   const { state: formState, setters: formSetters, handlers: formHandlers } = useMissionForm(handleClearMap);
-
-  useEffect(() => {
-    fetchMissions();
-  }, [fetchMissions]);
 
   const handleDeleteMission = async () => {
     if (!missionToDelete) return;
@@ -53,7 +49,6 @@ function MissionsPage() {
         "info",
       );
       setMissionToDelete(null);
-      fetchMissions();
     } catch {
       addToast("Error al eliminar la misión", "error");
     }

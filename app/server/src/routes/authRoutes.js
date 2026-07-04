@@ -16,7 +16,7 @@ const router = Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.NODE_ENV === "test" ? 100000 : 10,
   message: { error: "Too many failed attempts. Please wait 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false
@@ -54,12 +54,17 @@ const loginLimiter = rateLimit({
  *     responses:
  *       200:
  *         description: Inicio de sesión exitoso.
+ *         headers:
+ *           Set-Cookie:
+ *             schema:
+ *               type: string
+ *               example: "accessToken=...; HttpOnly; Secure; refreshToken=...; HttpOnly; Secure"
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 accessToken:
  *                   type: string
  *                   example: "eyJhbGciOiJIUzI1NiIsInR..."
  *                 user:
@@ -98,6 +103,26 @@ router.post("/login", validate(loginSchema), loginLimiter, authController.login)
  *     responses:
  *       200:
  *         description: Token válido. Devuelve los datos del usuario.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "admin"
+ *                     role:
+ *                       type: string
+ *                       example: "admin"
  *       401:
  *         description: No se ha proporcionado ningún token.
  *       403:
@@ -116,5 +141,19 @@ router.get("/verify", authenticateToken, authController.verify);
  *         description: Sesión cerrada correctamente.
  */
 router.post("/logout", authController.logout);
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresca el token de acceso usando el token de refresco
+ *     tags: [Autenticación]
+ *     responses:
+ *       200:
+ *         description: Token refrescado correctamente.
+ *       401:
+ *         description: Token de refresco ausente, expirado o inválido.
+ */
+router.post("/refresh", authController.refresh);
 
 export default router;

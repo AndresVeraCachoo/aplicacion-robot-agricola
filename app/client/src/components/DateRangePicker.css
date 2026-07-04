@@ -1,4 +1,3 @@
-/* src/components/DateRangePicker.css */
 .filter-bar-container {
   display: flex;
   align-items: flex-end;
@@ -11,7 +10,6 @@
   flex-wrap: wrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
-  /* Mantener el tamaño de la tabla */
   width: 100%;
   box-sizing: border-box;
 }
@@ -30,7 +28,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Inputs y Selects Adaptativos */
 .custom-datepicker-input {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
@@ -92,11 +89,6 @@
   color: #ffffff;
 }
 
-/* =========================================
-   BLINDAJE DEL POPUP DE REACT-DATEPICKER 
-   (100% OPACO - CERO TRANSPARENCIAS)
-========================================= */
-
 #root-portal {
   position: absolute;
   z-index: 999999 !important;
@@ -106,16 +98,10 @@
   z-index: 999999 !important;
 }
 
-/* Ocultamos la flecha del globo que se descoloca con los temas */
 .react-datepicker__triangle {
   display: none !important;
 }
 
-/* =========================================
-   DISEÑO MODO OSCURO (POR DEFECTO)
-========================================= */
-
-/* Contenedor principal del calendario */
 .react-datepicker {
   background-color: #1e1e1e !important;
   border: 1px solid #333 !important;
@@ -126,14 +112,12 @@
   overflow: hidden;
 }
 
-/* Cabecera del mes y controles */
 .react-datepicker__header {
-  background-color: #252525 !important; /* Gris oscuro sólido */
+  background-color: #252525 !important;
   border-bottom: 1px solid #444 !important;
   padding-top: 15px !important;
 }
 
-/* Títulos del mes y la hora */
 .react-datepicker__current-month,
 .react-datepicker-time__header,
 .react-datepicker-year-header {
@@ -141,14 +125,12 @@
   font-weight: bold !important;
 }
 
-/* Nombres de los días de la semana (L, M, X...) */
 .react-datepicker__day-name,
 .react-datepicker__time-name {
   color: #9ca3af !important;
   font-weight: 600 !important;
 }
 
-/* Días numéricos del calendario */
 .react-datepicker__day {
   color: #f3f4f6 !important;
 }
@@ -158,7 +140,6 @@
   border-radius: 4px !important;
 }
 
-/* Día actualmente seleccionado */
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected,
 .react-datepicker__day--in-range {
@@ -167,13 +148,11 @@
   border-radius: 4px !important;
 }
 
-/* Días que pertenecen al mes anterior o siguiente (atenuados) */
 .react-datepicker__day--outside-month {
   color: #6b7280 !important;
   opacity: 0.5 !important;
 }
 
-/* Contenedor inferior del Input de la Hora exacta */
 .react-datepicker__input-time-container {
   background-color: #252525 !important;
   border-top: 1px solid #444 !important;
@@ -183,7 +162,6 @@
   font-weight: 600 !important;
 }
 
-/* La cajita donde escribes la hora */
 .react-datepicker__input-time-container input {
   background-color: #1e1e1e !important;
   color: #f3f4f6 !important;
@@ -197,10 +175,6 @@
 .react-datepicker__input-time-container input:focus {
   border-color: #3b82f6 !important;
 }
-
-/* =========================================
-   DISEÑO MODO CLARO (BLANCO SÓLIDO)
-========================================= */
 
 body.light .react-datepicker,
 body.light-mode .react-datepicker,

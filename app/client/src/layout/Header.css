@@ -1,14 +1,8 @@
-/* src/layout/Header.css */
-
-/* --- REGLA DE SINCRONIZACIÓN DEL CONTENEDOR --- */
 .main-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* ¡CRUCIAL! Hemos quitado la transición de aquí. 
-     Flexbox ajustará esto de manera instantánea y perfecta 
-     mientras el Sidebar mueve su margin-left */
 }
 
 .header {
@@ -24,8 +18,10 @@
   z-index: 100;
   width: 100%;
   box-sizing: border-box;
-  /* Solo animamos colores, NO el ancho. El ancho lo controla el Flexbox del padre */
-  transition: background-color 0.3s, border-color 0.3s;
+
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
 }
 
 .header-left {
@@ -50,7 +46,6 @@
   transform: scale(1.1);
 }
 
-/* --- ESTADO DEL SISTEMA --- */
 .system-status-pill {
   display: flex;
   align-items: center;
@@ -71,7 +66,6 @@
   background-color: #999;
 }
 
-/* Online */
 .system-status-pill.online {
   background-color: #dcfce7;
   border-color: #bbf7d0;
@@ -84,7 +78,6 @@
   animation: pulse-dot 2s infinite;
 }
 
-/* Offline */
 .system-status-pill.offline {
   background-color: #fee2e2;
   border-color: #fecaca;
@@ -95,12 +88,20 @@
 }
 
 @keyframes pulse-dot {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-/* Modo Oscuro - Estado del Sistema */
 body.dark-mode .system-status-pill.online {
   background-color: #064e3b;
   color: #6ee7b7;
@@ -113,14 +114,12 @@ body.dark-mode .system-status-pill.offline {
   border-color: #b91c1c;
 }
 
-/* --- CONTROLES DERECHOS --- */
 .header-right-controls {
   display: flex;
   align-items: center;
-  gap: 15px; /* Reducimos un poco el espacio entre widgets */
+  gap: 15px;
 }
 
-/* --- SELECTOR DE IDIOMAS COMPACTO --- */
 .header-lang-container {
   position: relative;
   display: flex;
@@ -129,27 +128,28 @@ body.dark-mode .system-status-pill.offline {
 
 .header-lang-btn {
   background-color: var(--background-widget, #ffffff);
-  border: 2px solid var(--border-light, #d1d5db); 
+  border: 2px solid var(--border-light, #d1d5db);
   color: var(--primary-darkest);
   font-size: 0.85em;
-  font-weight: 800; 
+  font-weight: 800;
   cursor: pointer;
-  padding: 6px 10px; 
+  padding: 6px 10px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 5px;
   transition: all 0.2s ease;
   font-family: monospace;
-  min-width: 55px; 
+  min-width: 55px;
   justify-content: center;
 }
 
-.header-lang-btn:hover, .header-lang-btn.active {
+.header-lang-btn:hover,
+.header-lang-btn.active {
   background-color: white;
   border-color: var(--accent-green, #22c55e);
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .lang-arrow {
@@ -173,14 +173,20 @@ body.dark-mode .system-status-pill.offline {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  min-width: 55px; 
+  min-width: 55px;
   z-index: 1000;
   animation: dropdownFade 0.2s ease-out;
 }
 
 @keyframes dropdownFade {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header-lang-option {
@@ -203,7 +209,6 @@ body.dark-mode .system-status-pill.offline {
   color: var(--accent-green);
 }
 
-/* Modo oscuro para idiomas */
 body.dark-mode .header-lang-btn {
   background-color: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.1);
@@ -225,7 +230,6 @@ body.dark-mode .header-lang-option:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* --- BOTÓN DE TEMA --- */
 .theme-toggle-btn {
   background: none;
   border: none;
@@ -246,7 +250,6 @@ body.dark-mode .theme-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* --- BATERÍA --- */
 .battery-widget {
   display: flex;
   align-items: center;
@@ -311,7 +314,6 @@ body.dark-mode .battery-widget:hover {
   transition: width 0.5s ease;
 }
 
-/* Estados de Batería */
 .battery-widget.good {
   color: var(--accent-green);
   border-color: var(--accent-green);
@@ -350,25 +352,44 @@ body.dark-mode .battery-widget.solar {
   animation: float-sun 3s ease-in-out infinite;
 }
 
-/* Keyframes de Batería */
 @keyframes pulse-bolt {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.7; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes critical-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 @keyframes float-sun {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-2px); filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
-/* --- RESPONSIVE MOBILE --- */
 @media (max-width: 480px) {
   .status-text {
     display: none;

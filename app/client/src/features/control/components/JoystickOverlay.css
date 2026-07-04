@@ -1,8 +1,3 @@
-/* src/features/control/components/JoystickOverlay.css */
-
-/* =====================================================================
-   OVERLAYS DE LA CÁMARA (JOYSTICK)
-   ===================================================================== */
 .joystick-overlay {
   position: absolute;
   bottom: 20px;
@@ -44,7 +39,6 @@
   cursor: not-allowed;
 }
 
-/* Joystick en móvil vertical */
 @media (max-width: 768px) {
   .joystick-overlay {
     bottom: 30px;
@@ -56,7 +50,6 @@
   }
 }
 
-/* Joystick en móvil horizontal (Transparente y Centrado) */
 @media (max-height: 600px) and (orientation: landscape) {
   .joystick-overlay {
     bottom: 20px;

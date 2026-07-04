@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import L from 'leaflet';
 import ControlMap from '../ControlMap.jsx';
 import { useRobotStore } from '../../../store/robotStore';
-import { useMissionStore } from '../../../store/missionStore';
+import { useMissions } from '../../../hooks/useMissions';
 import { useToastStore } from '../../../store/toastStore';
 
 const shared = vi.hoisted(() => ({
@@ -24,7 +24,7 @@ vi.mock('../../../store/toastStore', () => ({
 }));
 
 vi.mock('../../../store/robotStore', () => ({ useRobotStore: vi.fn() }));
-vi.mock('../../../store/missionStore', () => ({ useMissionStore: vi.fn() }));
+vi.mock('../../../hooks/useMissions', () => ({ useMissions: vi.fn() }));
 
 // Mock completo de Leaflet
 vi.mock('leaflet', () => {
@@ -178,7 +178,7 @@ describe('Componente ControlMap', () => {
       return robotStoreMock;
     });
     
-    useMissionStore.mockReturnValue(missionStoreMock);
+    useMissions.mockReturnValue(missionStoreMock);
     useToastStore.mockReturnValue(toastMock);
   });
 
@@ -314,3 +314,5 @@ describe('Componente ControlMap', () => {
     expect(toastMock.addToast).toHaveBeenCalledWith(expect.stringContaining('Batería insuficiente'), 'error');
   });
 });
+
+

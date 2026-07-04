@@ -1,0 +1,38 @@
+# Exclusiones globales del monorepo
+.git
+.gitignore
+.github
+.vscode
+.idea
+.unlighthouse
+
+# Dependencias (MUY IMPORTANTE ignorar los locales)
+node_modules
+app/client/node_modules
+app/server/node_modules
+npm-debug.log*
+
+# Entornos y credenciales
+.env
+.env.*
+
+# Build, distribuciones y reports
+dist
+app/client/dist
+coverage
+app/client/coverage
+app/server/coverage
+src/generated
+
+# Logs
+k6_logs.txt
+
+# Carpetas y archivos de documentación / base de datos que no se necesitan en ejecución
+database/
+documentacion_tfg/
+referencias/
+*.md
+
+# Configuración específica de herramientas (Docker no lo necesita dentro de la imagen)
+docker-compose.yml
+sonar-project.properties

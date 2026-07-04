@@ -1,4 +1,4 @@
-export class SimulatorState {
+class SimulatorState {
   BASE_LAT = 42.36317;
   BASE_LON = -3.69882;
 
