@@ -395,7 +395,7 @@ function ChartWidget({
         </div>
       </div>
       <div className="chart-responsive-wrapper">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           {renderChart()}
         </ResponsiveContainer>
       </div>

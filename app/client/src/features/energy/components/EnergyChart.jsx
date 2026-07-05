@@ -28,7 +28,7 @@ function EnergyChart({ chartData, currentLocale, t }) {
 
   return (
     <div className="chart-wrapper">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         {chartData.length > 0 ? (
           <AreaChart
             data={chartData}

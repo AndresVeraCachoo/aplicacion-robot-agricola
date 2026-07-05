@@ -97,8 +97,34 @@ describe("Servicio de Usuarios", () => {
       mockCreate.mockResolvedValueOnce({ id: 5, name: 'pepe', role: 'operator' });
 
       const result = await userServiceInstance.createNewUser('pepe', 'operator', '123');
-      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: 'pepe', role: 'operator', password: 'new-hash' } }));
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ name: 'pepe', role: 'operator', password: 'new-hash' }) }));
       expect(result.user).toHaveProperty('name', 'pepe');
+    });
+
+    it("Debería lanzar error 409 si se intenta usar un email que ya existe", async () => {
+      mockFindUnique
+        .mockResolvedValueOnce(null) // userExists
+        .mockResolvedValueOnce({ id: 2, email: 'test@correo.com' }); // emailExists
+      
+      await expect(userServiceInstance.createNewUser('pepe2', 'operator', '123', 'test@correo.com')).rejects.toThrow("Email is already in use");
+    });
+
+    it("Debería lanzar error 400 si no se envía password ni email", async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      await expect(userServiceInstance.createNewUser('pepe3', 'operator', null, null)).rejects.toThrow("Password is required if no email is provided");
+    });
+
+    it("Debería autogenerar contraseña si no se pasa password pero sí email", async () => {
+      mockFindUnique.mockResolvedValue(null);
+      mockBcryptHash.mockResolvedValueOnce('auto-hash');
+      mockCreate.mockResolvedValueOnce({ id: 3, name: 'autoUser', email: 'auto@test.com' });
+
+      const result = await userServiceInstance.createNewUser('autoUser', 'operator', null, 'auto@test.com');
+      
+      expect(result.generatedPassword).toHaveLength(12); // randomBytes(6) => 12 hex chars
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ password: 'auto-hash', email: 'auto@test.com' })
+      }));
     });
   });
 
@@ -143,6 +169,14 @@ describe("Servicio de Usuarios", () => {
       const result = await userServiceInstance.updateExistingUser(1, "Edited", "admin", null);
       expect(result.message).toMatch(/updated/i);
       expect(mockBcryptHash).not.toHaveBeenCalled();
+    });
+
+    it("Debería actualizar el email si se pasa en los parámetros", async () => {
+      mockUpdate.mockResolvedValueOnce({ id: 1 });
+      await userServiceInstance.updateExistingUser(1, "Edited", "admin", null, "nuevo@test.com");
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({ email: "nuevo@test.com" })
+      }));
     });
 
     it("Debería ejecutar reescritura de hash si se provee nueva contraseña opcional", async () => {

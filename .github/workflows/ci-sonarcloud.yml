@@ -30,6 +30,9 @@ jobs:
       - name: Install Monorepo Dependencies
         run: npm ci
 
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=app/server/prisma/schema.prisma
+
       # Ejecutamos las pruebas con "continue-on-error: true" para que,
       # si un test falla, el pipeline no se corte y Sonar pueda registrar el fallo.
 
@@ -46,18 +49,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # PRUEBAS DE CARGA (LOAD TESTING) CON k6
-      - name: Start Services in CI for Load Testing
-        if: always()
-        run: docker-compose up -d --build
-
-      - name: Wait for Backend Health
-        if: always()
-        run: |
-          echo "Esperando a que el backend esté listo..."
-          npx wait-on http://localhost:3001/api/auth/verify --timeout 60000
-
-      - name: Run k6 Load Test
-        uses: grafana/k6-action@v0.3.1
-        if: always()
-        with:
-          filename: ./app/server/tests/load/scenarios.load.test.js
+      - name: Run K6 Load Tests
+        run: node app/server/tests/config/run-k6.js all

@@ -19,6 +19,6 @@ afterAll(async () => {
     await prisma.$disconnect();
     await pool.end();
   } catch (e) {
-    // Ignorar errores en el cierre
+    console.error('Error durante el cierre global de tests (teardown):', e);
   }
 });

@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq';
 import { env } from '../config/env.js';
-import { sendWelcomeEmail, sendSupportTicket } from '../services/emailService.js';
+import { sendWelcomeEmail, sendSupportTicket, sendReportEmail } from '../services/emailService.js';
 import Redis from 'ioredis';
 
 /**
@@ -40,8 +40,11 @@ const emailWorker = process.env.IS_UNIT_TEST === 'true'
     const { email, username, tempPassword } = payload;
     await sendWelcomeEmail(email, username, tempPassword);
   } else if (type === 'SUPPORT_TICKET') {
-    const { email, issueType, description } = payload;
-    await sendSupportTicket(email, issueType, description);
+    const { email, issueType, description, adminEmails } = payload;
+    await sendSupportTicket(email, issueType, description, adminEmails);
+  } else if (type === 'EXPORT_REPORT') {
+    const { email, fileBase64, filename, fileType } = payload;
+    await sendReportEmail(email, fileBase64, filename, fileType);
   } else {
     console.warn(`[EmailWorker] Tipo de trabajo desconocido: ${type}`);
   }

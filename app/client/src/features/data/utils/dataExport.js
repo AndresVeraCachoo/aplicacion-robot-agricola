@@ -1,5 +1,7 @@
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
+import httpClient from "../../../config/httpClient";
 
 export const groupSessions = (data, missions, t) => {
   const map = new Map();
@@ -86,24 +88,174 @@ export const exportToCSV = (missionData, sessionName, lng, addToast, t) => {
   addToast(t("data.csvSuccess"), "success");
 };
 
-export const exportToPDF = async (sessionName, addToast, t) => {
+const generateMissionPDFDoc = async (missionData, sessionName, t) => {
   const element = document.getElementById("mission-report-content");
-  if (!element) return;
-  try {
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-    const pdf = new jsPDF("p", "mm", "a4");
-    pdf.addImage(
-      canvas.toDataURL("image/png"),
-      "PNG",
-      0,
-      0,
-      pdf.internal.pageSize.getWidth(),
-      (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width,
+  if (!element) throw new Error("Element not found");
+
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 15;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(22);
+  pdf.setTextColor(20, 83, 45); 
+  pdf.text("AgroSkopos - " + t("data.missionReport", "Reporte de Misión"), margin, 20);
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(14);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text(`${t("data.mission", "Misión")}: ${sessionName}`, margin, 30);
+
+  pdf.setFontSize(10);
+  pdf.text(`${t("data.generatedOn", "Generado el")}: ${new Date().toLocaleString()}`, margin, 36);
+
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, 40, pageWidth - margin, 40);
+
+  pdf.setFontSize(14);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(t("data.globalStats", "Estadísticas y Ruta"), margin, 50);
+
+  const imgWidth = pageWidth - margin * 2;
+  let currentY = 55;
+
+  const mapImgHeight = (canvas.height * imgWidth) / canvas.width;
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, mapImgHeight);
+  currentY += mapImgHeight + 10;
+
+  const chart1Element = document.getElementById("chart-individual");
+  if (chart1Element) {
+    const canvasChart1 = await html2canvas(chart1Element, { scale: 2, useCORS: true });
+    const chart1Height = (canvasChart1.height * imgWidth) / canvasChart1.width;
+    // Comprobar si necesitamos una nueva página
+    if (currentY + chart1Height > pageHeight - margin) {
+      pdf.addPage();
+      currentY = margin;
+    }
+    pdf.addImage(canvasChart1.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, chart1Height);
+    currentY += chart1Height + 10;
+  }
+
+  const chart2Element = document.getElementById("chart-comparative");
+  if (chart2Element) {
+    const canvasChart2 = await html2canvas(chart2Element, { scale: 2, useCORS: true });
+    const chart2Height = (canvasChart2.height * imgWidth) / canvasChart2.width;
+    if (currentY + chart2Height > pageHeight - margin) {
+      pdf.addPage();
+      currentY = margin;
+    }
+    pdf.addImage(canvasChart2.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, chart2Height);
+    currentY += chart2Height + 10;
+  }
+
+  let tableStartY = currentY;
+  
+  if (missionData && missionData.length > 0) {
+    if (tableStartY > pageHeight - 40) {
+      pdf.addPage();
+      tableStartY = margin;
+    }
+    pdf.setFontSize(14);
+    pdf.text(t("data.dataLog", "Registro de Datos"), margin, tableStartY - 5);
+
+    const fallback = "-";
+    const tableBody = missionData.map(d => [
+      new Date(d.timestamp).toLocaleTimeString(),
+      d.lat == null ? fallback : Number(d.lat).toFixed(6),
+      d.lon == null ? fallback : Number(d.lon).toFixed(6),
+      d.humidity ?? fallback,
+      d.soilTemperature ?? fallback,
+      d.ph ?? fallback,
+      d.nitrogen ?? fallback,
+      d.phosphorus ?? fallback,
+      d.potassium ?? fallback
+    ]);
+
+    autoTable(pdf, {
+      startY: tableStartY,
+      head: [["Hora", "Lat", "Lon", "Hum (%)", "Temp (°C)", "pH", "N", "P", "K"]],
+      body: tableBody,
+      theme: "grid",
+      headStyles: { fillColor: [22, 101, 52] },
+      styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: margin, right: margin }
+    });
+  }
+
+  const pageCount = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i);
+    pdf.setFontSize(8);
+    pdf.setTextColor(150);
+    pdf.text(
+      `AgroSkopos App - ${t("data.page", "Página")} ${i} / ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: "center" }
     );
+  }
+
+  return pdf;
+};
+
+export const exportToPDF = async (missionData, sessionName, addToast, t) => {
+  try {
+    const pdf = await generateMissionPDFDoc(missionData, sessionName, t);
     pdf.save(`Reporte_Mision_${sessionName.replaceAll(/\s+/g, "_")}.pdf`);
     addToast(t("data.pdfSuccess"), "success");
-  } catch {
+  } catch (err) {
+    console.error("Error exportando PDF:", err);
     addToast(t("data.pdfError"), "error");
+  }
+};
+
+export const emailCSV = async (missionData, sessionName, lng, addToast, t) => {
+  if (missionData.length === 0) return;
+  const headers = "Time,Latitude,Longitude,Humidity_%,Temperature_C,pH,Nitrogen,Phosphorus,Potassium,Solar_Rad_W\n";
+  const fallback = t("data.notCollected", "No recogido");
+  
+  const rows = missionData
+    .map((d) => `"${new Date(d.timestamp).toLocaleString(lng)}",${d.lat},${d.lon},${d.humidity ?? fallback},${d.soilTemperature ?? fallback},${d.ph ?? fallback},${d.nitrogen ?? fallback},${d.phosphorus ?? fallback},${d.potassium ?? fallback},${d.solarRadiation ?? fallback}`)
+    .join("\n");
+  
+  const csvContent = headers + rows;
+  const base64Content = btoa(String.fromCodePoint(...new TextEncoder().encode(csvContent)));
+
+  addToast(t("data.emailing", "Encolando reporte para envío..."), "info");
+  try {
+    await httpClient.post("/export/email", {
+      fileBase64: base64Content,
+      filename: `Reporte_Mision_${sessionName.replaceAll(/\s+/g, "_")}.csv`,
+      fileType: "text/csv"
+    });
+    addToast(t("data.emailSuccess", "El correo se enviará en breve."), "success");
+  } catch (error) {
+    addToast(error.response?.data?.error || t("data.emailError", "Error al enviar el correo"), "error");
+  }
+};
+
+export const emailPDF = async (missionData, sessionName, addToast, t) => {
+  addToast(t("data.emailing", "Encolando reporte para envío..."), "info");
+  
+  try {
+    const pdf = await generateMissionPDFDoc(missionData, sessionName, t);
+    // Extraer base64 y limpiar cabecera URI
+    const pdfDataUri = pdf.output("datauristring");
+    const base64Content = pdfDataUri.split(",")[1];
+
+    await httpClient.post("/export/email", {
+      fileBase64: base64Content,
+      filename: `Reporte_Mision_${sessionName.replaceAll(/\s+/g, "_")}.pdf`,
+      fileType: "application/pdf"
+    });
+    
+    addToast(t("data.emailSuccess", "El correo se enviará en breve."), "success");
+  } catch (error) {
+    addToast(error.response?.data?.error || t("data.emailError", "Error al enviar el correo"), "error");
   }
 };
 

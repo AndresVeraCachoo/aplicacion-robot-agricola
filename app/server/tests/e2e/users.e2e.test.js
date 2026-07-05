@@ -135,6 +135,20 @@ describe("E2E - Usuarios y Control de Acceso", () => {
       expect(response.body.name).toBe("NuevoUsuario");
     });
 
+    it("debería crear un nuevo usuario con email para correo de bienvenida", async () => {
+      const response = await request(app)
+        .post("/api/users")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          name: "ConEmail",
+          role: "operador",
+          email: "conemail@test.com"
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.name).toBe("ConEmail");
+    });
+
     it("debería retornar error 400 si el rol no pertenece a opciones permitidas", async () => {
       const response = await request(app)
         .post("/api/users")

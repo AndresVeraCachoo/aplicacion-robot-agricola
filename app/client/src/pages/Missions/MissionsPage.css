@@ -157,10 +157,12 @@
   gap: 15px;
   width: 100%;
   box-sizing: border-box;
+  align-items: flex-end; 
 }
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0; 
 }
 
 .form-actions-row {

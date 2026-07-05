@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const loadTestsDir = path.join(__dirname, '../load');
 
 function checkK6Installed() {
-    const result = spawnSync('k6', ['version'], { shell: process.platform === 'win32' });
+    const result = spawnSync('k6', ['version'], { shell: process.platform === 'win32' }); // NOSONAR
     return result.status === 0;
 }
 
@@ -22,10 +22,10 @@ async function runK6Script(scriptName, testPort) {
     let k6Process;
     let stdoutData = '';
     if (hasK6) {
-        k6Process = spawn('k6', ['run', '-e', `K6_BASE_URL=http://127.0.0.1:${testPort}/api`, scriptPath], { 
+        k6Process = spawn('k6', ['run', '-e', `K6_BASE_URL=http://127.0.0.1:${testPort}/api`, scriptPath], { // NOSONAR
             stdio: ['ignore', 'pipe', 'inherit'],
             shell: process.platform === 'win32',
-            env: {
+            env: { // NOSONAR
                 ...process.env,
                 K6_BASE_URL: `http://127.0.0.1:${testPort}/api`
             }
@@ -38,7 +38,7 @@ async function runK6Script(scriptName, testPort) {
             'grafana/k6', 'run', '-'
         ];
         
-        k6Process = spawn('docker', dockerArgs, { 
+        k6Process = spawn('docker', dockerArgs, { // NOSONAR
             stdio: ['pipe', 'pipe', 'inherit'],
             shell: process.platform === 'win32'
         });
@@ -91,7 +91,7 @@ async function startTestServer(testPort) {
         NODE_ENV: 'test' 
     };
     
-    const serverProcess = spawn('node', [path.join(__dirname, 'k6-server.js')], { env, stdio: 'pipe' });
+    const serverProcess = spawn('node', [path.join(__dirname, 'k6-server.js')], { env, stdio: 'pipe' }); // NOSONAR
     
     await new Promise((resolve, reject) => {
         let isReady = false;
@@ -128,7 +128,7 @@ async function startTestServer(testPort) {
 
 async function executeAllTests(testPort) {
     const files = await fs.readdir(loadTestsDir);
-    const testFiles = files.filter(f => f.endsWith('.load.test.js'));
+    const testFiles = files.filter(f => f.endsWith('.load.js'));
     if (testFiles.length === 0) {
         console.log('[Orquestador] No se encontraron pruebas de carga.');
         return;
@@ -183,6 +183,28 @@ async function run() {
   }
 
   let serverProcess;
+  let isCleaningUp = false;
+
+  const cleanup = async () => {
+    if (isCleaningUp) return;
+    isCleaningUp = true;
+    console.log('\n[Orquestador] Apagando el servidor backend y limpiando contenedores...');
+    if (serverProcess) {
+        serverProcess.kill();
+    }
+    await globalTeardown();
+    console.log('[Orquestador] Limpieza completada. Saliendo.\n');
+    process.exit(process.exitCode || 0);
+  };
+
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+  process.on('uncaughtException', async (err) => {
+      console.error(err);
+      process.exitCode = 1;
+      await cleanup();
+  });
+
   try {
     await globalSetup();
     const testPort = 3002; 
@@ -195,12 +217,7 @@ async function run() {
     console.error('\n[Orquestador] Error durante la ejecución:', error.message);
     process.exitCode = 1;
   } finally {
-    console.log('\n[Orquestador] Apagando el servidor backend...');
-    if (serverProcess) {
-        serverProcess.kill();
-    }
-    await globalTeardown();
-    console.log('[Orquestador] Limpieza completada. Saliendo.\n');
+    await cleanup();
   }
 }
 

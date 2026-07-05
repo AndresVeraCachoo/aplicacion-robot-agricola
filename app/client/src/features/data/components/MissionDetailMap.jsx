@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   MapContainer,
@@ -27,11 +27,29 @@ const MissionDetailMap = ({
   avgPh,
   exportToCSV,
   exportToPDF,
+  emailCSV,
+  emailPDF,
   addToast,
   t,
   i18n,
-}) => (
-  <div className="mission-map-col">
+}) => {
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggle = (type) => setOpenDropdown(openDropdown === type ? null : type);
+
+  return (
+    <div className="mission-map-col">
     {selectedSession ? (
       <>
         <div className="mission-map-header">
@@ -39,13 +57,42 @@ const MissionDetailMap = ({
             <h3>{selectedSession.name}</h3>
             <p>{filteredMissionData.length} {t("data.pointsRegistered")}.</p>
           </div>
-          <div className="export-buttons">
-            <button className="btn-export csv" onClick={() => exportToCSV(filteredMissionData, selectedSession.name, i18n.language, addToast, t)}>
-              📥 {t("data.exportCsv")}
-            </button>
-            <button className="btn-export pdf" onClick={() => exportToPDF(selectedSession.name, addToast, t)}>
-              📄 {t("data.exportPdf")}
-            </button>
+          <div className="export-buttons" ref={dropdownRef}>
+
+            {/* Desplegable CSV */}
+            <div className="export-dropdown-wrap">
+              <button className="btn-export csv" onClick={() => toggle('csv')}>
+                📄 CSV ▾
+              </button>
+              {openDropdown === 'csv' && (
+                <div className="export-dropdown-menu">
+                  <button onClick={() => { exportToCSV(filteredMissionData, selectedSession.name, i18n.language, addToast, t); setOpenDropdown(null); }}>
+                    📥 {t("data.exportCsv", "Descargar CSV")}
+                  </button>
+                  <button onClick={() => { emailCSV(filteredMissionData, selectedSession.name, i18n.language, addToast, t); setOpenDropdown(null); }}>
+                    ✉️ {t("data.emailReport", "Enviar al correo")}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desplegable PDF */}
+            <div className="export-dropdown-wrap">
+              <button className="btn-export pdf" onClick={() => toggle('pdf')}>
+                📄 PDF ▾
+              </button>
+              {openDropdown === 'pdf' && (
+                <div className="export-dropdown-menu">
+                  <button onClick={() => { exportToPDF(filteredMissionData, selectedSession.name, addToast, t); setOpenDropdown(null); }}>
+                    📥 {t("data.exportPdf", "Descargar PDF")}
+                  </button>
+                  <button onClick={() => { emailPDF(filteredMissionData, selectedSession.name, addToast, t); setOpenDropdown(null); }}>
+                    ✉️ {t("data.emailReport", "Enviar al correo")}
+                  </button>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
         <div id="mission-report-content" className="mission-report-wrapper">
@@ -86,7 +133,8 @@ const MissionDetailMap = ({
       </div>
     )}
   </div>
-);
+  );
+};
 
 MissionDetailMap.propTypes = {
   selectedSession: PropTypes.object,
@@ -100,6 +148,8 @@ MissionDetailMap.propTypes = {
   avgPh: PropTypes.number,
   exportToCSV: PropTypes.func.isRequired,
   exportToPDF: PropTypes.func.isRequired,
+  emailCSV: PropTypes.func.isRequired,
+  emailPDF: PropTypes.func.isRequired,
   addToast: PropTypes.func.isRequired,
   t: PropTypes.func.isRequired,
   i18n: PropTypes.object.isRequired,

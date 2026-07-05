@@ -12,6 +12,7 @@ import robotRoutes from "./routes/robotRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import missionRoutes from "./routes/missionRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
+import exportRoutes from "./routes/exportRoutes.js";
 
 import { runSeed } from "./scripts/seed.js";
 import { AppError, errorHandler } from "./middlewares/errorHandler.js";
@@ -77,8 +78,8 @@ app.use(helmet({
 }));
 
 app.use(cors(corsOptions));
-// Limita los payloads JSON a 1MB para prevenir agotamiento de memoria
-app.use(express.json({ limit: "1mb" }));
+// Limita los payloads JSON a 50MB para prevenir agotamiento de memoria
+app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -91,6 +92,7 @@ app.use("/api/robot", robotRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/missions", missionRoutes);
 app.use("/api/support", supportRoutes);
+app.use("/api/export", exportRoutes);
 
 // Si alguien intenta acceder a una ruta inexistente, devuelve nuestro error 404 estándar
 app.all("*", (req, res, next) => {

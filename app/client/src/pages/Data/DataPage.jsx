@@ -17,6 +17,8 @@ import {
   calculateAverage,
   exportToCSV,
   exportToPDF,
+  emailCSV,
+  emailPDF,
   getMapCenterAndPolygon,
 } from "../../features/data/utils/dataExport";
 
@@ -131,7 +133,7 @@ const DataPage = () => {
       ) : (
         <>
           {displayData.length > 0 && (
-            <div className="chart-section">
+            <div id="chart-individual" className="chart-section">
               <ChartWidget
                 data={displayData}
                 title={t("data.individualAnalysis")}
@@ -142,7 +144,7 @@ const DataPage = () => {
           )}
 
           {displayData.length > 0 && (
-            <div className="chart-section">
+            <div id="chart-comparative" className="chart-section">
               <ChartWidget
                 data={displayData}
                 title={t("data.comparativeAnalysis")}
@@ -191,6 +193,8 @@ const DataPage = () => {
               avgPh={avgPh}
               exportToCSV={exportToCSV}
               exportToPDF={exportToPDF}
+              emailCSV={emailCSV}
+              emailPDF={emailPDF}
               addToast={addToast}
               t={t}
               i18n={i18n}

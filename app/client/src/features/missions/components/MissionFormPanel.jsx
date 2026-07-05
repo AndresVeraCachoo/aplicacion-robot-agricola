@@ -80,7 +80,7 @@ export function MissionFormPanel({ formState, formSetters, formHandlers }) {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="mission-width">
-                {t("missions.form.workingWidth")} (m)
+                {t("missions.form.Width")} (m)
               </label>
               <input
                 id="mission-width"
@@ -105,37 +105,35 @@ export function MissionFormPanel({ formState, formSetters, formHandlers }) {
                 onChange={(e) => setPassAngle(Number(e.target.value))}
               />
             </div>
+            <div className="form-group">
+              <label htmlFor="mission-battery">
+                {t("missions.form.minBattery")} (%)
+              </label>
+              <input
+                id="mission-battery"
+                type="number"
+                min="10"
+                max="50"
+                value={minBattery}
+                onChange={(e) => setMinBattery(Number(e.target.value))}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="mission-battery">
-              {t("missions.form.minBattery")} (%)
-            </label>
-            <input
-              id="mission-battery"
-              type="range"
-              min="10"
-              max="50"
-              value={minBattery}
-              onChange={(e) => setMinBattery(Number(e.target.value))}
-            />
-            <div className="range-value">{minBattery}%</div>
-          </div>
-
-          <div className="form-actions">
+          <div className="form-actions-row">
             {editingId && (
               <button
                 type="button"
-                className="btn-cancel"
+                className="btn-cancel-mission"
                 onClick={handleCancelEdit}
               >
                 {t("users.cancel", "Cancelar")}
               </button>
             )}
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-save-mission" style={{ width: "100%" }}>
               {editingId
                 ? t("users.save", "Guardar")
-                : t("missions.form.savePlan")}
+                : t("missions.form.saveBtn")}
             </button>
           </div>
         </form>

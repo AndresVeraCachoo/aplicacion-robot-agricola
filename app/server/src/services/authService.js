@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { AppError } from "../middlewares/errorHandler.js";
 import redisClient from "../config/redis.js";
 
@@ -41,7 +41,7 @@ export class AuthService {
     }
 
     const accessToken = jwt.sign(
-      { id: user.id, name: user.name, role: user.role },
+      { id: user.id, name: user.name, role: user.role, email: user.email },
       this.jwtSecret,
       { expiresIn: "15m" }
     );
@@ -63,6 +63,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         role: user.role,
+        email: user.email,
         avatar: user.avatar,
       },
     };
@@ -86,7 +87,7 @@ export class AuthService {
     }
 
     const user = await this.prisma.user.findUnique({
-      where: { id: parseInt(userId) }
+      where: { id: Number.parseInt(userId) }
     });
 
     if (!user) {
@@ -97,7 +98,7 @@ export class AuthService {
     await redisClient.del(`refresh_token:${refreshToken}`);
 
     const newAccessToken = jwt.sign(
-      { id: user.id, name: user.name, role: user.role },
+      { id: user.id, name: user.name, role: user.role, email: user.email },
       this.jwtSecret,
       { expiresIn: "15m" }
     );
@@ -119,6 +120,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         role: user.role,
+        email: user.email,
         avatar: user.avatar,
       },
     };

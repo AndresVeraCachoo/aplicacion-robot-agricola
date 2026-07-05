@@ -1,11 +1,12 @@
 import { Router } from "express";
+import { prisma } from "../config/db.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import { SupportController } from "../controllers/supportController.js";
 import { z } from "zod";
 import { validate } from "../middlewares/validateRequest.js";
 
 const router = Router();
-const supportController = new SupportController();
+const supportController = new SupportController(prisma);
 
 const ticketSchema = z.object({
   body: z.object({

@@ -121,9 +121,10 @@ export class UserService {
       data: {
         name,
         role,
-        password: hashedPassword
+        password: hashedPassword,
+        email: email || null
       },
-      select: { id: true, name: true, role: true }
+      select: { id: true, name: true, role: true, email: true }
     });
 
     return { user: newUser, generatedPassword };
@@ -139,9 +140,12 @@ export class UserService {
    * @returns {Promise<Object>} Mensaje de confirmación.
    * @throws {AppError} Lanza error 404 si el usuario no existe.
    */
-  async updateExistingUser(id, name, role, password) {
+  async updateExistingUser(id, name, role, password, email) {
     try {
       const updateData = { name, role };
+      if (email !== undefined) {
+        updateData.email = email || null;
+      }
       
       if (password) {
         updateData.password = await bcrypt.hash(password, 10);

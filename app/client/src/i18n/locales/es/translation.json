@@ -182,6 +182,7 @@
     "passwordPlaceholder": "Dejar en blanco para mantener actual",
     "pwdOrEmailHint": "Dejar vacío para autogenerar si hay email",
     "email": "Correo Electrónico (Opcional)",
+    "role": "Rol",
     "roleUser": "Usuario",
     "roleOperator": "Operador",
     "roleAdmin": "Admin",
@@ -293,9 +294,9 @@
       "ph": "pH",
       "npk": "N-P-K",
       "solarRad": "Rad. Solar",
-      "width": "Ancho (m)",
-      "angle": "Ángulo (º)",
-      "minBattery": "Bat. Mín (%)",
+      "width": "Ancho",
+      "angle": "Ángulo",
+      "minBattery": "Bat. Mín",
       "saveBtn": "Guardar Misión"
     },
     "card": {

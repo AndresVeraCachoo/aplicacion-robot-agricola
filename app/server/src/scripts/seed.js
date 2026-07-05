@@ -32,10 +32,10 @@ async function seedUsers() {
   const userHash = await bcrypt.hash("usuario123", 10);
 
   await pool.query(`
-    INSERT INTO usuarios (name, password, role) VALUES 
-    ('admin', $1, 'admin'),
-    ('operador', $2, 'operador'),
-    ('usuario', $3, 'usuario')
+    INSERT INTO usuarios (name, password, role, email) VALUES 
+    ('admin', $1, 'admin', 'admin.agroskopos@gmail.com'),
+    ('operador', $2, 'operador', NULL),
+    ('usuario', $3, 'usuario', NULL)
   `, [adminHash, operatorHash, userHash]);
 }
 

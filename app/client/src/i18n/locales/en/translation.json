@@ -294,9 +294,9 @@
       "ph": "pH",
       "npk": "N-P-K",
       "solarRad": "Solar Rad.",
-      "width": "Width (m)",
-      "angle": "Angle (º)",
-      "minBattery": "Min Bat. (%)",
+      "width": "Width",
+      "angle": "Angle",
+      "minBattery": "Min Bat",
       "saveBtn": "Save Mission"
     },
     "card": {

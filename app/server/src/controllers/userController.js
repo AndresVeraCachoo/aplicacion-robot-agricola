@@ -65,10 +65,13 @@ export class UserController {
     const { name, role, password, email } = req.body;
     const { user: newUser, generatedPassword } = await this.userService.createNewUser(name, role, password, email);
     
-    if (generatedPassword && email) {
+    // Enviar correo de bienvenida siempre que haya email,
+    // usando la contraseña generada automáticamente o la que puso el admin.
+    if (email) {
+      const passwordToSend = generatedPassword || password;
       await emailQueue.add('welcomeEmail', {
         type: 'WELCOME_EMAIL',
-        payload: { email, username: newUser.name, tempPassword: generatedPassword }
+        payload: { email, username: newUser.name, tempPassword: passwordToSend }
       });
     }
 
@@ -86,8 +89,8 @@ export class UserController {
    */
   updateUser = catchAsync(async (req, res, next) => {
     const { id } = req.params;
-    const { name, role, password } = req.body;
-    const result = await this.userService.updateExistingUser(id, name, role, password);
+    const { name, role, password, email } = req.body;
+    const result = await this.userService.updateExistingUser(id, name, role, password, email);
     res.json(result);
   });
 

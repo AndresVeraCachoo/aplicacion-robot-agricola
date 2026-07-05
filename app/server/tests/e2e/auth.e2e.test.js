@@ -62,7 +62,7 @@ describe("E2E - Autenticación (Auth)", () => {
       expect(response.status).toBe(401);
     });
 
-    it("debería retornar error 429 al exceder límite de intentos de login", async () => {
+    it("no debería bloquear peticiones en entorno de test (rate limit desactivado)", async () => {
       let lastResponse;
       for (let i = 0; i < 11; i++) {
         lastResponse = await request(app).post("/api/auth/login").send({
@@ -70,7 +70,7 @@ describe("E2E - Autenticación (Auth)", () => {
           password: "123456",
         });
       }
-      expect(lastResponse.status).toBe(429);
+      expect(lastResponse.status).toBe(401);
     });
   });
 

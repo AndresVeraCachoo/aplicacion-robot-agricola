@@ -37,6 +37,27 @@ const CenterButton = () => {
   );
 };
 
+const AutoCenter = ({ position }) => {
+  const map = useMap();
+  const hasCentered = useRef(false);
+
+  useEffect(() => {
+    if (!hasCentered.current && position?.lat && position?.lon) {
+      map.setView([position.lat, position.lon], 19);
+      hasCentered.current = true;
+    }
+  }, [position, map]);
+
+  return null;
+};
+
+AutoCenter.propTypes = {
+  position: PropTypes.shape({
+    lat: PropTypes.number,
+    lon: PropTypes.number,
+  }),
+};
+
 const MapClickHandler = ({ setClickedPos }) => {
   useMapEvents({
     click(e) {
@@ -145,12 +166,12 @@ export function MissionMapPanel({ mapRef, workArea, setWorkArea, editingId, setC
   const { addToast } = useToastStore();
 
   return (
-    <div className="mission-map-container">
+    <div className="mission-map-container" style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
       <MapContainer
         center={[37.3828, -5.9731]}
         zoom={16}
         scrollWheelZoom={true}
-        className="map-view"
+        className="leaflet-map-container"
         ref={mapRef}
       >
         <TileLayer
@@ -166,6 +187,7 @@ export function MissionMapPanel({ mapRef, workArea, setWorkArea, editingId, setC
           addToast={addToast}
         />
         <CenterButton />
+        <AutoCenter position={position} />
         <MapClickHandler setClickedPos={setClickedPos} />
 
         {position?.lat && position?.lon && (

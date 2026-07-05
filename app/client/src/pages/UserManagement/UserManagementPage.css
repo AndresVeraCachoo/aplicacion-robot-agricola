@@ -250,7 +250,7 @@
 .btn-delete-disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  background-color: #9ca3af;
+  background-color: #385c9b71;
   color: #f3f4f6;
 }
 
@@ -284,7 +284,7 @@
   padding: 10px 20px;
   border-radius: 6px;
   border: none;
-  background: #ef4444;
+  background: #d90429;
   color: white;
   cursor: pointer;
   font-weight: bold;
