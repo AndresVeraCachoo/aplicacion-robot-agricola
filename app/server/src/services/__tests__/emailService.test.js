@@ -77,7 +77,7 @@ describe('EmailService', () => {
       expect(callArg.subject).toContain('export.pdf');
       
       expect(callArg.attachments).toBeDefined();
-      expect(callArg.attachments.length).toBe(1);
+      expect(callArg.attachments).toHaveLength(1);
       expect(callArg.attachments[0].filename).toBe('export.pdf');
       expect(callArg.attachments[0].contentType).toBe('application/pdf');
       expect(callArg.attachments[0].content).toMatch(/^JVBERi/);

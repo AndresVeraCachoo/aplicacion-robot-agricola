@@ -41,7 +41,7 @@ export class RobotController {
       const filters = {
         start: req.query.start,
         end: req.query.end,
-        misionId: req.query.misionId,
+        missionId: req.query.missionId,
       };
       
       const data = await this.robotService.getAgronomicData(filters);
@@ -64,7 +64,7 @@ export class RobotController {
       const filters = {
         start: req.query.start,
         end: req.query.end,
-        misionId: req.query.misionId,
+        missionId: req.query.missionId,
       };
 
       const history = await this.robotService.getEnergyHistory(filters);

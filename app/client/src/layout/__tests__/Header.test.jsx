@@ -6,11 +6,10 @@ import { useRobotStore } from '../../store/robotStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useToastStore } from '../../store/toastStore';
 
-// Mock de i18next ajustado a la lógica de promesas de tu componente
 let currentLang = 'es';
 const mockChangeLanguage = vi.fn((lang) => {
   currentLang = lang;
-  return Promise.resolve(); // Simula la promesa que espera tu componente en el .then()
+  return Promise.resolve();
 });
 
 vi.mock('react-i18next', () => ({
@@ -20,7 +19,7 @@ vi.mock('react-i18next', () => ({
       get language() { return currentLang; },
       get resolvedLanguage() { return currentLang; },
       changeLanguage: mockChangeLanguage,
-      getFixedT: () => (k) => k, // Simula la función para traducir el toast
+      getFixedT: () => (k) => k,
     },
   }),
   initReactI18next: { type: '3rdParty', init: vi.fn() },
@@ -60,7 +59,6 @@ describe('Componente Header', () => {
     useToastStore.mockReturnValue({ addToast: mockAddToast });
   });
 
-  // Ajustado para mockear netPower e isConnected y cubrir todas las ramas
   const setupStore = (percentage, status, netPower = 0, isConnected = true) => {
     useRobotStore.mockImplementation((selector) => {
       const state = { battery: { percentage, status, netPower }, isConnected };
@@ -112,14 +110,11 @@ describe('Componente Header', () => {
       setupStore(80, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
       
-      // Hacemos click en el idioma actual
       const langBtn = screen.getByText('ES');
       fireEvent.click(langBtn);
 
-      // Verificamos que se abrió buscando la opción "EN" (tu array LANGUAGES)
       const englishOption = screen.getByText('EN');
       
-      // Usamos act() porque click lanza una promesa asíncrona (changeLanguage().then)
       await act(async () => {
         fireEvent.click(englishOption);
       });
@@ -130,22 +125,14 @@ describe('Componente Header', () => {
   });
 
   describe('Widget y Modal de Batería', () => {
-    it('aplica clase good si la batería supera 50%', () => {
-      setupStore(80, 'DISCHARGING');
+    it.each([
+      [80, 'good'],
+      [30, 'low'],
+      [5, 'critical'],
+    ])('aplica la clase %s cuando el nivel de batería es del %i%%', (percentage, expectedClass) => {
+      setupStore(percentage, 'DISCHARGING');
       render(<Header onMenuClick={mockOnMenuClick} />);
-      expect(document.querySelector('.battery-widget')).toHaveClass('good');
-    });
-
-    it('aplica clase low si la batería está entre 10% y 50%', () => {
-      setupStore(30, 'DISCHARGING');
-      render(<Header onMenuClick={mockOnMenuClick} />);
-      expect(document.querySelector('.battery-widget')).toHaveClass('low');
-    });
-
-    it('aplica clase critical si la batería es menor a 10%', () => {
-      setupStore(5, 'DISCHARGING');
-      render(<Header onMenuClick={mockOnMenuClick} />);
-      expect(document.querySelector('.battery-widget')).toHaveClass('critical');
+      expect(document.querySelector('.battery-widget')).toHaveClass(expectedClass);
     });
 
     it('aplica clase charging y muestra rayo si estado es CARGANDO', () => {

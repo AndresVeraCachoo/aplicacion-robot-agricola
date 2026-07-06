@@ -166,7 +166,7 @@ describe('Componente LoginPage', () => {
       useTranslation.mockReturnValue({
         t: (key) => key,
         i18n: {
-          resolvedLanguage: 'fr', // French is not in LANGUAGES
+          resolvedLanguage: 'fr', 
           changeLanguage: mockChangeLanguage,
         },
       });

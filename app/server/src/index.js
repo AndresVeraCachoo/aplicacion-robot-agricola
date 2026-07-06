@@ -1,4 +1,5 @@
 import http from "node:http";
+import path from "node:path";
 import express from "express";
 import { Server } from "socket.io";
 import cors from "cors";
@@ -45,13 +46,17 @@ app.set("trust proxy", 1);
 // Limita quién puede comunicarse con nuestra API (CORS)
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+$/.test(origin)) {
+    // Permitir si no hay origen (postman, curl), si es localhost, si es de Vercel, o si contiene dominio
+    if (!origin || 
+        /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+$/.test(origin) || 
+        origin.includes("vercel.app") || 
+        origin.includes("agroskopos")) {
       callback(null, true);
     } else {
       callback(new Error(`Blocked by CORS policy: ${origin}`));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -63,6 +68,8 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests from this IP. Please try again later." }
 });
 
+app.use(cors(corsOptions));
+
 // Refuerza las cabeceras HTTP de seguridad
 app.use(helmet({
   contentSecurityPolicy: {
@@ -70,21 +77,26 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       objectSrc: ["'none'"],
-      // Fuerza a que las imágenes externas (como avatares) carguen a través de enlaces seguros HTTPS
+      // Fuerza a que las imágenes externas carguen a través de enlaces seguros HTTPS
       imgSrc: ["'self'", "data:", "blob:", "https:"], 
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-app.use(cors(corsOptions));
 // Limita los payloads JSON a 50MB para prevenir agotamiento de memoria
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
+// Sirve la documentación JSDoc generada como archivos estáticos en /docs
+// La carpeta docs/ debe existir (generada con: npm run docs desde la raíz del monorepo)
+const docsPath = path.resolve(process.cwd(), "../../docs");
+app.use("/docs", express.static(docsPath));
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: "AgroSkopos API Docs"
 }));
+
 
 app.use("/api/", apiLimiter);
 app.use("/api/auth", authRoutes);
@@ -94,7 +106,7 @@ app.use("/api/missions", missionRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/export", exportRoutes);
 
-// Si alguien intenta acceder a una ruta inexistente, devuelve nuestro error 404 estándar
+// Si alguien intenta acceder a una ruta inexistente, devuelve un error 404 estándar
 app.all("*", (req, res, next) => {
   next(new AppError(`La ruta solicitada ${req.method} ${req.originalUrl} no existe en este servidor.`, 404));
 });

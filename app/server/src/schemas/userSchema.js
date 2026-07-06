@@ -12,8 +12,8 @@ export const createUserSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "validation.user.name_required"),
     role: roleEnum,
-    password: z.string().min(6, "validation.auth.password_min_length").optional(),
-    email: z.string().email("validation.user.invalid_email").optional()
+    password: z.string().min(6, "validation.auth.password_min_length").optional(), 
+    email: z.string().email({ message: "validation.user.invalid_email" }).optional() // NOSONAR
   }).refine((data) => data.password || data.email, {
     message: "validation.user.password_or_email_required",
     path: ["password"]
@@ -27,7 +27,7 @@ export const updateUserSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1, "validation.user.name_required"),
     role: roleEnum,
-    email: z.string().email("validation.user.invalid_email").optional(),
+    email: z.string().email({ message: "validation.user.invalid_email" }).optional(), // NOSONAR
     // Opcional porque el administrador puede editar el rol o nombre sin alterar las credenciales
     password: z.string().min(6, "validation.auth.password_min_length").optional()
   })

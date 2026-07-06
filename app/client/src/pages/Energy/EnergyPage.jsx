@@ -32,14 +32,14 @@ function EnergyPage() {
   const [dateFilter, setDateFilter] = useState({
     start: null,
     end: null,
-    misionId: null,
+    missionId: null,
   });
 
   const { chartData, currentSolarInput, isFiltering } = useEnergyData(dateFilter);
 
 
-  const handleFilter = (start, end, misionId) => {
-    setDateFilter({ start, end, misionId });
+  const handleFilter = (start, end, missionId) => {
+    setDateFilter({ start, end, missionId });
   };
 
   // Adapta el idioma de las fechas en la gráfica
@@ -72,7 +72,7 @@ function EnergyPage() {
       <div className="energy-charts-section">
         <div className="charts-section-header">
           <h3 className="section-title">
-            {dateFilter.start || dateFilter.misionId
+            {dateFilter.start || dateFilter.missionId
               ? t("energy.balance", "Balance Energético")
               : t("energy.balance24h", "Balance Energético (24h)")}
           </h3>

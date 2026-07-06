@@ -282,18 +282,18 @@ describe('Componente ControlMap', () => {
     robotStoreMock.system.battery = 100;
     render(<ControlMap />);
     
-    // Open panel
+
     act(() => { fireEvent.click(screen.getByText(/control\.missionsBtn/)); });
     
-    // Hover mission to cover `hoveredZigZag` generator
+
     const missionCard = screen.getByRole('article', { name: 'Misión: Misión Test' });
     fireEvent.mouseEnter(missionCard);
     
-    // Load mission
+
     const loadBtn = screen.getByText('control.loadZone');
     fireEvent.click(loadBtn);
     
-    // Start mission
+
     const startBtn = screen.getByText('control.startAuto');
     await act(async () => {
       fireEvent.click(startBtn);

@@ -68,9 +68,14 @@ async function seedMissionsAndData(now) {
   let energyInsertValues = [];
   let simBattery = 85;
 
-  for (const mission of missionsDef) {
+  for (let i = 0; i < missionsDef.length; i++) {
+    const mission = missionsDef[i];
     let startDate = new Date(now.getTime() - (mission.daysAgo * 24 * 60 * 60 * 1000));
-    startDate.setHours(10, 30, 0, 0);
+    // Variar la hora de inicio (entre 8 AM y 4 PM) para que la gráfica de radiación cambie
+    startDate.setHours(8 + (i * 2), 15 + (i * 10), 0, 0);
+
+    // Recargar la batería del robot completamente antes de salir a la misión para evitar caídas a cero
+    simBattery = 95 + getSecureRandom() * 5;
 
     // Conversión estructural requerida por PostGIS para leer las coordenadas correctamente
     const geoJsonCoords = mission.coords.map(c => [c[1], c[0]]);
@@ -113,8 +118,10 @@ async function seedMissionsAndData(now) {
 
       // Generar y asociar dato de energía para ese mismo punto de la misión
       let generated = radiation * 0.0015;
-      simBattery = Math.max(0, Math.min(100, simBattery - 2 + generated));
-      energyInsertValues.push(`('${pointDateObj.toISOString()}', ${simBattery.toFixed(2)}, 'WORKING', ${radiation}, 2.00, ${generated.toFixed(2)}, ${temp})`);
+      // Variar un poco el consumo base por misión para que las gráficas de batería bajen distinto
+      let baseConsumption = 1.8 + (i * 0.2) + (getSecureRandom() * 0.5);
+      simBattery = Math.max(0, Math.min(100, simBattery - baseConsumption + generated));
+      energyInsertValues.push(`('${pointDateObj.toISOString()}', ${simBattery.toFixed(2)}, 'WORKING', ${radiation}, ${baseConsumption.toFixed(2)}, ${generated.toFixed(2)}, ${temp})`);
     });
   }
 
@@ -142,12 +149,12 @@ async function seedMissionsAndData(now) {
  * @returns {Promise<void>}
  */
 async function seedEnergyHistory(now) {
-  console.log("[Seed] Generando historial de energía con simulación solar y consumo (5 Días)...");
+  console.log("[Seed] Generando historial de energía con simulación solar y consumo (5 Meses)...");
   let energyInsert = [];
   
   let simBattery = 40; 
-  // 1440 ciclos representan 5 días divididos en fracciones de 5 minutos
-  const historyPoints = 1440; 
+  // 43200 ciclos representan ~5 meses (150 días) divididos en fracciones de 5 minutos
+  const historyPoints = 43200; 
   
   const executions = await pool.query("SELECT fecha_inicio, fecha_fin FROM ejecuciones_mision");
   const execs = executions.rows;
@@ -174,12 +181,16 @@ async function seedEnergyHistory(now) {
     simBattery = Math.max(0, Math.min(100, simBattery)); 
 
     energyInsert.push(`('${tickTime.toISOString()}', ${simBattery.toFixed(2)}, '${status}', ${radiation.toFixed(2)}, ${consumption.toFixed(2)}, ${generated.toFixed(2)})`);
-  }
 
-  await pool.query(`
-    INSERT INTO historial_energia ("timestamp", bateria_porcentaje, estado, radiacion_solar, energia_consumida, energia_generada)
-    VALUES ${energyInsert.join(', ')}
-  `);
+    // Inserción en lotes de 5000 para no sobrepasar límites de string SQL
+    if (energyInsert.length >= 5000 || i === 0) {
+      await pool.query(`
+        INSERT INTO historial_energia ("timestamp", bateria_porcentaje, estado, radiacion_solar, energia_consumida, energia_generada)
+        VALUES ${energyInsert.join(', ')}
+      `);
+      energyInsert = [];
+    }
+  }
 }
 
 /**

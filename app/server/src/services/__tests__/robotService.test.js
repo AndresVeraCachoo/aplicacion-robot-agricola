@@ -51,9 +51,9 @@ describe("Servicio de Telemetría", () => {
       expect(args.where.timestamp).toHaveProperty('gte');
     });
 
-    it("Debería ignorar variable misionId si recibe string 'null'", async () => {
+    it("Debería ignorar variable missionId si recibe string 'null'", async () => {
       mockFindMany.mockResolvedValueOnce([]);
-      await robotServiceInstance.getAgronomicData({ misionId: 'null' });
+      await robotServiceInstance.getAgronomicData({ missionId: 'null' });
       
       const args = mockFindMany.mock.calls[0][0];
       expect(args.where).not.toHaveProperty('execution');
@@ -61,9 +61,9 @@ describe("Servicio de Telemetría", () => {
   });
 
   describe("Construcción SQL Dinámica (Energía)", () => {
-    it("Debería resolver límites inyectando subconsultas indexadas si misionId existe", async () => {
+    it("Debería resolver límites inyectando subconsultas indexadas si missionId existe", async () => {
       mockFindMany.mockResolvedValueOnce([]);
-      await robotServiceInstance.getEnergyHistory({ misionId: '5' });
+      await robotServiceInstance.getEnergyHistory({ missionId: '5' });
       
       const args = mockFindMany.mock.calls[0][0];
       expect(args.where.timestamp).toBeDefined();
@@ -79,7 +79,7 @@ describe("Servicio de Telemetría", () => {
 
     it("Debería inyectar la cláusula relacional de misión si el ID es numérico", async () => {
       mockFindMany.mockResolvedValueOnce([]);
-      await robotServiceInstance.getAgronomicData({ misionId: '5' });
+      await robotServiceInstance.getAgronomicData({ missionId: '5' });
       const args = mockFindMany.mock.calls[0][0];
       expect(args.where).toHaveProperty('execution.missionId', 5);
     });

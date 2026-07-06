@@ -45,10 +45,12 @@ const DataPage = () => {
   const itemsPerPage = 10;
 
   const [filters, setFilters] = useState(null);
+  const [compMetric1, setCompMetric1] = useState("temperature");
+  const [compMetric2, setCompMetric2] = useState("humidity");
 
   const { data: filteredData = null, isFetching: isFiltering, isError } = useQuery({
     queryKey: ["agronomicData", filters],
-    queryFn: () => robotService.getAgronomicData(filters.start, filters.end, filters.misionId),
+    queryFn: () => robotService.getAgronomicData(filters.start, filters.end, filters.missionId),
     enabled: !!filters,
   });
 
@@ -60,13 +62,13 @@ const DataPage = () => {
       wasFiltering.current = false;
       if (filters) {
         if (isError) {
-          addToast("data.fetchError", "error");
+          addToast(t("data.fetchError", "Error al obtener datos"), "error");
         } else {
-          addToast("data.recordsFound", "info");
+          addToast(t("data.recordsFound", "{{count}} registros encontrados", { count: filteredData?.length || 0 }), "info");
         }
       }
     }
-  }, [isFiltering, isError, filters, addToast]);
+  }, [isFiltering, isError, filters, addToast, filteredData?.length, t]);
 
   const liveAgronomicData = useRobotStore((state) =>
     Array.isArray(state.agronomicData) ? state.agronomicData : [],
@@ -91,11 +93,11 @@ const DataPage = () => {
     fetchMissions();
   }, [fetchMissions]);
 
-  const handleFilter = (start, end, misionId) => {
-    if (!start && !end && !misionId) {
+  const handleFilter = (start, end, missionId) => {
+    if (!start && !end && !missionId) {
       setFilters(null);
     } else {
-      setFilters({ start, end, misionId });
+      setFilters({ start, end, missionId });
       setCurrentPage(1);
     }
   };
@@ -149,8 +151,10 @@ const DataPage = () => {
                 data={displayData}
                 title={t("data.comparativeAnalysis")}
                 initialType="compare"
-                initialMetric1="temperature"
-                initialMetric2="humidity"
+                initialMetric1={compMetric1}
+                initialMetric2={compMetric2}
+                onMetric1Change={setCompMetric1}
+                onMetric2Change={setCompMetric2}
                 forcedCompare={true}
               />
             </div>
@@ -196,6 +200,8 @@ const DataPage = () => {
               emailCSV={emailCSV}
               emailPDF={emailPDF}
               addToast={addToast}
+              compMetric1={compMetric1}
+              compMetric2={compMetric2}
               t={t}
               i18n={i18n}
             />

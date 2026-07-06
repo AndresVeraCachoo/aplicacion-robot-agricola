@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (k) => {
-      // Force a falsy value to cover the fallback branch ( || "Close sidebar" )
+
       if (k === 'modal.close') return undefined;
       return k;
     }
@@ -40,7 +40,7 @@ describe('Componente Sidebar', () => {
       const overlay = document.querySelector('.sidebar-overlay-bg');
       expect(overlay).toHaveClass('visible');
       expect(overlay).toHaveAttribute('tabindex', '0');
-      // Verify that the aria-label fallback works when there is no translation
+
       expect(overlay).toHaveAttribute('aria-label', 'Close sidebar');
 
       const aside = document.querySelector('.sidebar');
@@ -64,13 +64,13 @@ describe('Componente Sidebar', () => {
 
   it('renderiza enlaces básicos e invoca onClose al hacer clic', () => {
     useAuthStore.mockReturnValue({ userRole: 'basico', logout: mockLogout });
-    // Add isOpen={true} in other tests for PropTypes best practices
+
     renderWithRouter(<Sidebar isOpen={true} onClose={mockOnClose} />);
 
-    const inicioLink = screen.getByText('sidebar.home');
-    expect(inicioLink).toBeInTheDocument();
+    const homeLink = screen.getByText('sidebar.home');
+    expect(homeLink).toBeInTheDocument();
     
-    fireEvent.click(inicioLink);
+    fireEvent.click(homeLink);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
     
     const closeBtn = document.querySelector('.close-menu-btn');

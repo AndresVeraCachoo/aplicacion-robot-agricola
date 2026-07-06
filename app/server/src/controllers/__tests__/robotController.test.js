@@ -23,10 +23,10 @@ describe("Controlador de Telemetría", () => {
   });
 
   it("Debería extraer parámetros y solicitar datos agronómicos", async () => {
-    req.query = { start: "fecha1", end: "fecha2", misionId: "3" };
+    req.query = { start: "fecha1", end: "fecha2", missionId: "3" };
     mockRobotService.getAgronomicData.mockResolvedValueOnce([]);
     await robotController.getAgronomicData(req, res, next);
-    expect(mockRobotService.getAgronomicData).toHaveBeenCalledWith({ start: "fecha1", end: "fecha2", misionId: "3" });
+    expect(mockRobotService.getAgronomicData).toHaveBeenCalledWith({ start: "fecha1", end: "fecha2", missionId: "3" });
     expect(res.json).toHaveBeenCalledWith([]);
   });
 

@@ -31,6 +31,7 @@ k6_logs.txt
 database/
 documentacion_tfg/
 referencias/
+docs/
 *.md
 
 # Configuración específica de herramientas (Docker no lo necesita dentro de la imagen)

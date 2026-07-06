@@ -165,7 +165,7 @@ describe('Componente EnergyPage', () => {
       });
 
       expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('start=2026-01-01'));
-      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('misionId=2'));
+      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('missionId=2'));
       expect(screen.getByText('0 W/m²')).toBeInTheDocument();
       expect(screen.getByText('Standby / Noche')).toBeInTheDocument();
 

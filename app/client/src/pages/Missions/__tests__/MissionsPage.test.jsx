@@ -7,7 +7,6 @@ import { useMissions } from '../../../hooks/useMissions';
 import { useToastStore } from '../../../store/toastStore';
 import L from 'leaflet';
 
-// --- MOCKS EXTERNOS ---
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (k, def) => def || k,
@@ -45,7 +44,6 @@ vi.mock('leaflet', () => {
     toGeoJSON() { 
       return { geometry: { type: 'Polygon', coordinates: [[[0, 0]]] } }; 
     }
-  
     _pmTempLayer = false;
 }
 
@@ -222,16 +220,13 @@ describe('Componente MissionsPage', () => {
         globalThis.__mapOnCallbacks['pm:remove']();
       });
       
-      // FIX: Rellenamos el nombre para que el formulario no bloquee el submit nativo
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Test' } });
-      fireEvent.click(screen.getByText('missions.form.savePlan'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
       expect(mockAddToast).toHaveBeenCalledWith('Debes dibujar un polígono en el mapa', 'warning');
     });
   });
 
   describe('Validación y Creación de Misión', () => {
-    
-    // Silenciamos el warning del Scroll de JSDOM
     beforeEach(() => {
       window.scrollTo = vi.fn();
     });
@@ -249,14 +244,11 @@ describe('Componente MissionsPage', () => {
         });
       });
 
-      // FIX: Rellenamos el nombre para que HTML5 nos deje enviar el formulario
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Sin Sensores' } });
-
-      // Desmarcamos el único sensor activo (Humedad)
       const humCheckbox = screen.getAllByRole('checkbox')[0];
       fireEvent.click(humCheckbox);
 
-      fireEvent.click(screen.getByText('missions.form.savePlan'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
       
       expect(mockAddToast).toHaveBeenCalledWith('Selecciona al menos un sensor', 'warning');
       expect(mockCreateMision).not.toHaveBeenCalled();
@@ -276,7 +268,7 @@ describe('Componente MissionsPage', () => {
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Alfa' } });
-      fireEvent.click(screen.getByText('missions.form.savePlan'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
 
       await waitFor(() => {
         expect(mockCreateMision).toHaveBeenCalledWith(expect.objectContaining({ name: 'Misión Alfa' }));
@@ -299,7 +291,7 @@ describe('Componente MissionsPage', () => {
       });
 
       fireEvent.change(document.querySelector('input[id="mission-name"]'), { target: { value: 'Misión Error' } });
-      fireEvent.click(screen.getByText('missions.form.savePlan'));
+      fireEvent.click(screen.getByText('missions.form.saveBtn'));
 
       await waitFor(() => {
         expect(mockAddToast).toHaveBeenCalledWith('Error al guardar la misión', 'error');
@@ -379,4 +371,3 @@ describe('Componente MissionsPage', () => {
     });
   });
 });
-

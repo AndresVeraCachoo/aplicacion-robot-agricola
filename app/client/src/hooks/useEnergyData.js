@@ -10,15 +10,15 @@ import { robotService } from "../services/robotService";
  * @param {Object} dateFilter - Filtro de fechas y misión.
  * @param {string} dateFilter.start - Fecha de inicio.
  * @param {string} dateFilter.end - Fecha de fin.
- * @param {string} dateFilter.misionId - ID de la misión a filtrar.
+ * @param {string} dateFilter.missionId - ID de la misión a filtrar.
  * @returns {Object} Objeto con chartData, currentSolarInput, isFiltering y la función fetchEnergyHistory.
  */
 export function useEnergyData(dateFilter) {
-  const isFilteringActive = !!(dateFilter.start || dateFilter.misionId);
+  const isFilteringActive = !!(dateFilter.start || dateFilter.missionId);
 
   const { data, isFetching, refetch } = useQuery({
-    queryKey: ["energy", dateFilter.start, dateFilter.end, dateFilter.misionId],
-    queryFn: () => robotService.getEnergy(dateFilter.start, dateFilter.end, dateFilter.misionId),
+    queryKey: ["energy", dateFilter.start, dateFilter.end, dateFilter.missionId],
+    queryFn: () => robotService.getEnergy(dateFilter.start, dateFilter.end, dateFilter.missionId),
     refetchInterval: isFilteringActive ? false : 15000,
     select: (responseData) => {
       // 🛡️ Prevenimos que datos nulos rompan la gráfica (NaN)

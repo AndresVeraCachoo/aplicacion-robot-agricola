@@ -12,77 +12,82 @@ export class AuthController {
   }
 
   /**
-   * Helper privado para establecer las cookies de autenticación
+   * Establece las cookies de autenticación en la respuesta.
+   * * @param {Object} res - Respuesta Express.
+   * @param {string} accessToken - Token de acceso.
+   * @param {string} refreshToken - Token de refresco.
+   * @returns {void}
    */
   _setAuthCookies(res, accessToken, refreshToken) {
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
 
   /**
    * Autentica a un usuario en el sistema y devuelve sus datos junto con un token JWT firmado.
-   * 
-   * @param {Object} req - Petición Express.
+   * * @param {Object} req - Petición Express.
    * @param {Object} res - Respuesta Express.
    * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
    */
   login = catchAsync(async (req, res, next) => {
-    // Confiamos en req.body porque el middleware previo de Zod bloquea cualquier petición malformada
-    const { name, password } = req.body; 
-    const authData = await this.authService.loginUser(name, password);
+    const { name, password } = req.body;
     
-    const { accessToken, refreshToken, user } = authData;
+    const { user, accessToken, refreshToken } = await this.authService.loginUser(name, password);
 
     this._setAuthCookies(res, accessToken, refreshToken);
 
-    res.json({ user, accessToken }); // Devolver temporalmente para compatibilidad hacia atrás
+    res.json({
+      user,
+      accessToken,
+    });
   });
 
   /**
-   * Cierra la sesión del usuario limpiando la cookie de autenticación.
+   * Cierra la sesión del usuario eliminando las cookies de autenticación.
+   * * @param {Object} req - Petición Express.
+   * @param {Object} res - Respuesta Express.
+   * @returns {void}
    */
   logout = (req, res) => {
-    res.clearCookie("accessToken", {
+    const isProd = process.env.NODE_ENV === "production";
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+    };
+
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
     res.json({ message: "Sesión cerrada correctamente" });
   };
 
   /**
    * Verifica si el token de sesión actual es válido devolviendo los datos del usuario logueado.
-   * 
-   * @param {Object} req - Petición Express.
+   * * @param {Object} req - Petición Express.
    * @param {Object} res - Respuesta Express.
    * @returns {void}
    */
   verify = (req, res) => {
-    // Si la petición llega aquí, el middleware authenticateToken ya ha validado la firma del JWT con éxito
     res.json({ valid: true, user: req.user });
   };
 
   /**
    * Refresca el token de acceso usando el token de refresco.
-   * 
-   * @param {Object} req - Petición Express.
+   * * @param {Object} req - Petición Express.
    * @param {Object} res - Respuesta Express.
    * @param {Function} next - Middleware para el manejo global de errores.
    * @returns {Promise<void>}
@@ -94,10 +99,13 @@ export class AuthController {
       return res.status(401).json({ message: "No refresh token provided" });
     }
 
-    const { accessToken, refreshToken, user } = await this.authService.refreshUserToken(currentRefreshToken);
+    const { accessToken, refreshToken: newRefreshToken, user } = await this.authService.refreshUserToken(currentRefreshToken);
 
-    this._setAuthCookies(res, accessToken, refreshToken);
+    this._setAuthCookies(res, accessToken, newRefreshToken);
 
-    res.json({ user, accessToken });
+    res.json({
+      user,
+      accessToken,
+    });
   });
 }

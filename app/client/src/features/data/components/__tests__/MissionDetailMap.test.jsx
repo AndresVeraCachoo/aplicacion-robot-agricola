@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import MissionDetailMap from '../MissionDetailMap';
 
-// Mock simple de react-leaflet
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }) => <div data-testid="map-container">{children}</div>,
   TileLayer: () => <div data-testid="tile-layer" />,
@@ -31,6 +30,8 @@ describe('MissionDetailMap Component', () => {
     avgPh: 7,
     exportToCSV: vi.fn(),
     exportToPDF: vi.fn(),
+    emailCSV: vi.fn(),
+    emailPDF: vi.fn(),
     addToast: vi.fn(),
     t: vi.fn(key => key),
     i18n: { language: 'es-ES' }
@@ -57,15 +58,25 @@ describe('MissionDetailMap Component', () => {
 
   it('debe llamar a exportToCSV al pulsar el botón', () => {
     render(<MissionDetailMap {...defaultProps} />);
-    const csvBtn = screen.getByText('📥 data.exportCsv');
+    
+    const csvToggle = screen.getByText(/CSV ▾/i);
+    fireEvent.click(csvToggle);
+    
+    const csvBtn = screen.getByText(/data.exportCsv/i);
     fireEvent.click(csvBtn);
+    
     expect(defaultProps.exportToCSV).toHaveBeenCalled();
   });
 
   it('debe llamar a exportToPDF al pulsar el botón', () => {
     render(<MissionDetailMap {...defaultProps} />);
-    const pdfBtn = screen.getByText('📄 data.exportPdf');
+    
+    const pdfToggle = screen.getByText(/PDF ▾/i);
+    fireEvent.click(pdfToggle);
+    
+    const pdfBtn = screen.getByText(/data.exportPdf/i);
     fireEvent.click(pdfBtn);
+    
     expect(defaultProps.exportToPDF).toHaveBeenCalled();
   });
 });

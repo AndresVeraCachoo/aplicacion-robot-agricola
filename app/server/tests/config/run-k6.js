@@ -34,6 +34,7 @@ async function runK6Script(scriptName, testPort) {
         console.log('[Orquestador] K6 no está instalado localmente. Usando imagen Docker (grafana/k6)...');
         const dockerArgs = [
             'run', '--rm', '-i',
+            '--add-host=host.docker.internal:host-gateway',
             '-e', `K6_BASE_URL=http://host.docker.internal:${testPort}/api`,
             'grafana/k6', 'run', '-'
         ];

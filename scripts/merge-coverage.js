@@ -41,21 +41,20 @@ reports.forEach(report => {
       if (line.startsWith('SF:')) {
         let filePath = line.substring(3);
         const normalizedRoot = rootDir.replaceAll('\\', '/');
-        const normalizedFilePath = filePath.replaceAll('\\', '/');
+        let normalizedFilePath = filePath.replaceAll('\\', '/');
         
         if (normalizedFilePath.includes(normalizedRoot)) {
-            filePath = normalizedFilePath.replace(normalizedRoot + '/', '');
-        } else if (!filePath.startsWith(report.prefix)) {
-            filePath = filePath.replace(/^[./]+/, '');
-            filePath = report.prefix + filePath;
+            normalizedFilePath = normalizedFilePath.replace(normalizedRoot + '/', '');
+        } else if (!normalizedFilePath.startsWith(report.prefix)) {
+            normalizedFilePath = normalizedFilePath.replace(/^[./]+/, '');
+            normalizedFilePath = report.prefix + normalizedFilePath;
         }
-        return `SF:${filePath}`;
+        return `SF:${normalizedFilePath}`;
       }
       
-      // Calculate stats
       if (line.startsWith('LF:')) stats.LF += Number.parseInt(line.substring(3), 10) || 0;
       if (line.startsWith('LH:')) stats.LH += Number.parseInt(line.substring(3), 10) || 0;
-      if (line.startsWith('FNF:')) stats.FNF += Number.parseInt(line.substring(4), 10) || 0;
+      if (line.startsWith('FNF:')) stats.FNH += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('FNH:')) stats.FNH += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('BRF:')) stats.BRF += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('BRH:')) stats.BRH += Number.parseInt(line.substring(4), 10) || 0;
@@ -70,7 +69,6 @@ reports.forEach(report => {
 fs.writeFileSync(path.join(coverageDir, 'lcov.info'), mergedLcov);
 console.log('Cobertura fusionada exitosamente en /coverage/lcov.info');
 
-// Helper to calculate percentage
 const getPercent = (hit, found) => found === 0 ? '100.00' : ((hit / found) * 100).toFixed(2);
 
 console.log('\nResumen de Cobertura Global Unificado:');

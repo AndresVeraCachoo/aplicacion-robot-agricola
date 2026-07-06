@@ -39,14 +39,14 @@ export const robotService = {
    * @param {string} [end] - Fecha de fin.
    * @returns {Promise<Object>} Datos de energía.
    */
-  getEnergy: async (start, end, misionId) => {
+  getEnergy: async (start, end, missionId) => {
     const params = new URLSearchParams();
     if (start && end) {
       params.append("start", start);
       params.append("end", end);
     }
-    if (misionId) {
-      params.append("misionId", misionId);
+    if (missionId) {
+      params.append("missionId", missionId);
     }
     const response = await httpClient.get(`/robot/energia/historial?${params.toString()}`);
     return response.data;
@@ -66,7 +66,7 @@ export const robotService = {
       params.append("end", end);
     }
     if (missionId) {
-      params.append("misionId", missionId);
+      params.append("missionId", missionId);
     }
     const response = await httpClient.get(`/robot/datos?${params.toString()}`);
     return response.data;

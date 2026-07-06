@@ -1,5 +1,5 @@
 // src/features/dashboard/components/ChartWidget.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import html2canvas from "html2canvas";
 import "./ChartWidget.css";
 
 const MetricOptions = ({ t }) => (
@@ -59,11 +60,39 @@ function ChartWidget({
   initialMetric1 = "humidity",
   initialMetric2 = "temperature",
   forcedCompare = false,
+  disableAnimation = false,
+  hideHeader = false,
+  onMetric1Change,
+  onMetric2Change,
 }) {
   const { t } = useTranslation();
   const [metric1, setMetric1] = useState(initialMetric1);
   const [metric2, setMetric2] = useState(initialMetric2);
   const [chartType, setChartType] = useState(initialType);
+  const chartRef = useRef(null);
+
+  const handleMetric1Change = (e) => {
+    setMetric1(e.target.value);
+    if (onMetric1Change) onMetric1Change(e.target.value);
+  };
+
+  const handleMetric2Change = (e) => {
+    setMetric2(e.target.value);
+    if (onMetric2Change) onMetric2Change(e.target.value);
+  };
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+    try {
+      const canvas = await html2canvas(chartRef.current, { scale: 2, useCORS: true, scrollY: -window.scrollY });
+      const link = document.createElement("a");
+      link.download = `${title.replace(/\s+/g, "_")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Error downloading chart:", error);
+    }
+  };
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -201,17 +230,33 @@ function ChartWidget({
               <stop offset="95%" stopColor={conf1.color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <Area
-            yAxisId="left"
-            type="monotone"
-            dataKey={metric1}
-            name={conf1.label}
-            stroke={conf1.color}
-            fillOpacity={1}
-            fill={`url(#grad-${metric1})`}
-            strokeWidth={2}
-            connectNulls={true}
-          />
+          {chartType === "line" ? (
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey={metric1}
+              name={conf1.label}
+              stroke={conf1.color}
+              strokeWidth={3}
+              dot={false}
+              activeDot={{ r: 5 }}
+              connectNulls={true}
+              isAnimationActive={!disableAnimation}
+            />
+          ) : (
+            <Area
+              yAxisId="left"
+              type="monotone"
+              dataKey={metric1}
+              name={conf1.label}
+              stroke={conf1.color}
+              fillOpacity={1}
+              fill={`url(#grad-${metric1})`}
+              strokeWidth={2}
+              connectNulls={true}
+              isAnimationActive={!disableAnimation}
+            />
+          )}
           <Line
             yAxisId="right"
             type="monotone"
@@ -222,6 +267,7 @@ function ChartWidget({
             dot={false}
             activeDot={{ r: 5 }}
             connectNulls={true}
+            isAnimationActive={!disableAnimation}
           />
         </ComposedChart>
       );
@@ -255,7 +301,7 @@ function ChartWidget({
             formatter={(value, name) => [value === null || value === undefined ? t("chart.notCollected", "No recogido") : value, name]}
           />
           <Legend />
-          <Scatter name={conf1.label} data={chartData} fill={conf1.color} />
+          <Scatter name={conf1.label} data={chartData} fill={conf1.color} isAnimationActive={!disableAnimation} />
         </ScatterChart>
       );
     }
@@ -271,6 +317,7 @@ function ChartWidget({
             name={conf1.label}
             fill={conf1.color}
             radius={[4, 4, 0, 0]}
+            isAnimationActive={!disableAnimation}
           />
         </BarChart>
       );
@@ -291,6 +338,7 @@ function ChartWidget({
             dot={false}
             activeDot={{ r: 6 }}
             connectNulls={true}
+            isAnimationActive={!disableAnimation}
           />
         </LineChart>
       );
@@ -323,19 +371,44 @@ function ChartWidget({
           fill={`url(#grad-${metric1}-single)`}
           strokeWidth={2}
           connectNulls={true}
+          isAnimationActive={!disableAnimation}
         />
       </AreaChart>
     );
   };
 
   return (
-    <div className="chart-widget-container">
-      <div className="chart-header">
-        <div className="chart-header-top">
-          <h3 className="chart-title">
-            {title}
-          </h3>
-          {!forcedCompare && (
+    <div className="chart-widget-container" ref={chartRef}>
+      {!hideHeader && (
+        <div className="chart-header">
+          <div className="chart-header-top">
+            <h3 className="chart-title">
+              {title}
+              <button
+                type="button"
+                className="btn-download-chart"
+                onClick={handleDownload}
+                title={t("chart.download", "Descargar Gráfica")}
+                data-html2canvas-ignore="true"
+                style={{ 
+                  background: 'var(--primary-light, #e0f2fe)', 
+                  border: '1px solid var(--primary-color, #0284c7)', 
+                  cursor: 'pointer', 
+                  fontSize: '1rem', 
+                  marginLeft: '10px',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                📷
+              </button>
+            </h3>
+            {!forcedCompare && (
             <div className="btn-group">
               <button
                 type="button"
@@ -375,7 +448,7 @@ function ChartWidget({
         <div className="metric-selectors-row">
           <select
             value={metric1}
-            onChange={(e) => setMetric1(e.target.value)}
+            onChange={handleMetric1Change}
             className="metric-select primary"
           >
             <MetricOptions t={t} />
@@ -385,7 +458,7 @@ function ChartWidget({
               <span className="vs-badge">vs</span>
               <select
                 value={metric2}
-                onChange={(e) => setMetric2(e.target.value)}
+                onChange={handleMetric2Change}
                 className="metric-select secondary"
               >
                 <MetricOptions t={t} />
@@ -394,6 +467,7 @@ function ChartWidget({
           )}
         </div>
       </div>
+      )}
       <div className="chart-responsive-wrapper">
         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           {renderChart()}
@@ -410,5 +484,9 @@ ChartWidget.propTypes = {
   initialMetric1: PropTypes.string,
   initialMetric2: PropTypes.string,
   forcedCompare: PropTypes.bool,
+  disableAnimation: PropTypes.bool,
+  hideHeader: PropTypes.bool,
+  onMetric1Change: PropTypes.func,
+  onMetric2Change: PropTypes.func,
 };
 export default ChartWidget;

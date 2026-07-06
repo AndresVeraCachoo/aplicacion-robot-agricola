@@ -15,7 +15,6 @@ const queryClient = new QueryClient({
 
 const renderWithProviders = (ui) => render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 
-// --- MOCKS EXTERNOS LIMPIOS PARA SONARQUBE ---
 vi.mock('react-leaflet', () => ({
   MapContainer: function MockMap() { return <div data-testid="map-container">{arguments[0].children}</div>; },
   TileLayer: () => null,
@@ -158,21 +157,15 @@ describe('Componente DataPage', () => {
     it('ajusta automáticamente currentPage si totalPages disminuye', async () => {
       renderWithProviders(<DataPage />);
       
-      // 1. Vamos a la página 2
       fireEvent.click(screen.getByText('→')); 
 
-      // 2. Simulamos que el filtro devuelve un solo registro
       axios.get.mockResolvedValueOnce({ data: [mockAgronomicData[0]] });
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       
-      // 3. SOLUCIÓN ANTI-FLAKY: Esperamos a que la petición termine 
-      // comprobando que el status de "Cargando..." ha desaparecido.
       await waitFor(() => {
         expect(screen.queryByText(/data.waitingData/i)).not.toBeInTheDocument();
       });
 
-      // 4. Verificamos algo ÚNICO en lugar de buscar un número "1". 
-      // Si estamos en la página 1 y solo hay 1 página, AMBOS botones deben estar bloqueados.
       expect(screen.getByText('←')).toBeDisabled();
       expect(screen.getByText('→')).toBeDisabled();
     });
@@ -187,7 +180,7 @@ describe('Componente DataPage', () => {
       expect(screen.getByText(/data.waitingData/)).toBeInTheDocument();
       
       await waitFor(() => {
-        expect(mockAddToast).toHaveBeenCalledWith('data.recordsFound', 'info');
+        expect(mockAddToast).toHaveBeenCalledWith('2 registros encontrados', 'info');
       });
     });
 
@@ -204,18 +197,15 @@ describe('Componente DataPage', () => {
     it('limpia filtros si todos se pasan como nulos', async () => {
       renderWithProviders(<DataPage />);
       
-      // Filtramos primero para tener datos filtrados
       axios.get.mockResolvedValueOnce({ data: [{ id: 99, lat: 0, lon: 0, timestamp: new Date().toISOString() }] });
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       
       await waitFor(() => {
-        expect(mockAddToast).toHaveBeenCalledWith('data.recordsFound', 'info');
+        expect(mockAddToast).toHaveBeenCalledWith('2 registros encontrados', 'info');
       });
 
-      // Luego limpiamos
       fireEvent.click(screen.getByTestId('mock-date-picker-clear'));
       
-      // La tabla debería volver a mostrar todos los registros, que son 12
       await waitFor(() => {
         expect(screen.getByText('12 data.totalRecords')).toBeInTheDocument();
       });
@@ -263,7 +253,10 @@ describe('Componente DataPage', () => {
       renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main')); 
       
-      const csvBtn = screen.getByText(/data.exportCsv/);
+      const csvToggle = screen.getByText(/CSV ▾/i);
+      fireEvent.click(csvToggle);
+      
+      const csvBtn = screen.getByText(/data.exportCsv/i);
       fireEvent.click(csvBtn);
 
       expect(mockClick).toHaveBeenCalled();
@@ -276,7 +269,10 @@ describe('Componente DataPage', () => {
       renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
-      const pdfBtn = screen.getByText(/data.exportPdf/);
+      const pdfToggle = screen.getByText(/PDF ▾/i);
+      fireEvent.click(pdfToggle);
+
+      const pdfBtn = screen.getByText(/data.exportPdf/i);
       fireEvent.click(pdfBtn);
 
       await waitFor(() => {
@@ -291,7 +287,10 @@ describe('Componente DataPage', () => {
       renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
-      const pdfBtn = screen.getByText(/data.exportPdf/);
+      const pdfToggle = screen.getByText(/PDF ▾/i);
+      fireEvent.click(pdfToggle);
+      
+      const pdfBtn = screen.getByText(/data.exportPdf/i);
       fireEvent.click(pdfBtn);
 
       await waitFor(() => {
@@ -300,5 +299,3 @@ describe('Componente DataPage', () => {
     });
   });
 });
-
-

@@ -9,7 +9,6 @@ vi.mock('./store/authStore', () => ({
   useAuthStore: vi.fn(),
 }));
 
-// Simular componentes lazy para acelerar tests y evitar advertencias de act() con suspense
 vi.mock('./pages/Login/LoginPage', () => ({ default: () => <div data-testid="login-page">Login Page</div> }));
 vi.mock('./layout/MainLayout', () => ({ default: () => <div data-testid="main-layout">Main Layout</div> }));
 vi.mock('./pages/Dashboard/DashboardPage', () => ({ default: () => <div data-testid="dashboard">Dashboard</div> }));
@@ -54,42 +53,16 @@ describe('Componente App y Rutas Protegidas', () => {
     expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
-  it('renderiza layout principal cuando usuario accede a ruta protegida', async () => {
+  it.each([
+    ['/app/dashboard'],
+    ['/'],
+    ['/unknown-route-123'],
+  ])('renderiza layout principal al acceder a la ruta %s con usuario autenticado', async (route) => {
     useAuthStore.mockReturnValue({ isLoggedIn: true, isLoading: false, initAuth: vi.fn(() => Promise.resolve(() => {})) });
 
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={['/app/dashboard']}>
-          <App />
-        </MemoryRouter>
-      );
-    });
-
-    // El mock de MainLayout debería renderizarse
-    expect(screen.getByTestId('main-layout')).toBeInTheDocument();
-  });
-
-  it('redirige ruta raíz a /app', async () => {
-    useAuthStore.mockReturnValue({ isLoggedIn: true, isLoading: false, initAuth: vi.fn(() => Promise.resolve(() => {})) });
-
-    await act(async () => {
-      render(
-        <MemoryRouter initialEntries={['/']}>
-          <App />
-        </MemoryRouter>
-      );
-    });
-
-    // Raíz -> /app -> /app/dashboard (si simulamos Dashboard dentro de MainLayout estaría allí, pero aquí solo comprobamos el layout principal)
-    expect(screen.getByTestId('main-layout')).toBeInTheDocument();
-  });
-
-  it('redirige ruta desconocida a /app', async () => {
-    useAuthStore.mockReturnValue({ isLoggedIn: true, isLoading: false, initAuth: vi.fn(() => Promise.resolve(() => {})) });
-
-    await act(async () => {
-      render(
-        <MemoryRouter initialEntries={['/unknown-route-123']}>
+        <MemoryRouter initialEntries={[route]}>
           <App />
         </MemoryRouter>
       );

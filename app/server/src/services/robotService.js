@@ -47,15 +47,15 @@ export class RobotService {
    * @param {Object} filters - Objeto con los criterios de filtrado.
    * @param {string} [filters.start] - Fecha de inicio del rango de búsqueda.
    * @param {string} [filters.end] - Fecha de fin del rango de búsqueda.
-   * @param {string|number} [filters.misionId] - Identificador de la misión para filtrar solo las lecturas tomadas durante su ejecución.
+   * @param {string|number} [filters.missionId] - Identificador de la misión para filtrar solo las lecturas tomadas durante su ejecución.
    * @returns {Promise<Array<Object>>} Lista de lecturas agronómicas, formateadas y aplanadas para el frontend (limitado a 2000).
    */
-  async getAgronomicData({ start, end, misionId }) {
+  async getAgronomicData({ start, end, missionId }) {
     const where = this._buildBaseDateFilter(start, end);
 
-    if (misionId && misionId !== 'null' && misionId !== '') {
+    if (missionId && missionId !== 'null' && missionId !== '') {
       where.execution = {
-        missionId: Number.parseInt(misionId, 10)
+        missionId: Number.parseInt(missionId, 10)
       };
     }
 
@@ -97,20 +97,31 @@ export class RobotService {
    * @param {Object} filters - Objeto con los criterios de filtrado.
    * @param {string} [filters.start] - Fecha de inicio del rango.
    * @param {string} [filters.end] - Fecha de fin del rango.
-   * @param {string|number} [filters.misionId] - Identificador de la misión para extraer la energía consumida durante la misma.
+   * @param {string|number} [filters.missionId] - Identificador de la misión para extraer la energía consumida durante la misma.
    * @returns {Promise<Array<Object>>} Lista con los registros históricos de batería y radiación solar (limitado a 2000).
    */
-  async getEnergyHistory({ start, end, misionId }) {
+  async getEnergyHistory({ start, end, missionId }) {
     const where = this._buildBaseDateFilter(start, end);
 
-    if (misionId && misionId !== 'null' && misionId !== '') {
+    if (missionId && missionId !== 'null' && missionId !== '') {
       const lastExecution = await this.prisma.missionExecution.findFirst({
-        where: { missionId: Number.parseInt(misionId, 10) },
+        where: { missionId: Number.parseInt(missionId, 10) },
         orderBy: { startTime: 'desc' }
       });
 
       if (!lastExecution) {
         return [];
+      }
+
+      // Si hay filtro de fecha, comprobamos si la misión cae en ese rango
+      if (where.timestamp) {
+        if (
+          lastExecution.startTime > where.timestamp.lte || 
+          (lastExecution.endTime || new Date()) < where.timestamp.gte
+        ) {
+          // La misión ocurrió fuera del rango de fechas que pide el usuario
+          return [];
+        }
       }
 
       where.timestamp = {

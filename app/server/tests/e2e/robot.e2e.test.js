@@ -5,14 +5,14 @@ import { pool } from "../../src/config/db.js";
 
 describe("E2E - Telemetría y Estado", () => {
   let validToken;
-  let misionId;
+  let missionId;
 
   const API_ESTADO = "/api/robot/estado";
   const API_DATOS = "/api/robot/datos";
   const API_ENERGIA = "/api/robot/energia/historial";
 
-  const fechaAntigua = new Date("2023-01-01T10:00:00Z");
-  const fechaReciente = new Date("2025-01-01T10:00:00Z");
+  const oldDate = new Date("2023-01-01T10:00:00Z");
+  const recentDate = new Date("2025-01-01T10:00:00Z");
 
   const getWithAuth = (endpoint) => request(app).get(endpoint).set("Authorization", `Bearer ${validToken}`);
 
@@ -26,29 +26,29 @@ describe("E2E - Telemetría y Estado", () => {
       "INSERT INTO robot_estado (id, system_status, battery_percentage, current_lat, current_lon) VALUES (1, 'inactivo', 100, 40.0, -3.0)"
     );
 
-    const resMision = await pool.query(
+    const missionRes = await pool.query(
       "INSERT INTO misiones (nombre, tipo_tarea, ancho_trabajo, angulo_pasada, bateria_minima, area_trabajo) VALUES ('Mision Robot', 'mapeo', 2, 90, 20, '[]') RETURNING id"
     );
-    misionId = resMision.rows[0].id;
+    missionId = missionRes.rows[0].id;
 
-    const resEjecucion = await pool.query(
+    const executionRes = await pool.query(
       "INSERT INTO ejecuciones_mision (mision_id, estado, fecha_inicio, fecha_fin) VALUES ($1, 'completado', $2, $3) RETURNING id",
-      [misionId, "2025-01-01T09:00:00Z", "2025-01-01T11:00:00Z"] 
+      [missionId, "2025-01-01T09:00:00Z", "2025-01-01T11:00:00Z"] 
     );
-    const ejecucionId = resEjecucion.rows[0].id;
+    const executionId = executionRes.rows[0].id;
 
     await pool.query(
       `INSERT INTO robot_datos (ejecucion_id, lat, lon, "timestamp", humedad) VALUES 
       (NULL, 40.1, -3.1, $1, 40), 
       ($3, 40.2, -3.2, $2, 60)`,
-      [fechaAntigua.toISOString(), fechaReciente.toISOString(), ejecucionId]
+      [oldDate.toISOString(), recentDate.toISOString(), executionId]
     );
 
     await pool.query(
       `INSERT INTO historial_energia ("timestamp", bateria_porcentaje, estado) VALUES 
       ($1, 80, 'activo'), 
       ($2, 50, 'activo')`,
-      [fechaAntigua.toISOString(), fechaReciente.toISOString()]
+      [oldDate.toISOString(), recentDate.toISOString()]
     );
   });
 
@@ -89,11 +89,11 @@ describe("E2E - Telemetría y Estado", () => {
     });
 
     it("debería filtrar datos agronómicos por identificador de misión", async () => {
-      const response = await getWithAuth(API_DATOS).query({ misionId });
+      const response = await getWithAuth(API_DATOS).query({ missionId });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1); 
-      expect(response.body[0].missionId).toBe(misionId);
+      expect(response.body[0].missionId).toBe(missionId);
     });
 
     it("debería retornar error 400 si falta la fecha de fin", async () => {
@@ -125,7 +125,7 @@ describe("E2E - Telemetría y Estado", () => {
     });
 
     it("debería filtrar historial de energía correspondiente a una misión", async () => {
-      const response = await getWithAuth(API_ENERGIA).query({ misionId });
+      const response = await getWithAuth(API_ENERGIA).query({ missionId });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);

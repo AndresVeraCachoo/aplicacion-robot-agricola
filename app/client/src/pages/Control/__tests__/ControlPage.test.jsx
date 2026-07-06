@@ -131,7 +131,7 @@ describe('Componente ControlPage', () => {
     });
 
     it('previene defensivamente handleMove y handleStop si modo no es MANUAL', () => {
-      // Simulate mode changing to AUTO but an event firing on a stale button reference
+
       const { rerender } = render(<ControlPage />);
       const upBtn = screen.getByText('▲');
 

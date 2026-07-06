@@ -11,6 +11,7 @@ import MapUpdater from "./MapUpdater";
 
 import NotCollected from "./NotCollected";
 import { formatDate, formatNum } from "../utils/formatters";
+import ChartWidget from "../../dashboard/components/ChartWidget";
 
 /**
  * Componente para mostrar el mapa y los detalles de una sesión de misión específica.
@@ -30,6 +31,8 @@ const MissionDetailMap = ({
   emailCSV,
   emailPDF,
   addToast,
+  compMetric1 = "temperature",
+  compMetric2 = "humidity",
   t,
   i18n,
 }) => {
@@ -101,7 +104,7 @@ const MissionDetailMap = ({
             <div className="stat-pill">🔋 <strong>{t("data.batterySpent")}:</strong> {batteryEst}</div>
           </div>
           <div className="mission-map-container">
-            <MapContainer center={mapCenter} zoom={17} className="mission-detail-map-view">
+            <MapContainer center={mapCenter} zoom={17} className="mission-detail-map-view" preferCanvas={true}>
               <MapUpdater center={mapCenter} />
               <TileLayer attribution="&copy; OpenStreetMap" url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
               {polygonCoords.length > 0 && <Polygon positions={polygonCoords} pathOptions={{ color: "#10b981", fillColor: "#10b981", fillOpacity: 0.2 }} />}
@@ -124,6 +127,34 @@ const MissionDetailMap = ({
               <div className="summary-item"><span>{t("data.avgPh")}</span><strong>{avgPh === null ? <NotCollected t={t} /> : formatNum(avgPh, 1)}</strong></div>
             </div>
           )}
+        </div>
+
+        {/* Gráficos ocultos para exportación a PDF, filtrados por la misión seleccionada */}
+        <div style={{ position: "absolute", top: "-9999px", left: "-9999px", width: "1000px" }}>
+          {["humidity", "temperature", "ph", "radiation", "nitrogen", "phosphorus", "potassium"].map(metric => (
+            <div key={metric} id={`mission-chart-${metric}`} style={{ width: "1000px", height: "450px", background: "white", padding: "20px 20px 40px 20px" }}>
+              <ChartWidget
+                data={filteredMissionData}
+                title=""
+                initialType="line"
+                initialMetric1={metric}
+                disableAnimation={true}
+                hideHeader={true}
+              />
+            </div>
+          ))}
+          <div id="mission-chart-comparative" style={{ width: "1000px", height: "450px", background: "white", padding: "20px 20px 40px 20px" }}>
+             <ChartWidget
+                data={filteredMissionData}
+                title=""
+                initialType="line"
+                initialMetric1={compMetric1}
+                initialMetric2={compMetric2}
+                forcedCompare={true}
+                disableAnimation={true}
+                hideHeader={true}
+              />
+          </div>
         </div>
       </>
     ) : (
@@ -151,6 +182,8 @@ MissionDetailMap.propTypes = {
   emailCSV: PropTypes.func.isRequired,
   emailPDF: PropTypes.func.isRequired,
   addToast: PropTypes.func.isRequired,
+  compMetric1: PropTypes.string,
+  compMetric2: PropTypes.string,
   t: PropTypes.func.isRequired,
   i18n: PropTypes.object.isRequired,
 };

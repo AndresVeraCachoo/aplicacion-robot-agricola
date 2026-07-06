@@ -5,25 +5,22 @@ import { env } from '../config/env.js';
  * Cliente de correo configurado para utilizar Gmail.
  * (Puede cambiarse a otros proveedores ajustando las opciones de SMTP).
  */
-export const transporter = nodemailer.createTransport(
-  process.env.NODE_ENV === 'test'
-    ? { jsonTransport: true }
-    : {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // Use TLS
-        auth: {
-          user: env.EMAIL_USER,
-          pass: env.EMAIL_PASS,
-        },
-      }
-);
+export const transporter = process.env.NODE_ENV === 'test'
+  ? nodemailer.createTransport({ jsonTransport: true }) // NOSONAR
+  : nodemailer.createTransport({ // NOSONAR
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: env.EMAIL_USER,
+        pass: env.EMAIL_PASS,
+      },
+    });
 
 /**
  * Envía un correo electrónico de bienvenida al crear un nuevo usuario,
  * incluyendo sus credenciales temporales.
- * 
- * @param {string} email - Correo electrónico del destinatario.
+ * * @param {string} email - Correo electrónico del destinatario.
  * @param {string} username - Nombre de usuario.
  * @param {string} tempPassword - Contraseña temporal autogenerada.
  * @returns {Promise<void>}
@@ -54,8 +51,7 @@ export const sendWelcomeEmail = async (email, username, tempPassword) => {
 /**
  * Envía un correo electrónico a los administradores del sistema con
  * los detalles de un ticket de soporte creado por un usuario.
- * 
- * @param {string} userEmail - Correo electrónico del usuario que solicita soporte.
+ * * @param {string} userEmail - Correo electrónico del usuario que solicita soporte.
  * @param {string} type - Tipo o categoría de la incidencia.
  * @param {string} description - Detalles de la incidencia aportados por el usuario.
  * @returns {Promise<void>}
@@ -63,7 +59,6 @@ export const sendWelcomeEmail = async (email, username, tempPassword) => {
 export const sendSupportTicket = async (userEmail, type, description, adminEmails = []) => {
   const toEmails = adminEmails.length > 0 ? adminEmails.join(', ') : env.ADMIN_EMAIL;
 
-  // Solo ponemos Reply-To si el usuario tiene un correo real (no el fallback del sistema)
   const isRealEmail = userEmail && !userEmail.endsWith('@sistema.local');
 
   const mailOptions = {
@@ -91,15 +86,13 @@ export const sendSupportTicket = async (userEmail, type, description, adminEmail
 
 /**
  * Envía un correo con un archivo adjunto (PDF o CSV) al usuario que lo generó.
- * 
- * @param {string} userEmail - Correo electrónico del usuario autenticado.
+ * * @param {string} userEmail - Correo electrónico del usuario autenticado.
  * @param {string} fileBase64 - Contenido del archivo en formato base64.
  * @param {string} filename - Nombre del archivo a enviar.
  * @param {string} fileType - Tipo MIME (application/pdf o text/csv).
  * @returns {Promise<void>}
  */
 export const sendReportEmail = async (userEmail, fileBase64, filename, fileType) => {
-  // Limpiamos el prefijo de base64 si estuviera presente (por seguridad)
   const base64Data = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
 
   const mailOptions = {
@@ -127,4 +120,3 @@ export const sendReportEmail = async (userEmail, fileBase64, filename, fileType)
 
   await transporter.sendMail(mailOptions);
 };
-

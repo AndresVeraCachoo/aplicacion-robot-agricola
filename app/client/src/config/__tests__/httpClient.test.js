@@ -94,9 +94,7 @@ describe('httpClient interceptors', () => {
     
     beforeEach(() => {
       originalPost = httpClient.post;
-      // Mock the base function call of httpClient for when it retries the original request
-      // Unfortunately we can't easily mock the function itself inside the same file unless we mock axios.
-      // So we will just test the rejection flow if it's already retrying
+
     });
 
     afterEach(() => {

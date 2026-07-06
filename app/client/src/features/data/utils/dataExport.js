@@ -88,11 +88,33 @@ export const exportToCSV = (missionData, sessionName, lng, addToast, t) => {
   addToast(t("data.csvSuccess"), "success");
 };
 
-const generateMissionPDFDoc = async (missionData, sessionName, t) => {
+const addPageIfNeeded = (pdf, currentY, elementHeight, pageHeight, margin) => {
+  if (currentY + elementHeight + 15 > pageHeight - margin) {
+    pdf.addPage();
+    return margin;
+  }
+  return currentY;
+};
+
+const addChartToPdf = async (pdf, elementId, label, imgWidth, margin, currentY, pageHeight) => {
+  const chartElement = document.getElementById(elementId);
+  if (!chartElement) return currentY;
+  await new Promise(r => setTimeout(r, 50));
+  const canvasChart = await html2canvas(chartElement, { scale: 1.5, useCORS: true, scrollY: -window.scrollY, scrollX: 0 });
+  const chartHeight = (canvasChart.height * imgWidth) / canvasChart.width;
+  const y = addPageIfNeeded(pdf, currentY, chartHeight, pageHeight, margin);
+  pdf.setFontSize(14);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(label, margin, y);
+  pdf.addImage(canvasChart.toDataURL("image/png"), "PNG", margin, y + 8, imgWidth, chartHeight);
+  return y + 8 + chartHeight + 10;
+};
+
+export const generateMissionPDFDoc = async (filteredMissionData, sessionName, t) => {
   const element = document.getElementById("mission-report-content");
   if (!element) throw new Error("Element not found");
 
-  const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true, scrollY: -window.scrollY, scrollX: 0 });
   const pdf = new jsPDF("p", "mm", "a4");
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -126,34 +148,37 @@ const generateMissionPDFDoc = async (missionData, sessionName, t) => {
   pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, mapImgHeight);
   currentY += mapImgHeight + 10;
 
-  const chart1Element = document.getElementById("chart-individual");
-  if (chart1Element) {
-    const canvasChart1 = await html2canvas(chart1Element, { scale: 2, useCORS: true });
-    const chart1Height = (canvasChart1.height * imgWidth) / canvasChart1.width;
-    // Comprobar si necesitamos una nueva página
-    if (currentY + chart1Height > pageHeight - margin) {
-      pdf.addPage();
-      currentY = margin;
-    }
-    pdf.addImage(canvasChart1.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, chart1Height);
-    currentY += chart1Height + 10;
+  const metricsInfo = [
+    { id: "humidity", label: "Humedad del Suelo (%)" },
+    { id: "temperature", label: "Temperatura del Suelo (°C)" },
+    { id: "ph", label: "pH del Suelo" },
+    { id: "radiation", label: "Radiación Solar (W/m²)" },
+    { id: "nitrogen", label: "Nitrógeno (mg/kg)" },
+    { id: "phosphorus", label: "Fósforo (mg/kg)" },
+    { id: "potassium", label: "Potasio (mg/kg)" },
+  ];
+
+  for (const metric of metricsInfo) {
+    currentY = await addChartToPdf(pdf, `mission-chart-${metric.id}`, metric.label, imgWidth, margin, currentY, pageHeight);
   }
 
-  const chart2Element = document.getElementById("chart-comparative");
-  if (chart2Element) {
-    const canvasChart2 = await html2canvas(chart2Element, { scale: 2, useCORS: true });
-    const chart2Height = (canvasChart2.height * imgWidth) / canvasChart2.width;
-    if (currentY + chart2Height > pageHeight - margin) {
-      pdf.addPage();
-      currentY = margin;
-    }
-    pdf.addImage(canvasChart2.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, chart2Height);
-    currentY += chart2Height + 10;
+  const compElement = document.getElementById("mission-chart-comparative");
+  if (compElement) {
+    await new Promise(r => setTimeout(r, 50));
+    const canvasChart = await html2canvas(compElement, { scale: 1.5, useCORS: true, scrollY: -window.scrollY, scrollX: 0 });
+    const chartHeight = (canvasChart.height * imgWidth) / canvasChart.width;
+    currentY = addPageIfNeeded(pdf, currentY, chartHeight, pageHeight, margin);
+    pdf.setFontSize(14);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(t("data.comparativeAnalysis", "Análisis Comparativo (Seleccionado)"), margin, currentY);
+    currentY += 8;
+    pdf.addImage(canvasChart.toDataURL("image/png"), "PNG", margin, currentY, imgWidth, chartHeight);
+    currentY += chartHeight + 10;
   }
 
   let tableStartY = currentY;
   
-  if (missionData && missionData.length > 0) {
+  if (filteredMissionData && filteredMissionData.length > 0) {
     if (tableStartY > pageHeight - 40) {
       pdf.addPage();
       tableStartY = margin;
@@ -162,7 +187,7 @@ const generateMissionPDFDoc = async (missionData, sessionName, t) => {
     pdf.text(t("data.dataLog", "Registro de Datos"), margin, tableStartY - 5);
 
     const fallback = "-";
-    const tableBody = missionData.map(d => [
+    const tableBody = filteredMissionData.map(d => [
       new Date(d.timestamp).toLocaleTimeString(),
       d.lat == null ? fallback : Number(d.lat).toFixed(6),
       d.lon == null ? fallback : Number(d.lon).toFixed(6),
@@ -202,11 +227,15 @@ const generateMissionPDFDoc = async (missionData, sessionName, t) => {
   return pdf;
 };
 
-export const exportToPDF = async (missionData, sessionName, addToast, t) => {
+export const exportToPDF = async (filteredMissionData, sessionName, addToast, t) => {
   try {
-    const pdf = await generateMissionPDFDoc(missionData, sessionName, t);
-    pdf.save(`Reporte_Mision_${sessionName.replaceAll(/\s+/g, "_")}.pdf`);
-    addToast(t("data.pdfSuccess"), "success");
+    addToast(t("data.generatingReport", "Generando reporte, por favor espera..."), "info");
+    // Pequeña pausa para permitir que el toast se renderice antes de bloquear el hilo
+    await new Promise(r => setTimeout(r, 100));
+
+    const pdf = await generateMissionPDFDoc(filteredMissionData, sessionName, t);
+    pdf.save(`${sessionName}_Reporte.pdf`);
+    addToast(t("data.exportSuccess", "Exportado correctamente"), "success");
   } catch (err) {
     console.error("Error exportando PDF:", err);
     addToast(t("data.pdfError"), "error");
@@ -238,15 +267,17 @@ export const emailCSV = async (missionData, sessionName, lng, addToast, t) => {
   }
 };
 
-export const emailPDF = async (missionData, sessionName, addToast, t) => {
-  addToast(t("data.emailing", "Encolando reporte para envío..."), "info");
-  
+export const emailPDF = async (filteredMissionData, sessionName, addToast, t) => {
   try {
-    const pdf = await generateMissionPDFDoc(missionData, sessionName, t);
+    addToast(t("data.generatingReport", "Generando reporte, por favor espera..."), "info");
+    await new Promise(r => setTimeout(r, 100));
+
+    const pdf = await generateMissionPDFDoc(filteredMissionData, sessionName, t);
     // Extraer base64 y limpiar cabecera URI
     const pdfDataUri = pdf.output("datauristring");
     const base64Content = pdfDataUri.split(",")[1];
 
+    addToast(t("data.emailing", "Encolando reporte para envío..."), "info");
     await httpClient.post("/export/email", {
       fileBase64: base64Content,
       filename: `Reporte_Mision_${sessionName.replaceAll(/\s+/g, "_")}.pdf`,
