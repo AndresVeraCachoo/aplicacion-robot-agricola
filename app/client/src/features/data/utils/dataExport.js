@@ -3,6 +3,14 @@ import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import httpClient from "../../../config/httpClient";
 
+/**
+ * Agrupa los datos agronómicos por misión o ejecución.
+ *
+ * @param {Array<Object>} data - Datos agronómicos recibidos de la API.
+ * @param {Array<Object>} missions - Lista de misiones disponibles.
+ * @param {Function} t - Función de traducción de i18next.
+ * @returns {Array<Object>} Lista de sesiones agrupadas y ordenadas por fecha.
+ */
 export const groupSessions = (data, missions, t) => {
   const map = new Map();
   data.forEach((d) => {
@@ -40,6 +48,12 @@ export const groupSessions = (data, missions, t) => {
   );
 };
 
+/**
+ * Calcula la duración estimada y el uso aproximado de batería para un conjunto de datos.
+ *
+ * @param {Array<Object>} missionData - Puntos de datos de una sesión específica.
+ * @returns {{ durationStr: string, batteryEst: string }} Objeto con la duración formateada y uso estimado de batería.
+ */
 export const calculateStats = (missionData) => {
   if (missionData.length === 0) return { durationStr: "--", batteryEst: "--" };
   const timestamps = missionData.map((d) => new Date(d.timestamp).getTime());
@@ -59,6 +73,13 @@ export const calculateStats = (missionData) => {
   };
 };
 
+/**
+ * Calcula el promedio de una métrica específica en los datos de la misión.
+ *
+ * @param {Array<Object>} data - Arreglo con los datos agronómicos de la misión.
+ * @param {string} key - Clave de la métrica a promediar (e.g., 'humidity', 'ph').
+ * @returns {number|null} El valor promedio calculado, o null si no hay datos válidos.
+ */
 export const calculateAverage = (data, key) => {
   const validD = data.filter((d) => d[key] !== null && d[key] !== undefined);
   if (validD.length === 0) return null;
@@ -66,6 +87,15 @@ export const calculateAverage = (data, key) => {
   return sum / validD.length;
 };
 
+/**
+ * Genera y descarga un archivo CSV con los datos de la sesión seleccionada.
+ *
+ * @param {Array<Object>} missionData - Datos a incluir en el CSV.
+ * @param {string} sessionName - Nombre de la sesión para el nombre del archivo.
+ * @param {string} lng - Idioma actual (e.g., 'es', 'en').
+ * @param {Function} addToast - Función para mostrar notificaciones.
+ * @param {Function} t - Función de traducción de i18next.
+ */
 export const exportToCSV = (missionData, sessionName, lng, addToast, t) => {
   if (missionData.length === 0) return;
   const headers =
@@ -110,7 +140,16 @@ const addChartToPdf = async (pdf, elementId, label, imgWidth, margin, currentY, 
   return y + 8 + chartHeight + 10;
 };
 
-export const generateMissionPDFDoc = async (filteredMissionData, sessionName, t) => {
+/**
+ * Genera el documento PDF con los datos agronómicos y el gráfico interactivo.
+ * Esta función es de uso interno dentro del módulo.
+ *
+ * @param {Array<Object>} filteredMissionData - Datos de la misión filtrados.
+ * @param {string} sessionName - Nombre de la sesión seleccionada.
+ * @param {Function} t - Función de traducción de i18next.
+ * @returns {Promise<jsPDF>} La instancia de jsPDF generada lista para guardarse.
+ */
+const generateMissionPDFDoc = async (filteredMissionData, sessionName, t) => {
   const element = document.getElementById("mission-report-content");
   if (!element) throw new Error("Element not found");
 
@@ -227,6 +266,15 @@ export const generateMissionPDFDoc = async (filteredMissionData, sessionName, t)
   return pdf;
 };
 
+/**
+ * Gestiona el proceso completo de generación y guardado de un reporte PDF.
+ * Muestra notificaciones de estado (toast) al iniciar y finalizar.
+ *
+ * @param {Array<Object>} filteredMissionData - Datos agronómicos a exportar.
+ * @param {string} sessionName - Nombre de la misión o sesión actual.
+ * @param {Function} addToast - Función para mostrar notificaciones UI.
+ * @param {Function} t - Función de traducción de i18next.
+ */
 export const exportToPDF = async (filteredMissionData, sessionName, addToast, t) => {
   try {
     addToast(t("data.generatingReport", "Generando reporte, por favor espera..."), "info");
@@ -290,6 +338,14 @@ export const emailPDF = async (filteredMissionData, sessionName, addToast, t) =>
   }
 };
 
+/**
+ * Calcula el centro geográfico aproximado del mapa basado en los datos de la sesión
+ * o devuelve una coordenada por defecto en caso de no haber datos.
+ *
+ * @param {Object} selectedSession - Objeto de la sesión actual (puede contener la plantilla de la misión).
+ * @param {Array<Object>} filteredMissionData - Array de coordenadas/datos recopilados.
+ * @returns {{ center: [number, number], polygon: Array<Array<[number, number]>>|null }} Coordenadas centrales y el polígono del área de trabajo (si aplica).
+ */
 export const getMapCenterAndPolygon = (selectedSession, filteredMissionData) => {
   const polygonCoords =
     selectedSession?.template?.area_trabajo?.coordinates[0]?.map((c) => [

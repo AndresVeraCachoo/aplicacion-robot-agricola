@@ -14,25 +14,9 @@ En la fase inicial de toma de requisitos, planteada a principio de septiembre, e
 
 Sin embargo, durante el transcurso del curso académico, el proyecto experimentó una reestructuración forzosa. Diversos problemas técnicos, logísticos y de suministro impidieron que el proyecto de Ingeniería Electrónica pudiera finalizar la construcción del robot físico a tiempo. Esta eventualidad imposibilitó la fase de integración de \textit{hardware} que estaba prevista inicialmente.
 
-Lejos de suponer un bloqueo, este contratiempo impulsó una ambiciosa evolución orgánica del \textit{software}. Para poder validar la arquitectura orientada a eventos y la recepción de telemetría, el motor de simulación interno (que inicialmente se había concebido como un simple \textit{script} de pruebas temporales) se reescribió por completo y se dotó de algoritmos cinemáticos avanzados. Al no requerir la inversión de tiempo en la integración física, el esfuerzo de desarrollo se redirigió hacia la ampliación masiva de las funcionalidades de la plataforma, convirtiendo lo que iba a ser un simple visor de datos en un producto tecnológico integral mucho más completo.
+Lejos de suponer un bloqueo, este contratiempo impulsó una ambiciosa evolución orgánica del \textit{software}. Para poder validar la arquitectura orientada a eventos y la recepción de telemetría, el \textbf{motor de simulación interno} (que inicialmente se había concebido como un simple \textit{script} de pruebas temporales) se reescribió por completo y se dotó de algoritmos cinemáticos avanzados. Al no requerir la inversión de tiempo en la integración física, el esfuerzo de desarrollo se redirigió hacia la ampliación masiva de las funcionalidades de la plataforma, convirtiendo lo que iba a ser un simple visor de datos en un producto tecnológico integral mucho más completo.
 
-De este modo, se incorporó un complejo sistema de misiones autónomas y planificación de rutas, delimitación virtual del terreno (geocercas), soporte multilenguaje (i18n), personalización de la interfaz (modo oscuro) y la migración arquitectónica hacia una Aplicación Web Progresiva (PWA).
-
-\section{Planificación}
-
-La planificación del proyecto se estructuró asumiendo la alta incertidumbre derivada de un desarrollo dependiente, en sus inicios, de factores externos (el \textit{hardware}). Como se documentó en el capítulo metodológico, se empleó Scrum \cite{scrum} junto a la herramienta Zube para orquestar el trabajo en iteraciones de dos semanas, lo que permitió una gran capacidad de adaptación ante los cambios de alcance.
-
-El ciclo de desarrollo se dividió en las siguientes grandes fases planificadas:
-\begin{enumerate}
-    \item \textbf{Fase de Análisis y Diseño:} Toma de requisitos iniciales, diseño de la base de datos relacional y elaboración de los prototipos de la interfaz gráfica de usuario.
-    \item \textbf{Fase de Desarrollo \textit{Frontend}:} Construcción de la \textit{Single Page Application} (SPA) con React \cite{react}, integración del mapa interactivo con Leaflet \cite{leaflet} y conexión con los servicios del \textit{backend}.
-    \item \textbf{Fase de Desarrollo \textit{Backend}:} Implementación del servidor Node.js \cite{nodejs}, despliegue del contenedor PostgreSQL \cite{postgresql}, configuración de la API REST y establecimiento del servidor de WebSockets para la comunicación bidireccional.
-    \item \textbf{Fase de Refactorización y Simulación Avanzada:} Hito introducido tras la cancelación de las pruebas físicas. Consistió en el desarrollo del motor de simulación cinemática y la generación dinámica de datos agronómicos (\texttt{simulator.js}) para replicar el comportamiento de un entorno real.
-    \item \textbf{Fase de Expansión de Funcionalidades:} Implementación de las misiones, algoritmos de navegación (rutas de cobertura y \textit{zigzag}), internacionalización y configuración de la PWA.
-    \item \textbf{Fase de Pruebas (\textit{Testing}) y Despliegue:} Consolidación de las pruebas unitarias y E2E, análisis estático con SonarCloud \cite{sonarqube} y contenedorización final mediante Docker \cite{docker} Compose \cite{docker}.
-\end{enumerate}
-
-Esta fragmentación en fases permitió aislar la complejidad, garantizando que el núcleo de la aplicación estuviera consolidado y probado antes de implementar las capas superiores de lógica de negocio y visualización.
+De este modo, se incorporó un complejo sistema de \textbf{misiones autónomas y planificación de rutas}, delimitación virtual del terreno (geocercas), soporte multilenguaje (i18n), personalización de la interfaz (modo oscuro) y la migración arquitectónica hacia una \textbf{Aplicación Web Progresiva (PWA)}.
 
 \section{Adquisición de conceptos técnicos}
 
@@ -44,48 +28,112 @@ Esta adquisición de competencias se llevó a cabo en dos etapas diferenciadas:
     \item \textbf{Etapa Inicial (Verano 2025):} El proceso de formación comenzó durante el periodo estival, coincidiendo con las prácticas extracurriculares en empresa. En esta fase se llevó a cabo un estudio autodidacta centrado en los fundamentos del desarrollo web moderno, asimilando la sintaxis y capacidades de JavaScript (ES6+), así como la estructuración y diseño con HTML5 y CSS3. Esta etapa sentó las bases necesarias para abordar la programación orientada a la web con la agilidad requerida.
     \item \textbf{Etapa de Pre-desarrollo (Septiembre - Octubre 2025):} Tras la formalización de los requisitos del proyecto, se estableció un bloque de un mes dedicado de forma exclusiva a la investigación teórica, antes de realizar la primera confirmación de código (\textit{commit}). Durante este tiempo se consolidó el dominio del ecosistema de React \cite{react} y de las tecnologías fundamentales para AgroSkopos:
     \begin{itemize}
-        \item \textbf{Paradigma de React \cite{react} y Estado Global:} Se profundizó en el modelo declarativo, el ciclo de vida de los componentes y la gestión avanzada de estados globales mediante \textit{hooks} optimizados como Zustand \cite{zustand}, previendo el alto volumen de datos de telemetría que la aplicación debía manejar.
-        \item \textbf{Librerías Geoespaciales (Leaflet \cite{leaflet}):} Sabiendo que el núcleo visual del proyecto iba a ser un visor interactivo de precisión, se realizó un estudio pormenorizado de la API de Leaflet \cite{leaflet}. Se analizaron conceptos cartográficos como las capas de teselas (\textit{tile layers}), las proyecciones de coordenadas y la renderización reactiva de polígonos y marcadores.
+        \item \textbf{Paradigma de React y Estado Global:} Se profundizó en el modelo declarativo, el ciclo de vida de los componentes y la gestión avanzada de estados globales mediante \textit{hooks} optimizados como Zustand \cite{zustand}, previendo el alto volumen de datos de telemetría que la aplicación debía manejar.
+        \item \textbf{Librerías Geoespaciales (Leaflet):} Sabiendo que el núcleo visual del proyecto iba a ser un visor interactivo de precisión, se realizó un estudio pormenorizado de la API de Leaflet \cite{leaflet}. Se analizaron conceptos cartográficos como las capas de teselas (\textit{tile layers}), las proyecciones de coordenadas y la renderización reactiva de polígonos y marcadores.
     \end{itemize}
 \end{itemize}
 
 Esta fase preparatoria resultó crítica para mitigar los riesgos técnicos del proyecto. El tiempo invertido garantizó que, una vez iniciado el desarrollo \textit{frontend}, se ejecutara bajo decisiones de diseño de \textit{software} maduras, limpias y escalables, evitando la deuda técnica temprana.
 
-\section{Desarrollo del proyecto}
+\section{Planificación}
 
-La implementación técnica del sistema AgroSkopos se llevó a cabo de manera incremental, siguiendo la metodología ágil descrita. El esfuerzo se estructuró a lo largo de seis fases lógicas, divididas operativamente entre el \textit{frontend} y el \textit{backend}:
+La planificación del proyecto se estructuró asumiendo la alta incertidumbre derivada de un desarrollo dependiente, en sus inicios, de factores externos (el \textit{hardware}). Como se documentó en el capítulo metodológico, se empleó \textbf{Scrum} junto a la herramienta \textbf{Zube} para orquestar el trabajo en iteraciones o \textit{sprints} de dos semanas.
 
-\subsection{Evolución del \textit{Frontend} y la Interfaz}
-\textbf{Fase 1: Cimentación Arquitectónica y Prototipado Visual (Octubre 2025)}
-El desarrollo dio comienzo con la configuración del entorno \textit{frontend} (React \cite{react} y Vite \cite{vite}) y el diseño de las interfaces base. Durante los primeros \textit{sprints}, el trabajo se centró en construir la estructura esquelética de la \textit{Single Page Application} (SPA), implementando el enrutamiento (React \cite{react} Router), la pantalla de autenticación y el panel principal (\textit{Dashboard}). En esta etapa temprana, se integró por primera vez el visor cartográfico mediante Leaflet \cite{leaflet} y se estableció el sistema de gestión de estado global utilizando Zustand \cite{zustand}. Las primeras iteraciones finalizaron operando en este punto con datos estáticos simulados (\textit{Mocks}).
+Esta fragmentación en ciclos de entrega cortos permitió aislar la complejidad y otorgó una gran capacidad de adaptación ante los cambios de alcance. De este modo, se garantizó que el núcleo de la aplicación estuviera siempre consolidado y operativo antes de implementar nuevas capas de lógica de negocio o complejas mecánicas de visualización por encima de él.
 
-\subsection{Evolución del \textit{Backend} y Lógica de Servidor}
-\textbf{Fase 2: Arquitectura \textit{Backend}, Seguridad y Modelado de Datos (Noviembre 2025)}
-Una vez estabilizada la interfaz, el enfoque se trasladó al servidor Node.js \cite{nodejs}. Se abandonaron los datos estáticos migrando el núcleo de almacenamiento a PostgreSQL \cite{postgresql}. En esta fase se implementaron los pilares de seguridad del sistema: cifrado de contraseñas mediante Bcrypt, protección de rutas de la API, y un robusto sistema de autenticación basado en \textit{JSON Web Tokens} (JWT). Asimismo, se desarrolló la lógica de control de acceso basado en roles (RBAC).
-
-\subsection{Integración de Sistemas y Simulación}
-\textbf{Fase 3: El Punto de Inflexión - Simulación y Telemetría en Tiempo Real (Finales de Noviembre 2025)}
-Ante la imposibilidad de integrar el chasis del robot físico, el desarrollo pivotó estratégicamente hacia la creación de un simulador telemétrico propio en el \textit{backend}. Se sustituyeron las peticiones HTTP convencionales por una arquitectura orientada a eventos mediante WebSockets, logrando comunicación bidireccional en tiempo real y habilitando notificaciones visuales en el \textit{frontend}.
-
-\textbf{Fase 4: Control Cinemático y Analítica Espacial (Diciembre 2025 - Febrero 2026)}
-Se desarrollaron las interfaces y la lógica del servidor para permitir el control manual del vehículo y se programaron los primeros algoritmos de navegación automatizada (rutas de cobertura y \textit{zigzag}). A nivel espacial, se introdujo el concepto de \textit{Geofencing} (delimitación poligonal de zonas seguras) y se implementaron mapas de calor (\textit{Heatmaps}) para visualizar la densidad de nutrientes sobre el terreno.
-
-\textbf{Fase 5: Misiones Autónomas e Internacionalización (Marzo - Abril 2026)}
-Se diseñó el esquema de la base de datos y la API para dar soporte a un sistema completo de Misiones. Se implementó una interfaz de creación, gestión y ejecución de misiones en vivo, apoyada por una máquina de estados en el \textit{backend}. Además, se integró el \textit{framework} i18next \cite{i18next} para soportar la internacionalización (multi-idioma).
-
-\textbf{Fase 6: Despliegue, PWA y Aseguramiento de la Calidad (\textit{Testing}) (Abril - Mayo 2026)}
-El repositorio se restructuró bajo un modelo Monorepo estricto y se configuraron los contenedores Docker \cite{docker} (\texttt{docker-compose}). A nivel de cliente, la aplicación se transformó en una Aplicación Web Progresiva (PWA). Finalmente, se diseñó e implementó la cobertura de pruebas (\textit{Testing}), abarcando pruebas unitarias de controladores e integración \textit{End-to-End} (E2E).
-
-\section{Testing y Calidad de Código}
-
-Para garantizar la estabilidad, robustez y correcta funcionalidad del sistema AgroSkopos, se diseñó e implementó una estrategia integral de pruebas automáticas que abarca tanto el cliente web como el servidor. 
-
+El ciclo de desarrollo se dividió transversalmente en las siguientes grandes fases o hitos planificados:
 \begin{enumerate}
-    \item \textbf{Pruebas Unitarias y de Componentes en el \textit{Frontend}:} Para la interfaz de usuario se empleó Vitest \cite{vitest} en combinación con \textit{React \cite{react} Testing Library}. Se aislaron los componentes complejos mediante el uso intensivo de \textit{Mocks} (simulaciones) para dependencias externas pesadas. Se validó el comportamiento asíncrono y los cambios en el estado global (Zustand \cite{zustand}), así como los contextos de la aplicación (\textit{Context API}).
-    \item \textbf{Pruebas Unitarias lógicas en el \textit{Backend} (Jest \cite{jest}):} En la capa del servidor, las pruebas unitarias se enfocaron en aislar los controladores lógicos (\textit{Controllers}) de la infraestructura externa. Empleando Jest \cite{jest}, se desarrollaron baterías de pruebas que simulaban (\textit{mockeaban}) tanto las consultas a la base de datos PostgreSQL \cite{postgresql} como las operaciones criptográficas.
-    \item \textbf{Pruebas \textit{End-to-End} (E2E) y Testcontainers \cite{testcontainers} en la API REST:} El nivel más avanzado de la estrategia de calidad del \textit{backend} fue la validación completa del ciclo de vida de las peticiones HTTP mediante entornos efímeros. Para ello, se integró Testcontainers \cite{testcontainers}, orquestando de forma aislada una instancia de PostgreSQL \cite{postgresql} en Docker \cite{docker} para cada batería de pruebas automatizadas mediante Supertest \cite{supertest}, garantizando el aislamiento (idempotencia) entre cada prueba.
+    \item \textbf{Fase de Análisis y Diseño:} Toma de requisitos iniciales, diseño de la base de datos relacional y elaboración de los prototipos de la interfaz gráfica de usuario.
+    \item \textbf{Fase de Desarrollo \textit{Frontend}:} Construcción de la \textit{Single Page Application} (SPA) con React \cite{react}, integración del mapa interactivo con Leaflet \cite{leaflet} y conexión con los servicios del \textit{backend}.
+    \item \textbf{Fase de Desarrollo \textit{Backend}:} Implementación del servidor Node.js \cite{nodejs}, despliegue del contenedor PostgreSQL \cite{postgresql}, configuración de la API REST y establecimiento del servidor de WebSockets para la comunicación bidireccional.
+    \item \textbf{Fase de Refactorización y Simulación Avanzada:} Hito introducido tras la cancelación de las pruebas físicas. Consistió en el desarrollo del motor de simulación cinemática y la generación dinámica de datos agronómicos para replicar el comportamiento de un entorno real.
+    \item \textbf{Fase de Expansión de Funcionalidades:} Implementación de las misiones, algoritmos de navegación (rutas de cobertura y \textit{zigzag}), internacionalización y configuración de la PWA.
+    \item \textbf{Fase de Pruebas (\textit{Testing}) y Aseguramiento de la Calidad:} Consolidación de las pruebas unitarias y E2E, y análisis estático con SonarCloud \cite{sonarqube}.
+    \item \textbf{Fase de Pruebas de Carga y Despliegue en la Nube:} Pruebas de carga con k6 \cite{k6}, contenedorización final mediante Docker \cite{docker} Compose y orquestación productiva en Vercel \cite{vercel} y Azure \cite{azure}.
 \end{enumerate}
 
-\section{Despliegue}
+\section{Desarrollo del Backend}
 
-% TODO: Añadir detalles sobre el despliegue con Docker \cite{docker} si el sistema se implementa en un servidor remoto de manera pública.
+La implementación de la lógica del servidor de AgroSkopos fue un proceso iterativo que evolucionó conforme a las crecientes necesidades del sistema, priorizando siempre la estabilidad y la escalabilidad.
+
+\subsection{Arquitectura, Seguridad y Modelado de Datos inicial}
+Una vez cimentadas las bases visuales en las primeras semanas de trabajo, el enfoque se trasladó al servidor \textbf{Node.js \cite{nodejs}}. Se abandonaron los datos estáticos migrando el núcleo de almacenamiento a \textbf{PostgreSQL \cite{postgresql}}. En esta fase temprana, el diseño de la persistencia de datos persiguió una filosofía de extrema simplicidad para evitar la sobreingeniería inicial. Originalmente, el sistema operaba únicamente con tres tablas maestras: \textit{Usuarios} (gestión de acceso), \textit{Misiones} (estado de los recorridos del robot) y \textit{Telemetría} (captura de datos masivos). La comunicación con la base de datos se realizaba mediante consultas SQL crudas integradas directamente en el código del servidor.
+
+Paralelamente, se implementaron los pilares de seguridad del sistema. Se integró el cifrado asimétrico de contraseñas mediante \textbf{Bcrypt} y un robusto sistema de autenticación basado en \textbf{\textit{JSON Web Tokens} (JWT)}, complementado con una lógica de Control de Acceso Basado en Roles (RBAC) para proteger las rutas de la API de usuarios no autorizados.
+
+Para mitigar vulnerabilidades críticas como los ataques de secuestro de sesión (\textit{Cross-Site Scripting} o XSS), se diseñó un mecanismo de doble \textit{token} (\textit{AccessToken} de vida corta y \textit{RefreshToken} de vida larga). Estos \textit{tokens} no se inyectan en el \textit{LocalStorage} del navegador (que es vulnerable a la inyección de \textit{scripts}), sino que viajan directamente en \textbf{\textit{Cookies HttpOnly}}. Esto asegura que las credenciales sean totalmente inaccesibles desde el código del cliente y se adjunten de forma automática y transparente en cada petición.
+
+\imagen{./img/apartado_4/flujo_autenticacion.png}{Flujo de Autenticación mediante JWT y Cookies HttpOnly}{0.9}
+
+\subsection{Evolución del ORM y Validación de Datos}
+A medida que creció la complejidad de las funcionalidades y aumentaron las tablas y relaciones de la aplicación, se hizo evidente la necesidad de escalar el sistema. Para ello, se integró el motor de persistencia \textbf{Prisma ORM}. Prisma permitió mantener una estructura de datos limpia pero abstrajo por completo la redacción manual de SQL, mitigando el riesgo de inyección de código y delegando al \textit{framework} la generación automática de migraciones.
+
+Aún más importante, Prisma actuó como el pilar fundamental para lograr un \textbf{Tipado Estricto de Extremo a Extremo} (\textit{End-to-End Type Safety}). Al combinar los tipos autogenerados por la base de datos de Prisma con la librería de validación estática \textbf{Zod} en la entrada de las peticiones HTTP, se garantizó que la información fluyera con una integridad estructural matemática, detectando discrepancias mucho antes del tiempo de ejecución.
+
+Además, para unificar las respuestas de fallo (como un \textit{payload} malformado de Zod o un fallo interno del servidor) y evitar que se filtren trazas de pila sensibles en producción, se diseñó un \textbf{\textit{Middleware} de Manejo Global de Errores} que actúa como sumidero final y devuelve errores HTTP estandarizados y limpios al cliente.
+
+\begin{figure}[!h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=10cm,keepaspectratio]{./img/apartado_5/diagrama_bd_inicial.png}
+        \caption{Diagrama ER inicial (SQL Crudo)}
+        \label{fig:./img/apartado_5/diagrama_bd_inicial.png}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=10cm,keepaspectratio]{./img/apartado_5/diagrama_bd_final.png}
+        \caption{Diagrama ER autogenerado por Prisma}
+        \label{fig:./img/apartado_5/diagrama_bd_final.png}
+    \end{minipage}
+\end{figure}
+\FloatBarrier
+
+\subsection{Integración de Sistemas y Simulación Telemétrica}
+Ante la cancelación definitiva de las pruebas con el chasis físico del robot, el desarrollo del servidor pivotó hacia la creación de un \textbf{simulador telemétrico avanzado}. Para soportar el envío masivo de estados robóticos, se sustituyeron las tradicionales peticiones HTTP orientadas a la gestión por una arquitectura de baja latencia impulsada por \textbf{WebSockets} bidireccionales. El servidor de AgroSkopos adoptó entonces el papel de despachador principal (\textit{Broker}), capaz de inyectar variables cinemáticas, niveles de batería y coordenadas GPS sobre la red en milisegundos para actualizar la pantalla de los clientes en estricto tiempo real.
+
+\section{Desarrollo del Frontend}
+
+El cliente web evolucionó desde una sencilla interfaz de visualización estática hasta convertirse en una plataforma de gestión agrícola profundamente interactiva.
+
+\subsection{Cimentación Arquitectónica y Prototipado Visual}
+El desarrollo del \textit{software} dio comienzo con la configuración del entorno moderno impulsado por \textbf{React \cite{react}} y \textbf{Vite \cite{vite}}. Durante los primeros ciclos de desarrollo, se construyó el esqueleto de la \textbf{\textit{Single Page Application} (SPA)}, implementando el enrutamiento visual (React \cite{react} Router) y maquetando el panel de control (\textit{Dashboard}). El estado global se extrajo inmediatamente y se delegó a la librería \textbf{Zustand \cite{zustand}}, una decisión crítica en etapas tempranas que impidió que la complejidad estructural estrangulara el rendimiento al lidiar posteriormente con los flujos constantes de telemetría.
+
+\imagen{./img/apartado_5/CapturaDashboard.png}{Panel principal de control (Dashboard) del sistema AgroSkopos}{0.95}
+
+\subsection{Control Cinemático y Analítica Espacial}
+Una vez construidos los cimientos, se integró el motor cartográfico \textbf{Leaflet \cite{leaflet}}. Se diseñaron interfaces responsivas para permitir el telemando manual direccional del vehículo a través de la web. Posteriormente, se programaron algoritmos de navegación automatizada para la generación visual de \textbf{rutas de cobertura} (como patrones agrícolas en \textit{zigzag}).
+
+A nivel analítico espacial, la aplicación introdujo dinámicas de \textbf{\textit{Geofencing}} (delimitación poligonal de zonas seguras y parcelas) y la generación de \textbf{mapas de calor (\textit{Heatmaps})} interactivos orientados a plasmar gráficamente la densidad paramétrica sobre el terreno, como las concentraciones de humedad y el nivel de pH edafológico. Además, el panel analítico es capaz de generar de forma nativa gráficas comparativas que cruzan el histórico de estos datos, permitiendo al operador visualizar la evolución temporal de los nutrientes y la batería directamente en la interfaz de la propia aplicación sin requerir herramientas externas.
+
+\imagen{./img/apartado_5/grafica_comparativa.png}{Gráfica comparativa de evolución temporal generada de forma nativa por la aplicación}{0.85}
+
+\subsection{Misiones Autónomas e Internacionalización}
+Con las lógicas de movimiento e interfaz estabilizadas, se diseñó el flujo operativo para dar soporte al ciclo completo de \textbf{Misiones Autónomas}. Los usuarios pueden planificar sobre un lienzo cartográfico, gestionar en tablas y poner en ejecución distintas misiones agrícolas que operan bajo una máquina de estados visual.
+
+\imagen{./img/apartado_5/estados_mision.png}{Máquina de estados del ciclo de vida de una Misión}{0.7}
+
+Por último, se implementó la capa de soporte multi-idioma (i18n) a través del \textit{framework} \textbf{i18next \cite{i18next}}, y se migró todo el cliente bajo los estándares de las \textbf{Aplicaciones Web Progresivas (PWA)}, habilitando el uso del portal como una aplicación nativa instalable capaz de cachear los mapas para ofrecer cargas casi instantáneas.
+
+\section{\textit{Testing}, calidad de código y despliegue}
+
+\subsection{Estrategia Integral de Pruebas}
+Para certificar la fiabilidad y robustez técnica de un sistema distribuido como AgroSkopos, se integró una cobertura analítica exhaustiva abordando cada capa crítica de su ecosistema:
+
+\begin{enumerate}
+    \item \textbf{Pruebas Unitarias y de Componentes (\textit{Frontend}):} Apoyándose en el corredor de pruebas \textbf{Vitest \cite{vitest}} y en la biblioteca \textbf{\textit{React \cite{react} Testing Library}}, se verificó el correcto montaje y re-renderizado de la interfaz. Se aislaron los componentes complejos utilizando simulaciones exhaustivas (\textit{Mocks}) para validar la accesibilidad, las integraciones asíncronas de la API y las mutaciones persistentes en el gestor de estado global (Zustand \cite{zustand}).
+    \item \textbf{Pruebas Unitarias lógicas (\textit{Backend}):} En el seno del servidor, el \textit{framework} \textbf{Jest \cite{jest}} permitió orquestar comprobaciones sobre los controladores y servicios lógicos de forma aséptica. Mediante el \textit{mocking} inyectado, se desacoplaron las dependencias reales aislando la conexión a PostgreSQL \cite{postgresql} o a las pasarelas criptográficas para garantizar un rendimiento óptimo de las pruebas sin dependencias externas.
+    \item \textbf{Pruebas \textit{End-to-End} (E2E) e Integración:} Representando el nivel superior de calidad en el servidor, se integró \textbf{Testcontainers \cite{testcontainers}}. Esta herramienta orquesta contenedores efímeros de Docker \cite{docker} para instanciar bases de datos PostgreSQL \cite{postgresql} desechables exclusivas para el entorno de testeo. Esto aseguró que las peticiones simuladas por \textbf{Supertest \cite{supertest}} interactuaran con un sistema vivo bajo condiciones idénticas al entorno productivo.
+    \item \textbf{Pruebas de Carga (\texttt{load testing}):} Para certificar que la arquitectura de eventos del servidor tolerara altos volúmenes de telemetría sin degradación, se diseñaron \textit{scripts} asíncronos en \textbf{k6 \cite{k6}}. Esta fase consistió en la inyección agresiva y parametrizada de cientos de usuarios virtuales concurrentes contra los \textit{endpoints} críticos.
+\end{enumerate}
+
+Para gobernar este proceso, los reportes estandarizados de cobertura de ambos clientes se fusionan mediante lógicas propias y son capturados automáticamente por un flujo de \textit{GitHub Actions} \cite{githubactions}. Finalmente, dichos reportes nutren el \textbf{análisis estático de SonarCloud \cite{sonarqube}}, que actúa como \textbf{barrera técnica (\textit{Quality Gate})}, censurando y bloqueando el despliegue de cualquier confirmación que no alcance un mínimo del $80\%$ de cobertura o que introduzca agujeros de seguridad (\textit{Security Hotspots}).
+
+\subsection{Despliegue y Arquitectura Cloud}
+Para garantizar una disponibilidad global y sin interrupciones, la plataforma completa de AgroSkopos fue orquestada y desplegada sobre un entorno productivo híbrido.
+
+El sistema cliente (\textit{Frontend}) se encuentra hospedado en \textbf{Vercel \cite{vercel}}. Esta elección provee una \textbf{arquitectura de red de entrega de contenidos (CDN) global} altamente optimizada para construcciones de React \cite{react}, minimizando radicalmente la latencia para el operador agrícola independientemente de su localización.
+
+Por el contrario, el procesamiento computacional pesado y el núcleo del servidor (\textit{Backend}) residen en una \textbf{infraestructura virtualizada basada en Linux} desplegada a través de \textbf{Microsoft Azure \cite{azure}}. En este nodo central se implementó un flujo automatizado de orquestación local mediante \textbf{Docker \cite{docker} Compose}. Este archivo declarativo asegura el levantamiento secuencial y estandarizado del servidor Node.js \cite{nodejs}, el \textbf{motor en memoria Redis \cite{redis}} (esencial para el gestor de colas en segundo plano) y el \textbf{clúster transaccional de PostgreSQL \cite{postgresql}}. 
+
+La comunicación de este nodo interno con el mundo exterior fluye de manera exclusiva a través de un \textbf{proxy inverso gestionado por Nginx}. Además de balancear las rutas HTTP convencionales y la mensajería \textit{WebSocket}, este proxy absorbe la gestión y negociación de los \textbf{certificados criptográficos SSL/TLS}, garantizando que toda la telemetría operativa transite exclusivamente bajo el protocolo seguro \textbf{HTTPS}.

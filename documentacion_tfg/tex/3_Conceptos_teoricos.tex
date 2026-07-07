@@ -1,83 +1,37 @@
 \capitulo{3}{Conceptos teóricos}
 
-En aquellos proyectos que necesiten para su comprensión y desarrollo de unos conceptos teóricos de una determinada materia o de un determinado dominio de conocimiento, debe existir un apartado que sintetice dichos conceptos.
+Este capítulo introduce los \textbf{fundamentos teóricos necesarios} para comprender el dominio en el que opera el proyecto AgroSkopos. Se abordarán disciplinas que exceden el ámbito puro de la ingeniería del \textit{software}, adentrándose en la \textbf{agronomía, la robótica de campo y los paradigmas de comunicación de alta frecuencia}.
 
-Algunos conceptos teóricos de \LaTeX \footnote{Créditos a los proyectos de Álvaro López Cantero: Configurador de Presupuestos y Roberto Izquierdo Amo: PLQuiz}.
+\section{Agricultura de Precisión}
 
-\section{Secciones}
+La agricultura de precisión es un \textbf{paradigma de gestión agrícola} basado en la observación, la medición y la respuesta a la variabilidad inter e intra-campo de los cultivos. Su objetivo es \textbf{optimizar el retorno de la inversión} y \textbf{preservar los recursos} mediante el uso intensivo de \textbf{tecnologías de la información (TIC)} y sistemas de teledetección \cite{zhang2002precision, mulla2013twenty}.
 
-Las secciones se incluyen con el comando section.
-
-\subsection{Subsecciones}
-
-Además de secciones tenemos subsecciones.
-
-\subsubsection{Subsubsecciones}
-
-Y subsecciones. 
-
-
-\section{Referencias}
-
-Las referencias se incluyen en el texto usando cite \cite{wiki:latex}. Para citar webs, artículos o libros \cite{koza92}.
-
-
-\section{Imágenes}
-
-Se pueden incluir imágenes con los comandos standard de \LaTeX, pero esta plantilla dispone de comandos propios como por ejemplo el siguiente:
-
-\imagen{escudoInfor}{Autómata para una expresión vacía}{.5}
-
-
-
-\section{Listas de items}
-
-Existen tres posibilidades:
-
+\subsection{Variables Agronómicas Críticas: NPK, Humedad y pH}
+El correcto desarrollo de cualquier cultivo depende del equilibrio de diversas \textbf{variables edafológicas}, destacando especialmente la disponibilidad de macronutrientes, la retención hídrica y la acidez del suelo \cite{npk_concept, brady2008nature}.
 \begin{itemize}
-	\item primer item.
-	\item segundo item.
+    \item \textbf{Índice NPK (Nitrógeno, Fósforo y Potasio):} Son los macronutrientes primarios. El nitrógeno es fundamental para el crecimiento foliar; el fósforo es crítico en la transferencia de energía y el desarrollo radicular; y el potasio mejora la resistencia al estrés hídrico.
+    \item \textbf{Humedad Volumétrica del Suelo:} Representa la cantidad de agua disponible en el perfil del suelo. Su monitorización evita tanto el estrés por sequía como la asfixia radicular por encharcamiento, optimizando las estrategias de riego.
+    \item \textbf{Potencial de Hidrógeno (pH):} Mide la acidez o alcalinidad del terreno. Es un factor determinante, ya que un pH fuera del rango óptimo (generalmente entre 6.0 y 7.0) "bloquea" los nutrientes, impidiendo que las raíces puedan absorber el NPK aunque este se encuentre presente.
 \end{itemize}
+La monitorización en tiempo real de estas variables permite aplicar dosis de fertilización e irrigación exclusivamente donde son necesarias, reduciendo la contaminación de acuíferos y minimizando los costes operativos.
 
-\begin{enumerate}
-	\item primer item.
-	\item segundo item.
-\end{enumerate}
+\imagen{./img/apartado_3/N-P-K.png}{Esquema de los macronutrientes primarios (NPK) y su función fundamental en el desarrollo vegetal}{0.7}
 
-\begin{description}
-	\item[Primer item] más información sobre el primer item.
-	\item[Segundo item] más información sobre el segundo item.
-\end{description}
-	
-\begin{itemize}
-\item 
-\end{itemize}
+\subsection{Radiación Solar Incidente}
+La \textbf{radiación solar activa fotosintéticamente} (PAR, por sus siglas en inglés) es la fracción del espectro electromagnético (400-700 nm) que las plantas pueden utilizar para la fotosíntesis. En el contexto de un robot agrícola autónomo propulsado por energía solar, la medición de esta radiación adquiere una doble utilidad: por un lado, se recopila como dato agronómico vital para estimar la evapotranspiración del cultivo; por otro, actúa como variable principal para calcular la \textbf{curva de recarga energética} de los paneles fotovoltaicos del propio vehículo.
 
-\section{Tablas}
+\section{Telemetría y Comunicaciones}
 
-Igualmente se pueden usar los comandos específicos de \LaTeX o bien usar alguno de los comandos de la plantilla.
+La telemetría es una tecnología que permite la medición remota de magnitudes físicas y el posterior envío de la información hacia un operador del sistema \cite{telemetria}.
 
-\tablaSmall{Herramientas y tecnologías utilizadas en cada parte del proyecto}{l c c c c}{herramientasportipodeuso}
-{ \multicolumn{1}{l}{Herramientas} & App AngularJS & API REST & BD & Memoria \\}{ 
-HTML5 & X & & &\\
-CSS3 & X & & &\\
-BOOTSTRAP & X & & &\\
-JavaScript & X & & &\\
-AngularJS & X & & &\\
-Bower & X & & &\\
-PHP & & X & &\\
-Karma + Jasmine & X & & &\\
-Slim framework & & X & &\\
-Idiorm & & X & &\\
-Composer & & X & &\\
-JSON & X & X & &\\
-PhpStorm & X & X & &\\
-MySQL & & & X &\\
-PhpMyAdmin & & & X &\\
-Git + BitBucket & X & X & X & X\\
-Mik\TeX{} & & & & X\\
-\TeX{}Maker & & & & X\\
-Astah & & & & X\\
-Balsamiq Mockups & X & & &\\
-VersionOne & X & X & X & X\\
-} 
+\subsection{Baja Latencia y Asincronía}
+En robótica móvil, la telemetría incluye datos críticos como la velocidad de avance, la orientación (guiñada, cabeceo, alabeo), las coordenadas satelitales (GNSS) y el nivel de energía. Dado que el operador requiere conocer el estado exacto del vehículo en el instante actual, la transmisión de estos datos no puede apoyarse en \textbf{protocolos de petición-respuesta convencionales}. En su lugar, se utilizan \textbf{\textit{WebSockets}}, canales que permiten enviar ráfagas de datos asíncronos (eventos) con latencias que rondan los pocos milisegundos, garantizando la \textbf{seguridad en el control remoto} (telemando).
+
+\subsection{Sistemas de Colas de Mensajes}
+A diferencia de la telemetría, existen operaciones en un sistema integral (como el envío de notificaciones por correo electrónico o el procesamiento de \textit{tickets} de soporte) que no requieren respuesta inmediata, pero sí garantía de entrega. Los \textbf{sistemas de colas asíncronas} almacenan estas tareas temporalmente en estructuras de datos en memoria (generalmente gestionadas por motores en memoria), liberando al servidor principal de cargas bloqueantes y distribuyendo el esfuerzo en trabajadores en segundo plano (\textit{background workers}).
+
+\section{Simulación en Robótica}
+
+La integración de \textit{hardware} y \textit{software} en proyectos de robótica agrícola suele enfrentarse a bloqueos logísticos, problemas de suministro o fallos mecánicos. Para mitigar estos riesgos, la industria emplea la simulación en lazo cerrado (\textit{Hardware/Software-In-The-Loop}).
+
+Un \textbf{simulador cinemático} computa, a intervalos regulares de tiempo, el desplazamiento vectorial de un cuerpo en función de su velocidad actual, su rumbo y el terreno, generando coordenadas GPS virtuales. Si a esto se le suma un \textbf{simulador energético}, el sistema es capaz de drenar virtualmente la batería en función de la resistencia teórica del terreno y los motores, permitiendo a la capa de control (\textit{software}) validar algoritmos críticos como el Retorno al Punto de Origen (RTH, \textit{Return To Home}) y sistemas de navegación autónoma \cite{mousazadeh2013technical} sin poner en riesgo una máquina física de alto coste.

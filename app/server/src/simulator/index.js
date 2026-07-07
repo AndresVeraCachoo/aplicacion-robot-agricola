@@ -10,11 +10,34 @@ const SENSOR_INTERVAL = 5000;
 const ENERGY_LOG_INTERVAL = 5000; 
 const MAX_HISTORY_RECORDS = 1000;
 
+/**
+ * Establece el límite de velocidad del robot en porcentaje.
+ * @param {number} limit - Límite de velocidad (0 a 100).
+ */
 export const setSpeedLimit = (limit) => { state.speedLimitPercent = limit; };
+
+/**
+ * Añade un punto de navegación a la cola de la ruta.
+ * @param {Object} point - Coordenadas del punto {lat, lon}.
+ */
 export const queueNavPoint = (point) => { state.navQueue.push(point); };
+
+/**
+ * Define la zona segura de simulación y calcula la ruta de cobertura automática.
+ * @param {Array<Array<[number, number]>>} zone - Polígono que define la zona segura.
+ */
 export const setSimulationZone = (zone) => { state.safeZonePolygon = zone; state.autoPath = generateCoveragePath(zone); state.currentPathIndex = 0; };
+
+/**
+ * Limpia la zona de simulación y detiene la ruta actual.
+ */
 export const clearSimulationZone = () => { state.safeZonePolygon = null; state.autoPath = []; state.currentPathIndex = 0; };
 
+/**
+ * Cambia el modo de control del robot (ej. AUTO, MANUAL).
+ * Gestiona el restablecimiento de interrupciones si el robot estaba volviendo a la base.
+ * @param {string} mode - Modo de control a establecer.
+ */
 export const setRobotMode = (mode) => {
   if (state.controlMode === "RETURNING_TO_BASE" || state.controlMode === "RESUMING_MISSION") {
     state.interruptedState = null; 
@@ -29,20 +52,42 @@ export const setRobotMode = (mode) => {
   }
 };
 
+/**
+ * Aplica una velocidad manual al robot si se encuentra en modo MANUAL.
+ * @param {number} vx - Velocidad en el eje X.
+ * @param {number} vy - Velocidad en el eje Y.
+ */
 export const setManualVelocity = (vx, vy) => { 
   if (state.controlMode === "MANUAL") {
     state.manualVelocity = { x: vx, y: vy }; 
   }
 };
 
+/**
+ * Establece un objetivo de navegación directo y cambia el modo a NAVIGATING.
+ * @param {number} lat - Latitud de destino.
+ * @param {number} lon - Longitud de destino.
+ * @param {boolean} clearQueue - Si es true, vacía la cola de navegación existente.
+ */
 export const setNavigationTarget = (lat, lon, clearQueue = false) => { 
   state.navTarget = { lat, lon }; 
   if (clearQueue) state.navQueue = []; 
   state.controlMode = "NAVIGATING"; 
 };
 
+/**
+ * Pausa la simulación y detiene el robot temporalmente.
+ */
 export const pauseSimulation = () => { state.isPaused = true; state.speed = 0; };
+
+/**
+ * Reanuda la simulación previamente pausada.
+ */
 export const resumeSimulation = () => { state.isPaused = false; };
+
+/**
+ * Cancela completamente la simulación, reseteando la zona, colas de navegación y modos de control.
+ */
 export const cancelSimulation = () => { 
   state.isPaused = false; 
   state.safeZonePolygon = null; 

@@ -1,3 +1,48 @@
 \capitulo{6}{Trabajos relacionados}
 
-Este apartado sería parecido a un estado del arte de una tesis o tesina. En un trabajo final grado no parece obligada su presencia, aunque se puede dejar a juicio del tutor el incluir un pequeño resumen comentado de los trabajos y proyectos ya realizados en el campo del proyecto en curso. 
+En el sector de la tecnología agrícola (\textit{AgTech}), existen diversas soluciones comerciales y académicas orientadas a la monitorización y gestión de flotas. Sin embargo, la mayoría de estos sistemas se dividen en plataformas de muy alto coste orientadas a grandes latifundios (como las soluciones de maquinaria pesada) o en herramientas de recolección de datos satelitales que carecen de la capacidad de telemando en tiempo real. 
+
+A continuación, se describen brevemente algunas de las plataformas más representativas del sector y se establece una comparativa directa con las capacidades desarrolladas en AgroSkopos.
+
+\section{Soluciones Comerciales}
+
+\subsection{John Deere Operations Center}
+Es una de las plataformas líderes a nivel global en la gestión agrícola. Permite la monitorización del rendimiento, la planificación de tareas y la integración con tractores automatizados. Si bien su ecosistema es sumamente robusto y maduro, se trata de una solución de código cerrado, altamente acoplada al \textit{hardware} del propio fabricante (\textit{vendor lock-in}) y cuyo coste de licenciamiento resulta prohibitivo para pequeños y medianos agricultores.
+
+\subsection{FarmLogs}
+FarmLogs es un \textit{software} de gestión agrícola enfocado en el análisis de rentabilidad, seguimiento de lluvias y mapas satelitales. Aunque destaca en el procesamiento de datos a nivel macroscópico y planificación a largo plazo, no está diseñado para el control de la telemetría en tiempo real ni posee capacidades de pilotaje remoto de vehículos autónomos.
+
+\subsection{Plataformas de Vuelo Agrícola (DJI SmartFarm / Pix4Dfields)}
+En el ámbito de la fotogrametría y la fumigación de precisión, destacan soluciones asociadas a drones como la serie DJI Agras operada mediante la aplicación DJI SmartFarm, o el \textit{software} Pix4Dfields. Estas plataformas ofrecen una captura de datos aéreos incomparable y cuentan con sistemas de evitación física de obstáculos mediante radares y cámaras estéreo. Sin embargo, su operación está estrictamente limitada al vuelo y a ecosistemas cerrados, y no ofrecen la versatilidad de un \textit{software} de control multipropósito de código abierto para robótica terrestre.
+
+\section{Comparativa Funcional}
+
+En la tabla \ref{tabla:comparativa_trabajos} se sintetizan las principales diferencias funcionales entre las soluciones comerciales mencionadas y la propuesta implementada en este Trabajo de Fin de Grado. Para ofrecer una visión realista, se incluyen también aquellas características avanzadas propias del sector industrial que escapan al alcance actual de AgroSkopos.
+
+\begin{table}[!h]
+ \begin{center}
+  \rowcolors{2}{gray!35}{}
+  \resizebox{0.9\textwidth}{!}{%
+  \begin{tabular}{p{0.3\linewidth} c c c c}
+   \toprule
+   \textbf{Característica} & \textbf{John Deere} & \textbf{FarmLogs} & \textbf{DJI SmartFarm} & \textbf{AgroSkopos} \\
+   \otoprule
+   Telemetría en Tiempo Real (Baja Latencia) & Sí & No & Sí & Sí \\
+   Telemando Manual (\textit{WebSockets}) & No & No & No & Sí \\
+   Diseño de Misiones y Rutas Autónomas & Sí & No & Sí & Sí \\
+   Independencia de \textit{Hardware} (Agnóstico) & No & Sí & No & Sí \\
+   Motor de Simulación Integrado & No & No & No & Sí \\
+   \hline
+   Gestión de Carga (Ej: Fumigación) & Sí & No & Sí & No \\
+   Evasión Física de Obstáculos (\textit{Hardware}) & Sí & No & Sí & No \\
+   Detección Automática de Enfermedades (IA) & Sí & Parcial & Sí & No \\
+   Modelo de Licencia & Comercial & Comercial & Comercial & Código Abierto \\
+   \bottomrule
+  \end{tabular}%
+  }
+  \caption{Comparativa de características entre plataformas}
+  \label{tabla:comparativa_trabajos}
+ \end{center}
+\end{table}
+
+Como se observa en la comparativa, AgroSkopos logra un equilibrio único al ofrecer capacidades de telemetría y telemando de baja latencia en una plataforma agnóstica al \textit{hardware} y de código abierto. Si bien carece de integraciones \textit{hardware} profundas como la evasión física de obstáculos o la dosificación automatizada de líquidos (propias de soluciones industriales), sienta las bases lógicas necesarias para incorporarlas en el futuro.

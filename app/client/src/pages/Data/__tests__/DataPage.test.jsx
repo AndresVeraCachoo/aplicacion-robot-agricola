@@ -65,16 +65,34 @@ vi.mock('html2canvas', () => ({
   }))
 }));
 
-const mockPdfSave = vi.fn();
-const mockPdfAddImage = vi.fn();
+const { mockPdfSave, mockPdfAddImage } = vi.hoisted(() => ({
+  mockPdfSave: vi.fn(),
+  mockPdfAddImage: vi.fn()
+}));
+
 vi.mock('jspdf', () => ({
-  default: class {
+  jsPDF: class {
     constructor() {
-      this.internal = { pageSize: { getWidth: () => 210 } };
+      this.internal = { 
+        pageSize: { getWidth: () => 210, getHeight: () => 297 },
+        getNumberOfPages: () => 1
+      };
     }
     addImage = mockPdfAddImage;
     save = mockPdfSave;
+    setFont = vi.fn();
+    setFontSize = vi.fn();
+    setTextColor = vi.fn();
+    setDrawColor = vi.fn();
+    text = vi.fn();
+    line = vi.fn();
+    addPage = vi.fn();
+    setPage = vi.fn();
   }
+}));
+
+vi.mock('jspdf-autotable', () => ({
+  default: vi.fn()
 }));
 
 
@@ -87,7 +105,6 @@ describe('Componente DataPage', () => {
     queryClient.clear();
     mockAddToast = vi.fn();
     mockFetchMisiones = vi.fn();
-    
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     useToastStore.mockReturnValue({ addToast: mockAddToast });
@@ -180,7 +197,7 @@ describe('Componente DataPage', () => {
       expect(screen.getByText(/data.waitingData/)).toBeInTheDocument();
       
       await waitFor(() => {
-        expect(mockAddToast).toHaveBeenCalledWith('2 registros encontrados', 'info');
+        expect(mockAddToast).toHaveBeenCalledWith('data.recordsFound', 'info');
       });
     });
 
@@ -201,7 +218,7 @@ describe('Componente DataPage', () => {
       fireEvent.click(screen.getByTestId('mock-date-picker'));
       
       await waitFor(() => {
-        expect(mockAddToast).toHaveBeenCalledWith('2 registros encontrados', 'info');
+        expect(mockAddToast).toHaveBeenCalledWith('data.recordsFound', 'info');
       });
 
       fireEvent.click(screen.getByTestId('mock-date-picker-clear'));
@@ -266,6 +283,10 @@ describe('Componente DataPage', () => {
     });
 
     it('exporta reporte a PDF correctamente', async () => {
+      const dummyElement = document.createElement('div');
+      dummyElement.id = 'mission-report-content';
+      document.body.appendChild(dummyElement);
+
       renderWithProviders(<DataPage />);
       fireEvent.click(document.querySelector('.mission-item-main'));
       
@@ -282,6 +303,10 @@ describe('Componente DataPage', () => {
     });
 
     it('captura errores de exportación a PDF', async () => {
+      const dummyElement = document.createElement('div');
+      dummyElement.id = 'mission-report-content';
+      document.body.appendChild(dummyElement);
+
       html2canvas.mockRejectedValueOnce(new Error('Canvas Error'));
       
       renderWithProviders(<DataPage />);

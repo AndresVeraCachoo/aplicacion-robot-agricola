@@ -54,7 +54,7 @@ reports.forEach(report => {
       
       if (line.startsWith('LF:')) stats.LF += Number.parseInt(line.substring(3), 10) || 0;
       if (line.startsWith('LH:')) stats.LH += Number.parseInt(line.substring(3), 10) || 0;
-      if (line.startsWith('FNF:')) stats.FNH += Number.parseInt(line.substring(4), 10) || 0;
+      if (line.startsWith('FNF:')) stats.FNF += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('FNH:')) stats.FNH += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('BRF:')) stats.BRF += Number.parseInt(line.substring(4), 10) || 0;
       if (line.startsWith('BRH:')) stats.BRH += Number.parseInt(line.substring(4), 10) || 0;

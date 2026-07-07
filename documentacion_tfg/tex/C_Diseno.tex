@@ -24,7 +24,7 @@ El modelo de datos se ha diseñado buscando el equilibrio comentado entre normal
     \item \textbf{historial\_energia:} Persiste métricas históricas de consumo eléctrico y captación energética del panel solar para permitir el análisis a largo plazo del rendimiento y la autonomía del prototipo.
 \end{itemize}
 
-A continuación, en la figura \ref{fig:img/apendice_C/diagrama_er.png}, se expone el Diagrama Entidad-Relación (ER) lógico que ilustra la cardinalidad e interacción semántica entre los dominios principales. Cabe destacar que la estructura visual de este diagrama ha sido autogenerada de manera a partir del esquema de configuración de Prisma ORM.
+A continuación, en la figura \ref{fig:./img/apendice_C/diagrama_er.png}, se expone el Diagrama Entidad-Relación (ER) lógico que ilustra la cardinalidad e interacción semántica entre los dominios principales. Cabe destacar que la estructura visual de este diagrama ha sido autogenerada de manera a partir del esquema de configuración de Prisma ORM.
 
 \imagen{img/apendice_C/diagrama_er.png}{Diagrama Entidad-Relación Lógico del Sistema}
 
@@ -60,7 +60,7 @@ A diferencia de los sistemas de gestión tradicionales orientados a modelos ané
 A continuación, se ilustran a través de diagramas de secuencia UML los cinco flujos operacionales más críticos de la arquitectura.
 
 \subsubsection{Flujo de Autenticación y Autorización}
-El primer punto de contacto de cualquier operario con el sistema es el inicio de sesión (figura \ref{fig:img/apendice_C/flujo_auth.png}). Los pasos son los siguientes:
+El primer punto de contacto de cualquier operario con el sistema es el inicio de sesión (figura \ref{fig:./img/apendice_C/flujo_auth.png}). Los pasos son los siguientes:
 \begin{enumerate}
     \item El usuario introduce sus credenciales en el formulario de la aplicación web y el \textit{frontend} envía la petición POST al \textit{backend}.
     \item El \textit{backend} (Express) busca al usuario en la base de datos a través del ORM Prisma.
@@ -72,7 +72,7 @@ El primer punto de contacto de cualquier operario con el sistema es el inicio de
 \imagen{img/apendice_C/flujo_auth.png}{Diagrama de Secuencia: Flujo de Autenticación}
 
 \subsubsection{Flujo de Planificación de Misión Agrícola}
-Antes de ejecutar una tarea, el sistema requiere una planificación espacial (figura \ref{fig:img/apendice_C/flujo_planificacion.png}). El proceso de creación es el siguiente:
+Antes de ejecutar una tarea, el sistema requiere una planificación espacial (figura \ref{fig:./img/apendice_C/flujo_planificacion.png}). El proceso de creación es el siguiente:
 \begin{enumerate}
     \item El operario utiliza la capa interactiva del mapa en React para trazar visualmente un polígono cerrado sobre la parcela.
     \item El \textit{frontend} recolecta estos puntos geográficos, calcula el área teórica y los formatea al estándar \textit{GeoJSON}.
@@ -84,7 +84,7 @@ Antes de ejecutar una tarea, el sistema requiere una planificación espacial (fi
 \imagen{img/apendice_C/flujo_planificacion.png}{Diagrama de Secuencia: Planificación de Cobertura Agrícola}
 
 \subsubsection{Flujo de Ejecución de Misión}
-La transición de una misión desde su fase de planificación estática hasta su ejecución dinámica en el terreno se detalla en la figura \ref{fig:img/apendice_C/flujo_mision.png}:
+La transición de una misión desde su fase de planificación estática hasta su ejecución dinámica en el terreno se detalla en la figura \ref{fig:./img/apendice_C/flujo_mision.png}:
 \begin{enumerate}
     \item El operario localiza una misión en estado pendiente y pulsa el botón de \textit{Iniciar} desde el panel de control.
     \item El \textit{backend} recibe la instrucción y comprueba las precondiciones operativas, asegurando que el robot cuente con la batería mínima requerida.
@@ -96,7 +96,7 @@ La transición de una misión desde su fase de planificación estática hasta su
 \imagen{img/apendice_C/flujo_mision.png}{Diagrama de Secuencia: Inicio de una Misión Agrícola}
 
 \subsubsection{Ciclo de Vida de Telemetría (Real-Time)}
-El flujo más recurrente y pesado del proyecto es la captación continua de telemetría (figura \ref{fig:img/apendice_C/flujo_telemetria.png}), que actúa como el "latido" del sistema:
+El flujo más recurrente y pesado del proyecto es la captación continua de telemetría (figura \ref{fig:./img/apendice_C/flujo_telemetria.png}), que actúa como el "latido" del sistema:
 \begin{enumerate}
     \item El intervalo asíncrono interno de Node.js se dispara periódicamente, actuando como el reloj maestro de la simulación.
     \item El motor de físicas recalcula la recarga de los paneles solares y el drenaje de la batería basándose en el clima y el estado actual.
@@ -108,7 +108,7 @@ El flujo más recurrente y pesado del proyecto es la captación continua de tele
 \imagen{img/apendice_C/flujo_telemetria.png}{Diagrama de Secuencia: Ciclo de Telemetría Asíncrona}
 
 \subsubsection{Consulta de Histórico y Análisis Energético}
-Para permitir la toma de decisiones, la aplicación consolida el rendimiento pasado del robot en gráficas interactivas (figura \ref{fig:img/apendice_C/flujo_analitica.png}):
+Para permitir la toma de decisiones, la aplicación consolida el rendimiento pasado del robot en gráficas interactivas (figura \ref{fig:./img/apendice_C/flujo_analitica.png}):
 \begin{enumerate}
     \item El administrador accede a la sección de analíticas desde la barra de navegación lateral.
     \item React despacha peticiones HTTP REST concurrentes al \textit{backend} solicitando datos agregados.
@@ -129,7 +129,7 @@ El sistema implementa un modelo de arquitectura cliente-servidor completamente d
     \item \textbf{Canal de flujo continuo (WebSockets):} Empleado para mantener una conexión TCP persistente, bidireccional y \textit{stateful} entre el servidor y los clientes. Este patrón (Pub-Sub) permite que el motor de simulación emita un \textit{stream} ininterrumpido de telemetría a alta frecuencia, garantizando que el mapa interactivo se mueva en tiempo real con una latencia mínima.
 \end{itemize}
 
-Para facilitar la comprensión visual de estas interacciones, se han elaborado dos esquemas. La figura \ref{fig:img/apendice_C/arquitectura_software.png} detalla las tecnologías lógicas empleadas en cada capa de la aplicación. Por otro lado, la figura \ref{fig:img/apendice_C/arquitectura_docker.png} ilustra la arquitectura de despliegue físico.
+Para facilitar la comprensión visual de estas interacciones, se han elaborado dos esquemas. La figura \ref{fig:./img/apendice_C/arquitectura_software.png} detalla las tecnologías lógicas empleadas en cada capa de la aplicación. Por otro lado, la figura \ref{fig:./img/apendice_C/arquitectura_docker.png} ilustra la arquitectura de despliegue físico.
 
 % DIAGRAMAS (El usuario exportará los PNG desde Draw.io)
 \imagen{img/apendice_C/arquitectura_software.png}{Diagrama de Arquitectura de Software: Interacción entre Cliente, Servidor y Base de Datos}

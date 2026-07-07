@@ -1,10 +1,10 @@
 \capitulo{2}{Objetivos del proyecto}
 
-Este capítulo tiene como propósito definir el alcance y las metas fundamentales que guían el desarrollo de AgroSkopos. El proyecto surge de la necesidad de proporcionar una interfaz de usuario avanzada para la gestión de un vehículo autónomo en entornos agrícolas, priorizando la precisión en la telemetría y la fiabilidad en el control remoto.
+Este capítulo tiene como propósito definir el alcance y las metas fundamentales que guían el desarrollo de AgroSkopos. El proyecto surge de la necesidad de proporcionar una \textbf{interfaz de usuario avanzada} para la gestión de un vehículo autónomo en entornos agrícolas, priorizando la \textbf{precisión en la telemetría} y la \textbf{fiabilidad en el control remoto}.
 
 \section{Objetivo General}
 
-El objetivo principal de este Trabajo de Fin de Grado es el diseño, implementación y validación de una plataforma web centralizada para la monitorización, telemetría y control de un robot agrícola autónomo. La solución debe actuar como un visor de precisión, permitiendo al operador supervisar el estado del vehículo en tiempo real y gestionar misiones de trabajo de manera eficiente, garantizando la integridad operativa mediante un entorno de simulación.
+El objetivo principal de este Trabajo de Fin de Grado es el \textbf{diseño, implementación y validación} de una \textbf{plataforma web centralizada} para la monitorización, telemetría y control de un robot agrícola autónomo. La solución debe actuar como un \textbf{visor de precisión}, permitiendo al operador supervisar el estado del vehículo en tiempo real y gestionar misiones de trabajo de manera eficiente, garantizando la integridad operativa mediante un \textbf{entorno de simulación}.
 
 \section{Objetivos Específicos}
 
@@ -25,13 +25,14 @@ Para alcanzar el objetivo general propuesto, se han definido una serie de metas 
     \item \textbf{Arquitectura de Baja Latencia:} Configurar un sistema de comunicación cliente-servidor en tiempo real mediante canales bidireccionales (\textit{WebSockets}) para asegurar que la telemetría refleje de forma instantánea el estado del vehículo y permitir el control remoto sin retardos.
     \item \textbf{Gestión de Estado Global:} Utilizar Zustand \cite{zustand} para la administración del estado de la aplicación en el \textit{frontend}, garantizando una reactividad fluida sin las sobrecargas de rendimiento asociadas a otras librerías.
     \item \textbf{Simulación Cinemática:} Desarrollar un motor de simulación nativo en el \textit{backend} que emule el comportamiento físico y energético del robot, permitiendo validar la lógica de la aplicación sin dependencia inicial del \textit{hardware} físico.
-    \item \textbf{Contenerización:} Orquestar todo el ecosistema de \textit{software} (interfaz, lógica de servidor y base de datos) mediante Docker \cite{docker} para asegurar la portabilidad, escalabilidad y un despliegue robusto del sistema.
+    \item \textbf{Arquitectura Asíncrona y Colas de Mensajes:} Incorporar un sistema de colas basado en Redis \cite{redis} para procesar tareas pesadas en segundo plano (como el envío de correos electrónicos transaccionales y la gestión de \textit{tickets} de soporte), descongestionando el hilo principal del servidor.
+    \item \textbf{Contenerización y Despliegue en la Nube:} Orquestar todo el ecosistema de \textit{software} (interfaz, lógica de servidor, proxy inverso y base de datos) mediante Docker \cite{docker} para asegurar la portabilidad, y desplegar la arquitectura completa en una máquina virtual alojada en Microsoft Azure \cite{azure}.
 \end{itemize}
 
 \subsection{Objetivos de Gestión y Calidad}
 
 \begin{itemize}
-    \item \textbf{Metodología Ágil (Scrum \cite{scrum}):} Implementar un marco de trabajo basado en Scrum \cite{scrum}, estructurado en iteraciones o \textit{sprints} de dos semanas. Este enfoque permite gestionar la variabilidad en mi disponibilidad y garantiza una validación continua de los requisitos mediante reuniones de revisión periódicas con el tutor.
-    \item \textbf{Pruebas Automatizadas (\textit{Testing}):} Diseñar e implementar una estrategia integral de pruebas automáticas, abarcando pruebas unitarias para aislar la lógica de componentes y controladores, así como pruebas de integración (\textit{End-to-End}) sobre entornos reales. El objetivo es garantizar la estabilidad del sistema, prevenir regresiones y habilitar su ejecución automática mediante flujos de Integración Continua (CI).
-    \item \textbf{Calidad de Código:} Integrar el análisis estático de código mediante SonarCloud \cite{sonarqube} para detectar vulnerabilidades, errores funcionales y mantener un bajo nivel de deuda técnica, siguiendo los estándares de la industria del \textit{software}.
+    \item \textbf{Metodología Ágil (Scrum):} Implementar un marco de trabajo basado en Scrum \cite{scrum}, estructurado en iteraciones o \textit{sprints} de dos semanas. Este enfoque permite gestionar la variabilidad en la disponibilidad temporal y garantiza una validación continua de los requisitos.
+    \item \textbf{Pruebas Automatizadas y de Carga:} Diseñar e implementar una estrategia integral de pruebas, abarcando pruebas unitarias (\textit{Vitest} \cite{vitest}), pruebas de integración (\textit{End-to-End} con \textit{Supertest} \cite{supertest}) y pruebas de estrés para evaluar el rendimiento bajo alta concurrencia mediante \textit{k6} \cite{k6}.
+    \item \textbf{Integración Continua (CI/CD) y Calidad de Código:} Integrar plataformas de automatización como \textit{GitHub Actions} \cite{githubactions} para validar el código antes de su despliegue, y emplear análisis estático mediante SonarCloud \cite{sonarqube} para garantizar una deuda técnica nula y el cumplimiento estricto de \textit{Quality Gates}.
 \end{itemize}

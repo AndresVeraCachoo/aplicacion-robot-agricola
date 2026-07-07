@@ -38,7 +38,7 @@ jobs:
 
       - name: Run All Tests & Merge Coverage
         continue-on-error: true
-        run: npm run test:cov
+        run: npm run test:cov --workspaces --if-present; node scripts/merge-coverage.js all
 
       # Sube los resultados generados a la plataforma de SonarCloud
       - name: SonarCloud Scan

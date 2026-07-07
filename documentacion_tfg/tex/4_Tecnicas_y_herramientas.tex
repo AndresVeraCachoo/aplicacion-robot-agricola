@@ -2,12 +2,12 @@
 
 \section{Metodologías y técnicas de gestión}
 
-Para el desarrollo del presente proyecto se ha prescindido de los modelos tradicionales de ciclo de vida del \textit{software} (como el modelo en Cascada), optando en su lugar por un enfoque ágil (\textit{Agile}). Esta decisión metodológica se fundamenta en la necesidad de abordar requisitos en constante evolución y en la importancia de disponer de versiones funcionales del sistema desde las primeras etapas del desarrollo, algo crítico al integrar un simulador de telemetría y una aplicación de control en tiempo real.
+Para el desarrollo del presente proyecto se ha prescindido de los modelos tradicionales de ciclo de vida del \textit{software} (como el modelo en Cascada), optando en su lugar por un \textbf{enfoque ágil (\textit{Agile})}. Si bien esta decisión metodológica no fue la única responsable del éxito, su flexibilidad resultó vital para adaptarse a los imprevistos. Al realizar revisiones periódicas (aproximadamente cada dos semanas), fue posible realizar un \textbf{seguimiento progresivo} de la construcción del chasis físico del robot. Gracias a este enfoque iterativo, el hecho de que el \textit{hardware} no llegara a construirse a tiempo no supuso un bloqueo repentino, sino que permitió \textbf{pivotar orgánicamente} hacia la creación de un simulador telemétrico sin llegar a paralizar el desarrollo del \textit{software} en ningún momento.
 
-Para materializar este enfoque, se ha aplicado una metodología pragmática que combina los principios iterativos de Scrum \cite{scrum} con la gestión y trazabilidad de requisitos mediante \textit{GitHub Issues}.
+Para materializar este enfoque, se ha aplicado una metodología pragmática que combina los principios iterativos de \textbf{Scrum} \cite{scrum} con la gestión y trazabilidad de requisitos mediante \textbf{\textit{GitHub Issues}}.
 
-\subsection{Scrum \cite{scrum} y adaptación al entorno académico}
-Scrum \cite{scrum} es un marco de trabajo ágil orientado a la gestión de proyectos complejos. Se basa en el desarrollo iterativo e incremental, donde el trabajo se estructura en ciclos de tiempo fijo denominados \textit{sprints}. Durante cada \textit{sprint}, el equipo se compromete a diseñar, implementar y probar un subconjunto de funcionalidades priorizadas, generando un incremento de \textit{software} potencialmente entregable al final del ciclo.
+\subsection{Scrum y adaptación al entorno académico}
+Scrum \cite{scrum} es un marco de trabajo ágil orientado a la gestión de proyectos complejos. Se basa en el \textbf{desarrollo iterativo e incremental}, donde el trabajo se estructura en ciclos de tiempo fijo denominados \textbf{\textit{sprints}}. Durante cada \textit{sprint}, el equipo se compromete a diseñar, implementar y probar un subconjunto de funcionalidades priorizadas, generando un incremento de \textit{software} potencialmente entregable al final del ciclo.
 
 Dada la naturaleza estrictamente individual de este Trabajo de Fin de Grado, el marco oficial de Scrum \cite{scrum} requirió una adaptación metodológica para encajar en el contexto académico:
 
@@ -16,39 +16,47 @@ Dada la naturaleza estrictamente individual de este Trabajo de Fin de Grado, el 
     \item \textbf{Revisión de \textit{Sprint} y validación de negocio:} Al finalizar cada iteración, se programaron reuniones de seguimiento con los tutores del proyecto. En este escenario, asumieron un rol análogo al de \textit{Product Owner}, evaluando los incrementos funcionales de la aplicación, aportando retroalimentación técnica y validando que los requisitos cumplieran con los estándares de ingeniería exigidos.
 \end{itemize}
 
-\subsection{Gestión de requisitos y trazabilidad con \textit{GitHub Issues}}
-De forma complementaria a los ciclos de Scrum \cite{scrum}, se adoptó \textit{GitHub Issues} como herramienta principal para el seguimiento operativo diario y la documentación de tareas.
+De forma complementaria a los ciclos de Scrum, se adoptó \textit{GitHub Issues} como herramienta principal para el seguimiento operativo diario y la documentación de tareas.
 
 Cada incidencia (\textit{issue}) fue documentada detallando su propósito técnico y asignándole etiquetas (\textit{labels}) estandarizadas que indicaban su prioridad y naturaleza funcional (por ejemplo, \textit{testing} para añadir tests o \textit{bug} para la resolución de fallos). Al estar estrechamente ligado al control de versiones, este enfoque facilitó asociar de forma automática las confirmaciones de código (\textit{commits}).
 
 Finalmente, la sincronización bidireccional entre \textit{GitHub Issues} y la plataforma ágil Zube permitió agrupar estas incidencias para planificar los \textit{sprints} de forma visual. Esta integración garantizó una trazabilidad absoluta del progreso, asegurando que el esfuerzo de programación estuviera siempre documentado y alineado con los objetivos de la iteración en curso.
 
-\section{Patrón de arquitectura}
+\imagen{./img/apartado_5/imagen_SprintBoard_Zube.png}{Tablero de \textit{sprints} y gestión de incidencias en Zube}{0.95}
+
+\section{Arquitectura de la aplicación}
 
 El diseño del sistema AgroSkopos se ha concebido bajo premisas de alta cohesión, bajo acoplamiento y reactividad en tiempo real, requisitos indispensables para una plataforma de telemetría robótica. Para satisfacer estas necesidades, el \textit{software} se fundamenta en la combinación de varios patrones arquitectónicos complementarios.
 
 \subsection{Arquitectura Cliente-Servidor y \textit{Single Page Application} (SPA)}
 
-A nivel macroarquitectónico, el sistema implementa un modelo Cliente-Servidor con un desacoplamiento estricto entre la interfaz de usuario (\textit{frontend}) y la lógica de negocio (\textit{backend}). A pesar de esta separación operativa e independiente, el código de ambas partes (\texttt{/app/client} y \texttt{/app/server}) se administra de manera centralizada mediante el patrón de Monorepo, lo que optimiza la gestión de dependencias y simplifica los flujos de integración continua sin romper el aislamiento técnico de cada capa.
+A nivel macroarquitectónico, el sistema implementa un modelo \textbf{Cliente-Servidor} con un \textbf{desacoplamiento estricto} entre la interfaz de usuario (\textit{frontend}) y la lógica de negocio (\textit{backend}). A pesar de esta separación operativa e independiente, el código de ambas partes (\texttt{/app/client} y \texttt{/app/server}) se administra de manera centralizada mediante el patrón de \textbf{Monorepo}, lo que optimiza la gestión de dependencias y simplifica los flujos de integración continua sin romper el aislamiento técnico de cada capa.
 
-El cliente web ha sido desarrollado siguiendo el patrón de Arquitectura de Una Sola Página (\textit{Single Page Application} o SPA). A diferencia de las aplicaciones web tradicionales multi-página, la SPA carga un único documento HTML en el navegador y actualiza dinámicamente el contenido (el Modelo de Objetos del Documento o DOM) a medida que el usuario interactúa con la plataforma. Este enfoque reduce drásticamente el consumo de ancho de banda y proporciona una fluidez de navegación similar a la de una aplicación de escritorio, algo crítico al operar el mapa interactivo y el panel de control del robot.
+El cliente web ha sido desarrollado siguiendo el patrón de \textbf{Arquitectura de Una Sola Página} (\textit{Single Page Application} o SPA). A diferencia de las aplicaciones web tradicionales multi-página, la SPA carga un único documento HTML en el navegador y actualiza dinámicamente el contenido (el Modelo de Objetos del Documento o DOM) a medida que el usuario interactúa con la plataforma. Este enfoque reduce drásticamente el consumo de ancho de banda y proporciona una \textbf{fluidez de navegación} similar a la de una aplicación de escritorio, algo crítico al operar el mapa interactivo y el panel de control del robot.
+
+\imagen{./img/apartado_4/arquitectura_cliente_servidor.png}{Diagrama de la arquitectura software}{1.15}
 
 \subsection{Arquitectura en Capas (\textit{Layered Architecture}) en el \textit{Backend}}
 
 Para garantizar la mantenibilidad y escalabilidad del servidor, el \textit{backend} implementa una Arquitectura en Capas lógicas. El flujo de información desde que entra una petición hasta que se consulta la base de datos atraviesa niveles con responsabilidades únicas y bien definidas:
 
+\imagen{./img/apartado_4/arquitectura_backend.png}{Diagrama de la arquitectura en capas del servidor Node.js}{0.95}
+
 \begin{enumerate}
     \item \textbf{Capa de Enrutamiento (\textit{Routes}):} Actúa como punto de entrada de la API REST, interceptando las peticiones HTTP (GET, POST, PUT, DELETE) y derivándolas al controlador correspondiente.
     \item \textbf{Capa de Intermediación (\textit{Middlewares}):} Subsistema transversal encargado de interceptar el tráfico para aplicar reglas de seguridad (verificación de \textit{tokens} de autenticación) y gestión centralizada de errores antes de alcanzar la lógica principal.
-    \item \textbf{Capa de Aplicación (\textit{Controllers}):} Contiene la lógica de negocio pura. Es la encargada de procesar las órdenes de control, gestionar el historial de misiones y preparar las respuestas para el cliente.
-    \item \textbf{Capa de Persistencia (\textit{Data/Config}):} Abstrae la conexión y las consultas directas al sistema gestor de bases de datos relacional (PostgreSQL \cite{postgresql}).
+    \item \textbf{Capa de Aplicación (\textit{Controllers}):} Contiene la lógica orquestadora para procesar las peticiones HTTP, validando los datos de entrada y enviando la respuesta al cliente.
+    \item \textbf{Capa de Servicios (\textit{Services}):} Contiene la lógica de negocio pura y la lógica asíncrona pesada (como el envío de correos o la integración con Redis \cite{redis} y BullMQ \cite{bullmq}). Abstrae la complejidad para mantener los controladores limpios y aislados.
+    \item \textbf{Capa de Persistencia (\textit{Data/Config}):} Abstrae la conexión a la base de datos PostgreSQL \cite{postgresql} delegando el mapeo relacional a Prisma ORM, lo que garantiza consultas fuertemente tipadas y seguras.
 \end{enumerate}
 
 \subsection{Arquitectura Orientada a Eventos (\textit{Event-Driven})}
 
-Mientras que las operaciones de gestión (como consultar el historial de misiones o registrar usuarios) se resuelven mediante el clásico patrón de petición-respuesta (API REST), la monitorización cinemática y energética del robot exige un paradigma distinto.
+Mientras que las operaciones de gestión (como consultar el historial de misiones o registrar usuarios) se resuelven mediante el clásico \textbf{patrón de petición-respuesta (API REST)}, la monitorización cinemática y energética del robot exige un paradigma distinto.
 
-Para solventar esta necesidad, AgroSkopos integra una Arquitectura Orientada a Eventos paralela a la API REST. Mediante el uso de WebSockets bidireccionales, el sistema establece un canal de comunicación persistente y de baja latencia. El simulador del robot actúa como un "Productor" de eventos (emitiendo variables de estado como batería, velocidad y coordenadas cada pocos milisegundos), el servidor actúa como un "\textit{Broker}" o despachador, y los componentes visuales del \textit{frontend} actúan como "Consumidores", reaccionando y re-renderizando la pantalla instantáneamente tras la recepción de un nuevo evento. Este patrón es el núcleo que permite que el visor funcione en estricto tiempo real.
+Para solventar esta necesidad, AgroSkopos integra una Arquitectura Orientada a Eventos paralela a la API REST. Mediante el uso de WebSockets bidireccionales, el sistema establece un canal de comunicación persistente y de baja latencia. El simulador del robot actúa como un "Productor" de eventos (emitiendo variables de estado como batería, velocidad y coordenadas cada pocos milisegundos), el servidor actúa como un \textit{"Broker"} o despachador, y los componentes visuales del \textit{frontend} actúan como Consumidores, reaccionando y re-renderizando la pantalla instantáneamente tras la recepción de un nuevo evento. Este patrón es el núcleo que permite que el visor funcione en estricto tiempo real.
+
+\imagen{./img/apartado_4/arquitectura_websockets.png}{Diagrama de secuencia de la Arquitectura Orientada a Eventos por WebSockets}{0.95}
 
 \section{Tecnologías y \textit{frameworks} principales}
 
@@ -57,51 +65,91 @@ En esta sección se detallan las herramientas tecnológicas que conforman el eco
 \subsection{\textit{Backend} (Lógica de servidor)}
 
 \begin{itemize}
-    \item \textbf{Node.js \cite{nodejs} y Express \cite{express}:} Node.js \cite{nodejs} es un entorno de ejecución multiplataforma basado en el motor V8 de JavaScript, diseñado para construir aplicaciones de red escalables mediante un modelo de entrada/salida sin bloqueo y orientado a eventos. Sobre este entorno se emplea Express \cite{express}, un \textit{framework} web minimalista que facilita la creación de la API REST, gestionando el enrutamiento de las peticiones HTTP (rutas de usuarios, misiones y control) y la integración de \textit{middlewares} de forma estructurada.
-    \item \textbf{PostgreSQL \cite{postgresql} y node-postgres \cite{nodepostgres} (pg):} PostgreSQL \cite{postgresql} es un sistema de gestión de bases de datos relacional orientado a objetos, conocido por su robustez, extensibilidad y cumplimiento del estándar SQL. Constituye el núcleo de persistencia del sistema, almacenando el historial de misiones, telemetría y perfiles de usuario. Para la comunicación entre la aplicación Node.js \cite{nodejs} y la base de datos se utiliza \texttt{pg} (\textit{node-postgres \cite{nodepostgres}}), un cliente de PostgreSQL \cite{postgresql} que permite la ejecución asíncrona de consultas parametrizadas, protegiendo al sistema contra inyecciones SQL.
-    \item \textbf{Socket.io \cite{socketio} (Servidor):} Socket.io \cite{socketio} es una biblioteca que habilita la comunicación bidireccional, persistente y de baja latencia entre el cliente web y el servidor. En el contexto de AgroSkopos, actúa como el motor de la arquitectura orientada a eventos, permitiendo la transmisión en tiempo real de la telemetría del robot (coordenadas, velocidad, batería) sin la sobrecarga de cabeceras de las peticiones HTTP tradicionales.
+    \item \textbf{Node.js \cite{nodejs} y Express \cite{express}:} Node.js \cite{nodejs} es un entorno de ejecución multiplataforma basado en el motor V8 de JavaScript. Sobre este entorno se emplea Express \cite{express}, un \textit{framework} web minimalista que facilita la creación de la API REST.
+    \item \textbf{PostgreSQL \cite{postgresql} y Prisma ORM \cite{prisma}:} PostgreSQL \cite{postgresql} constituye el núcleo de persistencia del sistema relacional. Para la interacción con la base de datos se utiliza Prisma ORM \cite{prisma}, que sustituye a los clientes SQL tradicionales proporcionando un esquema declarativo, migraciones automatizadas y un cliente de base de datos fuertemente tipado en JavaScript, mitigando radicalmente el riesgo de inyecciones SQL.
+    \item \textbf{Redis \cite{redis} y BullMQ \cite{bullmq}:} Redis \cite{redis} es un almacén de estructura de datos en memoria empleado como un intermediario (\textit{broker}) de alta velocidad. En conjunción con BullMQ \cite{bullmq}, permite la gestión robusta de colas de mensajes y trabajos en segundo plano (\textit{background jobs}), siendo la espina dorsal del sistema asíncrono para el envío de correos electrónicos y la gestión de \textit{tickets} de soporte técnico sin bloquear el flujo principal de peticiones de la API.
+    \item \textbf{Socket.io \cite{socketio} (Servidor):} Socket.io \cite{socketio} actúa como el motor de la arquitectura orientada a eventos, permitiendo la transmisión en tiempo real de la telemetría del robot sin la sobrecarga de cabeceras de las peticiones HTTP tradicionales.
     \item \textbf{Seguridad de la API (JWT, Bcrypt, Helmet y Rate Limit):} Para garantizar la integridad y confidencialidad de la API, se ha implementado un ecosistema de seguridad compuesto por varias librerías:
     \begin{itemize}
         \item \textbf{JSON Web Token \cite{jwt} (jsonwebtoken):} Estándar abierto (RFC 7519) utilizado para transmitir información de forma segura entre el cliente y el servidor en formato JSON. Se emplea para la autenticación sin estado (\textit{stateless}) tras el inicio de sesión.
-        \item \textbf{Bcrypt:} Librería de cifrado basada en el algoritmo de \textit{hash} de contraseñas de Blowfish. Garantiza que las credenciales de los usuarios se almacenen de forma segura y unidireccional.
-        \item \textbf{Helmet y Express \cite{express}-Rate-Limit:} \textit{Middlewares} de seguridad que protegen la aplicación configurando adecuadamente las cabeceras HTTP y limitando el número máximo de peticiones por IP, mitigando ataques de denegación de servicio (DDoS) y ataques de fuerza bruta.
+        \item \textbf{Bcrypt \cite{bcrypt}:} Librería de cifrado basada en el algoritmo de \textit{hash} de contraseñas de Blowfish. Garantiza que las credenciales de los usuarios se almacenen de forma segura y unidireccional.
+        \item \textbf{Helmet \cite{helmet} y Express-Rate-Limit \cite{expressratelimit}:} \textit{Middlewares} de seguridad que protegen la aplicación configurando adecuadamente las cabeceras HTTP y limitando el número máximo de peticiones por IP, mitigando ataques de denegación de servicio (DDoS) y ataques de fuerza bruta.
     \end{itemize}
-    \item \textbf{Turf.js \cite{turfjs}:} Turf.js \cite{turfjs} es una biblioteca avanzada de análisis espacial en JavaScript. En el servidor, se emplea para realizar operaciones matemáticas geoespaciales complejas de forma nativa, tales como la validación de que las coordenadas del robot se encuentran dentro de los polígonos permitidos (geocercas) o el cálculo de distancias entre \textit{waypoints} durante la simulación cinemática.
+    \item \textbf{Zod \cite{zod}:} Biblioteca de validación de esquemas estáticos y declaración de tipos mediante un enfoque \textit{schema-first}. Garantiza que las estructuras de datos que entran a la API cumplan con formatos estrictos antes de ser procesadas.
+    \item \textbf{Nodemailer \cite{nodemailer}:} Módulo para aplicaciones Node.js que permite el envío automatizado de correos electrónicos. Destaca por su seguridad (soporte para TLS/STARTTLS) e independencia del proveedor de correo.
+    \item \textbf{Turf.js \cite{turfjs}:} Biblioteca avanzada de análisis espacial en JavaScript. Permite realizar operaciones matemáticas geoespaciales complejas de forma nativa (cálculo de áreas, intersecciones de polígonos y distancias).
 \end{itemize}
 
 \subsection{\textit{Frontend} (Interfaz de usuario)}
 
 \begin{itemize}
     \item \textbf{React \cite{react} y Vite \cite{vite}:} React \cite{react} es una biblioteca de JavaScript desarrollada por Meta para la construcción de interfaces de usuario basadas en componentes declarativos y reutilizables. Su uso permite gestionar dinámicamente el DOM mediante un modelo de renderizado reactivo. Para la construcción y empaquetado del código se emplea Vite \cite{vite}, una herramienta de desarrollo de nueva generación que aprovecha los módulos ES nativos del navegador para ofrecer un entorno de desarrollo ultrarrápido y compilaciones optimizadas.
-    \item \textbf{React \cite{react} Router:} React \cite{react} Router es la biblioteca estándar de enrutamiento para aplicaciones React \cite{react}. Habilita la navegación dinámica entre distintas vistas del panel de control (\textit{Dashboard}, Mapa, Historial, Perfil) sin necesidad de recargar la página web, consolidando la arquitectura de \textit{Single Page Application} (SPA).
+    \item \textbf{React Router \cite{reactrouter}:} React Router \cite{reactrouter} es la biblioteca estándar de enrutamiento para aplicaciones React \cite{react}. Habilita la navegación dinámica entre distintas vistas del panel de control (\textit{Dashboard}, Mapa, Historial, Perfil) sin necesidad de recargar la página web, consolidando la arquitectura de \textit{Single Page Application} (SPA).
     \item \textbf{Zustand \cite{zustand}:} Zustand \cite{zustand} es un gestor de estado global ligero, rápido y escalable. A diferencia de soluciones más pesadas como Redux, Zustand \cite{zustand} utiliza \textit{hooks} de React \cite{react} para compartir el estado (como los datos telemétricos en vivo o el usuario activo) entre componentes profundamente anidados sin incurrir en problemas de renderizado innecesario ni excesivo código repetitivo (\textit{prop-drilling}).
-    \item \textbf{Ecosistema Leaflet \cite{leaflet} (Geoman y Heatmaps):} Leaflet \cite{leaflet} es la principal biblioteca de código abierto para la creación de mapas interactivos adaptables a dispositivos móviles. Para su integración reactiva se emplea React \cite{react}-Leaflet \cite{leaflet}. Este núcleo cartográfico se ha potenciado con dos extensiones fundamentales para el sector agrícola:
+    \item \textbf{Ecosistema Leaflet \cite{leaflet} (Geoman y Heatmaps):} Leaflet \cite{leaflet} es la principal biblioteca de código abierto para la creación de mapas interactivos adaptables a dispositivos móviles. Para su integración reactiva se emplea React-Leaflet \cite{leaflet}. Este núcleo cartográfico se ha potenciado con dos extensiones fundamentales para el sector agrícola:
     \begin{itemize}
-        \item \textbf{Leaflet \cite{leaflet}-Geoman:} Herramienta que proporciona controles avanzados de dibujo y edición geométrica, permitiendo al usuario trazar polígonos (parcelas) y rutas directamente sobre el visor espacial.
-        \item \textbf{Leaflet \cite{leaflet}.heat:} \textit{Plugin} para la generación de mapas de calor, utilizado para representar gráficamente la densidad de datos edafológicos (como humedad o nutrientes) sobre el terreno.
+        \item \textbf{Leaflet-Geoman \cite{leaflet}:} Herramienta que proporciona controles avanzados de dibujo y edición geométrica, permitiendo al usuario trazar polígonos (parcelas) y rutas directamente sobre el visor espacial.
+        \item \textbf{Leaflet.heat \cite{leaflet}:} \textit{Plugin} para la generación de mapas de calor, utilizado para representar gráficamente la densidad de datos edafológicos (como humedad o nutrientes) sobre el terreno.
     \end{itemize}
-    \item \textbf{Axios \cite{axios}:} Axios \cite{axios} es un cliente HTTP basado en promesas. Se encarga de gestionar la comunicación asíncrona entre la interfaz de React \cite{react} y la API REST del \textit{backend}, facilitando la interceptación de peticiones para la inyección automática de \textit{tokens} de seguridad y la gestión centralizada de errores de red.
-    \item \textbf{Recharts \cite{recharts}:} Recharts \cite{recharts} es una biblioteca de visualización de datos basada en componentes de React \cite{react} y D3.js. Se utiliza para modelar la información numérica del sistema mediante gráficos interactivos y adaptables (como la curva de descarga energética de la batería o las estadísticas de rendimiento de las misiones).
-    \item \textbf{Internacionalización (i18next \cite{i18next}):} Para dotar al sistema de soporte multilingüe, se ha integrado el \textit{framework} i18next \cite{i18next} junto a su conector react-i18next \cite{i18next}. A su vez, se emplea un detector de idioma en el navegador que adapta automáticamente la interfaz del visor a la configuración regional del operador.
-    \item \textbf{PWA (\textit{Progressive Web App}):} Mediante el \textit{plugin} \texttt{vite-plugin-pwa \cite{vitepwa}}, la interfaz está configurada como una Aplicación Web Progresiva (PWA). Esto permite la instalación nativa de AgroSkopos en dispositivos móviles, tabletas y ordenadores. El \textit{plugin} genera y registra automáticamente \textit{Service Workers} que cachean los recursos estáticos del cliente (\textit{App Shell}). Esto mejora drásticamente los tiempos de carga en zonas rurales con baja cobertura, reduce el consumo de datos y sienta la base tecnológica necesaria para implementar capacidades operativas \textit{offline} más avanzadas en futuras iteraciones del proyecto.
+    \item \textbf{Axios \cite{axios}:} Cliente HTTP basado en promesas diseñado para gestionar la comunicación asíncrona entre aplicaciones web y APIs REST, facilitando la intercepción de peticiones y respuestas.
+    \item \textbf{Recharts \cite{recharts}:} Biblioteca de visualización de datos basada en componentes de React \cite{react} y D3.js. Permite modelar información numérica mediante gráficos interactivos y personalizables.
+    \item \textbf{html2canvas \cite{html2canvas} y jsPDF \cite{jspdf}:} Conjunto de herramientas para la exportación de documentos. \textit{html2canvas} \cite{html2canvas} permite capturar el DOM del navegador y convertirlo en una imagen (lienzo), mientras que \textit{jsPDF} \cite{jspdf} empaqueta dichas imágenes en documentos portátiles (PDF) estructurados.
+    \item \textbf{date-fns \cite{datefns}:} Biblioteca de utilidades para la manipulación y formateo de fechas en JavaScript. Ofrece un diseño modular que permite importar solo las funciones necesarias, reduciendo el tamaño del paquete final.
+    \item \textbf{Internacionalización (i18next \cite{i18next}):} \textit{Framework} que dota al sistema de soporte multilingüe, adaptando el contenido de la interfaz en función de la configuración regional del usuario.
+    \item \textbf{PWA (\textit{Progressive Web App}) \cite{vitepwa}:} Estándar de desarrollo que dota a las aplicaciones web de capacidades nativas (instalabilidad, ejecución en segundo plano y operación sin conexión). Mediante \textit{Service Workers}, cachea los recursos estáticos para acelerar los tiempos de carga en redes inestables.
 \end{itemize}
 
 \subsection{\textit{Testing} y Calidad del \textit{Software}}
-Para asegurar la robustez de la plataforma, se emplean dos ecosistemas de pruebas consolidados:
-
 \begin{itemize}
-    \item \textbf{\textit{Backend}:} Se utiliza Jest \cite{jest} como marco de pruebas unitarias para aislar la lógica de controladores, y Supertest \cite{supertest} para la validación \textit{End-to-End} (E2E) de las rutas HTTP. Además, se integra Testcontainers \cite{testcontainers} para levantar instancias efímeras y aisladas de PostgreSQL \cite{postgresql} en Docker \cite{docker} durante la ejecución de las pruebas de integración.
-    \item \textbf{\textit{Frontend}:} Se emplea Vitest \cite{vitest} (un marco de pruebas nativo de Vite \cite{vite}) en conjunción con React \cite{react} Testing Library y \texttt{jsdom \cite{jsdom}} para simular el comportamiento del navegador y validar la correcta renderización e interactividad de los componentes visuales.
+    \item \textbf{Jest \cite{jest} y Supertest \cite{supertest}:} Jest \cite{jest} es un marco de pruebas unitarias para JavaScript diseñado para garantizar la correctitud del código. Se complementa con Supertest \cite{supertest}, una biblioteca de aserciones especializada en simular peticiones HTTP y probar APIs REST sin necesidad de levantar un servidor en un puerto real.
+    \item \textbf{Testcontainers \cite{testcontainers}:} Herramienta que soporta pruebas de integración mediante el despliegue programático de contenedores Docker \cite{docker} efímeros (como bases de datos desechables) durante la ejecución de los tests.
+    \item \textbf{Vitest \cite{vitest} y React Testing Library \cite{reacttestinglibrary}:} Vitest \cite{vitest} es un marco de pruebas rápido y nativo impulsado por Vite \cite{vite}. Junto con React Testing Library \cite{reacttestinglibrary}, permite escribir pruebas de componentes de interfaz de usuario centrándose en el comportamiento y accesibilidad en lugar de en los detalles de implementación.
+    \item \textbf{k6 \cite{k6}:} Herramienta de código abierto para pruebas de carga y rendimiento (\textit{load testing}). Permite inyectar cientos de usuarios virtuales concurrentes para descubrir cuellos de botella y evaluar el comportamiento de los servidores bajo condiciones de estrés.
 \end{itemize}
 
-\subsection{Contenedores y orquestación}
-Docker \cite{docker} y Docker \cite{docker} Compose \cite{docker} conforman una plataforma de contenerización que permite empaquetar aplicaciones junto con sus dependencias y variables de entorno en unidades estándar aisladas. Para la orquestación del ecosistema completo (servidor Node.js \cite{nodejs}, cliente React \cite{react} servido mediante Nginx, y base de datos PostgreSQL \cite{postgresql}) se emplea Docker \cite{docker} Compose. Esta herramienta permite levantar toda la arquitectura con un único archivo declarativo, garantizando que el entorno de desarrollo sea idéntico al entorno de producción.
-
-\subsection{Automatizaciones y Análisis estático}
+\subsection{Infraestructura Cloud y Contenedores}
 \begin{itemize}
-    \item \textbf{ESLint \cite{eslint} y SonarCloud \cite{sonarqube}:} ESLint \cite{eslint} es una herramienta de análisis estático (\textit{linter}) que identifica y reporta patrones problemáticos en el código JavaScript, garantizando el cumplimiento de los estándares de estilo. Posteriormente, este código es sometido a un análisis de calidad profundo y seguridad continua mediante la integración de SonarCloud \cite{sonarqube}.
-    \item \textbf{GitHub Actions \cite{githubactions}:} Herramienta de Integración Continua (CI) \cite{githubactions} que automatiza los flujos de trabajo del repositorio. En este proyecto, orquesta la ejecución automática de los \textit{tests} y el envío de reportes a SonarCloud \cite{sonarqube} cada vez que se detectan cambios en el código, bloqueando la integración de código defectuoso.
+    \item \textbf{Docker \cite{docker} y Docker Compose \cite{docker}:} Plataforma de contenerización que permite empaquetar aplicaciones junto con sus dependencias en unidades estándar aisladas. Docker Compose facilita la orquestación de múltiples contenedores interconectados mediante un único archivo declarativo.
+    \item \textbf{Vercel \cite{vercel}:} Plataforma de \textit{Cloud Computing} optimizada para el despliegue de aplicaciones web modernas. Destaca por su integración continua y el uso de una Red de Entrega de Contenido (CDN) distribuida globalmente.
+    \item \textbf{Microsoft Azure \cite{azure}:} Proveedor de nube pública que ofrece Infraestructura como Servicio (IaaS), permitiendo el despliegue de máquinas virtuales escalables y seguras.
+    \item \textbf{Nginx \cite{nginx}:} Servidor web y proxy inverso de alto rendimiento. Actúa como barrera de seguridad perimetral, gestionando dinámicamente el enrutamiento HTTP/HTTPS y el balanceo de carga.
 \end{itemize}
+
+\subsection{Integración Continua y Análisis Estático}
+\begin{itemize}
+    \item \textbf{GitHub Actions \cite{githubactions}:} Plataforma de automatización que permite definir flujos de trabajo (\textit{workflows}) directamente en el repositorio. Actúa como el motor de la Integración Continua (CI), ejecutando pruebas y analizando el código automáticamente tras cada confirmación.
+    \item \textbf{SonarCloud \cite{sonarqube}:} Servicio basado en la nube para el análisis estático de código. Evalúa la calidad del \textit{software} midiendo variables como la deuda técnica, las vulnerabilidades de seguridad y el porcentaje de cobertura de pruebas (\textit{Coverage}), bloqueando el despliegue si no se superan los umbrales de calidad exigidos (\textit{Quality Gates}).
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\rowcolors{2}{gray!15}{white}
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Herramienta / Tecnología} & \textbf{\textit{Frontend}} & \textbf{\textit{Backend}} & \textbf{Infraestructura} \\
+\midrule
+React / Vite & X & & \\
+Zustand & X & & \\
+Leaflet (Geoman, Heat) & X & & \\
+Axios / Recharts & X & & \\
+Node.js / Express & & X & \\
+PostgreSQL / Prisma ORM & & X & \\
+Redis / BullMQ & & X & \\
+Socket.io & X & X & \\
+JWT / Bcrypt / Zod & & X & \\
+Nodemailer & & X & \\
+Jest / Supertest & & X & \\
+Vitest / React Testing Library & X & & \\
+k6 & & X & \\
+Docker / Docker Compose & & & X \\
+Vercel & & & X \\
+Microsoft Azure / Nginx & & & X \\
+GitHub Actions / SonarCloud & & & X \\
+\bottomrule
+\end{tabular}
+\caption{Resumen de herramientas y tecnologías por capa de arquitectura.}
+\label{tab:tecnologias}
+\end{table}
 
 \subsection{Documentación y diseño}
 Para la redacción, estructuración y composición tipográfica de la presente memoria técnica se ha utilizado inicialmente el sistema \LaTeX \ \cite{latex} a través de la plataforma web Overleaf \cite{overleaf}. La elección de estas herramientas responde a su excelente rendimiento en el manejo de documentos de carácter científico-técnico y a su capacidad para garantizar un formato limpio, uniforme y profesional. En una primera fase, Overleaf facilitó la automatización de elementos complejos como los índices dinámicos, las referencias cruzadas, el listado de figuras y la gestión bibliográfica.
@@ -125,9 +173,10 @@ El Entorno de Desarrollo Integrado (IDE) principal escogido para la codificació
 
 \begin{itemize}
     \item \textbf{ESLint \cite{eslint} y Prettier:} Encargados de realizar el análisis estático y el formateo en tiempo de ejecución dentro del editor. Forzaron el cumplimiento de las reglas de estilo y detectaron errores de sintaxis o variables huérfanas antes de la compilación.
-    \item \textbf{Docker \cite{docker} y Containers (Microsoft):} Extensiones para la inspección visual, gestión y monitorización en tiempo real de los contenedores locales (\textit{Frontend}, \textit{Backend} y Base de Datos), agilizando las pruebas de despliegue y la orquestación del entorno.
+    \item \textbf{Docker y Containers (Microsoft):} Extensiones para la inspección visual, gestión y monitorización en tiempo real de los contenedores locales (\textit{Frontend}, \textit{Backend} y Base de Datos), agilizando las pruebas de despliegue y la orquestación del entorno.
     \item \textbf{SonarLint:} Integrado como un \textit{linter} avanzado en el IDE, conectándose de forma bidireccional con las reglas de calidad de SonarCloud \cite{sonarqube} para detectar vulnerabilidades de seguridad (\textit{Security Hotspots}) y deuda técnica en el mismo instante de la escritura del código.
     \item \textbf{Database Client for PostgreSQL \cite{postgresql}:} Herramienta integrada en el propio editor que permitió la conexión directa a la base de datos local y a los contenedores, facilitando la ejecución de sentencias SQL y la validación del esquema de datos sin necesidad de recurrir a clientes pesados externos.
+    \item \textbf{LaTeX Workshop \cite{latexworkshop}:} Extensión clave que posibilitó la compilación, previsualización en tiempo real y detección de errores de sintaxis al redactar toda la memoria técnica y los anexos del proyecto directamente desde el IDE.
 \end{itemize}
 
 
