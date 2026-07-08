@@ -563,3 +563,70 @@ body.dark-mode .mission-map-panel {
   flex: 1;
   margin: 0;
 }
+
+/* Delete Mission Modal Styling */
+.delete-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.delete-modal-text {
+  font-size: 1.05rem;
+  color: var(--text-main, #334155);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-modal-cancel,
+.btn-modal-delete {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-cancel {
+  background-color: var(--background-app, #f1f5f9);
+  color: var(--text-main, #334155);
+  border: 1px solid var(--border-light, #cbd5e1);
+}
+
+.btn-modal-cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-modal-delete {
+  background-color: #e91616;
+  color: white;
+}
+
+.btn-modal-delete:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+}
+
+body.dark-mode .delete-modal-text {
+  color: #f8fafc;
+}
+
+body.dark-mode .btn-modal-cancel {
+  background-color: var(--background-app, #0f172a);
+  color: #f8fafc;
+  border-color: var(--border-light, #334155);
+}
+
+body.dark-mode .btn-modal-cancel:hover {
+  background-color: #1e293b;
+}

@@ -9,7 +9,7 @@ El principal objetivo que se planteó para este proyecto era desarrollar una sol
     \item Desarrollar una plataforma centralizada y segura para la gestión de usuarios y roles dentro del entorno empresarial.
     \item Proveer capacidades de monitorización y telemetría en tiempo real, ofreciendo datos críticos del estado del robot y del terreno.
     \item Implementar un sistema de control bidireccional que permita la operación manual remota y la navegación autónoma.
-    \item Facilitar la planificación y ejecución de misiones agrícolas autónomas mediante herramientas de geofencing.
+    \item Facilitar la planificación y ejecución de misiones agrícolas autónomas mediante herramientas de \textit{geofencing}.
 \end{itemize}
 
 \section{Catálogo de requisitos}
@@ -43,7 +43,7 @@ El principal objetivo que se planteó para este proyecto era desarrollar una sol
     \item \textbf{RF-4.1 (Cambio de Modo):} El sistema debe permitir al Operador alternar entre los modos de funcionamiento del robot (Manual, Autónomo, Navegación).
     \item \textbf{RF-4.2 (Control Manual Remoto):} El sistema debe proporcionar un sistema de control mediante los botones de dirección de la interfaz o las flechas del teclado para conducir el robot en modo Manual.
     \item \textbf{RF-4.3 (Control de Velocidad):} El sistema debe permitir al Operador modificar la velocidad de desplazamiento del robot en tiempo real.
-    \item \textbf{RF-4.4 (Navegación por Waypoints):} El sistema debe permitir encolar puntos en el mapa para que el robot navegue hacia ellos.
+    \item \textbf{RF-4.4 (Navegación por \textit{waypoints}):} El sistema debe permitir encolar puntos en el mapa para que el robot navegue hacia ellos.
     \item \textbf{RF-4.5 (Pausa Rápida):} El sistema debe permitir pausar temporalmente cualquier movimiento del robot y poder reanudarlo.
     \item \textbf{RF-4.6 (Parada de Emergencia):} El sistema debe disponer de un control de emergencia que aborte inmediatamente la misión y detenga los motores.
     \item \textbf{RF-4.7 (Transmisión de Vídeo):} El sistema debe integrar un flujo de vídeo en tiempo real para facilitar la supervisión visual durante la operación y control del robot.
@@ -84,6 +84,13 @@ El principal objetivo que se planteó para este proyecto era desarrollar una sol
     \item \textbf{RF-8.3 (Documentación Interactiva de API):} El servidor debe exponer una interfaz web donde los desarrolladores y administradores puedan explorar y probar interactivamente los \textit{endpoints} del sistema (Swagger).
 \end{itemize}
 
+\subsection{Módulo de Notificaciones y Reportes}
+\begin{itemize}
+    \item \textbf{RF-9.1 (Envío de Credenciales Autogeneradas):} El sistema debe enviar automáticamente un correo electrónico de bienvenida con la contraseña autogenerada cuando el Administrador da de alta a un nuevo empleado.
+    \item \textbf{RF-9.2 (Sistema de Soporte por Tickets):} El sistema debe permitir a los usuarios reportar problemas o incidencias técnicas mediante la generación de un ticket que se enviará automáticamente por correo electrónico al equipo responsable.
+    \item \textbf{RF-9.3 (Distribución de Reportes):} El sistema debe permitir tanto la descarga local (en formatos PDF y CSV) de los análisis agronómicos, como su envío directo por correo electrónico a la dirección solicitada.
+\end{itemize}
+
 \subsection{Requisitos No Funcionales}
 \begin{itemize}
     \item \textbf{RNF-1 (Rendimiento y Latencia):} El sistema de telemetría y control remoto debe operar con una latencia mínima, garantizando una respuesta fluida a los comandos manuales y a la recepción de datos en tiempo real.
@@ -97,6 +104,8 @@ El principal objetivo que se planteó para este proyecto era desarrollar una sol
     \item \textbf{RNF-9 (Fiabilidad y Cobertura de Pruebas):} Los módulos deben contar con una batería de pruebas unitarias y de integración automatizadas para prevenir regresiones y asegurar su correcto funcionamiento.
     \item \textbf{RNF-10 (Validación Estricta de Datos):} El sistema debe implementar mecanismos rigurosos de validación de esquemas en todas las entradas de datos para prevenir errores de tipo y fallos en tiempo de ejecución.
     \item \textbf{RNF-11 (Documentación de Código Autogenerada):} El código fuente debe estar debidamente documentado mediante un formato estandarizado (como JSDoc) que permita la generación automática y actualización continua de la documentación técnica.
+    \item \textbf{RNF-12 (Pruebas de Carga y Estrés):} El servidor debe soportar picos de peticiones y tráfico intensivo de telemetría sin degradación notable. La resistencia debe validarse mediante inyección de carga con herramientas como k6.
+    \item \textbf{RNF-13 (Despliegue Híbrido Cloud):} El sistema debe desplegar la API REST y la base de datos en servidores virtuales (como Microsoft Azure) y el cliente en una red de entrega global estática (como Vercel) para optimizar la latencia.
 \end{itemize}
 
 \section{Especificación de requisitos}
@@ -108,6 +117,14 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
     \item \textbf{Operador:} Hereda todos los permisos de visualización del perfil \textit{Usuario}. Además, está capacitado para tomar el control activo del vehículo. Puede conducir el robot en modo manual, dibujar áreas de trabajo, configurar parámetros y lanzar misiones autónomas.
     \item \textbf{Administrador (Admin):} Posee el control total del sistema. Hereda las capacidades operativas del \textit{Operador} y añade privilegios exclusivos de gestión interna, como la creación, modificación y eliminación de cuentas de empleados, así como la asignación de roles.
 \end{itemize}
+
+Para ilustrar de manera general las interacciones de estos actores, la figura \ref{fig:img/apendice_B/diagrama_casos_uso.png} muestra el diagrama de casos de uso completo del sistema.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1\textwidth,height=0.9\textheight,keepaspectratio]{img/apendice_B/diagrama_casos_uso.png}
+    \caption{Diagrama General de Casos de Uso del Sistema}\label{fig:img/apendice_B/diagrama_casos_uso.png}
+\end{figure}
 \clearpage
 
 % CU-1 Iniciar Sesión
@@ -130,8 +147,8 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
 			\item El usuario accede a la página de inicio de sesión.
 			\item El sistema solicita correo electrónico y contraseña.
 			\item El usuario introduce sus datos y pulsa el botón de acceso.
-            \item El sistema valida las credenciales y devuelve un token de acceso (JWT).
-            \item El sistema redirige al usuario a la vista principal (Dashboard).
+            \item El sistema valida las credenciales y devuelve un \textit{token} de acceso (\textbf{JWT}).
+            \item El sistema redirige al usuario a la vista principal (\textit{dashboard}).
 		\end{enumerate}\\
 		\textbf{Postcondición}        & El usuario queda autenticado y tiene acceso a las funciones permitidas por su rol. \\
 		\textbf{Excepciones}          & Credenciales incorrectas: El sistema deniega el acceso y muestra un mensaje de error. \\
@@ -163,9 +180,10 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
 			\item El Administrador selecciona crear un nuevo usuario o editar uno existente.
             \item El Administrador introduce/modifica los datos (nombre, correo, rol) y guarda.
             \item El sistema actualiza la base de datos y refleja los cambios en el listado.
+            \item (Solo si es un alta nueva) El sistema envía un correo electrónico automatizado al empleado con sus credenciales iniciales.
 		\end{enumerate}\\
-		\textbf{Postcondición}        & Las credenciales y privilegios del usuario afectado se actualizan en el sistema. \\
-		\textbf{Excepciones}          & Correo duplicado al crear usuario: El sistema informa de que la cuenta ya existe. \\
+		\textbf{Postcondición}        & Las credenciales y privilegios del usuario afectado se actualizan y el empleado recibe su notificación de alta. \\
+		\textbf{Excepciones}          & Correo duplicado al crear usuario: El sistema informa de que la cuenta ya existe. Fallo en el servidor SMTP: El usuario se crea, pero se informa de que el correo no pudo enviarse. \\
 		\textbf{Importancia}          & Alta \\
 		\bottomrule
 	\end{tabularx}
@@ -192,7 +210,7 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
 			\item El Operador establece el modo de funcionamiento del robot a "Manual".
             \item El Operador ajusta el nivel de velocidad deseado.
 			\item El Operador presiona las flechas de dirección en la interfaz o su teclado.
-			\item El sistema envía vectores de velocidad y dirección mediante WebSockets al simulador/robot.
+			\item El sistema envía vectores de velocidad y dirección mediante \textit{WebSockets} al simulador/robot.
             \item El robot procesa el movimiento y actualiza su posición en el mapa interactivo.
 		\end{enumerate}\\
 		\textbf{Postcondición}        & El robot se desplaza según las indicaciones del Operador. \\
@@ -275,7 +293,7 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
 		\textbf{Versión}              & 1.0    \\
 		\textbf{Autor}                & Andrés Vera Cachoo \\
 		\textbf{Actores}              & Usuario, Operador, Administrador \\
-		\textbf{Requisitos asociados} & RF-7.2, RF-7.3, RF-7.4, RF-7.6 \\
+		\textbf{Requisitos asociados} & RF-7.1, RF-7.2, RF-7.3, RF-7.4, RF-7.5, RF-7.6 \\
 		\textbf{Descripción}          & El usuario filtra, visualiza y exporta métricas recogidas en campo bajo distintas perspectivas. \\
 		\textbf{Precondición}         & Existen misiones completadas con recolección de datos en la base de datos. \\
 		\textbf{Acciones}             &
@@ -295,4 +313,66 @@ Antes de detallar las interacciones de cada caso de uso, es necesario definir lo
 		\bottomrule
 	\end{tabularx}
 	\caption{CU-6 Análisis integral de datos agronómicos.}
+\end{table}
+
+% CU-7 Modificar Contraseña Propia
+\begin{table}[H]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.21\columnwidth} p{0.71\columnwidth} }
+		\toprule
+		\textbf{CU-7}    & \textbf{Modificar contraseña de perfil}\\
+		\toprule
+		\textbf{Versión}              & 1.0    \\
+		\textbf{Autor}                & Andrés Vera Cachoo \\
+		\textbf{Actores}              & Usuario, Operador, Administrador \\
+		\textbf{Requisitos asociados} & RF-1.4 \\
+		\textbf{Descripción}          & Permite a cualquier empleado modificar su contraseña para mantener la seguridad de su cuenta. \\
+		\textbf{Precondición}         & El usuario debe estar autenticado en el sistema. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El empleado hace clic sobre su avatar/nombre en la cabecera.
+			\item Selecciona la opción de "Perfil" y navega al apartado de seguridad.
+			\item El empleado introduce su contraseña actual por seguridad y la nueva contraseña repetida.
+            \item El sistema verifica que la contraseña cumple las políticas de seguridad y la actualiza en base de datos.
+            \item El sistema cierra la sesión actual forzando a iniciar sesión con las nuevas credenciales.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & La contraseña queda actualizada y cifrada de forma segura. \\
+		\textbf{Excepciones}          & Contraseña actual incorrecta: El sistema rechaza el cambio y muestra un aviso. \\
+		\textbf{Importancia}          & Media-Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-7 Modificar contraseña de perfil.}
+\end{table}
+
+% CU-8 Reportar Incidencia
+\begin{table}[H]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.21\columnwidth} p{0.71\columnwidth} }
+		\toprule
+		\textbf{CU-8}    & \textbf{Reportar incidencia técnica (Sistema de Tickets)}\\
+		\toprule
+		\textbf{Versión}              & 1.0    \\
+		\textbf{Autor}                & Andrés Vera Cachoo \\
+		\textbf{Actores}              & Usuario, Operador, Administrador \\
+		\textbf{Requisitos asociados} & RF-9.2 \\
+		\textbf{Descripción}          & Permite a cualquier usuario reportar un problema técnico enviando un ticket automático por correo al soporte. \\
+		\textbf{Precondición}         & El usuario debe estar autenticado en el sistema. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario detecta un problema y accede a la sección de "Soporte".
+			\item El usuario rellena un formulario describiendo la incidencia y su nivel de urgencia.
+			\item El usuario hace clic en el botón "Enviar Ticket".
+            \item El sistema recopila los datos del formulario y el usuario origen, generando un correo electrónico formateado.
+            \item El sistema envía el correo mediante el protocolo \textbf{SMTP} al equipo de mantenimiento o administrador.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El equipo de soporte recibe el reporte del problema en su bandeja de entrada y el usuario es notificado del éxito del envío. \\
+		\textbf{Excepciones}          & Fallo de red o del servidor \textbf{SMTP}: El sistema alerta al usuario de que el correo no pudo enviarse en este momento. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-8 Reportar incidencia técnica.}
 \end{table}

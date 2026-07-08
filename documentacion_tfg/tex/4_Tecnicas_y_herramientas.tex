@@ -20,7 +20,7 @@ De forma complementaria a los ciclos de Scrum, se adoptó \textit{GitHub Issues}
 
 Cada incidencia (\textit{issue}) fue documentada detallando su propósito técnico y asignándole etiquetas (\textit{labels}) estandarizadas que indicaban su prioridad y naturaleza funcional (por ejemplo, \textit{testing} para añadir tests o \textit{bug} para la resolución de fallos). Al estar estrechamente ligado al control de versiones, este enfoque facilitó asociar de forma automática las confirmaciones de código (\textit{commits}).
 
-Finalmente, la sincronización bidireccional entre \textit{GitHub Issues} y la plataforma ágil Zube permitió agrupar estas incidencias para planificar los \textit{sprints} de forma visual. Esta integración garantizó una trazabilidad absoluta del progreso, asegurando que el esfuerzo de programación estuviera siempre documentado y alineado con los objetivos de la iteración en curso.
+Finalmente, la sincronización bidireccional entre \textit{GitHub Issues} y la plataforma ágil Zube~\cite{zube} permitió agrupar estas incidencias para planificar los \textit{sprints} de forma visual. Esta integración garantizó una trazabilidad absoluta del progreso, asegurando que el esfuerzo de programación estuviera siempre documentado y alineado con los objetivos de la iteración en curso.
 
 \imagen{./img/apartado_5/imagen_SprintBoard_Zube.png}{Tablero de \textit{sprints} y gestión de incidencias en Zube}{0.95}
 
@@ -102,14 +102,14 @@ En esta sección se detallan las herramientas tecnológicas que conforman el eco
 \subsection{\textit{Testing} y Calidad del \textit{Software}}
 \begin{itemize}
     \item \textbf{Jest \cite{jest} y Supertest \cite{supertest}:} Jest \cite{jest} es un marco de pruebas unitarias para JavaScript diseñado para garantizar la correctitud del código. Se complementa con Supertest \cite{supertest}, una biblioteca de aserciones especializada en simular peticiones HTTP y probar APIs REST sin necesidad de levantar un servidor en un puerto real.
-    \item \textbf{Testcontainers \cite{testcontainers}:} Herramienta que soporta pruebas de integración mediante el despliegue programático de contenedores Docker \cite{docker} efímeros (como bases de datos desechables) durante la ejecución de los tests.
+    \item \textbf{Testcontainers \cite{testcontainers}:} Herramienta que soporta pruebas de integración mediante el despliegue programático de contenedores Docker~\cite{docker} \cite{docker} efímeros (como bases de datos desechables) durante la ejecución de los tests.
     \item \textbf{Vitest \cite{vitest} y React Testing Library \cite{reacttestinglibrary}:} Vitest \cite{vitest} es un marco de pruebas rápido y nativo impulsado por Vite \cite{vite}. Junto con React Testing Library \cite{reacttestinglibrary}, permite escribir pruebas de componentes de interfaz de usuario centrándose en el comportamiento y accesibilidad en lugar de en los detalles de implementación.
     \item \textbf{k6 \cite{k6}:} Herramienta de código abierto para pruebas de carga y rendimiento (\textit{load testing}). Permite inyectar cientos de usuarios virtuales concurrentes para descubrir cuellos de botella y evaluar el comportamiento de los servidores bajo condiciones de estrés.
 \end{itemize}
 
 \subsection{Infraestructura Cloud y Contenedores}
 \begin{itemize}
-    \item \textbf{Docker \cite{docker} y Docker Compose \cite{docker}:} Plataforma de contenerización que permite empaquetar aplicaciones junto con sus dependencias en unidades estándar aisladas. Docker Compose facilita la orquestación de múltiples contenedores interconectados mediante un único archivo declarativo.
+    \item \textbf{Docker~\cite{docker} \cite{docker} y Docker~\cite{docker} Compose \cite{docker}:} Plataforma de contenerización que permite empaquetar aplicaciones junto con sus dependencias en unidades estándar aisladas. Docker~\cite{docker} Compose facilita la orquestación de múltiples contenedores interconectados mediante un único archivo declarativo.
     \item \textbf{Vercel \cite{vercel}:} Plataforma de \textit{Cloud Computing} optimizada para el despliegue de aplicaciones web modernas. Destaca por su integración continua y el uso de una Red de Entrega de Contenido (CDN) distribuida globalmente.
     \item \textbf{Microsoft Azure \cite{azure}:} Proveedor de nube pública que ofrece Infraestructura como Servicio (IaaS), permitiendo el despliegue de máquinas virtuales escalables y seguras.
     \item \textbf{Nginx \cite{nginx}:} Servidor web y proxy inverso de alto rendimiento. Actúa como barrera de seguridad perimetral, gestionando dinámicamente el enrutamiento HTTP/HTTPS y el balanceo de carga.
@@ -141,7 +141,7 @@ Nodemailer & & X & \\
 Jest / Supertest & & X & \\
 Vitest / React Testing Library & X & & \\
 k6 & & X & \\
-Docker / Docker Compose & & & X \\
+Docker~\cite{docker} / Docker~\cite{docker} Compose & & & X \\
 Vercel & & & X \\
 Microsoft Azure / Nginx & & & X \\
 GitHub Actions / SonarCloud & & & X \\
@@ -156,7 +156,7 @@ Para la redacción, estructuración y composición tipográfica de la presente m
 
 A pesar de tratarse de un desarrollo de \textit{software} individual, la plataforma web resultó fundamental para optimizar el flujo de trabajo inicial con los tutores del proyecto, habilitando un acceso compartido para la supervisión asíncrona de los borradores en tiempo real. 
 
-No obstante, en las etapas más avanzadas de la redacción, y por una estricta cuestión de comodidad y centralización del entorno de trabajo, se procedió a descargar e instalar una distribución de \LaTeX \ de forma local en el equipo de desarrollo. A partir de este momento, el grueso de la documentación continuó redactándose y compilándose directamente desde \textbf{Visual Studio Code} \cite{vscode}, aprovechando la potente extensión \textbf{LaTeX Workshop} \cite{latexworkshop}. Este cambio permitió integrar el flujo de escritura de la memoria con el mismo editor utilizado para el desarrollo del código fuente, ganando agilidad y unificando todo el proyecto en un único entorno local.
+No obstante, en las etapas más avanzadas de la redacción, y por una estricta cuestión de comodidad y centralización del entorno de trabajo, se procedió a descargar e instalar una distribución de \LaTeX \ de forma local en el equipo de desarrollo. A partir de este momento, el grueso de la documentación continuó redactándose y compilándose directamente desde \textbf{Visual Studio Code~\cite{vscode}} \cite{vscode}, aprovechando la potente extensión \textbf{LaTeX Workshop} \cite{latexworkshop}. Este cambio permitió integrar el flujo de escritura de la memoria con el mismo editor utilizado para el desarrollo del código fuente, ganando agilidad y unificando todo el proyecto en un único entorno local.
 
 \section{Gestión de código y entorno de desarrollo}
 
@@ -169,11 +169,11 @@ En su lugar, se adoptó un flujo de trabajo simplificado enfocado a la trazabili
 Para mantener la disciplina y el rigor metodológico en el repositorio, la confirmación de cambios se ha regido por la especificación semántica de \textit{Conventional Commits}. Cada mensaje de registro (\textit{commit}) se ha estructurado utilizando prefijos obligatorios que identifican unívocamente la naturaleza de la modificación, tales como "feat" para nuevas características, "fix" para correcciones de errores o "test" para la infraestructura de pruebas. Esta práctica ha dotado al proyecto de una legibilidad excelente, facilitando la auditoría del \textit{software} y la generación de un historial de cambios profesional.
 
 \subsection{Entorno operativo y administración}
-El Entorno de Desarrollo Integrado (IDE) principal escogido para la codificación de toda la plataforma ha sido Visual Studio Code, debido a su ligereza, naturaleza de código abierto y su soporte nativo para el ecosistema de JavaScript y Node.js \cite{nodejs}. Para optimizar el ciclo de desarrollo y asegurar la homogeneidad del \textit{software}, la potencia del editor se ha ampliado mediante un conjunto seleccionado de extensiones técnicas:
+El Entorno de Desarrollo Integrado (IDE) principal escogido para la codificación de toda la plataforma ha sido Visual Studio Code~\cite{vscode}, debido a su ligereza, naturaleza de código abierto y su soporte nativo para el ecosistema de JavaScript y Node.js \cite{nodejs}. Para optimizar el ciclo de desarrollo y asegurar la homogeneidad del \textit{software}, la potencia del editor se ha ampliado mediante un conjunto seleccionado de extensiones técnicas:
 
 \begin{itemize}
     \item \textbf{ESLint \cite{eslint} y Prettier:} Encargados de realizar el análisis estático y el formateo en tiempo de ejecución dentro del editor. Forzaron el cumplimiento de las reglas de estilo y detectaron errores de sintaxis o variables huérfanas antes de la compilación.
-    \item \textbf{Docker y Containers (Microsoft):} Extensiones para la inspección visual, gestión y monitorización en tiempo real de los contenedores locales (\textit{Frontend}, \textit{Backend} y Base de Datos), agilizando las pruebas de despliegue y la orquestación del entorno.
+    \item \textbf{Docker~\cite{docker} y Containers (Microsoft):} Extensiones para la inspección visual, gestión y monitorización en tiempo real de los contenedores locales (\textit{Frontend}, \textit{Backend} y Base de Datos), agilizando las pruebas de despliegue y la orquestación del entorno.
     \item \textbf{SonarLint:} Integrado como un \textit{linter} avanzado en el IDE, conectándose de forma bidireccional con las reglas de calidad de SonarCloud \cite{sonarqube} para detectar vulnerabilidades de seguridad (\textit{Security Hotspots}) y deuda técnica en el mismo instante de la escritura del código.
     \item \textbf{Database Client for PostgreSQL \cite{postgresql}:} Herramienta integrada en el propio editor que permitió la conexión directa a la base de datos local y a los contenedores, facilitando la ejecución de sentencias SQL y la validación del esquema de datos sin necesidad de recurrir a clientes pesados externos.
     \item \textbf{LaTeX Workshop \cite{latexworkshop}:} Extensión clave que posibilitó la compilación, previsualización en tiempo real y detección de errores de sintaxis al redactar toda la memoria técnica y los anexos del proyecto directamente desde el IDE.

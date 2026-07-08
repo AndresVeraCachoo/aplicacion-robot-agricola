@@ -310,6 +310,8 @@
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   background: white;
+  position: relative;
+  z-index: 1000;
 }
 .mission-map-header h3 {
   margin: 0 0 5px 0;

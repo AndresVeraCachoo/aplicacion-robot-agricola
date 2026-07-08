@@ -3,10 +3,10 @@
 \section{Introducción}
 Este apéndice ofrece el contexto técnico necesario para comprender la implementación a bajo nivel del \textit{software} AgroSkopos, sirviendo como manual de referencia (\textit{onboarding}) para futuros desarrolladores o equipos de mantenimiento. 
 
-Se detalla la justificación organizativa de los archivos, los paradigmas de modularidad aplicados y los principios de separación de responsabilidades que permiten que el código sea escalable y resistente a la alta complejidad.
+Se detalla la justificación organizativa de los archivos, los paradigmas de modularidad aplicados y los principios de separación de responsabilidades que permiten que el código sea escalable y fácil de mantener.
 
 \section{Estructura de directorios}
-La base de código fuente se organiza bajo el paradigma de \textbf{Monorepo} (repositorio monolítico). Este patrón arquitectónico centraliza múltiples proyectos lógicos (en este caso, el cliente web y el servidor) dentro del mismo control de versiones, facilitando la integración continua (CI/CD), la orquestación conjunta mediante Docker y la coherencia estructural.
+La base de código fuente se organiza bajo el paradigma de \textbf{\textit{Monorepo}}~\cite{monorepo} (repositorio monolítico). Este patrón centraliza el cliente web y el servidor dentro del mismo control de versiones, facilitando la integración continua (CI/CD), la orquestación conjunta mediante Docker y la coherencia estructural.
 
 \subsection{Organización del repositorio raíz}
 En el directorio raíz del proyecto residen los archivos fundamentales de configuración y orquestación, de los cuales cuelga toda la lógica de la aplicación.
@@ -22,184 +22,269 @@ En el directorio raíz del proyecto residen los archivos fundamentales de config
 	.2 {documentacion\_tfg/ -> Memoria académica y anexos en \LaTeX}.
 	.2 {.env.example -> Plantilla estandarizada de variables de entorno}.
 	.2 {docker-compose.yml -> Definición de infraestructura Docker}.
-	.2 {package.json -> Scripts globales del monorepo y linter}.
-	.2 {sonar-project.properties -> Configuración de análisis estático (SonarCloud)}.
+	.2 {package.json -> \textit{Scripts} globales del monorepo y linter}.
+	.2 {scripts/ -> \textit{Scripts} de automatización y consolidación de tests}.
+	.2 {sonar-project.properties -> Configuración de análisis estático (SonarCloud~\cite{sonarqube})}.
 }}
 
-\subsection{Estructura del cliente web (Frontend)}
-El cliente de React abandona la tradicional agrupación plana por tipos técnicos (donde todas las vistas estarían en una sola carpeta enorme) en favor de un modelo híbrido orientado al dominio y a características (\textit{Feature-Sliced Design}). Esta decisión semántica garantiza que cada módulo de la aplicación (por ejemplo, el panel de control o la autenticación) actúe de forma encapsulada y autocontenida.
+\vfill
+\newpage
+\subsection{Estructura del cliente web (\textit{Frontend})}
+El cliente de React se estructura siguiendo el patrón orientado al dominio y a características (\textit{Feature-Sliced Design~\cite{featuresliced}}). Esta decisión semántica garantiza que cada módulo de la aplicación (por ejemplo, el panel de control o la autenticación) actúe de forma independiente y autocontenida.
 
 {\footnotesize
 \dirtree{%
 	.1 {app/client/}.
 	.2 {src/ -> Código fuente principal de React}.
-	.3 {components/ -> Componentes UI "tontos" genéricos (botones, modales)}.
-	.3 {config/ -> Variables estáticas y parámetros de despliegue}.
-	.3 {context/ -> Proveedores globales de estado estático (ej. Autenticación)}.
+	.3 {components/ -> Componentes UI ``tontos'' genéricos (botones, modales)}.
+	.3 {config/ -> Clientes de red y estado de servidor (Axios, React Query)}.
 	.3 {features/ -> Módulos complejos de dominio encapsulados}.
 	.4 {authentication/ -> Lógica y vistas de inicio de sesión o registro}.
 	.4 {control/ -> Panel e interfaces de operación del robot}.
 	.4 {dashboard/ -> Vistas de resumen, analíticas y métricas}.
+	.4 {... -> (Otras áreas como misiones, energía, perfil, soporte, etc.)}.
 	.3 {hooks/ -> Lógica reactiva y ciclos de vida (\textit{Custom Hooks})}.
 	.3 {i18n/ -> Ficheros de traducción e internacionalización}.
 	.3 {layout/ -> Estructuras base de la interfaz (Navbar, Sidebar)}.
 	.3 {pages/ -> Ensambladores de alto nivel o vistas completas}.
+	.4 {Camera/ -> Vista de cámara principal y minimapa}.
+	.4 {Control/ -> Pantalla de operación remota del robot}.
+	.4 {Dashboard/ -> Componente principal del panel de control}.
+	.4 {Data/ -> Interfaz de visualización analítica e histórica}.
+	.4 {Energy/ -> Página de análisis energético}.
+	.4 {Login/ -> Autenticación de usuarios}.
+	.4 {Missions/ -> Vista de gestión y creación de misiones}.
+	.4 {Profile/ -> Ajustes de usuario y seguridad}.
+	.4 {UserManagement/ -> Gestión administrativa de empleados}.
+	.3 {services/ -> Lógica de integración contra la API REST (\textit{endpoints})}.
 	.3 {store/ -> Estado global masivo de alta frecuencia (Zustand)}.
+	.3 {utils/ -> Funciones de apoyo puras y genéricas}.
 	.3 {App.jsx -> Enrutador raíz y definición de accesos}.
 	.3 {main.jsx -> Punto de entrada e inyección de la aplicación en el DOM}.
 	.2 {public/ -> Activos estáticos directos (manifiesto PWA, favicon, iconos)}.
 	.3 {avatars/ -> Imágenes de perfil para los usuarios}.
 	.3 {pwa-icons/ -> Iconos generados para la aplicación instalable PWA}.
-	.2 {package.json -> Dependencias, scripts de test y comandos de Vite}.
+	.2 {package.json -> Dependencias, \textit{scripts} de test y comandos de Vite}.
 	.2 {vite.config.js -> Compilador SWC y configuración de empaquetado}.
 }}
 
-\subsection{Estructura del servidor (Backend)}
-El motor del sistema (\textit{backend}) en Express.js sigue una separación estricta de responsabilidades (Capa de Presentación, Capa de Lógica de Negocio y Capa de Acceso a Datos), garantizando que los flujos de información sean fuertemente tipados y predecibles.
+\vfill
+\newpage
+\subsection{Estructura del servidor (\textit{Backend})}
+El motor del sistema (\textit{backend}) en Express.js sigue una separación estricta de responsabilidades (Capa de Presentación, Capa de Lógica de Negocio y Capa de Acceso a Datos), facilitando el mantenimiento y testeo del código.
 
 {\footnotesize
 \dirtree{%
 	.1 {app/server/}.
 	.2 {src/ -> Código fuente del motor en Node.js}.
-	.3 {config/ -> Inicializadores (Variables de entorno, Swagger)}.
+	.3 {config/ -> Inicializadores (BBDD, Redis, Entorno, Swagger)}.
 	.3 {controllers/ -> Receptores HTTP y gestión de respuestas REST}.
-	.3 {generated/ -> Clientes dinámicos o auto-generados}.
+	.3 {generated/ -> Clientes dinámicos auto-generados (Prisma)}.
 	.3 {middlewares/ -> Interceptores de tráfico de red (Seguridad, Errores)}.
 	.3 {routes/ -> Enrutador y asignación semántica de los \textit{endpoints}}.
 	.3 {schemas/ -> Reglas de validación de datos estrictas mediante Zod}.
 	.3 {scripts/ -> Tareas administrativas (ej. poblar la base de datos)}.
 	.3 {services/ -> Lógica pura de dominio e interacciones ORM (Prisma)}.
+	.3 {simulator/ -> Motor activo estructurado en submódulos (estado, físicas)}.
 	.3 {websockets/ -> Gestores de canal bidireccional en tiempo real}.
+	.3 {workers/ -> Consumidores de colas asíncronas para tareas pesadas (BullMQ)}.
 	.3 {index.js -> Inicialización del puerto web y servicios pasivos}.
-	.3 {simulator.js -> Motor activo (cálculos físicos, geográficos y batería)}.
 	.2 {prisma/ -> Modelo relacional de base de datos (\texttt{schema.prisma})}.
 	.2 {package.json -> Dependencias y comandos de ejecución de Node.js}.
 }}
 
-\subsection{Arquitectura de control de calidad (Colocation Principle)}
-Un elemento clave en la arquitectura técnica de AgroSkopos es la estructuración organizativa de los archivos de pruebas. De forma deliberada, el código rompe con el patrón clásico de almacenar todas las pruebas unitarias y funcionales en una inmensa carpeta global (como \texttt{tests/}) en la raíz. 
+\subsection{Arquitectura de control de calidad (Colocation Principle)}\label{sec:colocation}
+Un elemento clave en la arquitectura técnica de AgroSkopos es la estructuración organizativa de los archivos de pruebas. Los archivos de pruebas unitarias no se almacenan aislados en una única carpeta global (como \texttt{tests/}) en la raíz. 
 
-En su lugar, el proyecto adopta firmemente el \textbf{Principio de Colocation}: tanto en el servidor como en el cliente web, las carpetas \texttt{\_\_tests\_\_} o los archivos sufijados en \texttt{.test.js} se declaran \textbf{exactamente en el mismo directorio} que el código fuente que evalúan (ej. \texttt{DataPage.test.jsx} vive en el mismo directorio que \texttt{DataPage.jsx}). Este enfoque presenta dos ventajas vitales de ingeniería:
+En su lugar, el proyecto adopta el \textbf{Principio de \textit{Colocation}~\cite{colocation}}: tanto en el servidor como en el cliente web, las carpetas \texttt{\_\_tests\_\_} o los archivos terminados en \texttt{.test.js} se declaran \textbf{exactamente en el mismo directorio} que el código fuente que evalúan (ej. \texttt{DataPage.test.jsx} vive junto a \texttt{DataPage.jsx}). Este enfoque presenta dos ventajas vitales:
 \begin{enumerate}
-    \item \textbf{Mantenibilidad e Intención:} Un desarrollador localiza al instante la cobertura de pruebas de un archivo sin navegar por árboles inconexos, lo que fomenta de forma natural el \textit{Test-Driven Development} (TDD).
-    \item \textbf{Refactorización resiliente:} Al mover un componente React o un servicio de Node.js a otro directorio para reestructurar el sistema, su test viaja encapsulado automáticamente con él, impidiendo que se rompan las frágiles rutas relativas de importación (\texttt{../../../}).
+    \item \textbf{Mantenibilidad:} Un desarrollador localiza al instante los test de un archivo, lo que fomenta el \textit{Test-Driven Development} (TDD).
+    \item \textbf{Refactorización:} Al mover un componente React o un servicio de Node.js a otro directorio, su test se mueve con él de forma natural, evitando que se rompan las rutas de importación relativas.
 \end{enumerate}
 
-La única excepción a este principio se aplica a las \textbf{pruebas E2E (End-to-End)}. Dado que estas validan el sistema web en su conjunto interactuando con toda la pila tecnológica (levantando bases de datos de prueba en la subred mediante \textit{Testcontainers}), dichas pruebas sí residen en infraestructuras separadas debido a su naturaleza global y no unitaria.
+La única excepción a este principio se aplica a las \textbf{pruebas \textit{End-to-End} (E2E)}. Dado que estas validan el sistema web en su conjunto interactuando con toda la pila tecnológica (levantando bases de datos con \textit{Testcontainers}), residen en una estructura separada.
 
 \section{Manual del programador}
 
 Esta sección tiene como propósito servir de guía técnica para futuros desarrolladores que necesiten mantener, extender o depurar el sistema AgroSkopos. Se documentan aquí los patrones de arquitectura aplicados, el ciclo de vida de los datos y las convenciones de programación adoptadas, de manera complementaria a los diagramas arquitectónicos expuestos en el Anexo C.
 
 \subsection{Calidad estática del código}
-El repositorio emplea herramientas automatizadas para garantizar un estilo de código homogéneo y libre de defectos lógicos. En los proyectos de cliente y servidor se utilizan \textbf{ESLint} para la validación estática. Además, todo el código subido al repositorio es analizado de forma continua por \textbf{SonarCloud} (según lo descrito en la configuración CI de \textit{GitHub Actions}), que mide la deuda técnica, las vulnerabilidades y la cobertura de pruebas. Cualquier nuevo desarrollo debe adherirse a estas normativas para superar las barreras de integración. Adicionalmente, es un requisito estricto mantener y ampliar la batería de pruebas (unitarias y E2E) a medida que se escribe nuevo código o se modifican funcionalidades existentes, asegurando que la cobertura no disminuya y protegiendo el sistema continuamente contra regresiones.
+El repositorio emplea herramientas automatizadas para garantizar un estilo de código homogéneo y libre de defectos lógicos. En los proyectos de cliente y servidor se utilizan \textbf{ESLint} para la validación estática. Además, todo el código subido al repositorio es analizado de forma continua por \textbf{SonarCloud~\cite{sonarqube}} (según lo descrito en la configuración CI de \textit{GitHub Actions}), que mide la deuda técnica, las vulnerabilidades y la cobertura de pruebas. Cualquier nuevo desarrollo debe adherirse a estas normativas para superar las barreras de integración. Adicionalmente, es un requisito estricto mantener y ampliar la batería de pruebas (unitarias y E2E) a medida que se escribe nuevo código o se modifican funcionalidades existentes, asegurando que la cobertura no disminuya y protegiendo el sistema continuamente contra regresiones.
 
-\subsection{El flujo de una petición en el Backend (API REST)}
-El servidor, construido sobre Node.js y Express, implementa una filosofía de validación rígida y encapsulación lógica. El flujo típico cuando se recibe una solicitud externa (por ejemplo, para crear una misión) es el siguiente:
+\subsection{El flujo de una petición en el \textit{Backend} (API REST)}
+El servidor, construido sobre Node.js y Express~\cite{express}, aísla la lógica en capas. El flujo de una solicitud HTTP típica (por ejemplo, crear una misión) es el siguiente:
 \begin{enumerate}
     \item \textbf{Capa de Rutas (\texttt{routes/}):} Recibe la petición HTTP y la delega a los interceptores correspondientes.
-    \item \textbf{Capa de Validación Estricta (\texttt{schemas/}):} Antes de invocar a la lógica de negocio, se validan los parámetros de entrada utilizando la librería \textbf{Zod} (ej. \texttt{missionSchema.js}, \texttt{robotSchema.js}). Si la estructura o los tipos de datos no coinciden con los esperados, la solicitud es interceptada y rechazada automáticamente, impidiendo posibles inyecciones o corrupciones en la base de datos.
+    \item \textbf{Capa de Validación Estricta (\texttt{schemas/}):} Antes de invocar a la lógica de negocio, se validan los parámetros de entrada utilizando la librería \textbf{Zod}~\cite{zod} (ej. \texttt{missionSchema.js}, \texttt{robotSchema.js}). Si la estructura o los tipos de datos no coinciden con los esperados, la solicitud es interceptada y rechazada automáticamente, impidiendo posibles inyecciones o corrupciones en la base de datos.
     \item \textbf{Capa de Controlador (\texttt{controllers/}):} Extrae la información ya formateada y limpia, para pasársela a los servicios.
-    \item \textbf{Capa de Servicios (\texttt{services/}):} Ejecuta la lógica empresarial pura y realiza las transacciones necesarias empleando \textbf{Prisma ORM} contra la base de datos PostgreSQL.
+    \item \textbf{Capa de Servicios (\texttt{services/}):} Ejecuta la lógica empresarial pura y realiza las transacciones necesarias empleando \textbf{Prisma ORM}~\cite{prisma} contra la base de datos PostgreSQL~\cite{postgresql}.
 \end{enumerate}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=1\textwidth]{img/apendice_D/flujo_trabajo.png}
     \caption{Diagrama de flujo del ciclo de vida de una petición HTTP en la API REST.}
     \label{fig:api_flow}
 \end{figure}
 
-% TODO: Ampliar/Modificar esta subsección cuando se termine de implementar el nuevo sistema global de manejo de errores HTTP y logging centralizado (ej. Winston o Morgan).
-\subsection{Manejo de Errores}
-Actualmente, los errores asíncronos y fallos de negocio se gestionan atrapando las excepciones en la capa de controladores y devolviendo respuestas JSON estandarizadas con códigos de estado HTTP semánticos (400, 401, 404, 500) acompañados de un mensaje descriptivo para la correcta interpretación del \textit{frontend}.
-
-\subsection{Comunicaciones asíncronas y simulación física}
-Uno de los componentes centrales y más complejos del servidor es el \textbf{Motor de Simulación} (\texttt{simulator.js}). Este módulo emula en tiempo real la física y las operaciones del robot agrícola, incluyendo:
+\subsection{Manejo de Errores (\textit{Error Handler} Global)}
+El sistema implementa un interceptor centralizado (\texttt{errorHandler.js}) por el que pasan todas las excepciones asíncronas antes de ser devueltas al cliente. Este \textit{middleware} filtra y traduce los errores técnicos a formatos limpios y seguros:
 \begin{itemize}
-    \item Generación de rutas de cobertura y barrido óptimas usando mallas de polígonos geográficos (\texttt{@turf/turf}).
-    \item Consumo dinámico de batería basado en la velocidad lineal, y recargas mediante simulación de eficiencia de paneles solares.
-    \item Control de estados autónomos: ciclos de inactividad (\textit{IDLE}), reanudación de misiones y retorno seguro a la base (\textit{RTL}).
+    \item \textbf{Mapeo de base de datos:} Traduce códigos de error nativos de PostgreSQL (ej. \texttt{23505} para duplicados o \texttt{23503} para violaciones de claves foráneas) a mensajes legibles.
+    \item \textbf{Errores de Validación:} Desglosa los fallos capturados por \textbf{Zod} en un array estructurado (indicando el campo y la clave de traducción del error) para que el \textit{frontend} pueda mostrar validaciones campo por campo en los formularios.
+    \item \textbf{Excepciones Estructuradas:} A través de la clase personalizada \texttt{AppError}, todos los errores operacionales incluyen un código HTTP semántico (400, 401, 404, 500) y una clave interna constante (ej. \texttt{VALIDATION\_ERROR}), facilitando el manejo programático en el cliente sin depender del idioma del mensaje.
 \end{itemize}
-Debido a su naturaleza en tiempo real, los datos calculados por el simulador no viajan mediante protocolo HTTP tradicional. Se emplea un canal bidireccional asíncrono con \textbf{WebSockets} (\texttt{websockets/socketHandler.js}), el cual emite paquetes de telemetría constantes (\textit{ticks} de velocidad, latitud, longitud, nivel de batería) a todos los clientes web conectados simultáneamente.
 
-\begin{figure}[H]
+\subsection{Comunicaciones asíncronas y motor de simulación (\textit{Simulator})}
+Uno de los componentes centrales y más complejos del servidor es el \textbf{Motor de Simulación} (\texttt{simulator/}). Este motor emula en tiempo real la física y las operaciones del robot agrícola, y ha sido arquitectónicamente refactorizado en un ecosistema altamente modular compuesto por:
+\begin{itemize}
+    \item \textbf{Bucle Principal y Estado (\texttt{index.js} y \texttt{state.js}):} El núcleo del simulador mantiene en memoria el estado unificado del robot y ejecuta un bucle infinito de ciclos de reloj (\textit{ticks}) en segundo plano.
+    \item \textbf{Sistemas Lógicos (\texttt{systems/}):} La complejidad se ha desacoplado en motores independientes que actúan sobre el estado global en cada ciclo:
+    \begin{itemize}
+        \item \textbf{\texttt{movement.js}:} Calcula la cinemática, genera rutas de barrido iterando mallas de polígonos geográficos (\texttt{@turf/turf}) y resuelve el \textit{pathfinding} autónomo.
+        \item \textbf{\texttt{energy.js}:} Evalúa el consumo dinámico frente a la velocidad, inyecta la ganancia de los paneles solares y determina el umbral crítico para forzar el retorno automático a la base (\textit{RTL}).
+        \item \textbf{\texttt{agronomy.js}:} Simula los parámetros edafológicos del suelo (Humedad, pH, NPK) con inyección de variables ambientales lógicas.
+    \end{itemize}
+\end{itemize}
+Debido a la altísima frecuencia de muestreo, los datos calculados no viajan mediante protocolo HTTP tradicional. Se emplea un canal bidireccional asíncrono con \textbf{WebSockets} (\texttt{websockets/socketHandler.js}), emitiendo paquetes de telemetría constante a todos los clientes web conectados.
+
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.65\textwidth]{img/apendice_D/diagrama_websockets.png}
     \caption{Diagrama del flujo asíncrono de datos emitidos por el simulador mediante WebSockets.}
     \label{fig:websocket_flow}
 \end{figure}
 
-\subsection{Gestión de estado y arquitectura en el Frontend}
-Para evitar bloqueos y cuellos de botella en la interfaz interactiva (React), AgroSkopos aborda la gestión de estado de forma segregada:
+\subsection{Gestión de Estado (Carpeta \texttt{store/})}
+Para evitar bloqueos y cuellos de botella en la interfaz interactiva de React frente a la ráfaga de datos en tiempo real, AgroSkopos abandona soluciones monolíticas y delega la responsabilidad a un modelo segregado ultrarrápido:
 \begin{itemize}
-    \item \textbf{Estado Global de alta frecuencia (Zustand):} Para suscribirse a la ráfaga de eventos del WebSocket (como las coordenadas en vivo del robot) y gestionar entidades complejas, se utiliza \textit{Zustand}. Este se organiza de manera modular en el directorio \texttt{store/} (ej. \texttt{robotStore.js}, \texttt{missionStore.js}), permitiendo actualizaciones del DOM ultrarrápidas y sin renderizados innecesarios.
-    \item \textbf{Estado Local y Contextos:} Se reserva para datos más estáticos o globales por usuario, como la autenticación (\texttt{AuthContext}) y controles de interfaz visual puramente local.
+    \item \textbf{Estado Global mediante Zustand (\texttt{store/}):} Toda la memoria compartida de la aplicación se centraliza en la carpeta \texttt{store/}. Aquí se instancian repositorios (\textit{stores}) atómicos y directos (ej. \texttt{robotStore.js} para telemetría, \texttt{authStore.js} para sesiones de usuario). Zustand emplea actualizaciones selectivas, permitiendo inyectar coordenadas GPS masivas al mapa sin forzar un pesado re-renderizado en cascada del DOM subyacente.
+    \item \textbf{Estado Local y Caché:} Se reserva la memoria interna reactiva (\texttt{useState}) únicamente para variables efímeras visuales (ej. aperturas de modales o textos de formularios), separando limpiamente la lógica técnica del dibujo web.
 \end{itemize}
 
-\subsection{Guía para extender la interfaz (Feature-Sliced Design)}
-Si un desarrollador necesita agregar un nuevo módulo interactivo, debe adherirse al paradigma arquitectónico aplicado en \texttt{app/client/src/features/}. Para añadir una funcionalidad (ej. Módulo de análisis de suelo), los pasos recomendados son:
+\subsection{Guía para extender la interfaz (Feature-Sliced Design~\cite{featuresliced})}
+Si un desarrollador necesita escalar el proyecto y agregar un nuevo módulo interactivo, debe adherirse estrictamente a la topología de carpetas impuesta. Para añadir una nueva funcionalidad (por ejemplo, un visor geológico), el flujo de trabajo es el siguiente:
 \begin{enumerate}
-    \item \textbf{Lógica de dominio (\texttt{features/}):} Crear una nueva carpeta bajo \texttt{features/soil\_analysis/} para aislar sus componentes React, llamadas a la API y \textit{hooks} exclusivos.
-    \item \textbf{Elementos visuales genéricos (\texttt{components/}):} No reinventar la rueda; utilizar los botones, modales o tarjetas genéricas ya existentes en la librería compartida \texttt{components/}.
-    \item \textbf{Estado Global (\texttt{store/}):} Si el módulo necesita leer o escribir variables que deben verse en toda la aplicación (ej. datos del suelo que también usa el dashboard), crear su propio \textit{store} de Zustand.
-    \item \textbf{Ensamblaje y Rutas (\texttt{pages/} y \texttt{App.jsx}):} Exponer desde \texttt{features/} únicamente el bloque principal y usarlo para construir una página en \texttt{pages/SoilAnalysisPage.jsx}, registrándola finalmente en el enrutador \texttt{App.jsx}.
+    \item \textbf{Lógica de Dominio (\texttt{features/}):} Aislar la inteligencia creando una carpeta en \texttt{features/geology/}. Dentro de este directorio, el programador creará sus propias subcarpetas (\texttt{components/}, \texttt{utils/}) para empaquetar de forma cohesiva los elementos visuales y métodos que son exclusivos de esa funcionalidad.
+    \item \textbf{Lógica Reactiva Global (\texttt{hooks/}):} Si el módulo requiere ciclos de vida complejos o peticiones recurrentes a la API que trascienden el dominio aislado (ej. un gancho para sondear APIs meteorológicas), deberá abstraerse como un \textit{Custom Hook} dentro de la carpeta global \texttt{hooks/}.
+    \item \textbf{Variables Globales (\texttt{store/}):} Si este nuevo bloque necesita compartir datos cruciales que otras partes de la app consumirán, añadirá o creará un repositorio dedicado en la carpeta \texttt{store/} (Zustand).
+    \item \textbf{Ensamblaje Arquitectónico (\texttt{pages/} y \texttt{App.jsx}):} Exponer públicamente los bloques construidos en \texttt{features/} e integrarlos visualmente fabricando una vista global dentro del directorio \texttt{pages/} (ej. \texttt{pages/Geology/GeologyPage.jsx}). Por último, se registrará esta página maestra en el árbol de rutas de \texttt{App.jsx}.
 \end{enumerate}
 
 % TODO: Añadir sección futura para documentar el proceso y la topología de despliegue a producción (Docker Swarm, VPS o Kubernetes) una vez que la infraestructura en la nube esté totalmente definida.
 
-\section{Compilación, instalación y ejecución del proyecto}
+\section{Despliegue, instalación y ejecución del proyecto}
 
+AgroSkopos ha sido diseñado con una arquitectura agnóstica de plataforma, lo que permite que su despliegue y ejecución sean idénticos tanto en entornos locales de desarrollo como en infraestructuras productivas en la nube. Todo el ecosistema de dependencias, desde los motores de Node.js hasta la configuración de base de datos, ha sido abstraído mediante la tecnología de contenerización de \textbf{Docker}.
+
+\subsection{Despliegue en Entorno de Producción}
+Actualmente, el sistema se encuentra desplegado en un entorno productivo híbrido para maximizar su disponibilidad:
+\begin{itemize}
+    \item \textbf{Capa de Presentación (\textit{Frontend}):} Desplegado mediante infraestructura \textit{Serverless} en Vercel, sirviendo los archivos estáticos compilados a través de su red global de entrega de contenido (CDN) de forma segura bajo protocolo HTTPS.
+    \item \textbf{Capa de Lógica y Datos (\textit{Backend} y BBDD):} Alojado en una máquina virtual de Linux en Microsoft Azure, en la cual se ejecuta el orquestador \texttt{docker-compose} para mantener activos los contenedores de PostgreSQL, Redis y la API REST con Node.js de forma ininterrumpida.
+\end{itemize}
+
+\subsection{Instalación y Configuración Local}
+Para el departamento de ingeniería, replicar el ecosistema de producción en un ordenador local de desarrollo es un proceso trivial y estandarizado.
+
+\textbf{Requisitos Previos:}
+El ordenador anfitrión debe tener instalados únicamente dos programas:
+\begin{enumerate}
+    \item \textbf{Git:} Para clonar el código fuente y el control de versiones.
+    \item \textbf{Docker Desktop (o Docker Engine):} Que incluye el motor de contenedores y la utilidad \texttt{docker-compose}.
+\end{enumerate}
+No es necesario instalar de forma nativa Node.js, NPM, PostgreSQL ni Redis en la máquina local, ya que todas estas tecnologías vendrán incrustadas y preconfiguradas dentro de sus respectivos contenedores.
+
+\textbf{Proceso de Despliegue Paso a Paso:}
+\begin{enumerate}
+    \item \textbf{Obtención del código:} 
+    El programador debe abrir una terminal y clonar el repositorio principal de la empresa:
+    \begin{verbatim}
+git clone https://github.com/AndresVeraCachoo/aplicacion-robot-agricola.git
+cd aplicacion-robot-agricola
+    \end{verbatim}
+    
+    \item \textbf{Configuración de Entorno:}
+    El proyecto requiere de un archivo de configuración de variables secretas. En la raíz del proyecto, se provee un archivo de plantilla estandarizado que contiene todos los valores predeterminados para desarrollo (contraseñas de base de datos, configuraciones de puertos, etc.). El operario simplemente debe duplicar este archivo:
+    \begin{verbatim}
+cp .env.example .env
+    \end{verbatim}
+    Estos valores por defecto son completamente válidos y seguros para operar y testear la aplicación de forma aislada en \texttt{localhost}.
+
+    \item \textbf{Orquestación y Compilación Simultánea:}
+    Al ejecutar un único comando en la terminal, el sistema descarga las imágenes oficiales, instala las dependencias del \textit{frontend} y \textit{backend}, compila el código y levanta la red virtual que conecta la base de datos con los servidores:
+    \begin{verbatim}
+docker-compose up --build -d
+    \end{verbatim}
+    El parámetro \texttt{--build} asegura que el código fuente actual del repositorio se inyecte en imágenes frescas, mientras que el parámetro \texttt{-d} (\textit{Detached}) permite que los contenedores se ejecuten de fondo, liberando la consola para seguir trabajando.
+    
+    \item \textbf{Inicialización Automática de Datos (\textit{Seeding}):}
+    En el primer arranque, la base de datos ejecuta un \textit{script} automático (\texttt{database/init.sql}) que crea las tablas e inserta datos iniciales (misiones de prueba, datos agronómicos y el usuario \texttt{admin}), permitiendo realizar pruebas funcionales de inmediato.
+\end{enumerate}
+
+\subsection{Accesos y Puntos de Entrada}
+Una vez que el comando \texttt{docker-compose} finalice exitosamente, los cuatro contenedores estarán vivos y mapeados a los puertos locales del desarrollador. Se podrá interactuar con el ecosistema a través de las siguientes URLs en cualquier navegador estándar:
+
+\begin{itemize}
+    \item \textbf{Interfaz Web del Usuario:} \texttt{http://localhost:8080}
+    \item \textbf{API \textit{Backend} Base:} \texttt{http://localhost:3001/api}
+    \item \textbf{Documentación Interactiva (Swagger):} \texttt{http://localhost:3001/api-docs}. Este portal avanzado permite al desarrollador leer la especificación de todos los \textit{endpoints} disponibles y lanzar peticiones HTTP reales (como crear un usuario o borrar una misión) directamente contra su servidor local para verificar su funcionamiento, evitando la necesidad de instalar clientes externos como Postman o Insomnia.
+\end{itemize}
 \section{Pruebas del sistema}
 
-El aseguramiento de la calidad del \textit{software} (QA) en AgroSkopos se sustenta sobre un marco de pruebas automatizadas en múltiples niveles (unitarias y de extremo a extremo), abarcando tanto la lógica del servidor (\textit{backend}) como las interfaces de usuario del cliente web (\textit{frontend}). 
+La calidad del \textit{software} (QA) en AgroSkopos se asegura mediante pruebas automatizadas en múltiples capas, abarcando la lógica del \textit{backend}, el \textit{frontend} y la infraestructura. Todas estas pruebas se ejecutan localmente y de forma automatizada en Integración Continua (CI).
 
-\subsection{Pruebas del Cliente Web (Frontend)}
-Para el entorno interactivo en React, se ha optado por el ecosistema de \textbf{Vitest} combinado con \textbf{React Testing Library} y \texttt{jest-dom}. Vitest proporciona un motor de ejecución ultrarrápido y nativo para el empaquetador Vite, eliminando las fricciones de configuración clásicas.
-Las pruebas se centran en el comportamiento observable por el usuario en lugar de detalles de implementación interna. Se validan:
+\subsection{Pruebas del Cliente Web (\textit{Frontend})}
+Para el entorno interactivo en React, se emplea \textbf{Vitest}~\cite{vitest} combinado con \textbf{React \textit{Testing} Library} y \texttt{jest-dom}. Vitest actúa como empaquetador (\textit{bundler}) y motor de pruebas, facilitando la integración respecto a Jest en navegadores modernos.
+Las pruebas se centran en el comportamiento observable por el usuario. Se validan:
 \begin{itemize}
-    \item \textbf{Componentes UI:} Renderizado correcto, manejo de eventos (\textit{clicks}, \textit{inputs}) utilizando \texttt{@testing-library/user-event} y flujos de renderizado (ej. \texttt{Modal.test.jsx}).
-    \item \textbf{Lógica de estado y red:} Pruebas sobre contextos de React (ej. \texttt{AuthContext.test.jsx}) y utilidades cliente (ej. \texttt{httpClient.test.js}).
+    \item \textbf{Componentes UI:} Renderizado correcto, manejo de eventos (\textit{clicks}, \textit{inputs}) utilizando \texttt{@testing-library/user-event} y flujos de modales.
+    \item \textbf{Lógica de estado y red:} Pruebas sobre \textit{stores} globales (ej. \texttt{authStore.test.js}) y servicios de red o utilidades cliente.
 \end{itemize}
 
-Los comandos disponibles definidos en el \texttt{package.json} del cliente incluyen:
+Los comandos disponibles (ejecutables desde la raíz del monorepo) incluyen:
 \begin{itemize}
-    \item \texttt{npm run test}: Ejecuta la batería de pruebas mediante Vitest.
-    \item \texttt{npm run test:cov}: Ejecuta las pruebas e instrumenta el código con el motor \texttt{v8} para generar un informe completo de cobertura.
+    \item \texttt{npm run test:unit}: Ejecuta la batería de pruebas unitarias en todo el monorepo (incluyendo el \textit{frontend}).
+    \item \texttt{npm run test:unit:cov}: Ejecuta las pruebas e instrumenta el código para generar un informe completo de cobertura.
 \end{itemize}
 
-\subsection{Pruebas del Servidor (Backend)}
-En el lado del servidor (Node.js con Express), se emplea \textbf{Jest} como marco principal de \textit{testing}. El entorno se ha configurado para operar nativamente con módulos ES (\texttt{--experimental-vm-modules}). Se distinguen dos categorías de pruebas:
+\subsection{Pruebas del Servidor (\textit{Backend})}
+En el lado del servidor, se emplea \textbf{Jest}~\cite{jest} configurado para operar nativamente con módulos ES. Se distinguen tres niveles de evaluación crítica:
 
-\subsubsection{Pruebas unitarias}
-Siguen el \textit{Principio de Colocation} detallado en la sección D.2.4. Evalúan de forma aislada componentes lógicos individuales como controladores, \textit{middlewares} y esquemas de validación de datos, simulando (\textit{mocking}) las dependencias externas y accesos a base de datos.
+\subsubsection{Pruebas Unitarias}
+Siguen el Principio de \textit{Colocation} detallado en la sección \ref{sec:colocation}. Evalúan de forma aislada componentes lógicos individuales como controladores, \textit{middlewares} y esquemas de validación, simulando (\textit{mocking})~\cite{mocking} las dependencias externas y accesos a la base de datos.
+
+\subsubsection{Pruebas \textit{End-to-End} (E2E)~\cite{e2e}}
+Dado que el servidor interactúa intensivamente con una base de datos PostgreSQL y una caché Redis~\cite{redis}, las pruebas E2E (alojadas en la carpeta \texttt{app/server/tests/}) validan los flujos completos empleando \textbf{Supertest}~\cite{supertest}.
+Para lograr un entorno determinista, se utiliza la herramienta \textbf{Testcontainers}. Esta librería levanta dinámicamente contenedores Docker efímeros de PostgreSQL y Redis antes de la ejecución, aplica las migraciones y los destruye al finalizar.
 \begin{itemize}
-    \item Ejecución: \texttt{npm run test:unit}
-    \item Cobertura: \texttt{npm run test:unit:cov}
+    \item Ejecución: \texttt{npm run test:e2e}
+    \item Ejecución con cobertura: \texttt{npm run test:e2e:cov}
 \end{itemize}
 
-\subsubsection{Pruebas End-to-End (E2E)}
-Dado que el servidor interactúa intensivamente con una base de datos PostgreSQL, las pruebas E2E (alojadas en la carpeta \texttt{app/server/tests/}) validan los flujos HTTP y de lógica de negocio completos empleando \textbf{Supertest}.
-
-Para garantizar un entorno de pruebas aséptico, determinista y realista, se hace uso de la herramienta \textbf{Testcontainers} (\texttt{@testcontainers/postgresql}). Esta librería levanta dinámicamente un contenedor Docker de PostgreSQL efímero antes de la ejecución de las pruebas, aplica las migraciones y lo destruye al finalizar, garantizando que los tests se ejecuten sobre un motor de base de datos idéntico al de producción.
+\subsubsection{Pruebas de Carga y Estrés (k6)}
+Para garantizar la estabilidad del servidor en producción frente a picos masivos de telemetría provenientes del campo, el proyecto integra una suite de pruebas de rendimiento escrita en \textbf{k6}. Se definen cuatro escenarios fundamentales que atacan directamente los \textit{endpoints} más exigentes de la API:
 \begin{itemize}
-    \item Ejecución secuencial: \texttt{npm run test:e2e}
+    \item \textbf{Load (Carga nominal):} Evalúa el rendimiento bajo un volumen de tráfico sostenido normal (\texttt{npm run test:k6:load}).
+    \item \textbf{Stress (Límite de ruptura):} Incrementa gradualmente los usuarios concurrentes para identificar en qué punto el servidor empieza a denegar conexiones (\texttt{npm run test:k6:stress}).
+    \item \textbf{Spike (Pico repentino):} Inyecta un torrente masivo de tráfico instantáneo para comprobar cómo el servidor reacciona y se recupera (\texttt{npm run test:k6:spike}).
+    \item \textbf{Soak (Carga prolongada):} Mantiene una carga media durante horas para detectar posibles fugas de memoria o cuellos de botella en la conexión a la base de datos (\texttt{npm run test:k6:soak}).
 \end{itemize}
+El desarrollador puede ejecutar todos los escenarios en secuencia navegando al directorio del servidor y lanzando el comando: \texttt{node tests/config/run-k6.js all}.
 
-\subsection{Cobertura de Código (Coverage)}
-La cobertura de código (\textit{Code Coverage}) es una métrica clave en ingeniería de software empleada para certificar el porcentaje del código fuente que ha sido ejecutado y validado durante la batería de pruebas automáticas. 
+\subsection{Cobertura de Código (\textit{Coverage}) y Consolidación}
+La métrica de cobertura certifica qué porcentaje del código fuente (Líneas, Ramas, Funciones y Declaraciones) ha sido ejecutado por las pruebas.
 
-La ejecución de los comandos de cobertura generará reportes que se pueden visualizar de dos formas principales: mediante un resumen estructurado directamente en la consola/terminal, y a través de una página web interactiva. Estos reportes HTML se generan dentro de la carpeta \texttt{coverage} (tanto en el proyecto de \texttt{client} como de \texttt{server}), y al abrirlos en el navegador permiten navegar línea por línea a través de todos los archivos del código para ver qué flujos exactos no se han evaluado. Estos reportes desglosan porcentualmente:
+AgroSkopos, al ser un \textit{monorepo}, genera los informes de cobertura de forma local y segregada. Tras ejecutar cualquier comando global de cobertura (por ejemplo \texttt{npm run test:cov}), el sistema dispara automáticamente de forma secuencial el \textit{script} \texttt{merge-coverage.js}. Este \textit{script} tiene la responsabilidad de recolectar todos los archivos \texttt{lcov.info} aislados generados por el cliente, el servidor unitario y el servidor E2E, fusionándolos en un único reporte maestro en el directorio raíz para enviarlo a herramientas externas como SonarCloud~\cite{sonarqube}.
+
+Aunque los resúmenes de cobertura se imprimen textualmente de forma condensada en la consola del desarrollador, los análisis exhaustivos y visuales se pueden revisar navegando línea por línea mediante los archivos HTML generados automáticamente en las siguientes rutas del proyecto (solo hace falta abrir el archivo \texttt{index.html} en cualquier navegador web):
 \begin{itemize}
-    \item \textbf{Statements (Declaraciones):} Proporción total de sentencias ejecutadas.
-    \item \textbf{Branches (Ramas):} Proporción de bifurcaciones lógicas evaluadas (\texttt{if/else}, \texttt{switch}).
-    \item \textbf{Functions (Funciones):} Proporción de métodos y funciones invocadas.
-    \item \textbf{Lines (Líneas):} Porcentaje absoluto de líneas de código cubiertas.
+    \item \textbf{Frontend (Unitarias):} \texttt{app/client/coverage/index.html}
+    \item \textbf{Backend (Unitarias):} \texttt{app/server/coverage/unit/index.html}
+    \item \textbf{Backend (E2E):} \texttt{app/server/coverage/e2e/index.html}
 \end{itemize}
-
-Para demostrar la fiabilidad técnica de la aplicación, se genera un reporte con los resultados globales del análisis de cobertura del sistema, lo que refleja un alto grado de mitigación frente a regresiones.
 
 % TODO: Añadir aquí la captura de pantalla del coverage y su respectivo entorno \begin{figure} cuando se tenga el reporte final.
 
 \subsection{Automatización en Integración Continua (CI)}
-Adicionalmente a la ejecución manual, el proyecto cuenta con un flujo de trabajo de integración continua configurado mediante \textbf{GitHub Actions}. Tal y como se define en el archivo \texttt{.github/workflows/ci-sonarcloud.yml}, cada vez que se suben cambios (\textit{push}) a la rama principal o se interactúa con un \textit{Pull Request}, una máquina virtual instalada en la nube ejecutará de forma desatendida todas las baterías de pruebas del monorepo (frontend, backend unitarias y backend E2E). Si alguna prueba falla, la subida se marca como errónea. Finalmente, los archivos de cobertura generados son procesados y enviados automáticamente a la plataforma \textbf{SonarCloud} para su análisis de calidad estático.
+Adicionalmente a la ejecución manual, el proyecto cuenta con un flujo de trabajo configurado en \textbf{GitHub Actions}. Según se define en el archivo \texttt{.github/workflows/ci-sonarcloud.yml}, cada \textit{push} o \textit{Pull Request} hacia la rama principal provoca que una máquina virtual en la nube instale el proyecto y ejecute de forma desatendida las baterías unitarias y E2E. Si alguna prueba falla, el código es rechazado de inmediato. Si pasan con éxito, los archivos de cobertura fusionados se envían automáticamente a la plataforma \textbf{SonarCloud~\cite{sonarqube}} para auditar rigurosamente la deuda técnica y la seguridad del nuevo código.

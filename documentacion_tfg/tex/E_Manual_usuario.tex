@@ -1,11 +1,220 @@
 \apendice{Documentación de usuario}
 
 \section{Introducción}
+Este apéndice constituye la guía técnica y funcional destinada al usuario final de AgroSkopos. En las secciones siguientes se describen los requisitos previos para el acceso a la plataforma, el proceso de puesta en marcha y el manual de operación de las distintas herramientas de monitorización de mapas y telemetría agrícola que ofrece la aplicación.
 
 \section{Requisitos de usuarios}
+Para garantizar una experiencia de uso fluida y el correcto funcionamiento de todas las características de la interfaz (incluyendo el mapeo interactivo por \textit{Leaflet} y la recepción de telemetría en tiempo real por \textit{WebSockets}), el usuario debe cumplir con los siguientes requisitos mínimos:
+
+\begin{itemize}
+    \item \textbf{Conectividad:} Disponer de acceso a la red local (en caso de despliegue privado mediante intranet en la finca) o conexión estable a Internet (para acceder a la plataforma desplegada en la nube).
+    \item \textbf{\textit{software}:} Un navegador web moderno y actualizado que soporte la ejecución de \textit{JavaScript} asíncrono (por ejemplo, Google Chrome, Mozilla Firefox, Microsoft Edge o Safari).
+    \item \textbf{\textit{hardware}:} Al tratarse de una aplicación con un diseño adaptativo (\textit{responsive design}), es perfectamente posible acceder de forma cómoda desde ordenadores de sobremesa en el centro de mando, portátiles, tabletas rugerizadas a pie de campo o dispositivos móviles con resolución de pantalla suficiente para la correcta visualización de las cartografías.
+\end{itemize}
 
 \section{Instalación}
+Desde la perspectiva del operario o usuario final, AgroSkopos \textbf{no requiere de ninguna instalación de \textit{software} local} ni configuración de bases de datos, ya que se trata de una aplicación web centralizada que se ejecuta enteramente en el navegador.
+
+Se presupone que el ecosistema ha sido previamente orquestado y desplegado por el departamento técnico (como se documenta en el \textit{Apéndice D: Manual del Programador}). Dado que la plataforma actual ya se encuentra en producción y desplegada en la nube, el usuario solo deberá seguir estos tres pasos:
+
+\begin{enumerate}
+    \item Abrir el navegador web de su dispositivo.
+    \item Introducir la dirección URL en el navegador. Dependiendo del método de distribución seleccionado por la empresa agrícola, el acceso se realizará de una de las siguientes maneras:
+    \begin{itemize}
+        \item \textbf{Despliegue en la nube (Producción):} Accediendo al dominio público oficial configurado (actualmente disponible en \texttt{https://agroskopos.vercel.app}).
+        \item \textbf{Despliegue local (\textit{On-Premise}):} Si la empresa opta por ejecutar el sistema en sus propios servidores, se accederá a través de la red local (generalmente \texttt{http://localhost:8080}).
+    \end{itemize}
+    \item Iniciar sesión en el portal cautivo empleando las credenciales personales (correo electrónico y contraseña) asignadas por el \textit{Administrador} del sistema.
+\end{enumerate}
 
 \section{Manual del usuario}
+A continuación se describen las funcionalidades principales que pueden llevarse a cabo en la plataforma AgroSkopos, guiando al operario paso a paso a través de las interfaces gráficas disponibles. Para facilitar la comprensión del flujo de navegación y la distribución de las vistas, la figura \ref{fig:img/apendice_E/diagrama_pantallas.png} muestra el esquema interactivo de pantallas que compone la aplicación.
+
+\imagen{img/apendice_E/diagrama_pantallas.png}{Mapa de navegación de las interfaces de AgroSkopos}
+
+\subsection{Autenticación y Acceso (Login)}
+El primer punto de contacto del usuario con el ecosistema es la pantalla de inicio de sesión (figura \ref{fig:img/apendice_E/pantalla_inicio.png}). Esta vista requiere que el operario o administrador introduzca sus credenciales oficiales (correo electrónico y contraseña). El sistema valida la información de forma segura y redirige al usuario a su panel de control correspondiente.
+
+\imagen{img/apendice_E/pantalla_inicio.png}{Pantalla de Autenticación: Inicio de Sesión de AgroSkopos}
+
+\subsection{Panel de Control Principal (\textit{dashboard})}
+Una vez autenticado, la plataforma presenta un cuadro de mandos unificado diseñado para maximizar el área de visualización topológica (figura \ref{fig:img/apendice_E/inicio_normal.png}). Este mapa interactivo es el núcleo operativo de la aplicación, desde donde se orquestan y auditan todas las misiones del robot agrícola.
+
+\imagen{img/apendice_E/inicio_normal.png}{Cuadro de Mandos Principal: Vista general del mapa interactivo}
+
+El mapa integra una botonera lateral de control \textit{GIS} (Sistemas de Información Geográfica) y diversas herramientas que otorgan al usuario un control preciso sobre la cartografía y la telemetría del suelo:
+
+\begin{itemize}
+    \item \textbf{Herramientas de Zoom:} Situadas habitualmente en las esquinas del visor, permiten acercar o alejar la vista del terreno con precisión. Son fundamentales para tener una visión holística de parcelas de gran extensión o, por el contrario, acercarse a inspeccionar puntos topológicos muy específicos de la cosecha.
+    
+    \item \textbf{Delimitación de Área (Dibujo de polígonos):} Para ordenar al robot que inspeccione una zona determinada, el usuario emplea la herramienta de trazado vectorial integrada en el panel del mapa. Haciendo clics precisos sobre el terreno, el operario delimita un polígono cerrado (figura \ref{fig:img/apendice_E/zona_delimitada.png}) que define el \textbf{Área de Trabajo}. Esta flexibilidad permite crear formas totalmente irregulares que se adapten a la orografía real, salvando obstáculos como balsas de agua o construcciones.
+    
+    \imagen{img/apendice_E/zona_delimitada.png}{Trazado Geométrico: Delimitación de área de trabajo irregular}
+    
+    \item \textbf{Capa de Satélite:} Por defecto, el mapa carga una vista cartográfica plana y estilizada para mejorar el rendimiento. Sin embargo, el operario puede activar el \textbf{Modo Satélite} (figura \ref{fig:img/apendice_E/modo_satelite_inicio.png}) a través del selector de capas. Esta vista renderiza ortofotos reales del terreno, un recurso indispensable para reconocer de forma visual el estado de los caminos, los lindes exactos de la propiedad y los accidentes geográficos.
+    
+    \imagen{img/apendice_E/modo_satelite_inicio.png}{Modo Satélite: Vista fotográfica aérea de la explotación agrícola}
+    
+    \item \textbf{Lecturas y Puntos Topológicos:} A medida que el robot avanza físicamente por la finca, inyecta cientos de puntos sobre el mapa en tiempo real. Cada uno de estos puntos representa una lectura geo-referenciada de los sensores del robot (figura \ref{fig:img/apendice_E/modal_dato_inicio.png}). Al hacer clic sobre cualquier punto, se despliega un pequeño modal o \textit{popup} con la información agronómica exacta que fue capturada en esas coordenadas (porcentaje de Humedad, nivel de pH, cantidad de radiación solar recibida, etc.). Una característica vital es que estos puntos \textbf{cambian de color de forma dinámica} basándose en la salud del terreno: si un parámetro (como el pH o el Nitrógeno) cae por debajo del umbral óptimo predefinido para ese cultivo, el punto cambia de verde a colores de advertencia (amarillo o rojo), alertando al operario sin necesidad de leer los números.
+    
+    \imagen{img/apendice_E/modal_dato_inicio.png}{Muestreo Agronómico: Detalle de lectura de suelo en un punto}
+    
+    \item \textbf{Mapas de Calor (\textit{Heatmaps}):} Cuando se acumulan miles de lecturas individuales, la pantalla puede saturarse. Para facilitar la interpretación visual a nivel macro, el usuario puede fusionar todos los puntos activando la representación por mapa de calor (figura \ref{fig:img/apendice_E/mapa_calor_indice.png}). Esta herramienta analítica genera manchas de color interpoladas sobre la finca. Las zonas con colores intensos y cálidos señalan altas concentraciones de un nutriente, mientras que las zonas frías denotan áreas estériles o carencias críticas. Esto habilita una toma de decisiones inmediata sobre dónde aplicar dosis variables de fertilizante.
+    
+    \imagen{img/apendice_E/mapa_calor_indice.png}{Representación Avanzada: Mapa de calor agronómico (\textit{Heatmap}) sobre el terreno}
+\end{itemize}
+
+\subsection{Layout y Configuración del Entorno}
+Envolviendo al mapa principal, el \textit{software} cuenta con una arquitectura de \textit{layout} o marco persistente que acompaña al usuario durante toda la sesión. Esta estructura está pensada para no estorbar, pudiendo mantenerse abierta u oculta según la preferencia del operario.
+
+\subsubsection{Menú de Navegación (\textit{Sidebar})}
+Haciendo clic en el icono de la esquina superior izquierda, se despliega el menú lateral principal (figura \ref{fig:img/apendice_E/inicio_barra.png}). Este menú actúa como la espina dorsal de la aplicación, proporcionando acceso directo a todas las secciones clave (Misiones, Usuarios, Analítica y Perfil). En la parte inferior de este menú se ubica el botón de \textbf{Cerrar Sesión} (\textit{logout}), que permite al operario finalizar su jornada de forma segura. Su diseño superpuesto garantiza que se pueda invocar rápidamente sin obligar a recargar la página ni perder el progreso en el mapa subyacente.
+
+\imagen{img/apendice_E/inicio_barra.png}{Navegación Global: Menú lateral retráctil desplegado sobre el mapa}
+
+\subsubsection{Modo Oscuro}
+La aplicación ha sido diseñada con la ergonomía en mente. Dado que la agricultura moderna exige en ocasiones jornadas nocturnas, la interfaz integra un botón de \textbf{Modo Oscuro} (figura \ref{fig:img/apendice_E/inicio_modo_oscuro.png}) en la barra superior. Al activarlo, todo el ecosistema (incluyendo el propio mapa base) transiciona a una paleta de grises muy oscuros. Esto reduce drásticamente el brillo de la pantalla, evitando el deslumbramiento y la fatiga visual en la cabina del tractor o en el centro de mando.
+
+\imagen{img/apendice_E/inicio_modo_oscuro.png}{Ergonomía Visual: Cuadro de mandos con el Modo Oscuro activado}
+
+\subsubsection{Sistema de Soporte y Tickets}
+En la cabecera, junto al perfil, existe un icono con forma de auriculares dedicado al soporte directo. Al pulsarlo, se lanza un \textbf{modal interactivo} (figura \ref{fig:img/apendice_E/mensaje_cascos.png}) que permite al trabajador contactar con el equipo de ingeniería para reportar una avería del robot o un error del \textit{software}. 
+Para facilitar la inmediatez, el operario solo tiene que escribir su mensaje; el sistema captura de manera invisible su identidad y sesión actual, encolando el \textit{ticket} y enviando un correo automático (figura \ref{fig:img/apendice_E/ticket_recibido_correo.png}) al departamento correspondiente sin abrir aplicaciones de correo externas.
+
+\imagen{img/apendice_E/mensaje_cascos.png}{Asistencia Técnica: Modal rápido de creación de \textit{tickets} de soporte}
+
+\subsubsection{Indicadores de Estado y Telemetría de Batería}
+La barra superior no solo sirve para la navegación, sino que actúa como el monitor vital del robot:
+\begin{itemize}
+    \item \textbf{Estado de Conexión:} Un pequeño indicador semafórico (conectado/desconectado) informa en tiempo real de si existe un flujo estable de telemetría a través de los \textit{WebSockets}. Si el robot pierde cobertura en la finca, el indicador alertará al usuario de la pérdida de comunicación.
+    \item \textbf{Módulo de Energía:} A la derecha de la barra superior, el usuario visualiza permanentemente el porcentaje de batería del robot, el cual \textbf{cambia de color dinámicamente} (verde, amarillo, rojo) conforme se aproxima a la reserva, para captar la atención de forma pasiva. Al hacer clic sobre él, se despliega el modal de energía (figura \ref{fig:img/apendice_E/bateria_desplegada.png}), mostrando lecturas detalladas de ingeniería: amperaje de carga actual desde los paneles solares, consumo de los motores en vatios y voltaje interno. Desde esta vista, el usuario puede navegar a la página completa de Analítica de Energía (figura \ref{fig:img/apendice_E/gráfica_energía.png}) que se explica posteriormente.
+\end{itemize}
+
+\imagen{img/apendice_E/bateria_desplegada.png}{Telemetría Energética: Modal desplegable con los parámetros de la batería}
+
+\subsection{Perfil de Usuario}\label{sec:perfil}
+Para humanizar la interacción técnica y dar control al operario sobre sus credenciales, cada empleado dispone de una sección privada denominada \textbf{Perfil} (véase el apartado \ref{sec:perfil}) (figura \ref{fig:img/apendice_E/perfil.png}). Desde esta vista, el usuario puede revisar sus datos personales vinculados a la empresa y verificar qué nivel de acceso (rol) tiene asignado dentro del ecosistema, una información crucial para entender a qué partes del \textit{software} está autorizado a entrar.
+
+\imagen{img/apendice_E/perfil.png}{Ajustes Personales: Ficha informativa del perfil del operario}
+
+Desde esta misma pantalla, el usuario tiene la potestad de actualizar su contraseña por motivos de seguridad. Adicionalmente, el portal incluye un mecanismo de personalización visual donde el empleado puede hacer clic sobre su retrato para abrir el modal de subida de archivos (figura \ref{fig:img/apendice_E/perfil_cambio_foto.png}). Al cargar una imagen o \textit{avatar} propio, esta se sincroniza inmediatamente en la base de datos y se actualiza en todas las cabeceras de la aplicación, facilitando la identificación visual de quién está operando el sistema.
+
+\imagen{img/apendice_E/perfil_cambio_foto.png}{Personalización: Modal para subir una imagen de avatar corporativo}
+
+\subsection{Administración: Gestión de Usuarios}
+El ecosistema AgroSkopos parte de un paradigma de alta seguridad. Por ello, solo los directivos o técnicos con privilegios de \textbf{Administrador} tienen potestad para acceder a la tabla administrativa de \textbf{Gestión de Usuarios} (figura \ref{fig:img/apendice_E/gestión_de_usuarios.png}). 
+
+\imagen{img/apendice_E/gestión_de_usuarios.png}{Panel de Administración: Listado de usuarios y control de acceso (\textit{RBAC})}
+
+En esta tabla, el administrador visualiza un listado completo de todo el personal dado de alta. Las funcionalidades principales que ofrece son:
+\begin{itemize}
+    \item \textbf{Modificación de Privilegios:} Cambiar el rol de un operario (por ejemplo, ascendiéndolo a administrador o degradándolo a visualizador).
+    \item \textbf{Eliminación (\textit{Baja}):} Expulsar a un usuario del sistema, revocando su acceso inmediatamente y bloqueando cualquier intento futuro de conexión.
+    \item \textbf{Creación de Empleados:} Al pulsar el botón de añadir, se despliega el \textbf{Modal de Creación} (figura \ref{fig:img/apendice_E/crear_usuario.png}), que permite introducir los datos del nuevo miembro.
+\end{itemize}
+
+\imagen{img/apendice_E/crear_usuario.png}{Alta en el Sistema: Modal para registrar a un nuevo operario}
+
+Es importante destacar la inteligencia del proceso de alta: a nivel de contraseñas, si el administrador decide \textbf{no asignar ninguna contraseña manual} al crear el usuario, el servidor remoto \textit{backend} entra en acción y genera aleatoriamente una clave criptográfica temporal altamente segura. En cualquiera de los casos (ya sea con contraseña manual o autogenerada), el sistema dispara invariablemente un correo electrónico de bienvenida (figura \ref{fig:img/apendice_E/correo_bienvenida_enviado.png}) al nuevo trabajador con sus credenciales (como se explicará detalladamente en el posterior apartado \ref{sec:mailing} (\textbf{Transacciones de Correo Electrónico})), garantizando que el usuario siempre sepa cómo acceder.
+
+\subsection{Supervisión Visual: Cámara a Bordo}
+Para dotar al operario de un control físico ocular de la situación del terreno, el ecosistema cuenta con una vista dedicada de retransmisión en directo (figura \ref{fig:img/apendice_E/cámara_en_vivo.png}). Esta pantalla recibe el flujo de vídeo (\textit{streaming}) ininterrumpido desde las ópticas instaladas en el chasis del robot.
+
+\imagen{img/apendice_E/cámara_en_vivo.png}{Visión Artificial: Retransmisión de vídeo en directo con minimapa contextual}
+
+Junto al reproductor de vídeo, se integra un \textbf{minimapa} satelital que permite al operario saber exactamente hacia dónde está mirando el robot en todo momento sin perder la perspectiva global de la finca. En dispositivos móviles o pantallas reducidas (\textit{Responsive Design}), el diseño de la vista se adapta inteligentemente: la cámara ocupa toda la pantalla para maximizar la visibilidad, pero al hacer clic o \textit{tap} sobre ella, la interfaz realiza un intercambio instantáneo, trayendo el minimapa a primer plano.
+
+\subsection{Planificación y Creación de Misiones}\label{sec:misiones}
+Antes de poder orquestar el movimiento físico del robot, el operario debe definir sus hojas de ruta. Para ello, se dirige a la sección de \textbf{Misiones} (véase el apartado \ref{sec:misiones} y la figura \ref{fig:img/apendice_E/misiones.png}). 
+
+\imagen{img/apendice_E/misiones.png}{Planificación Estratégica: Formulario de creación de una nueva misión}
+
+En esta interfaz, la creación obedece a parámetros estrictos: el usuario debe asignar obligatoriamente un nombre a la misión y \textbf{dibujar previamente el área de trabajo} en el mapa. Si no se cumplen estos requisitos, el sistema bloquea la creación por motivos de seguridad lógica. 
+
+Para flexibilizar la operativa, el operario puede seleccionar individualmente qué \textbf{sensores o datos tomará el robot}. Por ejemplo, si solo se desea hacer una misión rápida de reconocimiento topológico, se pueden desactivar los sensores de suelo para que la máquina no gaste tiempo de procesamiento en tomar muestras. Adicionalmente, el ingeniero puede configurar parámetros geométricos vitales: el \textbf{ángulo de pasada} y el \textbf{ancho entre cada pasada}. Estos dos valores instruyen al algoritmo sobre cómo generar matemáticamente el barrido en \textit{zig-zag} dentro del polígono.
+
+En la parte inferior de esta pantalla, se despliega una tabla con el registro de todas las misiones que han sido creadas y guardadas en el servidor, ofreciendo botones rápidos para \textbf{editar} sus parámetros o directamente \textbf{borrarlas} si han quedado obsoletas.
+
+\subsubsection{Historial de Ejecución de Misiones}
+El ciclo de vida de cada misión culmina en la pantalla de historial de ejecución (figura \ref{fig:img/apendice_E/historial_ejecucion_misiones.png}). Al acceder a una misión ya finalizada, la interfaz muestra un minimapa interactivo trazando la ruta real exacta que siguió el robot por el campo y, justo encima, un panel resumen con los totales estadísticos. 
+
+Desde esta vista final de consolidación, la administración dispone de un botón con forma de papelera para purgar ese historial si hubiera sido de prueba. Pero su verdadero utilidad principal reside en los botones de \textbf{Exportación Documental}. Con un solo clic, el usuario puede compilar un informe formal en PDF o un set de datos matemáticos en CSV, eligiendo si desea descargarlos en su ordenador local o si prefiere que el sistema los envíe automatizadamente a la cuenta de correo electrónico vinculada a su perfil (figura \ref{fig:img/apendice_E/reporte_enviado_al_correo.png}).
+
+\imagen{img/apendice_E/historial_ejecucion_misiones.png}{Registro Histórico: Resumen de ejecución y exportación documental a PDF/CSV}
 
 
+
+\subsection{Centro de Control y Ejecución de Misiones}
+El núcleo duro operativo donde convergen el \textit{hardware} mecánico y el \textit{software} de nube es el panel de control remoto. Esta interfaz flotante inferior gobierna absolutamente toda la motricidad de la máquina.
+
+\imagen{img/apendice_E/control_remoto.png}{Control Remoto: Panel base con barra de velocidad y modos de conducción}
+
+En la vista básica (figura \ref{fig:img/apendice_E/control_remoto.png}), el operario tiene a su disposición una \textbf{barra de velocidad} deslizable para limitar la velocidad punta motriz, y un conmutador fundamental que alterna entre los dos estados operativos del cerebro del robot: \textbf{Modo Manual} y \textbf{Modo Automático}.
+
+\subsubsection{Conducción en Modo Manual}
+Cuando el robot se encuentra en modo manual, el usuario toma el control directo y absoluto de las ruedas motrices. Para conducirlo, puede utilizar las flechas interactivas de la pantalla táctil o, si está en un ordenador, las teclas clásicas \textbf{W, A, S, D}. La tecla \textbf{W} y la \textbf{S} hacen avanzar y retroceder a la máquina en línea recta, mientras que la \textbf{A} y la \textbf{D} invierten el giro de las ruedas de cada lado, provocando que el robot rote sobre su propio eje central (comportamiento conocido como giro de tanque), lo cual es ideal para maniobrar en espacios reducidos o salir del fango.
+
+\subsubsection{Navegación en Modo Automático}
+Al activar el modo automático, el robot cede el control a su motor de \textit{pathfinding} interno. Llegados a este punto, el usuario dispone de varias opciones de ordenarle a dónde ir:
+\begin{itemize}
+    \item \textbf{Navegación por Puntos (\textit{Waypoints}):} Al hacer clic simple sobre cualquier parte del mapa, el robot calculará la ruta óptima y se dirigirá hasta la coordenada seleccionada automáticamente. Si el usuario hace clic mientras mantiene pulsada la tecla \textbf{SHIFT}, podrá encolar múltiples puntos, dibujando una ruta personalizada que el robot seguirá secuencialmente. Como característica de seguridad, si se hace clic directamente sobre el icono de la Base Central, el robot iniciará automáticamente la maniobra de "Retorno a Casa" (\textit{Return to Home}) para acoplarse y recargar sus baterías.
+    \item \textbf{Navegación por Escaneo de Área:} Si previamente se ha dibujado un polígono en el mapa usando la herramienta de \textbf{Área de Trabajo}, el usuario solo tiene que poner el robot en modo automático para que el sistema empiece a escanear automáticamente toda la zona. El robot trazará un patrón de barrido geográfico para asegurar que toda el área delimitada ha sido muestreada.
+\end{itemize}
+
+\subsubsection{Gestión de Tareas y Monitorización de Misiones}
+Para gestionar estas áreas, el usuario despliega la pestaña de misiones del panel (figura \ref{fig:img/apendice_E/control_remoto_barra_misiones.png}). Este módulo aloja una botonera táctica que permite acciones rápidas como \textbf{Cargar Zona} predefinida o darle la orden de \textbf{Iniciar Auto}.
+
+\imagen{img/apendice_E/control_remoto_barra_misiones.png}{Gestión de Operativa: Menú de misiones desplegado con botones de carga e inicio}
+
+Una vez enviada la orden, los servomotores se activan y el \textit{dashboard} entra en estado de \textbf{Misión Iniciada} (figura \ref{fig:img/apendice_E/control_remoto_misión_iniciada.png}).
+
+\imagen{img/apendice_E/control_remoto_misión_iniciada.png}{Misión Activa: Interfaz de control en vivo con botones de pausa y aborto de emergencia}
+
+Durante esta fase de desplazamiento autónomo, el panel de control se bloquea y se transforma, inhabilitando los controles manuales para evitar conflictos accidentales e iluminando de forma prominente dos acciones críticas en tiempo real: un botón naranja de \textbf{Pausar Misión} (que congela momentáneamente los motores y el cronómetro de la misión, ideal por si un tractor se cruza en su camino) y un botón rojo de \textbf{Cancelar Misión} (que purga la memoria de navegación, finaliza prematuramente el escaneo del área y detiene el robot de forma definitiva).
+
+\subsection{Analítica Agronómica y Exportación de Datos}\label{sec:datos}
+El sistema no solo actúa como un control remoto masivo, sino que transforma las lecturas de los sensores en inteligencia de negocio. La sección de Datos (apartado \ref{sec:datos}) actúa como un centro analítico avanzado, donde toda la telemetría es compilada.
+
+El elemento rector que afecta y filtra toda la vista es el \textbf{Selector de Fechas} (\textit{Date Range Picker}). Al pulsarlo, emerge un calendario interactivo que permite al agrónomo cribar absolutamente todas las gráficas y tablas seleccionando un rango de fechas y horas específico, o si lo prefiere, filtrando la base de datos directamente por una misión concreta.
+
+\subsubsection{Gráficas Interactivas y Comparativas}
+Las gráficas vectoriales (figura \ref{fig:img/apendice_E/datos_gráficas.png}) ofrecen una flexibilidad total al ingeniero: el usuario puede filtrar por el tipo de dato exacto (Humedad, pH, Energía, etc.) y cambiar dinámicamente el \textbf{tipo de gráfica} entre formato de Barras, Línea o matriz de Dispersión. Además, el sistema permite habilitar una segunda gráfica secundaria en paralelo para \textbf{comparar} dos variables agronómicas simultáneamente usando los mismos filtros. Ambas gráficas cuentan en todo momento con un botón de utilidad para capturar la renderización y descargarla en formato de imagen al instante.
+
+\imagen{img/apendice_E/datos_gráficas.png}{Inteligencia de Negocio: Gráficas comparativas de telemetría y sensores}
+
+\subsubsection{Tabla de Datos en Crudo}
+Para auditorías formales que requieran máxima precisión, los datos en crudo recogidos por el robot se exponen en una tabla de registros (figura \ref{fig:img/apendice_E/tabla_datos.png}). Esta vista ha sido diseñada para mover cientos de miles de filas sin colapsar el navegador, gracias a un mecanismo de paginación inteligente de base de datos. El operario puede navegar iterativamente mediante las flechas direccionales o introduciendo numéricamente la página exacta.
+
+\imagen{img/apendice_E/tabla_datos.png}{Auditoría en Crudo: Tabla paginada con todos los registros recolectados por el robot}
+
+
+
+\subsection{Analítica de Energía}
+El rendimiento autónomo depende crucialmente de la salud del tren de potencia. El operario dispone de una página exclusiva dedicada al histórico y tiempo real del flujo eléctrico del chasis.
+
+En la cabecera de la página, el sistema proyecta en formato numérico ampliado los \textbf{cuatro datos actuales} vitales del robot: porcentaje de carga restante, voltaje interno del circuito, tasa de consumo y amperaje de recuperación inyectado por los paneles solares. Estos indicadores permiten al ingeniero evaluar la autonomía instantánea de un simple vistazo.
+
+Bajo estos indicadores, se despliega una gráfica vectorial continua (figura \ref{fig:img/apendice_E/gráfica_energía.png}). Esta herramienta plasma \textbf{dos valores simultáneos} en el tiempo: la carga solar recibida contra el desgaste de la batería. Esto ayuda a visualizar de forma empírica cómo rinde el robot bajo distintas condiciones lumínicas a lo largo del día. Al igual que en la página de datos agronómicos, esta gráfica está conectada a su propio \textbf{Selector de Fechas} (\textit{Date Range Picker}), permitiendo filtrar todo el histórico de energía por un rango temporal específico.
+
+\imagen{img/apendice_E/gráfica_energía.png}{Eficiencia Energética: Monitorización analítica de batería y captación solar}
+
+\subsection{Transacciones de Correo Electrónico (\textit{Mailing})}\label{sec:mailing}
+Una plataforma \textit{SaaS} robusta exige un mecanismo de notificación institucional que fluya sin intervención humana y sin sobrecargar la interfaz gráfica. En AgroSkopos, todos los correos automáticos se expiden invariablemente desde el buzón de salida corporativo oficial (\texttt{sistema.agroskopos}, figura \ref{fig:img/apendice_E/cuenta_correo_sistema.png}), otorgando un grado máximo de profesionalidad y evitando que los mensajes caigan en carpetas de \textit{spam}.
+
+\imagen{img/apendice_E/cuenta_correo_sistema.png}{Infraestructura de Correos: Bandeja de salida oficial del sistema}
+
+A continuación, se exponen los tres modelos principales de correo electrónico inyectados en HTML desde el ecosistema, agrupados por su funcionalidad:
+
+\begin{itemize}
+    \item \textbf{Correo de Bienvenida:} Cuando un administrador da de alta a un nuevo empleado sin asignarle contraseña manual, el sistema genera una clave aleatoria y envía automáticamente este correo (figura \ref{fig:img/apendice_E/correo_bienvenida_enviado.png}). Contiene un mensaje de bienvenida, el nombre de usuario y las credenciales temporales necesarias para el primer inicio de sesión.
+    
+    \imagen{img/apendice_E/correo_bienvenida_enviado.png}{Notificación Oficial: Correo automatizado de bienvenida y credenciales iniciales}
+    
+    \item \textbf{Gestión de \textit{Tickets} de Soporte:} Se ha aplicado una arquitectura de enrutamiento invisible (\textit{Reply-To}) en el caso específico de los partes de avería. Aunque el sistema servidor es quien dispara el correo de aviso, este llega a la bandeja de entrada del administrador (figura \ref{fig:img/apendice_E/ticket_recibido_correo.png}) como si estuviera enviado por el operario que experimentó el problema. De este modo, si el administrador hace clic en "Responder", su mensaje no va a la máquina del sistema (\textit{no-reply}), sino directamente a la dirección del trabajador, agilizando la asistencia técnica.
+    
+    \imagen{img/apendice_E/ticket_recibido_correo.png}{Asistencia Técnica: Correo de apertura de \textit{ticket} de soporte con identidad enrutada}
+    
+    \item \textbf{Exportación de Informes PDF:} Como se detalló en el historial de misiones, el operario puede solicitar que el resumen estadístico de una misión terminada le sea enviado por correo. El sistema genera el documento en tiempo real y remite este correo (figura \ref{fig:img/apendice_E/reporte_enviado_al_correo.png}) adjuntando el informe PDF listo para su archivo o auditoría agronómica.
+    
+    \imagen{img/apendice_E/reporte_enviado_al_correo.png}{Integración Documental: Recepción automática del informe PDF en el correo del operario}
+\end{itemize}

@@ -355,5 +355,20 @@
       "battery_range": "La batería debe estar entre 0 y 100",
       "invalid_geojson": "El área de trabajo debe ser un objeto GeoJSON válido"
     }
+  },
+  "support": {
+    "title": "Soporte Técnico",
+    "issueType": "Tipo de Problema",
+    "typeRobot": "Problema con el Robot",
+    "typeApp": "Problema con la Aplicación",
+    "typePassword": "Pérdida de Contraseña",
+    "typeOther": "Otro",
+    "description": "Descripción breve",
+    "descPlaceholder": "Describe el problema aquí...",
+    "cancel": "Cancelar",
+    "sending": "Enviando...",
+    "send": "Enviar Ticket",
+    "success": "Ticket enviado correctamente. El equipo técnico lo revisará.",
+    "error": "Error al enviar el ticket"
   }
 }

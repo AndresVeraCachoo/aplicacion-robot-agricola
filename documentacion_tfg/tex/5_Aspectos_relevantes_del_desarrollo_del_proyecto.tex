@@ -129,6 +129,10 @@ Para certificar la fiabilidad y robustez técnica de un sistema distribuido como
 
 Para gobernar este proceso, los reportes estandarizados de cobertura de ambos clientes se fusionan mediante lógicas propias y son capturados automáticamente por un flujo de \textit{GitHub Actions} \cite{githubactions}. Finalmente, dichos reportes nutren el \textbf{análisis estático de SonarCloud \cite{sonarqube}}, que actúa como \textbf{barrera técnica (\textit{Quality Gate})}, censurando y bloqueando el despliegue de cualquier confirmación que no alcance un mínimo del $80\%$ de cobertura o que introduzca agujeros de seguridad (\textit{Security Hotspots}).
 
+Como se puede apreciar en la figura \ref{fig:img/apartado_5/imagen_sonar.png}, el panel de control de SonarCloud centraliza las métricas de calidad y confirma el paso exitoso de este riguroso \textit{Quality Gate}. La imagen evidencia una \textbf{cobertura global superior al 90\%}, lo que significa que más de nueve de cada diez líneas de código de la aplicación están siendo evaluadas automáticamente en cada prueba. Este alto nivel de cobertura garantiza una extrema fiabilidad frente a errores (\textit{bugs}), facilita enormemente la refactorización futura sin miedo a romper funcionalidades existentes y asegura la robustez del sistema en su conjunto. Además, el panel muestra la ausencia total de vulnerabilidades y un bajísimo índice de deuda técnica (puntuación \textit{A} en fiabilidad, seguridad y mantenibilidad), certificando la madurez del código base antes de su pase a los entornos de producción.
+
+\imagen{img/apartado_5/imagen_sonar.png}{Panel principal de SonarCloud mostrando el estado del Quality Gate y la cobertura del proyecto}{0.95}
+
 \subsection{Despliegue y Arquitectura Cloud}
 Para garantizar una disponibilidad global y sin interrupciones, la plataforma completa de AgroSkopos fue orquestada y desplegada sobre un entorno productivo híbrido.
 

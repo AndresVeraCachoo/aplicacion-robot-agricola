@@ -80,7 +80,7 @@ export function MissionFormPanel({ formState, formSetters, formHandlers }) {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="mission-width">
-                {t("missions.form.Width")} (m)
+                {t("missions.form.width")} (m)
               </label>
               <input
                 id="mission-width"

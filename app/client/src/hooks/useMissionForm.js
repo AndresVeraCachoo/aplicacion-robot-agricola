@@ -36,12 +36,20 @@ export function useMissionForm(clearMap) {
   const handleEditMission = useCallback((mission) => {
     setEditingId(mission.id);
     setName(mission.name);
-    setWorkingWidth(mission.workingWidth);
-    setPassAngle(mission.passAngle);
-    setMinBattery(mission.minBattery);
+    setWorkingWidth(mission.workWidth || 2);
+    setPassAngle(mission.passAngle || 0);
+    setMinBattery(mission.minBattery || 20);
     setWorkArea(mission.workArea);
-    if (mission.sensors) {
-      setSensors({ ...initialSensors, ...mission.sensors });
+    
+    if (mission.taskType) {
+      const activeKeys = mission.taskType.split(",").map((s) => s.trim());
+      const loadedSensors = { ...initialSensors };
+      activeKeys.forEach((k) => {
+        if (k in loadedSensors) loadedSensors[k] = true;
+      });
+      setSensors(loadedSensors);
+    } else {
+      setSensors(initialSensors);
     }
   }, []);
 
@@ -81,13 +89,17 @@ export function useMissionForm(clearMap) {
         return;
       }
 
+      const activeSensors = Object.entries(sensors)
+        .filter(([isActive]) => isActive)
+        .map(([key]) => key);
+
       const newMissionData = {
         name: name.trim(),
         workArea,
-        workingWidth,
+        workWidth: workingWidth,
         passAngle,
         minBattery,
-        sensors,
+        taskType: activeSensors.join(", "),
       };
 
       if (editingId) {
